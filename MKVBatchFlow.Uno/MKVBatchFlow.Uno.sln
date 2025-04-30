@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKVBatchFlow.Uno", "MKVBatchFlow.Uno\MKVBatchFlow.Uno.csproj", "{A3376D1B-B829-42FC-AFF9-5EDFAE18933B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKVBatchFlow.Uno.UITests", "MKVBatchFlow.Uno.UITests\MKVBatchFlow.Uno.UITests.csproj", "{8884F38B-9636-24E9-8A5B-1EC005DD45AA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKVBatchFlow.Uno.Tests", "MKVBatchFlow.Uno.Tests\MKVBatchFlow.Uno.Tests.csproj", "{C709FC41-0433-135F-969B-13E85A75CB62}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8777A485-BE7C-4ECE-A406-42440A4BEA91}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+		Directory.Packages.props = Directory.Packages.props
+		global.json = global.json
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKVBatchFlow.Core", "..\MKVBatchFlow.Core\MKVBatchFlow.Core.csproj", "{91081367-A262-5599-300A-550A83C14C8D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A3376D1B-B829-42FC-AFF9-5EDFAE18933B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3376D1B-B829-42FC-AFF9-5EDFAE18933B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3376D1B-B829-42FC-AFF9-5EDFAE18933B}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{A3376D1B-B829-42FC-AFF9-5EDFAE18933B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3376D1B-B829-42FC-AFF9-5EDFAE18933B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3376D1B-B829-42FC-AFF9-5EDFAE18933B}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{8884F38B-9636-24E9-8A5B-1EC005DD45AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8884F38B-9636-24E9-8A5B-1EC005DD45AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8884F38B-9636-24E9-8A5B-1EC005DD45AA}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{8884F38B-9636-24E9-8A5B-1EC005DD45AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8884F38B-9636-24E9-8A5B-1EC005DD45AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8884F38B-9636-24E9-8A5B-1EC005DD45AA}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{C709FC41-0433-135F-969B-13E85A75CB62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C709FC41-0433-135F-969B-13E85A75CB62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C709FC41-0433-135F-969B-13E85A75CB62}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{C709FC41-0433-135F-969B-13E85A75CB62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C709FC41-0433-135F-969B-13E85A75CB62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C709FC41-0433-135F-969B-13E85A75CB62}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{91081367-A262-5599-300A-550A83C14C8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91081367-A262-5599-300A-550A83C14C8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91081367-A262-5599-300A-550A83C14C8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91081367-A262-5599-300A-550A83C14C8D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8884F38B-9636-24E9-8A5B-1EC005DD45AA} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{C709FC41-0433-135F-969B-13E85A75CB62} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {18FCD60D-4924-4875-8AEC-87F4F706F944}
+	EndGlobalSection
+EndGlobal

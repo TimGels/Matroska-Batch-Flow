@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKVBatchFlow.Console", "MKVBatchFlow.Console.csproj", "{9222A42C-C1F9-0DA1-CAB8-96F34EBD17EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKVBatchFlow.Core", "..\MKVBatchFlow.Core\MKVBatchFlow.Core.csproj", "{91081367-A262-5599-300A-550A83C14C8D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9222A42C-C1F9-0DA1-CAB8-96F34EBD17EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9222A42C-C1F9-0DA1-CAB8-96F34EBD17EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9222A42C-C1F9-0DA1-CAB8-96F34EBD17EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9222A42C-C1F9-0DA1-CAB8-96F34EBD17EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91081367-A262-5599-300A-550A83C14C8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91081367-A262-5599-300A-550A83C14C8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91081367-A262-5599-300A-550A83C14C8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91081367-A262-5599-300A-550A83C14C8D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6887A033-DD74-4A4A-B880-130777423F68}
+	EndGlobalSection
+EndGlobal
