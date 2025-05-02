@@ -1,10 +1,12 @@
-﻿using System.Text.Json;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using MKVBatchFlow.Core;
+using MKVBatchFlow.Core.Enums;
 using MKVBatchFlow.Core.Scanning;
+using System.Text.Json;
+using static MKVBatchFlow.Core.BatchConfiguration;
 
 const string settingsFile = "appsettings.json";
 
@@ -65,6 +67,59 @@ Console.WriteLine("Exclude hidden files? (y/n):");
 var excludeHiddenInput = Console.ReadLine()?.Trim().ToLower();
 currentOptions.ExcludeHidden = excludeHiddenInput == "y";
 
+var batchConfiguration = new BatchConfiguration
+{
+    DirectoryPath = "/media/testfiles",
+    Title = "My MKV Batch",
+    AudioTracks =
+                [
+                    new() {
+                        TrackType = TrackType.Audio,
+                        Name = "English Audio",
+                        Language = "eng",
+                        Default = true,
+                        Forced = false,
+                        Remove = false
+                    },
+                    new() {
+                        TrackType = TrackType.Audio,
+                        Name = "Spanish Audio",
+                        Language = "spa",
+                        Default = false,
+                        Forced = false,
+                        Remove = true
+                    }
+                ],
+    VideoTracks =
+                [
+                    new TrackConfiguration
+                    {
+                        TrackType = TrackType.Video,
+                        Name = "Main Video",
+                        Language = "und",
+                        Default = true,
+                        Forced = false,
+                        Remove = false
+                    }
+                ],
+    SubtitleTracks =
+                [
+                    new TrackConfiguration
+                    {
+                        TrackType = TrackType.Subtitle,
+                        Name = "English Subs",
+                        Language = "eng",
+                        Default = true,
+                        Forced = false,
+                        Remove = false
+                    }
+                ]
+};
+
+string fileName = "BatchConfiguration.json";
+string jsonString = JsonSerializer.Serialize(batchConfiguration);
+File.WriteAllText(fileName, jsonString);
+
 // ✅ Write updated values back to appsettings.json
 var updatedJson = new
 {
@@ -88,7 +143,33 @@ try
     Console.WriteLine($"\n📁 Found {files.Count()} MKV file(s):");
     foreach (var file in files)
     {
-        Console.WriteLine($" - {file}");
+        Console.WriteLine($"\nFile: {file.FilePath}");
+        //Console.WriteLine($"Media Info Summary: {file.MediaInfoResult.MediaInfoSummary}");
+
+
+        if (file.Result.Media?.Track != null && file.Result.Media.Track.Count != 0)
+        {
+            Console.WriteLine("\nTracks:");
+            foreach (var track in file.Result.Media.Track)
+            {
+                Console.WriteLine($" - Type: {track.Type}");
+                if (!string.IsNullOrEmpty(track.Title))
+                    Console.WriteLine($"   Title: {track.Title}");
+                if (!string.IsNullOrEmpty(track.Format))
+                    Console.WriteLine($"   Format: {track.Format}");
+                if (!string.IsNullOrEmpty(track.Duration))
+                    Console.WriteLine($"   Duration: {track.Duration} ms");
+                if (!string.IsNullOrEmpty(track.BitRate))
+                    Console.WriteLine($"   Bitrate: {track.BitRate} bps");
+                if (!string.IsNullOrEmpty(track.Language))
+                    Console.WriteLine($"   Language: {track.Language}");
+                Console.WriteLine();
+            }
+        }
+        else
+        {
+            Console.WriteLine("No tracks found.");
+        }
     }
 }
 catch (Exception ex)

@@ -51,13 +51,16 @@ namespace MKVBatchFlow.Core.Scanning
         private static ScannedFileInfo ParseMediaInfoJson(string json, string filePath)
         {
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var root = JsonSerializer.Deserialize<ScannedFileInfo>(json, options)
+            var mediaInfoResult = JsonSerializer.Deserialize<MediaInfoResult>(json, options)
                 ?? throw new InvalidOperationException("Failed to deserialize MediaInfo JSON.");
 
             // Attach the file path to the parsed object
-            return root with { FilePath = filePath };
+            return new ScannedFileInfo()
+            {
+                FilePath = filePath,
+                Result = mediaInfoResult
+            };
         }
-
 
         /// <summary>
         /// Ensures that the directory specified in the options exists.
