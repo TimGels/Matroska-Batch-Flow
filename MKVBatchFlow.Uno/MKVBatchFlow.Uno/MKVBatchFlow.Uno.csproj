@@ -16,7 +16,7 @@
     <ApplicationPublisher>Tim</ApplicationPublisher>
     <!-- Package Description -->
     <Description>MKVBatchFlow.Uno powered by Uno Platform.</Description>
-
+      
     <!--
       UnoFeatures let's you quickly add and manage implicit package references based on the features you want to use.
       https://aka.platform.uno/singleproject-features
@@ -27,7 +27,7 @@
       Toolkit;
       Logging;
       LoggingSerilog;
-      MVUX;
+      Mvvm;
       Configuration;
       Http;
       Serialization;
@@ -36,14 +36,23 @@
       ThemeService;
     </UnoFeatures>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)'=='Debug' or '$(IsUiAutomationMappingEnabled)'=='True'">
-    <IsUiAutomationMappingEnabled>True</IsUiAutomationMappingEnabled>
-    <DefineConstants>$(DefineConstants);USE_UITESTS</DefineConstants>
-  </PropertyGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\..\MKVBatchFlow.Core\MKVBatchFlow.Core.csproj" />
+    <PackageReference Include="Uno.CommunityToolkit.WinUI.UI.Behaviors" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Services\Actions\DropCommandAction.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Presentation\ProductsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Presentation\InputPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
 </Project>

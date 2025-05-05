@@ -1,4 +1,6 @@
-﻿namespace MKVBatchFlow.Core.Scanning;
+﻿using System.Collections.Immutable;
+
+namespace MKVBatchFlow.Core.Scanning;
 
 public interface IFileScanner
 {

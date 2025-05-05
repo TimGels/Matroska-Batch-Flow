@@ -1,4 +1,6 @@
 ﻿global using System.Collections.Immutable;
+global using CommunityToolkit.Mvvm.ComponentModel;
+global using CommunityToolkit.Mvvm.Input;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.Localization;
@@ -11,4 +13,3 @@ global using MKVBatchFlow.Uno.Presentation;
 global using MKVBatchFlow.Uno.Services.Caching;
 global using MKVBatchFlow.Uno.Services.Endpoints;
 global using ApplicationExecutionState = Windows.ApplicationModel.Activation.ApplicationExecutionState;
-[assembly: Uno.Extensions.Reactive.Config.BindableGenerationTool(3)]

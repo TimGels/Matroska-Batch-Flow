@@ -6,36 +6,69 @@
       xmlns:utu="using:Uno.Toolkit.UI"
       NavigationCacheMode="Required"
       Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <ScrollViewer>
-        <Grid utu:SafeArea.Insets="VisibleBounds">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <utu:NavigationBar Content="{Binding Title}" />
 
-            <StackPanel Grid.Row="1"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Spacing="16">
-                <TextBox Text="{Binding Name, Mode=TwoWay}"
-            PlaceholderText="Enter your name:" />
-                <Button Content="Go to Second Page"
-            AutomationProperties.AutomationId="SecondPageButton"
-            Command="{Binding GoToSecond}" />
-            </StackPanel>
-            <TextBlock
-                Grid.Row="2"
-                Text="{Binding MediaInfo}"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"/>
-            <Button
-                Grid.Row="3"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Content="Retrieve media info data" Command="{Binding RetrieveMediaInfo}"/>
-        </Grid>
-    </ScrollViewer>
+    <Grid utu:SafeArea.Insets="Bottom, Left, Right"
+          uen:Region.Attached="True">
+        <NavigationView uen:Region.Attached="true"
+                        PaneDisplayMode="Top"
+                        IsBackButtonVisible="Collapsed"
+                        SettingsItem="Products">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Input"
+                                    uen:Region.Name="Input"
+                                    IsSelected="True"/>
+                <NavigationViewItem Content="General"
+                                    uen:Region.Name="General" />
+                <NavigationViewItem Content="Video"
+                                    uen:Region.Name="Video" />
+                <NavigationViewItem Content="Audio"
+                                    uen:Region.Name="Audio" />
+                <NavigationViewItem Content="Subtitles"
+                                    uen:Region.Name="Subtitles" />
+                <NavigationViewItem Content="Output"
+                                    uen:Region.Name="Output" />
+                <NavigationViewItem Content="Products"
+                                    uen:Region.Name="Products" />
+            </NavigationView.MenuItems>
+
+            <Grid uen:Region.Attached="True"
+                  uen:Region.Navigator="Visibility">
+                <Grid uen:Region.Name="General"
+                      Visibility="Collapsed">
+                    <TextBlock Text="General"
+                               FontSize="24"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Grid>
+                <Grid uen:Region.Name="Video"
+                      Visibility="Collapsed">
+                    <TextBlock Text="Video"
+                               FontSize="24"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Grid>
+                <Grid uen:Region.Name="Audio"
+                      Visibility="Collapsed">
+                    <TextBlock Text="Audio"
+                               FontSize="24"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Grid>
+                <Grid uen:Region.Name="Subtitles"
+                      Visibility="Collapsed">
+                    <TextBlock Text="Subtitles"
+                               FontSize="24"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Grid>
+                <Grid uen:Region.Name="Output"
+                      Visibility="Collapsed">
+                    <TextBlock Text="Output"
+                               FontSize="24"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Grid>
+            </Grid>
+        </NavigationView>
+    </Grid>
 </Page>

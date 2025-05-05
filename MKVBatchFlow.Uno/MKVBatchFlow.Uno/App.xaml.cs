@@ -1,7 +1,3 @@
-using System.Text.Json;
-using Microsoft.Extensions.Configuration;
-using MKVBatchFlow.Core;
-using MKVBatchFlow.Core.Scanning;
 using Uno.Resizetizer;
 
 namespace MKVBatchFlow.Uno;
@@ -21,28 +17,6 @@ public partial class App : Application
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        const string settingsFile = "appsettings.json";
-
-        // Ensure config file exists
-        if (!File.Exists(settingsFile))
-        {
-            var defaultOptions = new
-            {
-                ScanOptions = new ScanOptions
-                {
-                    DirectoryPath = Directory.GetCurrentDirectory(),
-                    AllowedExtensions = [".mkv"],
-                    Recursive = true,
-                    ExcludeHidden = false
-                }
-            };
-
-            var defaultJson = JsonSerializer.Serialize(defaultOptions, new JsonSerializerOptions { WriteIndented = true });
-            await File.WriteAllTextAsync(settingsFile, defaultJson);
-
-            Console.WriteLine("✅ Created default appsettings.json.");
-        }
-
         var builder = this.CreateBuilder(args)
             // Add navigation support for toolkit controls such as TabBar and NavigationView
             .UseToolkitNavigation()
@@ -100,20 +74,13 @@ public partial class App : Application
                     .AddTransient<DelegatingHandler, DebugHttpHandler>()
 #endif
                     .AddSingleton<IWeatherCache, WeatherCache>()
-
                     .AddRefitClient<IApiClient>(context))
-                .ConfigureAppConfiguration((hostingContext, config) =>
-                {
-                    config.AddJsonFile(settingsFile, optional: false, reloadOnChange: true);
-                })
                 .ConfigureServices((context, services) =>
                 {
                     // TODO: Register your services
-                    services.Configure<ScanOptions>(context.Configuration.GetSection("ScanOptions"));
-                    services.AddSingleton<IFileScanner, FileScanner>();
                     //services.AddSingleton<IMyService, MyService>();
                 })
-                .UseNavigation(ReactiveViewModelMappings.ViewModelMappings, RegisterRoutes)
+                .UseNavigation(RegisterRoutes)
             );
         MainWindow = builder.Window;
 
@@ -128,17 +95,25 @@ public partial class App : Application
     private static void RegisterRoutes(IViewRegistry views, IRouteRegistry routes)
     {
         views.Register(
-            new ViewMap(ViewModel: typeof(ShellModel)),
-            new ViewMap<MainPage, MainModel>(),
-            new DataViewMap<SecondPage, SecondModel, Entity>()
+            new ViewMap(ViewModel: typeof(ShellViewModel)),
+            new ViewMap<ProductsPage, ProductsViewModel>(),
+            new ViewMap<InputPage, InputViewModel>(),
+            new ViewMap<MainPage, MainViewModel>(),
+            new DataViewMap<SecondPage, SecondViewModel, Entity>()
         );
 
         routes.Register(
-            new RouteMap("", View: views.FindByViewModel<ShellModel>(),
+            new RouteMap("", View: views.FindByViewModel<ShellViewModel>(),
                 Nested:
                 [
-                    new ("Main", View: views.FindByViewModel<MainModel>(), IsDefault:true),
-                    new ("Second", View: views.FindByViewModel<SecondModel>()),
+                    new RouteMap("Main", View: views.FindByViewModel<MainViewModel>(), IsDefault: true,
+                        Nested:
+                        [
+                            new ("Input", View: views.FindByViewModel<InputViewModel>()),
+                            new ("Products", View: views.FindByViewModel<ProductsViewModel>()),
+                        ]
+                    ),
+                    new ("Second", View: views.FindByViewModel<SecondViewModel>()),
                 ]
             )
         );

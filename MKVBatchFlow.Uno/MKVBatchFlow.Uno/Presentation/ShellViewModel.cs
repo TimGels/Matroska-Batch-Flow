@@ -1,10 +1,10 @@
 namespace MKVBatchFlow.Uno.Presentation;
 
-public class ShellModel
+public class ShellViewModel
 {
     private readonly INavigator _navigator;
 
-    public ShellModel(
+    public ShellViewModel(
         INavigator navigator)
     {
         _navigator = navigator;

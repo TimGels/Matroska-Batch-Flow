@@ -1,6 +1,7 @@
-﻿using System.Text.Json;
-using MediaInfoLib;
+﻿using MediaInfoLib;
 using Microsoft.Extensions.Options;
+using System.Collections.Immutable;
+using System.Text.Json;
 
 namespace MKVBatchFlow.Core.Scanning
 {
