@@ -98,6 +98,7 @@ public partial class App : Application
             new ViewMap(ViewModel: typeof(ShellViewModel)),
             new ViewMap<ProductsPage, ProductsViewModel>(),
             new ViewMap<InputPage, InputViewModel>(),
+            new ViewMap<GeneralPage, GeneralViewModel>(),
             new ViewMap<MainPage, MainViewModel>(),
             new DataViewMap<SecondPage, SecondViewModel, Entity>()
         );
@@ -110,6 +111,7 @@ public partial class App : Application
                         Nested:
                         [
                             new ("Input", View: views.FindByViewModel<InputViewModel>()),
+                            new ("General", View: views.FindByViewModel<GeneralViewModel>()),
                             new ("Products", View: views.FindByViewModel<ProductsViewModel>()),
                         ]
                     ),

@@ -9,10 +9,16 @@
 
     <Grid utu:SafeArea.Insets="Bottom, Left, Right"
           uen:Region.Attached="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
         <NavigationView uen:Region.Attached="true"
                         PaneDisplayMode="Top"
                         IsBackButtonVisible="Collapsed"
-                        SettingsItem="Products">
+                        SettingsItem="Products"
+                        Grid.Row="0">
+            
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Input"
                                     uen:Region.Name="Input"
@@ -33,13 +39,6 @@
 
             <Grid uen:Region.Attached="True"
                   uen:Region.Navigator="Visibility">
-                <Grid uen:Region.Name="General"
-                      Visibility="Collapsed">
-                    <TextBlock Text="General"
-                               FontSize="24"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center" />
-                </Grid>
                 <Grid uen:Region.Name="Video"
                       Visibility="Collapsed">
                     <TextBlock Text="Video"
@@ -70,5 +69,9 @@
                 </Grid>
             </Grid>
         </NavigationView>
+        <Button Content="Process Files"
+                Grid.Row="1"
+                Margin="10,10,10,10"
+                HorizontalAlignment="Center" />
     </Grid>
 </Page>

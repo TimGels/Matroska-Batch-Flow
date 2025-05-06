@@ -14,7 +14,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="60"/>
+            <RowDefinition Height="20"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="40"/>
@@ -35,8 +35,6 @@
                       ScrollViewer.VerticalScrollBarVisibility="Auto"
                       HorizontalContentAlignment="Stretch"
                       SelectionMode="Extended"
-                      Loaded="OnLoaded"
-                      Unloaded="OnUnloaded"
                       Actions:ListViewSelectedItemsBehavior.BoundSelectedItems="{Binding SelectedFiles}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
@@ -67,7 +65,7 @@
               Grid.Column="2"
               Margin="10,10,10,10"
               VerticalAlignment="Top">
-            <Button Content="Remove Selection"
+            <Button Content="Remove"
                     Command="{Binding RemoveSelected}" />
         </Grid>
     </Grid>

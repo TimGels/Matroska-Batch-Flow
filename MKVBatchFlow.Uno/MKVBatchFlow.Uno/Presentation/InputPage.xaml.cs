@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using CommunityToolkit.Mvvm.DependencyInjection;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -13,9 +14,4 @@ public sealed partial class InputPage : Page
     {
         this.InitializeComponent();
     }
-
-    private void OnLoaded(object sender, RoutedEventArgs e) 
-        => Debug.WriteLine("LOADED");
-    private void OnUnloaded(object sender, RoutedEventArgs e) 
-        => Debug.WriteLine("UNLOADED");
 }
