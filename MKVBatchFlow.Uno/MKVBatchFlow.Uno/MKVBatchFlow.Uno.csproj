@@ -40,6 +40,9 @@
     <PackageReference Include="Uno.CommunityToolkit.WinUI.UI.Behaviors" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\MKVBatchFlow.Core\MKVBatchFlow.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <Page Update="Services\Actions\DropCommandAction.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -56,6 +59,26 @@
   </ItemGroup>
   <ItemGroup>
     <Page Update="Presentation\GeneralPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Presentation\VideoPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Controls\TrackSettingsControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Controls\UserControl1.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

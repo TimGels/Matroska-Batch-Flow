@@ -18,7 +18,7 @@
                         IsBackButtonVisible="Collapsed"
                         SettingsItem="Products"
                         Grid.Row="0">
-            
+
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Input"
                                     uen:Region.Name="Input"
@@ -39,13 +39,6 @@
 
             <Grid uen:Region.Attached="True"
                   uen:Region.Navigator="Visibility">
-                <Grid uen:Region.Name="Video"
-                      Visibility="Collapsed">
-                    <TextBlock Text="Video"
-                               FontSize="24"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center" />
-                </Grid>
                 <Grid uen:Region.Name="Audio"
                       Visibility="Collapsed">
                     <TextBlock Text="Audio"
@@ -62,16 +55,16 @@
                 </Grid>
                 <Grid uen:Region.Name="Output"
                       Visibility="Collapsed">
-                    <TextBlock Text="Output"
-                               FontSize="24"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center" />
+                    <TextBox TextWrapping="Wrap"
+                             Text="{Binding ScanResult}"
+                             AcceptsReturn="True"/>
                 </Grid>
             </Grid>
         </NavigationView>
         <Button Content="Process Files"
                 Grid.Row="1"
                 Margin="10,10,10,10"
-                HorizontalAlignment="Center" />
+                HorizontalAlignment="Center"
+                Command="{Binding ScanFiles}"/>
     </Grid>
 </Page>

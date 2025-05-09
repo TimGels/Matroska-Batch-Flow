@@ -16,14 +16,14 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
     [ObservableProperty]
     private ObservableCollection<IStorageItem> selectedFiles = [];
 
+    public ICommand RemoveSelected { get; }
+
     public InputViewModel(
         IStringLocalizer localizer,
         IOptions<AppConfig> appInfo)
     {
         RemoveSelected = new AsyncRelayCommand(RemoveSelectedFiles);
     }
-
-    public ICommand RemoveSelected { get; }
 
     private Task RemoveSelectedFiles()
     {

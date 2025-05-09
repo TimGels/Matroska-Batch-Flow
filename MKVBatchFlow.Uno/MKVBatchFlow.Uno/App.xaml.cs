@@ -1,3 +1,5 @@
+using MKVBatchFlow.Core;
+using MKVBatchFlow.Core.Scanning;
 using Uno.Resizetizer;
 
 namespace MKVBatchFlow.Uno;
@@ -59,7 +61,7 @@ public partial class App : Application
                 .UseConfiguration(configure: configBuilder =>
                     configBuilder
                         .EmbeddedSource<App>()
-                        .Section<AppConfig>()
+                        .Section<ScanOptions>()
                 )
                 // Enable localization (see appsettings.json for supported languages)
                 .UseLocalization()
@@ -74,11 +76,13 @@ public partial class App : Application
                     .AddTransient<DelegatingHandler, DebugHttpHandler>()
 #endif
                     .AddSingleton<IWeatherCache, WeatherCache>()
+                    
                     .AddRefitClient<IApiClient>(context))
                 .ConfigureServices((context, services) =>
                 {
                     // TODO: Register your services
                     //services.AddSingleton<IMyService, MyService>();
+                    services.AddSingleton<IFileScanner, FileScanner>();
                 })
                 .UseNavigation(RegisterRoutes)
             );
@@ -99,6 +103,7 @@ public partial class App : Application
             new ViewMap<ProductsPage, ProductsViewModel>(),
             new ViewMap<InputPage, InputViewModel>(),
             new ViewMap<GeneralPage, GeneralViewModel>(),
+            new ViewMap<VideoPage, VideoViewModel>(),
             new ViewMap<MainPage, MainViewModel>(),
             new DataViewMap<SecondPage, SecondViewModel, Entity>()
         );
@@ -112,6 +117,7 @@ public partial class App : Application
                         [
                             new ("Input", View: views.FindByViewModel<InputViewModel>()),
                             new ("General", View: views.FindByViewModel<GeneralViewModel>()),
+                            new ("Video", View: views.FindByViewModel<VideoViewModel>()),
                             new ("Products", View: views.FindByViewModel<ProductsViewModel>()),
                         ]
                     ),
