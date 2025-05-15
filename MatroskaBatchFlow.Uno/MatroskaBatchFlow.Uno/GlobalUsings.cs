@@ -1,0 +1,15 @@
+global using System.Collections.Immutable;
+global using CommunityToolkit.Mvvm.ComponentModel;
+global using CommunityToolkit.Mvvm.Input;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Hosting;
+global using Microsoft.Extensions.Localization;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Options;
+global using MatroskaBatchFlow.Uno.DataContracts;
+global using MatroskaBatchFlow.Uno.DataContracts.Serialization;
+global using MatroskaBatchFlow.Uno.Models;
+global using MatroskaBatchFlow.Uno.Presentation;
+global using MatroskaBatchFlow.Uno.Services.Caching;
+global using MatroskaBatchFlow.Uno.Services.Endpoints;
+global using ApplicationExecutionState = Windows.ApplicationModel.Activation.ApplicationExecutionState;

@@ -1,0 +1,23 @@
+﻿<Page
+    x:Class="MatroskaBatchFlow.Uno.Presentation.VideoPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MatroskaBatchFlow.Uno.Presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:Controls="using:MatroskaBatchFlow.Uno.Presentation.Controls"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <Controls:TrackSettingsControl IsRemoveTrack="{Binding CanEditDefaultTrack}"
+                                       IsDefaultTrack="{Binding CanEditDefaultTrack}"
+                                       IsForcedTrack="{Binding CanEditDefaultTrack}"
+                                       ChangeEnabledTrack="{Binding ChangeEnabledTrack}"
+                                       ChangeDefaultTrack="{Binding ChangeDefaultTrack}"
+                                       ChangeForcedTrack="{Binding ChangeForcedTrack}"
+                                       TrackName="{Binding TrackName}"
+                                       Tracks="{Binding VideoTracks, Mode=TwoWay}"
+                                       AvailableLanguages="{Binding Languages, Mode=OneWay}"/>
+    </Grid>
+</Page>

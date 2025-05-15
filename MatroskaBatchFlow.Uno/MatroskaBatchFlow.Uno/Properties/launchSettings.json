@@ -1,0 +1,30 @@
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:8080",
+      "sslPort": 0
+    }
+  },
+  "profiles": {
+    "MatroskaBatchFlow.Uno (WinAppSDK Unpackaged)": {
+      "commandName": "Project",
+      "compatibleTargetFramework": "windows"
+    },
+    "MatroskaBatchFlow.Uno (WinAppSDK Packaged)": {
+      "commandName": "MsixPackage",
+      "compatibleTargetFramework": "windows"
+    },
+    "MatroskaBatchFlow.Uno (Desktop)": {
+      "commandName": "Project",
+      "compatibleTargetFramework": "desktop"
+    },
+    "MatroskaBatchFlow.Uno (Desktop WSL2)": {
+      "commandName": "WSL2",
+      "commandLineArgs": "{ProjectDir}/bin/Debug/net9.0-desktop/MatroskaBatchFlow.Uno.dll",
+      "distributionName": "",
+      "compatibleTargetFramework": "desktop"
+    }
+  }
+}

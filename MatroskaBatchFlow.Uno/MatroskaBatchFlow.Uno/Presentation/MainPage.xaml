@@ -1,0 +1,60 @@
+﻿<Page x:Class="MatroskaBatchFlow.Uno.Presentation.MainPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:MatroskaBatchFlow.Uno.Presentation"
+      xmlns:uen="using:Uno.Extensions.Navigation.UI"
+      xmlns:utu="using:Uno.Toolkit.UI"
+      NavigationCacheMode="Required"
+      Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid utu:SafeArea.Insets="Bottom, Left, Right"
+          uen:Region.Attached="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <NavigationView uen:Region.Attached="true"
+                        PaneDisplayMode="Top"
+                        IsBackButtonVisible="Collapsed"
+                        Grid.Row="0">
+
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Input"
+                                    uen:Region.Name="Input"
+                                    IsSelected="True"/>
+                <NavigationViewItem Content="General"
+                                    uen:Region.Name="General" />
+                <NavigationViewItem Content="Video"
+                                    uen:Region.Name="Video" />
+                <NavigationViewItem Content="Audio"
+                                    uen:Region.Name="Audio" />
+                <NavigationViewItem Content="Subtitles"
+                                    uen:Region.Name="Subtitles" />
+                <NavigationViewItem Content="Output"
+                                    uen:Region.Name="Output" />
+            </NavigationView.MenuItems>
+
+            <Grid uen:Region.Attached="True"
+                  uen:Region.Navigator="Visibility">
+                <Grid uen:Region.Name="Subtitles"
+                      Visibility="Collapsed">
+                    <TextBlock Text="Subtitles"
+                               FontSize="24"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Grid>
+                <Grid uen:Region.Name="Output"
+                      Visibility="Collapsed">
+                    <TextBox TextWrapping="Wrap"
+                             Text="{Binding ScanResult}"
+                             AcceptsReturn="True"/>
+                </Grid>
+            </Grid>
+        </NavigationView>
+        <Button Content="Process Files"
+                Grid.Row="1"
+                Margin="10,10,10,10"
+                HorizontalAlignment="Center"
+                Command="{Binding ScanFiles}"/>
+    </Grid>
+</Page>
