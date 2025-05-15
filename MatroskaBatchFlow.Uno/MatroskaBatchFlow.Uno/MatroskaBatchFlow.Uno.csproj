@@ -49,6 +49,9 @@
       SkiaRenderer;
     </UnoFeatures>
     <Platforms>AnyCPU;x64</Platforms>
+    <PackageCertificateThumbprint>E620B8DF242BDECF6EF3C921BED1FCC5F8E819EF</PackageCertificateThumbprint>
+    <PackageCertificateKeyFile>MatroskaBatchFlow.Uno_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Presentation\AudioPage.xaml" />

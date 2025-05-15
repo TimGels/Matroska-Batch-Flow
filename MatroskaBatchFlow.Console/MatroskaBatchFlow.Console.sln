@@ -5,7 +5,7 @@ VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKVBatchFlow.Console", "MKVBatchFlow.Console.csproj", "{9222A42C-C1F9-0DA1-CAB8-96F34EBD17EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKVBatchFlow.Core", "..\MKVBatchFlow.Core\MKVBatchFlow.Core.csproj", "{91081367-A262-5599-300A-550A83C14C8D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatroskaBatchFlow.Core", "..\MatroskaBatchFlow.Core\MatroskaBatchFlow.Core.csproj", "{BA5D5648-76A5-16C6-D17E-86A0FB03B119}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{9222A42C-C1F9-0DA1-CAB8-96F34EBD17EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9222A42C-C1F9-0DA1-CAB8-96F34EBD17EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9222A42C-C1F9-0DA1-CAB8-96F34EBD17EC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{91081367-A262-5599-300A-550A83C14C8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{91081367-A262-5599-300A-550A83C14C8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{91081367-A262-5599-300A-550A83C14C8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{91081367-A262-5599-300A-550A83C14C8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA5D5648-76A5-16C6-D17E-86A0FB03B119}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA5D5648-76A5-16C6-D17E-86A0FB03B119}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA5D5648-76A5-16C6-D17E-86A0FB03B119}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA5D5648-76A5-16C6-D17E-86A0FB03B119}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

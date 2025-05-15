@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>MKVBatchFlow.Console</RootNamespace>
+    <RootNamespace>MatroskaBatchFlow.Console</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MKVBatchFlow.Core\MKVBatchFlow.Core.csproj" />
+    <ProjectReference Include="..\MatroskaBatchFlow.Core\MatroskaBatchFlow.Core.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,12 +1,12 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using MatroskaBatchFlow.Core;
+using MatroskaBatchFlow.Core.Enums;
+using MatroskaBatchFlow.Core.Models.AppSettings;
+using MatroskaBatchFlow.Core.Scanning;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using MKVBatchFlow.Core;
-using MKVBatchFlow.Core.Enums;
-using MKVBatchFlow.Core.Scanning;
 using System.Text.Json;
-using static MKVBatchFlow.Core.BatchConfiguration;
 
 const string settingsFile = "appsettings.json";
 
