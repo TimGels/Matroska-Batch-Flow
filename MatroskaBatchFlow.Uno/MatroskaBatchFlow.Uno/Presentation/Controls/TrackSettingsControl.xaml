@@ -61,14 +61,12 @@
                            VerticalAlignment="Center"/>
                 <RadioButton Content="Yes"
                              Grid.Column="1"
-                             GroupName="IsDefaultTrackGroup"
-                             IsChecked="{x:Bind IsDefaultTrack, Mode=TwoWay}"
+                             IsChecked="{x:Bind SelectedTrack.Default, Mode=TwoWay}"
                              MinWidth="0"
                              Margin="0,0,20,0"/>
                 <RadioButton Content="No"
                              Grid.Column="2"
-                             GroupName="IsDefaultTrackGroup"
-                             IsChecked="{x:Bind IsDefaultTrack, Mode=TwoWay, Converter={StaticResource InverseBoolConverter}}"
+                             IsChecked="{x:Bind SelectedTrack.Default, Mode=TwoWay, Converter={StaticResource InverseBoolConverter}}"
                              MinWidth="0"/>
             </Grid>
         </StackPanel>
@@ -86,14 +84,12 @@
                            VerticalAlignment="Center" />
                 <RadioButton Content="Yes"
                              Grid.Column="1"
-                             GroupName="IsForcedTrackGroup"
-                             IsChecked="{x:Bind IsForcedTrack, Mode=TwoWay}"
+                             IsChecked="{x:Bind SelectedTrack.Forced, Mode=TwoWay}"
                              MinWidth="0"
                              Margin="0,0,20,0" />
                 <RadioButton Content="No"
                              Grid.Column="2"
-                             GroupName="IsForcedTrackGroup"
-                             IsChecked="{x:Bind IsForcedTrack, Mode=TwoWay, Converter={StaticResource InverseBoolConverter}}"
+                             IsChecked="{x:Bind SelectedTrack.Forced, Mode=TwoWay, Converter={StaticResource InverseBoolConverter}}"
                              MinWidth="0" />
             </Grid>
         </StackPanel>
@@ -110,8 +106,7 @@
                            Grid.Column="0"
                            VerticalAlignment="Center"/>
                 <TextBox Grid.Column="1"
-                         IsEnabled="{x:Bind ChangeTrackName, Mode=OneWay}"
-                         Text="{x:Bind TrackName, Mode=TwoWay}"/>
+                         Text="{x:Bind SelectedTrack.Name, Mode=TwoWay}"/>
             </Grid>
         </StackPanel>
 

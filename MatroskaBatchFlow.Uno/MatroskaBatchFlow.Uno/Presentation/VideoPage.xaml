@@ -10,14 +10,16 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <Controls:TrackSettingsControl IsRemoveTrack="{Binding CanEditDefaultTrack}"
-                                       IsDefaultTrack="{Binding CanEditDefaultTrack}"
-                                       IsForcedTrack="{Binding CanEditDefaultTrack}"
-                                       ChangeEnabledTrack="{Binding ChangeEnabledTrack}"
-                                       ChangeDefaultTrack="{Binding ChangeDefaultTrack}"
-                                       ChangeForcedTrack="{Binding ChangeForcedTrack}"
-                                       TrackName="{Binding TrackName}"
-                                       Tracks="{Binding VideoTracks, Mode=TwoWay}"
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Controls:TrackSettingsControl Grid.Row="0" Tracks="{Binding VideoTracks, Mode=TwoWay}"
                                        AvailableLanguages="{Binding Languages, Mode=OneWay}"/>
+        <Controls:TrackSettingsControl Grid.Row="1" Tracks="{Binding VideoTracks2, Mode=TwoWay}"
+                               AvailableLanguages="{Binding Languages, Mode=OneWay}"/>
+
+        <Button Grid.Row="2" Content="Change track names" Command="{Binding ChangeTrackNames}" />
     </Grid>
 </Page>

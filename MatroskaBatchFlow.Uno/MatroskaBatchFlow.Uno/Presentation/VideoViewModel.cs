@@ -1,11 +1,13 @@
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using MatroskaBatchFlow.Core;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Uno.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
-public partial class VideoViewModel: ObservableObject
+public partial class VideoViewModel : ObservableObject
 {
     [ObservableProperty]
     private bool isDefaultTrack = true;
@@ -29,13 +31,19 @@ public partial class VideoViewModel: ObservableObject
     private string trackName = string.Empty;
 
     [ObservableProperty]
-    private IList<TrackConfiguration>? videoTracks = default;
+    private ObservableCollection<TrackConfiguration>? videoTracks = default;
+
+    [ObservableProperty]
+    private ObservableCollection<TrackConfiguration>? videoTracks2 = default;
 
     [ObservableProperty]
     private ImmutableList<MatroskaLanguageOption> languages;
 
-    public VideoViewModel(ILanguageProvider languageProvider)
+    public ICommand ChangeTrackNames { get; }
+
+    public VideoViewModel(ILanguageProvider languageProvider, TrackConfigurationWrapper trackConfigurationWrapper)
     {
+        ChangeTrackNames = new RelayCommand(ChangeTrackNamesUpdater);
         languages = languageProvider.Languages;
         VideoTracks = [
             new TrackConfiguration
@@ -69,6 +77,44 @@ public partial class VideoViewModel: ObservableObject
                 Remove = false
             },
         ];
+
+        VideoTracks2 = [
+            new TrackConfiguration
+            {
+                TrackType = TrackType.Video,
+                Name = "Main Video 4",
+                Position = 1,
+                Language = "und",
+                Default = true,
+                Forced = false,
+                Remove = false
+            },
+            new TrackConfiguration
+            {
+                TrackType = TrackType.Video,
+                Position = 2,
+                Name = "Main Video 5",
+                Language = "und",
+                Default = true,
+                Forced = false,
+                Remove = false
+            },
+            new TrackConfiguration
+            {
+                TrackType = TrackType.Video,
+                Position = 3,
+                Name = "Main Video 6",
+                Language = "eng",
+                Default = true,
+                Forced = false,
+                Remove = false
+            },
+        ];
+    }
+
+    private void ChangeTrackNamesUpdater()
+    {
+        VideoTracks[0].Name = "idk bro lol";
     }
 
     // This is auto-called when IsDefaultTrackEnabled changes

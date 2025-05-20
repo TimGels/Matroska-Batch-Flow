@@ -110,7 +110,7 @@ public partial class App : Application
             new ViewMap<InputPage, InputViewModel>(),
             new ViewMap<GeneralPage, GeneralViewModel>(),
             new ViewMap<VideoPage, VideoViewModel>(),
-            new ViewMap<AudioPage, VideoViewModel>(),
+            new ViewMap<AudioPage, AudioViewModel>(),
             new ViewMap<MainPage, MainViewModel>(),
             new DataViewMap<SecondPage, SecondViewModel, Entity>()
         );

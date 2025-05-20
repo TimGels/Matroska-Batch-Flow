@@ -10,8 +10,7 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <Controls:TrackSettingsControl
-            Tracks="{Binding AudioTracks, Mode=TwoWay}"
-            AvailableLanguages="{Binding Languages, Mode=OneWay}"/>
+        <Controls:TrackSettingsControl Tracks="{Binding AudioTracks, Mode=TwoWay}"
+                                       AvailableLanguages="{Binding Languages, Mode=OneWay}"/>
     </Grid>
 </Page>
