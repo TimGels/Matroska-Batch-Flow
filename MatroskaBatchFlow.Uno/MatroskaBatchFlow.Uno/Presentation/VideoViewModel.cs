@@ -14,7 +14,7 @@ public partial class VideoViewModel : ObservableObject
     private bool _isEnabledTrack = true;
     private bool _isForcedTrack = true;
     private string _trackName = string.Empty;
-
+    public bool IsTrackSelected => SelectedTrack is not null && VideoTracks.Count > 0;
     public ImmutableList<MatroskaLanguageOption> Languages
     {
         get => _languages;
@@ -39,6 +39,7 @@ public partial class VideoViewModel : ObservableObject
             {
                 _videoTracks = value;
                 OnPropertyChanged(nameof(VideoTracks));
+                OnPropertyChanged(nameof(IsTrackSelected));
             }
         }
     }
@@ -143,6 +144,8 @@ public partial class VideoViewModel : ObservableObject
             },
         ]);
 
+        SelectedTrack = _batchConfiguration.VideoTracks.FirstOrDefault();
+
         SetupEventHandlers();
 
         // Initialize the VideoTracks collection with the tracks from the batch configuration.
@@ -190,6 +193,9 @@ public partial class VideoViewModel : ObservableObject
     /// <param name="newValue"></param>
     partial void OnSelectedTrackChanged(TrackConfiguration? oldValue, TrackConfiguration? newValue)
     {
+        // Raise event to re-calculate IsTrackSelected
+        OnPropertyChanged(nameof(IsTrackSelected));
+
         if (newValue != null)
         {
             // Synchronize properties with the selected track

@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Parsers\**" />
+    <EmbeddedResource Remove="Parsers\**" />
+    <None Remove="Parsers\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="MediaInfo.dll" />
   </ItemGroup>
 
@@ -25,11 +31,6 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.4" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.4" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.4" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Parsers\" />
-    <Folder Include="Scanning\" />
   </ItemGroup>
 
 </Project>

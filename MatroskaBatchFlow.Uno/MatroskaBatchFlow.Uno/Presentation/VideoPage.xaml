@@ -19,7 +19,7 @@
         <!--Dropdown menu Tracks-->
         <StackPanel Grid.Row="0">
             <ComboBox ItemsSource="{Binding VideoTracks, Mode=OneWay}"
-                      SelectedItem="{Binding SelectedTrack, Mode=TwoWay}" SelectedIndex="1">
+                      SelectedItem="{Binding SelectedTrack, Mode=TwoWay}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="BatchConfig:TrackConfiguration">
                         <StackPanel Orientation="Horizontal">
@@ -34,11 +34,13 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
         </StackPanel>
+        
         <!--Edit-->
         <Controls:TrackSettingsControl Grid.Row="1"
                                        IsDefaultTrack="{Binding IsDefaultTrack, Mode=TwoWay}"
                                        IsForcedTrack="{Binding IsForcedTrack, Mode=TwoWay}"
-                                       AvailableLanguages="{Binding Languages, Mode=OneWay}"/>
+                                       AvailableLanguages="{Binding Languages, Mode=OneWay}"
+                                       IsEnabled="{Binding IsTrackSelected}"/>
         <!--<Controls:TrackSettingsControl Grid.Row="1" Tracks="{Binding VideoTracks2, Mode=TwoWay}"
                                        AvailableLanguages="{Binding Languages, Mode=OneWay}"/>-->
 
