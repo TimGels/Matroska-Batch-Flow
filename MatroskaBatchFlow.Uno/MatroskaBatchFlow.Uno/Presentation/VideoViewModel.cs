@@ -165,6 +165,11 @@ public partial class VideoViewModel : ObservableObject
             track.PropertyChanged += OnTrackPropertyChanged;
         }
 
+        // Subscribe to property changes for the VideoTracks collection itself.
+        // This ensures that any changes to the VideoTracks collection in the ViewModel
+        // (such as adding, removing, or reordering tracks) are immediately reflected
+        // in the BatchConfiguration's VideoTracks property. This keeps the ViewModel
+        // and the underlying batch configuration in sync, regardless of where the change originates.
         VideoTracks.CollectionChanged += (s, e) =>
         {
             _batchConfiguration.VideoTracks = VideoTracks;
