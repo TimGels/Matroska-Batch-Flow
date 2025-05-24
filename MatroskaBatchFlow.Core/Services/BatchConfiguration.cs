@@ -10,7 +10,6 @@ namespace MatroskaBatchFlow.Core.Services
     {
         private string _directoryPath = string.Empty;
         private string _title = string.Empty;
-        private string _version = string.Empty;
         private IList<TrackConfiguration> _audioTracks = [];
         private IList<TrackConfiguration> _videoTracks = [];
         private IList<TrackConfiguration> _subtitleTracks = [];
