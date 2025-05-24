@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:Controls="using:MatroskaBatchFlow.Uno.Presentation.Controls"
+    xmlns:BatchConfig="using:MatroskaBatchFlow.Core.Services"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -15,11 +16,32 @@
             <RowDefinition />
             <RowDefinition />
         </Grid.RowDefinitions>
-        <Controls:TrackSettingsControl Grid.Row="0" Tracks="{Binding VideoTracks, Mode=TwoWay}"
+        <!--Dropdown menu Tracks-->
+        <StackPanel Grid.Row="0">
+            <ComboBox ItemsSource="{Binding VideoTracks, Mode=OneWay}"
+                      SelectedItem="{Binding SelectedTrack, Mode=TwoWay}" SelectedIndex="1">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="BatchConfig:TrackConfiguration">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding TrackType}"/>
+                            <TextBlock Text="Track"
+                                       Margin="5,0,0,0"/>
+                            <TextBlock Text="{Binding Position}"
+                                       Margin="10,0,0,0"
+                                       Opacity="0.7"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+        <!--Edit-->
+        <Controls:TrackSettingsControl Grid.Row="1"
+                                       IsDefaultTrack="{Binding IsDefaultTrack, Mode=TwoWay}"
+                                       IsForcedTrack="{Binding IsForcedTrack, Mode=TwoWay}"
                                        AvailableLanguages="{Binding Languages, Mode=OneWay}"/>
-        <Controls:TrackSettingsControl Grid.Row="1" Tracks="{Binding VideoTracks2, Mode=TwoWay}"
-                               AvailableLanguages="{Binding Languages, Mode=OneWay}"/>
+        <!--<Controls:TrackSettingsControl Grid.Row="1" Tracks="{Binding VideoTracks2, Mode=TwoWay}"
+                                       AvailableLanguages="{Binding Languages, Mode=OneWay}"/>-->
 
-        <Button Grid.Row="2" Content="Change track names" Command="{Binding ChangeTrackNames}" />
+        <Button Grid.Row="2" Content="Clear Video Tracks" Command="{Binding ClearVideoTracks}" />
     </Grid>
 </Page>

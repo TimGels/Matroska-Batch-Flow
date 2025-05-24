@@ -1,15 +1,15 @@
-﻿using MediaInfoLib;
+﻿using MatroskaBatchFlow.Core.Models.AppSettings;
+using MediaInfoLib;
 using Microsoft.Extensions.Options;
-using MatroskaBatchFlow.Core.Models.AppSettings;
 using System.Collections.Immutable;
 using System.Text.Json;
 
-namespace MatroskaBatchFlow.Core.Scanning
+namespace MatroskaBatchFlow.Core.Services
 {
     /// <summary>
     /// Scans directories for files based on specified options and analyzes them using MediaInfo.
     /// </summary>
-    public class FileScanner(IOptionsMonitor<ScanOptions> optionsMonitor) : IFileScanner
+    public class FileScanner(IOptionsMonitor<ScanOptions> optionsMonitor, IBatchConfiguration batchConfiguration) : IFileScanner
     {
         private readonly ScanOptions _options = optionsMonitor.CurrentValue;
 

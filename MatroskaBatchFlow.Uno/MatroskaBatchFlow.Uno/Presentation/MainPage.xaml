@@ -16,12 +16,12 @@
         <NavigationView uen:Region.Attached="true"
                         PaneDisplayMode="Top"
                         IsBackButtonVisible="Collapsed"
-                        Grid.Row="0">
+                        Grid.Row="0" >
 
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Input"
                                     uen:Region.Name="Input"
-                                    IsSelected="True"/>
+                                    IsSelected="True" />
                 <NavigationViewItem Content="General"
                                     uen:Region.Name="General" />
                 <NavigationViewItem Content="Video"

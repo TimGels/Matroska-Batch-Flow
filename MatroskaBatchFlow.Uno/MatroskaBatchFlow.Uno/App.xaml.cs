@@ -1,5 +1,4 @@
 using MatroskaBatchFlow.Core.Models.AppSettings;
-using MatroskaBatchFlow.Core.Scanning;
 using MatroskaBatchFlow.Core.Services;
 using Uno.Extensions.Configuration;
 using Uno.Resizetizer;
@@ -89,6 +88,7 @@ public partial class App : Application
                     //services.AddSingleton<IMyService, MyService>();
                     services.AddSingleton<ILanguageProvider, LanguageProvider>();
                     services.AddSingleton<IFileScanner, FileScanner>();
+                    services.AddSingleton<IBatchConfiguration, BatchConfiguration>();
                 })
                 .UseNavigation(RegisterRoutes)
             );

@@ -1,6 +1,5 @@
 using System.Text.Json;
-using MatroskaBatchFlow.Core.Scanning;
-using MatroskaBatchFlow.Uno.DataContracts;
+using MatroskaBatchFlow.Core.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
