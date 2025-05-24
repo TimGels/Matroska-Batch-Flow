@@ -143,6 +143,8 @@ public partial class VideoViewModel : ObservableObject
             },
         ]);
 
+        SelectedTrack = _batchConfiguration.VideoTracks.FirstOrDefault();
+
         SetupEventHandlers();
 
         // Initialize the VideoTracks collection with the tracks from the batch configuration.

@@ -19,7 +19,7 @@
         <!--Dropdown menu Tracks-->
         <StackPanel Grid.Row="0">
             <ComboBox ItemsSource="{Binding VideoTracks, Mode=OneWay}"
-                      SelectedItem="{Binding SelectedTrack, Mode=TwoWay}" SelectedIndex="1">
+                      SelectedItem="{Binding SelectedTrack, Mode=TwoWay}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="BatchConfig:TrackConfiguration">
                         <StackPanel Orientation="Horizontal">
