@@ -1,6 +1,6 @@
 ﻿using MatroskaBatchFlow.Core.Enums;
 
-namespace MatroskaBatchFlow.Core.Services.RuleEngine
+namespace MatroskaBatchFlow.Core.Services.TrackNamingRuleEngine
 {
     internal class SubtitleTrackNamingRule : IFileProcessingRule
     {
@@ -19,7 +19,7 @@ namespace MatroskaBatchFlow.Core.Services.RuleEngine
             if (scannedFile?.Result?.Media?.Track == null || batchConfig?.SubtitleTracks == null)
                 return;
 
-            foreach (var track in scannedFile.Result.Media.Track.Where(t => t.Type == "Text"))
+            foreach (var track in scannedFile.Result.Media.Track.Where(t => t.Type == TrackType.Text))
             {
                 if (!_supportedFormatMappings.TryGetValue(track.Format ?? string.Empty, out var name))
                     continue;
@@ -28,24 +28,11 @@ namespace MatroskaBatchFlow.Core.Services.RuleEngine
                 if (!int.TryParse(track.StreamKindPos, out int position))
                     continue;
 
-                var config = new TrackConfiguration
+                var config = batchConfig.SubtitleTracks.FirstOrDefault(t => t.Position == position);
+                if (config != null)
                 {
-                    TrackType = TrackType.Subtitle,
-                    Position = position,
-                    Name = name,
-                    Language = track.Language ?? string.Empty,
-                    Default = track.Default == "Yes",
-                    Forced = track.Forced == "Yes",
-                    Remove = false
-                };
-
-                batchConfig.SubtitleTracks.Add(config);
-
-                //var config = batchConfig.SubtitleTracks.FirstOrDefault(t => t.Position == position);
-                //if (config != null)
-                //{
-                //    config.Name = name;
-                //}
+                    config.Name = name;
+                }
             }
         }
     }

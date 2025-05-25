@@ -1,9 +1,11 @@
-﻿using MatroskaBatchFlow.Core.Models.AppSettings;
-using MatroskaBatchFlow.Core.Services.RuleEngine;
+﻿using MatroskaBatchFlow.Core.Enums;
+using MatroskaBatchFlow.Core.Models.AppSettings;
+using MatroskaBatchFlow.Core.Services.TrackNamingRuleEngine;
 using MediaInfoLib;
 using Microsoft.Extensions.Options;
 using System.Collections.Immutable;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MatroskaBatchFlow.Core.Services
 {
@@ -12,10 +14,25 @@ namespace MatroskaBatchFlow.Core.Services
     /// </summary>
     public class FileScanner(IOptionsMonitor<ScanOptions> optionsMonitor, IBatchConfiguration batchConfiguration) : IFileScanner
     {
+        /// <summary>
+        /// The options used for scanning directories and filtering files.
+        /// </summary>
         private readonly ScanOptions _options = optionsMonitor.CurrentValue;
 
-        // Holds the list of scanned files
+        /// <summary>
+        /// List of scanned files containing their paths and MediaInfo parsed results.
+        /// </summary>
         private readonly List<ScannedFileInfo> _scannedFiles = [];
+
+        /// <summary>
+        /// List of file processing rules for applying automatic track names based on their type.
+        /// </summary>
+        private static readonly List<IFileProcessingRule> _trackNameRules =
+        [
+            new SubtitleTrackNamingRule(),
+            new AudioTrackNamingRule(),
+            new VideoTrackNamingRule(),
+        ];
 
         /// <summary>
         /// Scans the directory for files that match the specified filtering options.
@@ -23,24 +40,26 @@ namespace MatroskaBatchFlow.Core.Services
         /// <returns>A collection of file paths that match the filtering criteria.</returns>
         public async Task<IEnumerable<ScannedFileInfo>> ScanAsync(FileInfo[] files)
         {
-            EnsureDirectoryExists();
-            //var files = await Task.Run(() => GetFilteredFiles());
-            var scannedFiles = await AnalyzeFilesWithMediaInfoAsync(files.Select(f => f.FullName));
-            // Store the scanned files in the private list
-            _scannedFiles.Clear();
-            _scannedFiles.AddRange(scannedFiles);
+            if (files == null || files.Length == 0)
+                throw new ArgumentException("No files provided for scanning.", nameof(files));
 
-            var rules = new List<IFileProcessingRule>
-                {
-                    new SubtitleTrackNamingRule(),
-                    // Add other rules here
-                };
-            var engine = new FileProcessingRuleEngine(rules);
+            // Clear previous track configurations to avoid accumulation
+            batchConfiguration.Clear();
+
+
+            var scannedFiles = await AnalyzeFilesWithMediaInfoAsync(files.Select(f => f.FullName));
+
+            AddTracksToBatchConfiguration(scannedFiles);
+
+            var engine = new FileProcessingRuleEngine(_trackNameRules);
 
             foreach (var scannedFile in scannedFiles)
             {
                 engine.ApplyRules(scannedFile, batchConfiguration);
             }
+
+            _scannedFiles.Clear();
+            _scannedFiles.AddRange(scannedFiles);
             return scannedFiles;
         }
 
@@ -69,7 +88,11 @@ namespace MatroskaBatchFlow.Core.Services
         /// <returns>A <see cref="ScannedFileInfo"/> object.</returns>
         private static ScannedFileInfo ParseMediaInfoJson(string json, string filePath)
         {
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                NumberHandling = JsonNumberHandling.AllowReadingFromString
+            };
             var mediaInfoResult = JsonSerializer.Deserialize<MediaInfoResult>(json, options)
                 ?? throw new InvalidOperationException("Failed to deserialize MediaInfo JSON.");
 
@@ -144,5 +167,31 @@ namespace MatroskaBatchFlow.Core.Services
         /// </summary>
         /// <returns>The list of scanned files.</returns>
         public IEnumerable<ScannedFileInfo> GetScannedFiles() => _scannedFiles;
+
+        /// <summary>
+        /// Adds tracks to the batch configuration based on the scanned files. 
+        /// Only tracks that are editable (configurable within the batch configuration) are added.
+        /// </summary>
+        /// <param name="scannedFiles">The collection of scanned files.</param>
+        private void AddTracksToBatchConfiguration(IEnumerable<ScannedFileInfo> scannedFileInfos)
+        {
+            // Collects all editable (configurable within the batch configuration) tracks from the scanned files.
+            var editableTracks = scannedFileInfos
+                .SelectMany(sfi => sfi.Result?.Media?.Track ?? Enumerable.Empty<MediaInfoResult.MediaInfo.TrackInfo>())
+                .Where(track => track.Type.IsEditable());
+
+            // Adds each editable track to the batch configuration.
+            foreach (var track in editableTracks)
+            {
+                var trackConfiguration = new TrackConfiguration
+                {
+                    TrackType = track.Type,
+                    Position = track.StreamKindID,
+                    Language = track.Language,
+                };
+                // Retrieves a TrackConfiguration list of a TrackType, and adds a new TrackConfiguration entry to it.
+                batchConfiguration.GetTrackListForType(trackConfiguration.TrackType).Add(trackConfiguration);
+            }
+        }
     }
 }

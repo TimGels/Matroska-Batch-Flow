@@ -1,4 +1,5 @@
 ﻿using MatroskaBatchFlow.Core.Enums;
+using System.Collections.Immutable;
 using System.ComponentModel;
 
 namespace MatroskaBatchFlow.Core.Services
@@ -13,6 +14,7 @@ namespace MatroskaBatchFlow.Core.Services
         private IList<TrackConfiguration> _audioTracks = [];
         private IList<TrackConfiguration> _videoTracks = [];
         private IList<TrackConfiguration> _subtitleTracks = [];
+        private static readonly ImmutableList<TrackConfiguration> _emptyTrackList = [];
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -86,9 +88,7 @@ namespace MatroskaBatchFlow.Core.Services
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        /// <summary>
         /// <inheritdoc />
-        /// </summary>
         public void Clear()
         {
             DirectoryPath = string.Empty;
@@ -96,6 +96,18 @@ namespace MatroskaBatchFlow.Core.Services
             AudioTracks.Clear();
             VideoTracks = [];
             SubtitleTracks.Clear();
+        }
+
+        /// <inheritdoc />
+        public IList<TrackConfiguration> GetTrackListForType(TrackType trackType)
+        {
+            return trackType switch
+            {
+                TrackType.Audio => AudioTracks,
+                TrackType.Video => VideoTracks,
+                TrackType.Text => SubtitleTracks,
+                _ => _emptyTrackList
+            };
         }
     }
 

@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using MatroskaBatchFlow.Core.Enums;
+using System.Text.Json.Serialization;
 using static MatroskaBatchFlow.Core.MediaInfoResult;
 using static MatroskaBatchFlow.Core.MediaInfoResult.MediaInfo;
 using static MatroskaBatchFlow.Core.MediaInfoResult.MediaInfo.TrackInfo;
@@ -56,10 +57,11 @@ namespace MatroskaBatchFlow.Core
             /// </summary>
             public sealed record TrackInfo(
                 [property: JsonPropertyName("@type")]
+                [property: JsonConverter(typeof(JsonStringEnumConverter))]
                 /// <summary>
                 /// The type of the track (e.g., audio, video, subtitle).
                 /// </summary>
-                string Type,
+                TrackType Type,
 
                 /// <summary>
                 /// The order in which the track appears.
@@ -89,7 +91,7 @@ namespace MatroskaBatchFlow.Core
                 /// <summary>
                 /// The stream ID for the track.
                 /// </summary>
-                string StreamKindID,
+                int StreamKindID,
 
                 /// <summary>
                 /// The position of the track stream.

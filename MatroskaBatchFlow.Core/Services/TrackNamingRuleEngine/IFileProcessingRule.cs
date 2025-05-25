@@ -1,4 +1,4 @@
-﻿namespace MatroskaBatchFlow.Core.Services.RuleEngine
+﻿namespace MatroskaBatchFlow.Core.Services.TrackNamingRuleEngine
 {
     /// <summary>
     /// Represents a rule that processes a scanned file and updates the batch configuration accordingly.
