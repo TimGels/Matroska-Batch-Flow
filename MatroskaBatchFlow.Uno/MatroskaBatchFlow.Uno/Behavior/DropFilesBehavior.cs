@@ -1,4 +1,4 @@
-using MatroskaBatchFlow.Uno.Behavior;
+using Microsoft.UI.Xaml.Data;
 using Windows.ApplicationModel.DataTransfer;
 
 namespace MatroskaBatchFlow.Uno.Behavior;
@@ -7,6 +7,7 @@ namespace MatroskaBatchFlow.Uno.Behavior;
 /// Provides behavior for enabling drag-and-drop file operations on UI elements.
 /// Special thanks to https://stackoverflow.com/a/75007093
 /// </summary>
+[Bindable]
 public class DropFilesBehavior
 {
     /// <summary>

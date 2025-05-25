@@ -23,7 +23,11 @@
     "MatroskaBatchFlow.Uno (Desktop WSL2)": {
       "commandName": "WSL2",
       "commandLineArgs": "{ProjectDir}/bin/Debug/net9.0-desktop/MatroskaBatchFlow.Uno.dll",
-      "distributionName": "",
+      "environmentVariables": {
+        "DISPLAY": ":0",
+        "GDK_GL": "gles"
+      },
+      "distributionName": "Ubuntu",
       "compatibleTargetFramework": "desktop"
     }
   }

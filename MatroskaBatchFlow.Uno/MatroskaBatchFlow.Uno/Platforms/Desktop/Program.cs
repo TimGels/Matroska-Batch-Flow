@@ -1,12 +1,19 @@
-using MatroskaBatchFlow.Uno;
 using Uno.UI.Hosting;
 
-var host = UnoPlatformHostBuilder.Create()
-    .App(() => new App())
-    .UseX11()
-    .UseLinuxFrameBuffer()
-    .UseMacOS()
-    .UseWin32()
-    .Build();
+namespace MatroskaBatchFlow.Uno.Platforms.Desktop;
+public class Program
+{
+    [STAThread]
+    public static void Main(string[] args)
+    {
+        var host = UnoPlatformHostBuilder.Create()
+            .App(() => new App())
+            .UseX11()
+            .UseLinuxFrameBuffer()
+            .UseMacOS()
+            .UseWin32()
+            .Build();
 
-host.Run();
+        host.Run();
+    }
+}

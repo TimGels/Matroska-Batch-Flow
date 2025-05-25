@@ -1,4 +1,5 @@
 ﻿using MatroskaBatchFlow.Core.Models.AppSettings;
+using MatroskaBatchFlow.Core.Services.RuleEngine;
 using MediaInfoLib;
 using Microsoft.Extensions.Options;
 using System.Collections.Immutable;
@@ -20,11 +21,27 @@ namespace MatroskaBatchFlow.Core.Services
         /// Scans the directory for files that match the specified filtering options.
         /// </summary>
         /// <returns>A collection of file paths that match the filtering criteria.</returns>
-        public async Task<IEnumerable<string>> ScanAsync()
+        public async Task<IEnumerable<ScannedFileInfo>> ScanAsync(FileInfo[] files)
         {
             EnsureDirectoryExists();
-            var files = await Task.Run(() => GetFilteredFiles());
-            return files;
+            //var files = await Task.Run(() => GetFilteredFiles());
+            var scannedFiles = await AnalyzeFilesWithMediaInfoAsync(files.Select(f => f.FullName));
+            // Store the scanned files in the private list
+            _scannedFiles.Clear();
+            _scannedFiles.AddRange(scannedFiles);
+
+            var rules = new List<IFileProcessingRule>
+                {
+                    new SubtitleTrackNamingRule(),
+                    // Add other rules here
+                };
+            var engine = new FileProcessingRuleEngine(rules);
+
+            foreach (var scannedFile in scannedFiles)
+            {
+                engine.ApplyRules(scannedFile, batchConfiguration);
+            }
+            return scannedFiles;
         }
 
         /// <summary>
@@ -59,7 +76,7 @@ namespace MatroskaBatchFlow.Core.Services
             // Attach the file path to the parsed object
             return new ScannedFileInfo()
             {
-                FilePath = filePath,
+                Path = filePath,
                 Result = mediaInfoResult
             };
         }
@@ -71,7 +88,7 @@ namespace MatroskaBatchFlow.Core.Services
         private void EnsureDirectoryExists()
         {
             if (!Directory.Exists(_options.DirectoryPath))
-                throw new DirectoryNotFoundException("Directory does not exist.");
+                throw new DirectoryNotFoundException($"Directory: '{_options.DirectoryPath}' does not exist.");
         }
 
         /// <summary>

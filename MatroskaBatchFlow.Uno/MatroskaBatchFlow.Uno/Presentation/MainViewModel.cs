@@ -21,7 +21,7 @@ public partial class MainViewModel :ObservableObject {
 
         // Create a dictionary to map each file to its scan result
         var scanResults = scannedFiles.ToDictionary(
-            file => file.FilePath,
+            file => file.Path,
             file => file.Result
         );
 

@@ -8,12 +8,12 @@
         /// <summary>
         /// Path of the scanned file.
         /// </summary>
-        public required string FilePath { get; init; }
+        public string Path { get; set; }
 
         /// <summary>
         /// Resulting details from the MediaInfo scan.
         /// </summary>
-        public required MediaInfoResult Result { get; init; }
+        public MediaInfoResult Result { get; set; }
 
     }
 }

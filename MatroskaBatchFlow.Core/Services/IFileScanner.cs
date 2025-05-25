@@ -2,6 +2,6 @@
 
 public interface IFileScanner
 {
-    Task<IEnumerable<string>> ScanAsync();
+    Task<IEnumerable<ScannedFileInfo>> ScanAsync(FileInfo[] files);
     Task<IEnumerable<ScannedFileInfo>> ScanWithMediaInfoAsync();
 }

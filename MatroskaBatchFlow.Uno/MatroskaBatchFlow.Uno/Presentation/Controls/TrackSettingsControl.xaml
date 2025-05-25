@@ -41,12 +41,12 @@
                            VerticalAlignment="Center"/>
                 <RadioButton Content="Yes"
                              Grid.Column="1"
-                             IsChecked="{x:Bind SelectedTrack.Default, Mode=TwoWay}"
+                             IsChecked="{x:Bind IsDefaultTrack, Mode=TwoWay}"
                              MinWidth="0"
                              Margin="0,0,20,0"/>
                 <RadioButton Content="No"
                              Grid.Column="2"
-                             IsChecked="{x:Bind SelectedTrack.Default, Mode=TwoWay, Converter={StaticResource InverseBoolConverter}}"
+                             IsChecked="{x:Bind IsDefaultTrack, Mode=TwoWay, Converter={StaticResource InverseBoolConverter}}"
                              MinWidth="0"/>
             </Grid>
         </StackPanel>
