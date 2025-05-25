@@ -111,7 +111,7 @@ namespace MatroskaBatchFlow.Core.Services
         /// <summary>
         /// Ensures that the directory specified in the options exists.
         /// </summary>
-        /// <exception cref="DirectoryNotFoundException"></exception>
+        /// <exception cref="DirectoryNotFoundException">Thrown when the directory does not exist.</exception>
         private void EnsureDirectoryExists()
         {
             if (!Directory.Exists(_options.DirectoryPath))
@@ -121,6 +121,7 @@ namespace MatroskaBatchFlow.Core.Services
         /// <summary>
         /// Retrieves files from the directory based on the filtering options.
         /// </summary>
+        /// <returns>A collection of <see cref="string"/> file paths that match the filtering criteria.</returns>
         private IEnumerable<string> GetFilteredFiles()
         {
             var files = Directory.EnumerateFiles(
@@ -141,7 +142,7 @@ namespace MatroskaBatchFlow.Core.Services
         /// </summary>
         /// <param name="json"></param>
         /// <param name="filePath"></param>
-        /// <returns><see cref="ScannedFileInfo"/>.</returns>
+        /// <returns><see cref="ScannedFileInfo"/></returns>
         /// <exception cref="InvalidOperationException">Thrown when deserialization fails.</exception>
         private static ScannedFileInfo ParseMediaInfoJson(string json, string filePath)
         {
