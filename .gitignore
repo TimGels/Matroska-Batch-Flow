@@ -396,3 +396,4 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+/MatroskaBatchFlow.Uno/MatroskaBatchFlow.Uno/appsettings.development.json
