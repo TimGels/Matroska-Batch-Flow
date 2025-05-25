@@ -100,12 +100,12 @@
                 <TextBlock Text="Language: "
                           Grid.Column="0"
                           VerticalAlignment="Center" />
-                <win:ComboBox Grid.Column="1"
+                <ComboBox Grid.Column="1"
                           Width="150"
                           IsEditable="True"
                           ItemsSource="{x:Bind AvailableLanguages, Mode=OneWay}"
                           DisplayMemberPath="Name">
-                </win:ComboBox>
+                </ComboBox>
                 <!--<AutoSuggestBox 
                                 TextChanged="AutoSuggestBox_TextChanged"
                                 HorizontalAlignment="Left"
