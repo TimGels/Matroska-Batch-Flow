@@ -435,9 +435,6 @@ namespace MatroskaBatchFlow.Core
                     /// </summary>
                     string Lfeon,
 
-                    // Normalization values, average, minimum, maximum
-                    // Compression averages and values omitted for brevity...
-
                     /// <summary>
                     /// A dictionary of chapters for the media, where the key is the chapter identifier and the value is the chapter name.
                     /// </summary>
