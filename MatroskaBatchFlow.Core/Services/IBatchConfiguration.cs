@@ -1,4 +1,5 @@
 using MatroskaBatchFlow.Core.Enums;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 
 namespace MatroskaBatchFlow.Core.Services
@@ -13,9 +14,9 @@ namespace MatroskaBatchFlow.Core.Services
     {
         string DirectoryPath { get; set; }
         string Title { get; set; }
-        IList<TrackConfiguration> AudioTracks { get; set; }
-        IList<TrackConfiguration> VideoTracks { get; set; }
-        IList<TrackConfiguration> SubtitleTracks { get; set; }
+        ObservableCollection<TrackConfiguration> AudioTracks { get; set; }
+        ObservableCollection<TrackConfiguration> VideoTracks { get; set; }
+        ObservableCollection<TrackConfiguration> SubtitleTracks { get; set; }
 
         /// <summary>
         /// Clears the configuration settings.

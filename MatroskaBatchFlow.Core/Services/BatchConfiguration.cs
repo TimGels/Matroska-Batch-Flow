@@ -1,5 +1,6 @@
 ﻿using MatroskaBatchFlow.Core.Enums;
 using System.Collections.Immutable;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 
 namespace MatroskaBatchFlow.Core.Services
@@ -11,9 +12,9 @@ namespace MatroskaBatchFlow.Core.Services
     {
         private string _directoryPath = string.Empty;
         private string _title = string.Empty;
-        private IList<TrackConfiguration> _audioTracks = [];
-        private IList<TrackConfiguration> _videoTracks = [];
-        private IList<TrackConfiguration> _subtitleTracks = [];
+        private ObservableCollection<TrackConfiguration> _audioTracks = [];
+        private ObservableCollection<TrackConfiguration> _videoTracks = [];
+        private ObservableCollection<TrackConfiguration> _subtitleTracks = [];
         private static readonly ImmutableList<TrackConfiguration> _emptyTrackList = [];
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -44,7 +45,7 @@ namespace MatroskaBatchFlow.Core.Services
             }
         }
 
-        public IList<TrackConfiguration> AudioTracks
+        public ObservableCollection<TrackConfiguration> AudioTracks
         {
             get => _audioTracks;
             set
@@ -57,7 +58,7 @@ namespace MatroskaBatchFlow.Core.Services
             }
         }
 
-        public IList<TrackConfiguration> VideoTracks
+        public ObservableCollection<TrackConfiguration> VideoTracks
         {
             get => _videoTracks;
             set
@@ -70,7 +71,7 @@ namespace MatroskaBatchFlow.Core.Services
             }
         }
 
-        public IList<TrackConfiguration> SubtitleTracks
+        public ObservableCollection<TrackConfiguration> SubtitleTracks
         {
             get => _subtitleTracks;
             set
@@ -94,7 +95,7 @@ namespace MatroskaBatchFlow.Core.Services
             DirectoryPath = string.Empty;
             Title = string.Empty;
             AudioTracks.Clear();
-            VideoTracks = [];
+            VideoTracks.Clear();
             SubtitleTracks.Clear();
         }
 

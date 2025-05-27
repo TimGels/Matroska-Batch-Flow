@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Reflection;
 using MatroskaBatchFlow.Core.Enums;
@@ -111,38 +112,38 @@ public partial class VideoViewModel : ObservableObject
         ClearVideoTracks = new RelayCommand(ClearVideoTracksAction);
         _languages = languageProvider.Languages;
 
-        batchConfiguration.VideoTracks.AddRange([
-            new TrackConfiguration
-            {
-                TrackType = TrackType.Video,
-                Name = "Main Video",
-                Position = 1,
-                Language = "und",
-                Default = true,
-                Forced = false,
-                Remove = false
-            },
-            new TrackConfiguration
-            {
-                TrackType = TrackType.Video,
-                Position = 2,
-                Name = "Main Video 2",
-                Language = "und",
-                Default = true,
-                Forced = false,
-                Remove = false
-            },
-            new TrackConfiguration
-            {
-                TrackType = TrackType.Video,
-                Position = 3,
-                Name = "Main Video 3",
-                Language = "eng",
-                Default = true,
-                Forced = false,
-                Remove = false
-            },
-        ]);
+        //batchConfiguration.VideoTracks.AddRange([
+        //    new TrackConfiguration
+        //    {
+        //        TrackType = TrackType.Video,
+        //        Name = "Main Video",
+        //        Position = 1,
+        //        Language = "und",
+        //        Default = true,
+        //        Forced = false,
+        //        Remove = false
+        //    },
+        //    new TrackConfiguration
+        //    {
+        //        TrackType = TrackType.Video,
+        //        Position = 2,
+        //        Name = "Main Video 2",
+        //        Language = "und",
+        //        Default = true,
+        //        Forced = false,
+        //        Remove = false
+        //    },
+        //    new TrackConfiguration
+        //    {
+        //        TrackType = TrackType.Video,
+        //        Position = 3,
+        //        Name = "Main Video 3",
+        //        Language = "eng",
+        //        Default = true,
+        //        Forced = false,
+        //        Remove = false
+        //    },
+        //]);
 
         SelectedTrack = _batchConfiguration.VideoTracks.FirstOrDefault();
 
@@ -173,6 +174,65 @@ public partial class VideoViewModel : ObservableObject
         VideoTracks.CollectionChanged += (s, e) =>
         {
             _batchConfiguration.VideoTracks = VideoTracks;
+        };
+
+        //// Subscribe to changes (Add, Remove, etc.) in the VideoTracks collection of the batch configuration.
+        //_batchConfiguration.VideoTracks.CollectionChanged += (s, e) =>
+        //{
+        //    // Subscribe to PropertyChanged for new items
+        //    if (e.NewItems != null)
+        //    {
+        //        foreach (TrackConfiguration newTrack in e.NewItems)
+        //        {
+        //            newTrack.PropertyChanged += OnTrackPropertyChanged;
+        //        }
+        //    }
+
+        //    // Unsubscribe from PropertyChanged for old items
+        //    if (e.OldItems != null)
+        //    {
+        //        foreach (TrackConfiguration oldTrack in e.OldItems)
+        //        {
+        //            oldTrack.PropertyChanged -= OnTrackPropertyChanged;
+        //        }
+        //    }
+
+        //    // Handle the Reset action, which indicates that the entire collection has been replaced or cleared.
+        //    if (e.Action == NotifyCollectionChangedAction.Reset)
+        //    {
+        //        // Unsubscribe from PropertyChanged for all current items in the VideoTracks collection
+        //        foreach (var track in _batchConfiguration.VideoTracks)
+        //            track.PropertyChanged -= OnTrackPropertyChanged;
+
+        //        // Subscribe to PropertyChanged for all current items in the VideoTracks collection
+        //        foreach (var track in _batchConfiguration.VideoTracks)
+        //            track.PropertyChanged += OnTrackPropertyChanged;
+        //    }
+
+        //    // Update the local VideoTracks property to reflect the new state of the batch configuration.
+        //    VideoTracks = [.. _batchConfiguration.VideoTracks];
+        //};
+
+        _batchConfiguration.VideoTracks.CollectionChanged += (s, e) =>
+        {
+            void Subscribe(IEnumerable<TrackConfiguration>? items) =>
+                items?.ToList().ForEach(t => t.PropertyChanged += OnTrackPropertyChanged);
+
+            void Unsubscribe(IEnumerable<TrackConfiguration>? items) =>
+                items?.ToList().ForEach(t => t.PropertyChanged -= OnTrackPropertyChanged);
+
+            if (e.NewItems != null) Subscribe(e.NewItems.Cast<TrackConfiguration>());
+            if (e.OldItems != null) Unsubscribe(e.OldItems.Cast<TrackConfiguration>());
+
+            if (e.Action == NotifyCollectionChangedAction.Reset)
+            {
+                // Unsubscribe and subscribe all in one go
+                var all = _batchConfiguration.VideoTracks;
+                Unsubscribe(all);
+                Subscribe(all);
+            }
+
+            VideoTracks = [.. _batchConfiguration.VideoTracks];
         };
     }
 
