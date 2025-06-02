@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Reflection;
-using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
 
@@ -176,43 +175,7 @@ public partial class VideoViewModel : ObservableObject
             _batchConfiguration.VideoTracks = VideoTracks;
         };
 
-        //// Subscribe to changes (Add, Remove, etc.) in the VideoTracks collection of the batch configuration.
-        //_batchConfiguration.VideoTracks.CollectionChanged += (s, e) =>
-        //{
-        //    // Subscribe to PropertyChanged for new items
-        //    if (e.NewItems != null)
-        //    {
-        //        foreach (TrackConfiguration newTrack in e.NewItems)
-        //        {
-        //            newTrack.PropertyChanged += OnTrackPropertyChanged;
-        //        }
-        //    }
-
-        //    // Unsubscribe from PropertyChanged for old items
-        //    if (e.OldItems != null)
-        //    {
-        //        foreach (TrackConfiguration oldTrack in e.OldItems)
-        //        {
-        //            oldTrack.PropertyChanged -= OnTrackPropertyChanged;
-        //        }
-        //    }
-
-        //    // Handle the Reset action, which indicates that the entire collection has been replaced or cleared.
-        //    if (e.Action == NotifyCollectionChangedAction.Reset)
-        //    {
-        //        // Unsubscribe from PropertyChanged for all current items in the VideoTracks collection
-        //        foreach (var track in _batchConfiguration.VideoTracks)
-        //            track.PropertyChanged -= OnTrackPropertyChanged;
-
-        //        // Subscribe to PropertyChanged for all current items in the VideoTracks collection
-        //        foreach (var track in _batchConfiguration.VideoTracks)
-        //            track.PropertyChanged += OnTrackPropertyChanged;
-        //    }
-
-        //    // Update the local VideoTracks property to reflect the new state of the batch configuration.
-        //    VideoTracks = [.. _batchConfiguration.VideoTracks];
-        //};
-
+        // Subscribe to changes in the VideoTracks collection of the batch configuration.
         _batchConfiguration.VideoTracks.CollectionChanged += (s, e) =>
         {
             void Subscribe(IEnumerable<TrackConfiguration>? items) =>
@@ -221,12 +184,14 @@ public partial class VideoViewModel : ObservableObject
             void Unsubscribe(IEnumerable<TrackConfiguration>? items) =>
                 items?.ToList().ForEach(t => t.PropertyChanged -= OnTrackPropertyChanged);
 
-            if (e.NewItems != null) Subscribe(e.NewItems.Cast<TrackConfiguration>());
-            if (e.OldItems != null) Unsubscribe(e.OldItems.Cast<TrackConfiguration>());
+            if (e.NewItems != null)
+                Subscribe(e.NewItems.Cast<TrackConfiguration>());
+            if (e.OldItems != null)
+                Unsubscribe(e.OldItems.Cast<TrackConfiguration>());
 
+            // Handle the Reset action, which indicates that the entire collection has been replaced or cleared.
             if (e.Action == NotifyCollectionChangedAction.Reset)
             {
-                // Unsubscribe and subscribe all in one go
                 var all = _batchConfiguration.VideoTracks;
                 Unsubscribe(all);
                 Subscribe(all);
