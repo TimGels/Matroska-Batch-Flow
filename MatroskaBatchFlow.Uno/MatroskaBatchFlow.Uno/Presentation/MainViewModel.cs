@@ -3,7 +3,8 @@ using MatroskaBatchFlow.Core.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
-public partial class MainViewModel :ObservableObject {
+public partial class MainViewModel : ObservableObject
+{
     [ObservableProperty]
     private string _scanResult = string.Empty;
 
@@ -11,12 +12,14 @@ public partial class MainViewModel :ObservableObject {
 
     public ICommand ScanFiles { get; }
 
-    public MainViewModel (IFileScanner fileScanner) {
+    public MainViewModel(IFileScanner fileScanner)
+    {
         _fileScanner = fileScanner;
         ScanFiles = new AsyncRelayCommand(ScanFilesAsync);
     }
 
-    private async Task ScanFilesAsync () {
+    private async Task ScanFilesAsync()
+    {
         var scannedFiles = await _fileScanner.ScanWithMediaInfoAsync();
 
         // Create a dictionary to map each file to its scan result
@@ -26,7 +29,8 @@ public partial class MainViewModel :ObservableObject {
         );
 
         // Serialize the dictionary to JSON
-        ScanResult = JsonSerializer.Serialize(scanResults, new JsonSerializerOptions {
+        ScanResult = JsonSerializer.Serialize(scanResults, new JsonSerializerOptions
+        {
             WriteIndented = true // For pretty-printing
         });
     }

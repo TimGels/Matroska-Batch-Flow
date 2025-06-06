@@ -5,7 +5,6 @@ namespace MatroskaBatchFlow.Core.Services.FileValidation
     /// </summary>
     public enum FileValidationSeverity
     {
-
         /// <summary>
         /// Reserved for future use, currently not used in validation rules.
         /// </summary>

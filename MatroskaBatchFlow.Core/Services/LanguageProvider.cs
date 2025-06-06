@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.Options;
-using MatroskaBatchFlow.Core.Models;
+﻿using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Models.AppSettings;
+using Microsoft.Extensions.Options;
 using System.Collections.Immutable;
 using System.Text.Json;
 

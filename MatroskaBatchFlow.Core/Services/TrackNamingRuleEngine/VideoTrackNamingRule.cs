@@ -1,5 +1,4 @@
 ﻿using MatroskaBatchFlow.Core.Enums;
-using MediaInfoLib;
 
 namespace MatroskaBatchFlow.Core.Services.TrackNamingRuleEngine
 {

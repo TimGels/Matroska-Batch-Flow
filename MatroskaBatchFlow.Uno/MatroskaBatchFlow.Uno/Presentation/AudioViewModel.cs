@@ -3,9 +3,9 @@ using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
-public partial class AudioViewModel: ObservableObject
+public partial class AudioViewModel : ObservableObject
 {
-   
+
     [ObservableProperty]
     private IList<TrackConfiguration>? audioTracks = default;
     [ObservableProperty]
