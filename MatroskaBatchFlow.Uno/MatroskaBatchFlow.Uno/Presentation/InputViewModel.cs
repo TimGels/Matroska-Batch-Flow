@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using MatroskaBatchFlow.Core;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Uno.Behavior;
 using MatroskaBatchFlow.Uno.Services;
 using Microsoft.UI.Xaml.Data;
@@ -18,12 +19,15 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
 
     private IFileScanner _fileScanner;
 
+    private readonly IFileValidator _fileValidator;
+
     public ICommand RemoveSelected { get; }
 
-    public InputViewModel(IStringLocalizer localizer, IOptions<AppConfig> appInfo, IFileScanner fileScanner)
+    public InputViewModel(IStringLocalizer localizer, IOptions<AppConfig> appInfo, IFileScanner fileScanner, IFileValidator fileValidator)
     {
         _fileScanner = fileScanner;
         RemoveSelected = new AsyncRelayCommand(RemoveSelectedFiles);
+        _fileValidator = fileValidator;
     }
 
     private Task RemoveSelectedFiles()
@@ -42,6 +46,10 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
     public async void OnFilesDropped(IStorageItem[] files)
     {
         IEnumerable<ScannedFileInfo> scannedFileInfos = await _fileScanner.ScanAsync(StorageItemConverter.ToFileInfo(files));
+        foreach (var result in _fileValidator.Validate(scannedFileInfos))
+        {
+            Debug.Print($"Validation: {result.Severity} - {result.Message}");
+        }
         foreach (var file in scannedFileInfos)
         {
             Debug.Print($"File dropped: {file.Path}");
