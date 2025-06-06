@@ -89,6 +89,11 @@ public partial class App : Application
                     services.AddSingleton<ILanguageProvider, LanguageProvider>();
                     services.AddSingleton<IFileScanner, FileScanner>();
                     services.AddSingleton<IBatchConfiguration, BatchConfiguration>();
+
+                    // Register file validation rules engine service and it's accomadating rules.
+                    services.AddSingleton<IFileValidator, FileValidator>();
+                    services.AddSingleton<IFileValidationRule, LanguageConsistencyRule>();
+                    services.AddSingleton<IFileValidationRule, TrackCountConsistencyRule>();
                 })
                 .UseNavigation(RegisterRoutes)
             );
