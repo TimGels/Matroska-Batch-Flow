@@ -4,6 +4,7 @@
       xmlns:local="using:MatroskaBatchFlow.Uno.Presentation"
       xmlns:uen="using:Uno.Extensions.Navigation.UI"
       xmlns:utu="using:Uno.Toolkit.UI"
+      xmlns:dialogs="using:MatroskaBatchFlow.Uno.Presentation.Dialogs"
       NavigationCacheMode="Required"
       Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -56,5 +57,7 @@
                 Margin="10,10,10,10"
                 HorizontalAlignment="Center"
                 Command="{Binding ScanFiles}"/>
+
+        <dialogs:ErrorDialog x:Name="ErrorDialog" />
     </Grid>
 </Page>

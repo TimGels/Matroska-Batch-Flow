@@ -1,6 +1,6 @@
 using MatroskaBatchFlow.Core.Models.AppSettings;
 using MatroskaBatchFlow.Core.Services;
-using Uno.Extensions.Configuration;
+using MatroskaBatchFlow.Core.Services.FileValidation;
 using Uno.Resizetizer;
 using Windows.UI.ViewManagement;
 
