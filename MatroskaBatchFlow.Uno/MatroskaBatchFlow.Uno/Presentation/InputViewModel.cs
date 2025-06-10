@@ -6,6 +6,8 @@ using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Uno.Behavior;
 using MatroskaBatchFlow.Uno.Services;
 using Microsoft.UI.Xaml.Data;
+using CommunityToolkit.Mvvm.Messaging;
+using MatroskaBatchFlow.Uno.Presentation.Dialogs;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 [Bindable]
@@ -46,10 +48,27 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
     public async void OnFilesDropped(IStorageItem[] files)
     {
         IEnumerable<ScannedFileInfo> scannedFileInfos = await _fileScanner.ScanAsync(StorageItemConverter.ToFileInfo(files));
+        var errorMessages = new List<string>();
+
         foreach (var result in _fileValidator.Validate(scannedFileInfos))
         {
             Debug.Print($"Validation: {result.Severity} - {result.Message}");
+            if (result.Severity == FileValidationSeverity.Error)
+            {
+                errorMessages.Add(result.Message);
+            }
         }
+
+        if (errorMessages.Count > 0)
+        {
+            WeakReferenceMessenger.Default.Send(
+                new DialogMessage(
+                    "Validation Errors",
+                    string.Join(Environment.NewLine, errorMessages)
+                )
+            );
+        }
+
         foreach (var file in scannedFileInfos)
         {
             Debug.Print($"File dropped: {file.Path}");

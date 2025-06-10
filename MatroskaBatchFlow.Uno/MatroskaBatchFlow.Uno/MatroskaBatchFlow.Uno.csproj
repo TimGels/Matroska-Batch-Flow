@@ -55,6 +55,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Presentation\AudioPage.xaml" />
+    <None Remove="Presentation\Dialogs\ErrorDialog.xaml" />
     <None Remove="Presentation\GeneralPage.xaml" />
     <None Remove="Presentation\InputPage.xaml" />
     <None Remove="Presentation\ProductsPage.xaml" />
@@ -97,5 +98,10 @@
     <AppxManifest Update="Package.appxmanifest">
       <CopyToOutputDirectory></CopyToOutputDirectory>
     </AppxManifest>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Presentation\Dialogs\ErrorDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 </Project>
