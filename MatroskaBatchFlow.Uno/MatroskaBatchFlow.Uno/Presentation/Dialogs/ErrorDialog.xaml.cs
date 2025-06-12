@@ -14,12 +14,4 @@ public sealed partial class ErrorDialog : ContentDialog
         this.Closed += (sender, eventArgs) 
             => WeakReferenceMessenger.Default.Send(new DialogStatusMessage(nameof(ErrorDialog), false));
     }
-
-    private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
-    {
-    }
-
-    private void ContentDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
-    {
-    }
 }
