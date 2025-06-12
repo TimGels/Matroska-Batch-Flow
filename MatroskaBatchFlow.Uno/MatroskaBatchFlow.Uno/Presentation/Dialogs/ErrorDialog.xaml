@@ -4,12 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MatroskaBatchFlow.Uno.Presentation.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="{x:Bind ViewModel.Title, Mode=OneWay}"
     Style="{ThemeResource DefaultContentDialogStyle}"
     PrimaryButtonText="Close">
 	<Grid>
         <ScrollViewer>
-            <TextBlock Text="{x:Bind ViewModel.Message, Mode=OneWay}" TextWrapping="Wrap" />
+            <TextBlock Text="{x:Bind MessageText, Mode=OneWay}" TextWrapping="Wrap"/>
         </ScrollViewer>
     </Grid>
 </ContentDialog>
