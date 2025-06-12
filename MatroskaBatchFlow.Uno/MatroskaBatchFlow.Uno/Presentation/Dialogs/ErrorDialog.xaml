@@ -6,9 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="{x:Bind ViewModel.Title, Mode=OneWay}"
     Style="{ThemeResource DefaultContentDialogStyle}"
-    PrimaryButtonText="Close"
-    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
-    SecondaryButtonClick="ContentDialog_SecondaryButtonClick">
+    PrimaryButtonText="Close">
 	<Grid>
         <ScrollViewer>
             <TextBlock Text="{x:Bind ViewModel.Message, Mode=OneWay}" TextWrapping="Wrap" />
