@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 namespace MatroskaBatchFlow.Uno.Presentation.Dialogs;
 public sealed partial class ErrorDialog : ContentDialog
 {
-    public ErrorDialogViewModel ViewModel { get; } = new();
+    public string MessageText { get; set; } = string.Empty;
 
     public ErrorDialog()
     {
