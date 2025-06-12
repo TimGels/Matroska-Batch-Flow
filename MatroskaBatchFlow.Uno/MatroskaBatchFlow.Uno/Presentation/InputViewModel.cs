@@ -1,13 +1,13 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Core;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Uno.Behavior;
+using MatroskaBatchFlow.Uno.Presentation.Dialogs;
 using MatroskaBatchFlow.Uno.Services;
 using Microsoft.UI.Xaml.Data;
-using CommunityToolkit.Mvvm.Messaging;
-using MatroskaBatchFlow.Uno.Presentation.Dialogs;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 [Bindable]

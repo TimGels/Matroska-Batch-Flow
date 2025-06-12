@@ -25,7 +25,8 @@
             Grid.Column="1"
             Grid.Row="1"
             HorizontalScrollBarVisibility="Auto">
-            <ListView Background="{ThemeResource ControlStrokeColorDefaultBrush}"
+            <ListView x:Name="FileDropListView"
+                      Background="{ThemeResource ControlStrokeColorDefaultBrush}"
                       CornerRadius="{ThemeResource ControlCornerRadius}"
                       Actions:DropFilesBehavior.IsEnabled="True"
                       Actions:DropFilesBehavior.FileDropTarget="{Binding}"

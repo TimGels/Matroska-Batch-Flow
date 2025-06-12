@@ -11,9 +11,15 @@ public sealed partial class MainPage : Page
 
         WeakReferenceMessenger.Default.Register<DialogMessage>(this, async (r, m) =>
         {
-            ErrorDialog.ViewModel.Title = m.Title;
-            ErrorDialog.ViewModel.Message = m.Message;
-            await ErrorDialog.ShowAsync();
+            await new ErrorDialog
+            {
+                ViewModel =
+                {
+                    Title = m.Title,
+                    Message = m.Message
+                },
+                XamlRoot = XamlRoot,
+            }.ShowAsync();
         });
     }
 }
