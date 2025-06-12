@@ -13,11 +13,8 @@ public sealed partial class MainPage : Page
         {
             await new ErrorDialog
             {
-                ViewModel =
-                {
-                    Title = m.Title,
-                    Message = m.Message
-                },
+                Title = m.Title,
+                MessageText = m.Message,
                 XamlRoot = XamlRoot,
             }.ShowAsync();
         });
