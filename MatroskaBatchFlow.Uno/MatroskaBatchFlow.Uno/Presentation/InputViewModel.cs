@@ -6,10 +6,9 @@ using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Uno.Behavior;
 using MatroskaBatchFlow.Uno.Presentation.Dialogs;
 using MatroskaBatchFlow.Uno.Services;
-using Microsoft.UI.Xaml.Data;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
-[Bindable]
+
 public partial class InputViewModel : ObservableObject, IFilesDropped
 {
     [ObservableProperty]
@@ -54,7 +53,7 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
     /// pass validation. If validation errors are encountered, the method handles them and stops further
     /// processing.</remarks>
     /// <param name="files">An array of <see cref="IStorageItem"/> representing the files that were dropped.</param>
-    public async void OnFilesDropped(IStorageItem[] files)
+    public async Task OnFilesDropped(IStorageItem[] files)
     {
         if (files == null || files.Length == 0)
             return;

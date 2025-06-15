@@ -101,7 +101,7 @@ public class DropFilesBehavior
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">Event arguments containing drag-and-drop data.</param>
-    private static void OnDrop(object sender, DragEventArgs e)
+    private static async void OnDrop(object sender, DragEventArgs e)
     {
         var dobj = (DependencyObject)sender;
         var target = dobj.GetValue(FileDropTargetProperty);
@@ -123,6 +123,6 @@ public class DropFilesBehavior
             return;
         }
 
-        filesDropped.OnFilesDropped(files.ToArray());
+        await filesDropped.OnFilesDropped(files.ToArray());
     }
 }
