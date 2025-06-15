@@ -31,6 +31,13 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
         _fileValidator = fileValidator;
     }
 
+    /// <summary>
+    /// Removes all files currently selected in the <see cref="SelectedFiles"/> collection from the <see
+    /// cref="FileList"/>.
+    /// </summary>
+    /// <remarks>This method processes the removal of selected files by iterating over a copy of the <see
+    /// cref="SelectedFiles"/> collection..</remarks>
+    /// <returns>A completed <see cref="Task"/> representing the operation.</returns>
     private Task RemoveSelectedFiles()
     {
         // Convert SelectedFiles to an array to make a copy to avoid modifying the collection while iterating.
