@@ -71,6 +71,7 @@ namespace MatroskaBatchFlow.Core.Services.FileValidation
 
                     yield return new FileValidationResult(
                         FileValidationSeverity.Warning,
+                        scannedFiles[i].Path,
                         $"Language mismatch in {type} tracks at position {trackIndex + 1}: " +
                         $"'{referenceFileLanguages[trackIndex]}' (in '{scannedFiles[0].Path}') " +
                         $"vs '{languageMatrix[i][trackIndex]}' (in '{scannedFiles[i].Path}')."

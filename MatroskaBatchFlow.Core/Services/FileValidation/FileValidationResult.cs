@@ -32,5 +32,5 @@ namespace MatroskaBatchFlow.Core.Services.FileValidation
     /// </summary>
     /// <param name="Severity">The severity of the validation result.</param>
     /// <param name="Message">A message providing details about the validation result.</param>
-    public record FileValidationResult(FileValidationSeverity Severity, string Message);
+    public record FileValidationResult(FileValidationSeverity Severity, string ComparedFilePath, string Message);
 }
