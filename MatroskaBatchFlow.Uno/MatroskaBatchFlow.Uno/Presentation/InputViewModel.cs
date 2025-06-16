@@ -58,7 +58,7 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
         if (files == null || files.Length == 0)
             return;
 
-        var newFiles = await _fileScanner.ScanAsync(StorageItemConverter.ToFileInfo(files));
+        var newFiles = await _fileScanner.ScanAsync(files.ToFileInfo());
         var combinedFiles = FileList.Concat(newFiles).ToList();
 
         // Validate the combined list of files, including both existing and newly added files.
