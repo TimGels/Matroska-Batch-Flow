@@ -1,15 +1,18 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Core;
+using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileValidation;
+using MatroskaBatchFlow.Core.Services.TrackNamingRuleEngine;
 using MatroskaBatchFlow.Uno.Behavior;
 using MatroskaBatchFlow.Uno.Extensions;
 using MatroskaBatchFlow.Uno.Presentation.Dialogs;
+using Uno.Extensions.Specialized;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
-public partial class InputViewModel : ObservableObject, IFilesDropped
+public partial class InputViewModel :ObservableObject, IFilesDropped
 {
     [ObservableProperty]
     private ObservableCollection<ScannedFileInfo> fileList = [];
@@ -21,13 +24,28 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
 
     private readonly IFileValidator _fileValidator;
 
+    private readonly IFileProcessingRuleEngine _fileProcessingRuleEngine;
+
+    private readonly IBatchConfiguration _batchConfig;
+
+    private readonly IBatchConfigurationTrackInitializer _batchConfigurationTrackInitializer;
+
     public ICommand RemoveSelected { get; }
 
-    public InputViewModel(IFileScanner fileScanner, IFileValidator fileValidator)
+    public InputViewModel(
+        IFileScanner fileScanner,
+        IFileValidator fileValidator,
+        IFileProcessingRuleEngine fileProcessingRuleEngine,
+        IBatchConfiguration batchConfig,
+        IBatchConfigurationTrackInitializer batchConfigurationTrackInitializer
+        )
     {
         _fileScanner = fileScanner;
         RemoveSelected = new AsyncRelayCommand(RemoveSelectedFiles);
         _fileValidator = fileValidator;
+        _fileProcessingRuleEngine = fileProcessingRuleEngine;
+        _batchConfig = batchConfig;
+        _batchConfigurationTrackInitializer = batchConfigurationTrackInitializer;
     }
 
     /// <summary>
@@ -65,6 +83,13 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
         var validationResults = _fileValidator.Validate(combinedFiles).ToList();
         if (HandleValidationErrors(validationResults))
             return;
+
+        _batchConfigurationTrackInitializer.EnsureTrackCount(newFiles.First(), TrackType.Audio, TrackType.Video, TrackType.Text);
+        // If validation passed, apply processing rules to the new files.
+        foreach (var file in newFiles)
+        {
+            _fileProcessingRuleEngine.Apply(file, _batchConfig);
+        }
 
         FileList.AddRange(newFiles);
     }

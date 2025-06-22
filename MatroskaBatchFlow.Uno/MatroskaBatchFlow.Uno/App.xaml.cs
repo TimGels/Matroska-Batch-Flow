@@ -1,6 +1,7 @@
 using MatroskaBatchFlow.Core.Models.AppSettings;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileValidation;
+using MatroskaBatchFlow.Core.Services.TrackNamingRuleEngine;
 using Uno.Resizetizer;
 using Windows.UI.ViewManagement;
 
@@ -94,6 +95,14 @@ public partial class App : Application
                     services.AddSingleton<IFileValidator, FileValidator>();
                     services.AddSingleton<IFileValidationRule, LanguageConsistencyRule>();
                     services.AddSingleton<IFileValidationRule, TrackCountConsistencyRule>();
+
+                    // Register file processing rule engine service and it's accomadating rules.
+                    services.AddSingleton<IFileProcessingRuleEngine, FileProcessingRuleEngine>();
+                    services.AddSingleton<IFileProcessingRule, SubtitleTrackNamingRule>();
+                    services.AddSingleton<IFileProcessingRule, AudioTrackNamingRule>();
+                    services.AddSingleton<IFileProcessingRule, VideoTrackNamingRule>();
+
+                    services.AddSingleton<IBatchConfigurationTrackInitializer, BatchConfigurationTrackInitializer>();
                 })
                 .UseNavigation(RegisterRoutes)
             );

@@ -33,20 +33,20 @@
       https://aka.platform.uno/singleproject-features
     -->
     <UnoFeatures>
-      Lottie;
-      MediaElement;
-      Hosting;
-      Toolkit;
-      Logging;
-      LoggingSerilog;
-      Mvvm;
-      Configuration;
-      HttpRefit;
-      Serialization;
-      Localization;
-      Navigation;
-      ThemeService;
-      SkiaRenderer;
+        Lottie;
+        MediaElement;
+        Hosting;
+        Toolkit;
+        Logging;
+        LoggingSerilog;
+        Mvvm;
+        Configuration;
+        HttpRefit;
+        Serialization;
+        Localization;
+        Navigation;
+        ThemeService;
+        SkiaRenderer;
     </UnoFeatures>
     <Platforms>AnyCPU;x64</Platforms>
     <PackageCertificateThumbprint>E620B8DF242BDECF6EF3C921BED1FCC5F8E819EF</PackageCertificateThumbprint>

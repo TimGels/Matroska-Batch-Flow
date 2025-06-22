@@ -2,7 +2,7 @@
 
 namespace MatroskaBatchFlow.Core.Services.TrackNamingRuleEngine
 {
-    internal class VideoTrackNamingRule : IFileProcessingRule
+    public class VideoTrackNamingRule : IFileProcessingRule
     {
         public void Apply(ScannedFileInfo scannedFile, IBatchConfiguration batchConfig)
         {

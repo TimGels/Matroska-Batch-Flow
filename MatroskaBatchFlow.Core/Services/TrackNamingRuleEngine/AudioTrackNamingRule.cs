@@ -2,7 +2,7 @@
 
 namespace MatroskaBatchFlow.Core.Services.TrackNamingRuleEngine
 {
-    internal class AudioTrackNamingRule : IFileProcessingRule
+    public class AudioTrackNamingRule : IFileProcessingRule
     {
         private static readonly Dictionary<string, string> _channelLayoutMappings = new(StringComparer.OrdinalIgnoreCase)
         {

@@ -2,7 +2,7 @@
 
 namespace MatroskaBatchFlow.Core.Services.TrackNamingRuleEngine
 {
-    internal class SubtitleTrackNamingRule : IFileProcessingRule
+    public class SubtitleTrackNamingRule : IFileProcessingRule
     {
         private readonly Dictionary<string, string> _supportedFormatMappings = new(StringComparer.OrdinalIgnoreCase)
         {

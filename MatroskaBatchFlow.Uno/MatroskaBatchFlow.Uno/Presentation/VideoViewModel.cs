@@ -111,39 +111,6 @@ public partial class VideoViewModel : ObservableObject
         ClearVideoTracks = new RelayCommand(ClearVideoTracksAction);
         _languages = languageProvider.Languages;
 
-        //batchConfiguration.VideoTracks.AddRange([
-        //    new TrackConfiguration
-        //    {
-        //        TrackType = TrackType.Video,
-        //        Name = "Main Video",
-        //        Position = 1,
-        //        Language = "und",
-        //        Default = true,
-        //        Forced = false,
-        //        Remove = false
-        //    },
-        //    new TrackConfiguration
-        //    {
-        //        TrackType = TrackType.Video,
-        //        Position = 2,
-        //        Name = "Main Video 2",
-        //        Language = "und",
-        //        Default = true,
-        //        Forced = false,
-        //        Remove = false
-        //    },
-        //    new TrackConfiguration
-        //    {
-        //        TrackType = TrackType.Video,
-        //        Position = 3,
-        //        Name = "Main Video 3",
-        //        Language = "eng",
-        //        Default = true,
-        //        Forced = false,
-        //        Remove = false
-        //    },
-        //]);
-
         SelectedTrack = _batchConfiguration.VideoTracks.FirstOrDefault();
 
         SetupEventHandlers();

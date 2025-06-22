@@ -3,19 +3,14 @@
     /// <summary>
     /// Applies a set of rules to process scanned file information and update batch configuration.
     /// </summary>
-    internal class FileProcessingRuleEngine
+    public class FileProcessingRuleEngine(IEnumerable<IFileProcessingRule> rules): IFileProcessingRuleEngine
     {
-        private readonly List<IFileProcessingRule> _rules;
-
-        public FileProcessingRuleEngine(IEnumerable<IFileProcessingRule> rules)
-        {
-            _rules = new List<IFileProcessingRule>(rules);
-        }
+        private readonly List<IFileProcessingRule> _rules = [.. rules];
 
         /// <summary>
         /// Applies all registered rules to the scanned file and batch configuration.
         /// </summary>
-        public void ApplyRules(ScannedFileInfo scannedFile, IBatchConfiguration batchConfig)
+        public void Apply(ScannedFileInfo scannedFile, IBatchConfiguration batchConfig)
         {
             foreach (var rule in _rules)
             {
