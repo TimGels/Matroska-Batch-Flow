@@ -54,6 +54,12 @@
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Tests\**" />
+    <EmbeddedResource Remove="Tests\**" />
+    <None Remove="Tests\**" />
+    <Page Remove="Tests\**" />
+  </ItemGroup>
+  <ItemGroup>
     <None Remove="Presentation\AudioPage.xaml" />
     <None Remove="Presentation\Dialogs\ErrorDialog.xaml" />
     <None Remove="Presentation\GeneralPage.xaml" />
@@ -92,7 +98,7 @@
     <Folder Include="Presentation\Controls\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\MatroskaBatchFlow.Core\MatroskaBatchFlow.Core.csproj" />
+    <ProjectReference Include="..\MatroskaBatchFlow.Core\MatroskaBatchFlow.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Update="Package.appxmanifest">
@@ -103,5 +109,11 @@
     <Page Update="Presentation\Dialogs\ErrorDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Tests\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Remove="Tests\**" />
   </ItemGroup>
 </Project>
