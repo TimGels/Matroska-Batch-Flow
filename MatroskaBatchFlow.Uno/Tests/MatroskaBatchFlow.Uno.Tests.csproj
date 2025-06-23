@@ -19,8 +19,11 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\MatroskaBatchFlow.Uno.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
         <Using Include="Xunit" />
-        <ProjectReference Include="..\MatroskaBatchFlow.Uno\MatroskaBatchFlow.Uno.csproj" />
     </ItemGroup>
 
 </Project>

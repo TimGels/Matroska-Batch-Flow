@@ -1,4 +1,4 @@
-﻿namespace MatroskaBatchFlow.Core
+namespace MatroskaBatchFlow.Core
 {
     /// <summary>
     /// Represents the information of a scanned media file including its file path.
