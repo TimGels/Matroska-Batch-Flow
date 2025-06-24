@@ -1,5 +1,4 @@
 using MatroskaBatchFlow.Core.Enums;
-using System.Linq;
 
 namespace MatroskaBatchFlow.Core.Services.FileValidation
 {
