@@ -101,7 +101,7 @@ public class BatchConfigurationTrackInitializerTests
 
         // Assert
         Assert.Single(audioTracks);
-        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never());
+        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never);
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public class BatchConfigurationTrackInitializerTests
 
         // Assert
         Assert.Single(audioTracks);
-        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never());
+        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never);
     }
 
     [Fact]
@@ -223,7 +223,7 @@ public class BatchConfigurationTrackInitializerTests
 
         // Assert
         Assert.Single(audioTracks);
-        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never());
+        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never);
     }
 
     [Fact]
@@ -247,7 +247,7 @@ public class BatchConfigurationTrackInitializerTests
 
         // Assert
         Assert.Single(audioTracks);
-        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never());
+        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never);
     }
 
     [Fact]
@@ -272,7 +272,7 @@ public class BatchConfigurationTrackInitializerTests
 
         // Assert
         Assert.Single(audioTracks);
-        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never());
+        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never);
     }
 
     [Fact]
