@@ -114,7 +114,7 @@ public class BatchConfigurationTrackInitializerTests
 
         // Assert - Tracks should remain unchanged
         Assert.Single(audioTracks);
-        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never());
+        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never);
     }
 
     [Fact]
@@ -134,7 +134,7 @@ public class BatchConfigurationTrackInitializerTests
 
         // Assert - Tracks should remain unchanged
         Assert.Single(audioTracks);
-        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never());
+        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never);
     }
 
     private ScannedFileInfo CreateTestFile(int audioCount = 0, int videoCount = 0, int subtitleCount = 0)
