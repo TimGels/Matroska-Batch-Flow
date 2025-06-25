@@ -1,5 +1,5 @@
 using MatroskaBatchFlow.Uno.Extensions;
-using Moq;
+using NSubstitute;
 using Windows.Storage;
 
 namespace MatroskaBatchFlow.Uno.Tests.Extensions;
@@ -11,11 +11,11 @@ public class StorageItemExtensionsTests
     {
         // Arrange
         var expectedPath = @"C:\test\file.txt";
-        var mock = new Mock<IStorageItem>();
-        mock.SetupGet(x => x.Path).Returns(expectedPath);
+        var mock = Substitute.For<IStorageItem>();
+        mock.Path.Returns(expectedPath);
 
         // Act
-        var fileInfo = mock.Object.ToFileInfo();
+        var fileInfo = mock.ToFileInfo();
 
         // Assert
         Assert.NotNull(fileInfo);
@@ -39,22 +39,22 @@ public class StorageItemExtensionsTests
     public void ToFileInfo_InvalidPath_ThrowsInvalidOperationException(string? invalidPath)
     {
         // Arrange
-        var mock = new Mock<IStorageItem>();
-        mock.SetupGet(x => x.Path).Returns(invalidPath!);
+        var mock = Substitute.For<IStorageItem>();
+        mock.Path.Returns(invalidPath!);
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => mock.Object.ToFileInfo());
+        Assert.Throws<InvalidOperationException>(() => mock.ToFileInfo());
     }
 
     [Fact]
     public void ToFileInfo_Enumerable_ValidItems_ReturnsFileInfoArray()
     {
         // Arrange
-        var mock1 = new Mock<IStorageItem>();
-        mock1.SetupGet(x => x.Path).Returns(@"C:\file1.txt");
-        var mock2 = new Mock<IStorageItem>();
-        mock2.SetupGet(x => x.Path).Returns(@"C:\file2.txt");
-        var items = new[] { mock1.Object, mock2.Object };
+        var mock1 = Substitute.For<IStorageItem>();
+        mock1.Path.Returns(@"C:\file1.txt");
+        var mock2 = Substitute.For<IStorageItem>();
+        mock2.Path.Returns(@"C:\file2.txt");
+        var items = new[] { mock1, mock2 };
 
         // Act
         var result = items.ToFileInfo();
@@ -80,11 +80,11 @@ public class StorageItemExtensionsTests
     public void ToFileInfo_Enumerable_ContainsInvalidItem_ThrowsInvalidOperationException()
     {
         // Arrange
-        var mock1 = new Mock<IStorageItem>();
-        mock1.SetupGet(x => x.Path).Returns(@"C:\file1.txt");
-        var mock2 = new Mock<IStorageItem>();
-        mock2.SetupGet(x => x.Path).Returns(() => null!);
-        var items = new[] { mock1.Object, mock2.Object };
+        var mock1 = Substitute.For<IStorageItem>();
+        mock1.Path.Returns(@"C:\file1.txt");
+        var mock2 = Substitute.For<IStorageItem>();
+        mock2.Path.Returns(x => null!);
+        var items = new[] { mock1, mock2 };
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => items.ToFileInfo());
