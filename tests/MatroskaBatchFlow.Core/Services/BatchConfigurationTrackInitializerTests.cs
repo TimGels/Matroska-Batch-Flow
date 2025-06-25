@@ -1,7 +1,7 @@
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Tests.Builders;
-using Moq;
+using NSubstitute;
 
 namespace MatroskaBatchFlow.Core.Tests.Services;
 
@@ -11,17 +11,20 @@ public class BatchConfigurationTrackInitializerTests
     public void EnsureTrackCount_ReferenceHasMoreTracks_AddsTracksToBatchConfig()
     {
         // Arrange
-        var mockConfig = new Mock<IBatchConfiguration>();
+        var mockConfig = Substitute.For<IBatchConfiguration>();
         var audioTracks = new List<TrackConfiguration>();
-        mockConfig.Setup(c => c.GetTrackListForType(TrackType.Audio)).Returns(audioTracks);
+        mockConfig.GetTrackListForType(TrackType.Audio).Returns(audioTracks);
 
-        var initializer = new BatchConfigurationTrackInitializer(mockConfig.Object);
+        var initializer = new BatchConfigurationTrackInitializer(mockConfig);
 
-        // Build reference file with 3 audio tracks
-        var builder = new MediaInfoResultBuilder().WithCreatingLibrary();
-        for (int i = 0; i < 3; i++)
-            builder.AddTrack(new TrackInfoBuilder().WithType(TrackType.Audio).WithStreamKindID(i).Build());
-        var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = builder.Build() };
+        // Build reference file with 3 audio tracks using fluent API
+        var mediaInfoResult = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .AddTrackOfType(TrackType.Audio)
+            .AddTrackOfType(TrackType.Audio)
+            .AddTrackOfType(TrackType.Audio)
+            .Build();
+        var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = mediaInfoResult };
 
         // Act
         initializer.EnsureTrackCount(referenceFile, TrackType.Audio);
@@ -35,21 +38,23 @@ public class BatchConfigurationTrackInitializerTests
     public void EnsureTrackCount_ReferenceHasFewerTracks_RemovesTracksFromBatchConfig()
     {
         // Arrange
-        var mockConfig = new Mock<IBatchConfiguration>();
+        var mockConfig = Substitute.For<IBatchConfiguration>();
         var audioTracks = new List<TrackConfiguration>
         {
             new() { TrackType = TrackType.Audio },
             new() { TrackType = TrackType.Audio },
             new() { TrackType = TrackType.Audio }
         };
-        mockConfig.Setup(c => c.GetTrackListForType(TrackType.Audio)).Returns(audioTracks);
+        mockConfig.GetTrackListForType(TrackType.Audio).Returns(audioTracks);
 
-        var initializer = new BatchConfigurationTrackInitializer(mockConfig.Object);
+        var initializer = new BatchConfigurationTrackInitializer(mockConfig);
 
-        // Build reference file with 1 audio track
-        var builder = new MediaInfoResultBuilder().WithCreatingLibrary();
-        builder.AddTrack(new TrackInfoBuilder().WithType(TrackType.Audio).WithStreamKindID(0).Build());
-        var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = builder.Build() };
+        // Build reference file with 1 audio track using fluent API
+        var mediaInfoResult = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .AddTrackOfType(TrackType.Audio)
+            .Build();
+        var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = mediaInfoResult };
 
         // Act
         initializer.EnsureTrackCount(referenceFile, TrackType.Audio);
@@ -63,21 +68,23 @@ public class BatchConfigurationTrackInitializerTests
     public void EnsureTrackCount_ReferenceAndBatchConfigHaveSameCount_DoesNotModifyBatchConfig()
     {
         // Arrange
-        var mockConfig = new Mock<IBatchConfiguration>();
+        var mockConfig = Substitute.For<IBatchConfiguration>();
         var audioTracks = new List<TrackConfiguration>
         {
             new() { TrackType = TrackType.Audio },
             new() { TrackType = TrackType.Audio }
         };
-        mockConfig.Setup(c => c.GetTrackListForType(TrackType.Audio)).Returns(audioTracks);
+        mockConfig.GetTrackListForType(TrackType.Audio).Returns(audioTracks);
 
-        var initializer = new BatchConfigurationTrackInitializer(mockConfig.Object);
+        var initializer = new BatchConfigurationTrackInitializer(mockConfig);
 
-        // Build reference file with 2 audio tracks
-        var builder = new MediaInfoResultBuilder().WithCreatingLibrary();
-        for (int i = 0; i < 2; i++)
-            builder.AddTrack(new TrackInfoBuilder().WithType(TrackType.Audio).WithStreamKindID(i).Build());
-        var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = builder.Build() };
+        // Build reference file with 2 audio tracks using fluent API
+        var mediaInfoResult = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .AddTrackOfType(TrackType.Audio)
+            .AddTrackOfType(TrackType.Audio)
+            .Build();
+        var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = mediaInfoResult };
 
         // Act
         initializer.EnsureTrackCount(referenceFile, TrackType.Audio);
@@ -90,60 +97,64 @@ public class BatchConfigurationTrackInitializerTests
     public void EnsureTrackCount_ReferenceFileIsNull_DoesNotModifyBatchConfig()
     {
         // Arrange
-        var mockConfig = new Mock<IBatchConfiguration>();
+        var mockConfig = Substitute.For<IBatchConfiguration>();
         var audioTracks = new List<TrackConfiguration> { new() { TrackType = TrackType.Audio } };
-        mockConfig.Setup(c => c.GetTrackListForType(TrackType.Audio)).Returns(audioTracks);
+        mockConfig.GetTrackListForType(TrackType.Audio).Returns(audioTracks);
 
-        var initializer = new BatchConfigurationTrackInitializer(mockConfig.Object);
+        var initializer = new BatchConfigurationTrackInitializer(mockConfig);
 
         // Act
         initializer.EnsureTrackCount(null!, TrackType.Audio);
 
         // Assert
         Assert.Single(audioTracks);
-        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never);
+        mockConfig.DidNotReceive().GetTrackListForType(Arg.Any<TrackType>());
     }
 
     [Fact]
     public void EnsureTrackCount_NoTrackTypesSpecified_DoesNotModifyBatchConfig()
     {
         // Arrange
-        var mockConfig = new Mock<IBatchConfiguration>();
+        var mockConfig = Substitute.For<IBatchConfiguration>();
         var audioTracks = new List<TrackConfiguration> { new() { TrackType = TrackType.Audio } };
-        mockConfig.Setup(c => c.GetTrackListForType(TrackType.Audio)).Returns(audioTracks);
+        mockConfig.GetTrackListForType(TrackType.Audio).Returns(audioTracks);
 
-        var initializer = new BatchConfigurationTrackInitializer(mockConfig.Object);
+        var initializer = new BatchConfigurationTrackInitializer(mockConfig);
 
-        var builder = new MediaInfoResultBuilder().WithCreatingLibrary();
-        builder.AddTrack(new TrackInfoBuilder().WithType(TrackType.Audio).WithStreamKindID(0).Build());
-        var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = builder.Build() };
+        var mediaInfoResult = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .AddTrackOfType(TrackType.Audio)
+            .Build();
+        var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = mediaInfoResult };
 
         // Act
         initializer.EnsureTrackCount(referenceFile);
 
         // Assert
         Assert.Single(audioTracks);
-        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never);
+        mockConfig.DidNotReceive().GetTrackListForType(Arg.Any<TrackType>());
     }
 
     [Fact]
     public void EnsureTrackCount_MultipleTrackTypes_SynchronizesEachTypeIndependently()
     {
         // Arrange
-        var mockConfig = new Mock<IBatchConfiguration>();
+        var mockConfig = Substitute.For<IBatchConfiguration>();
         var audioTracks = new List<TrackConfiguration> { new() { TrackType = TrackType.Audio } };
         var videoTracks = new List<TrackConfiguration>();
-        mockConfig.Setup(c => c.GetTrackListForType(TrackType.Audio)).Returns(audioTracks);
-        mockConfig.Setup(c => c.GetTrackListForType(TrackType.Video)).Returns(videoTracks);
+        mockConfig.GetTrackListForType(TrackType.Audio).Returns(audioTracks);
+        mockConfig.GetTrackListForType(TrackType.Video).Returns(videoTracks);
 
-        var initializer = new BatchConfigurationTrackInitializer(mockConfig.Object);
+        var initializer = new BatchConfigurationTrackInitializer(mockConfig);
 
-        // Reference file: 2 audio, 1 video
-        var builder = new MediaInfoResultBuilder().WithCreatingLibrary();
-        builder.AddTrack(new TrackInfoBuilder().WithType(TrackType.Audio).WithStreamKindID(0).Build());
-        builder.AddTrack(new TrackInfoBuilder().WithType(TrackType.Audio).WithStreamKindID(1).Build());
-        builder.AddTrack(new TrackInfoBuilder().WithType(TrackType.Video).WithStreamKindID(0).Build());
-        var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = builder.Build() };
+        // Reference file: 2 audio, 1 video using fluent API
+        var mediaInfoResult = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .AddTrackOfType(TrackType.Audio)
+            .AddTrackOfType(TrackType.Audio)
+            .AddTrackOfType(TrackType.Video)
+            .Build();
+        var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = mediaInfoResult };
 
         // Act
         initializer.EnsureTrackCount(referenceFile, TrackType.Audio, TrackType.Video);
@@ -159,19 +170,21 @@ public class BatchConfigurationTrackInitializerTests
     public void EnsureTrackCount_ReferenceFileHasZeroTracks_ClearsBatchConfigList()
     {
         // Arrange
-        var mockConfig = new Mock<IBatchConfiguration>();
+        var mockConfig = Substitute.For<IBatchConfiguration>();
         var audioTracks = new List<TrackConfiguration>
         {
             new() { TrackType = TrackType.Audio },
             new() { TrackType = TrackType.Audio }
         };
-        mockConfig.Setup(c => c.GetTrackListForType(TrackType.Audio)).Returns(audioTracks);
+        mockConfig.GetTrackListForType(TrackType.Audio).Returns(audioTracks);
 
-        var initializer = new BatchConfigurationTrackInitializer(mockConfig.Object);
+        var initializer = new BatchConfigurationTrackInitializer(mockConfig);
 
-        // Reference file: 0 audio tracks
-        var builder = new MediaInfoResultBuilder().WithCreatingLibrary();
-        var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = builder.Build() };
+        // Reference file: 0 audio tracks using fluent API
+        var mediaInfoResult = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .Build();
+        var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = mediaInfoResult };
 
         // Act
         initializer.EnsureTrackCount(referenceFile, TrackType.Audio);
@@ -187,16 +200,16 @@ public class BatchConfigurationTrackInitializerTests
     public void EnsureTrackCount_VariousAudioCounts_ResultsAsExpected(int initialCount, int referenceCount, int expectedCount)
     {
         // Arrange
-        var mockConfig = new Mock<IBatchConfiguration>();
+        var mockConfig = Substitute.For<IBatchConfiguration>();
         var audioTracks = Enumerable.Range(0, initialCount)
             .Select(_ => new TrackConfiguration { TrackType = TrackType.Audio }).ToList();
-        mockConfig.Setup(c => c.GetTrackListForType(TrackType.Audio)).Returns(audioTracks);
+        mockConfig.GetTrackListForType(TrackType.Audio).Returns(audioTracks);
 
-        var initializer = new BatchConfigurationTrackInitializer(mockConfig.Object);
+        var initializer = new BatchConfigurationTrackInitializer(mockConfig);
 
         var builder = new MediaInfoResultBuilder().WithCreatingLibrary();
         for (int i = 0; i < referenceCount; i++)
-            builder.AddTrack(new TrackInfoBuilder().WithType(TrackType.Audio).WithStreamKindID(i).Build());
+            builder.AddTrackOfType(TrackType.Audio);
         var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = builder.Build() };
 
         // Act
@@ -210,11 +223,11 @@ public class BatchConfigurationTrackInitializerTests
     public void EnsureTrackCount_ReferenceFileResultIsNull_DoesNotModifyBatchConfig()
     {
         // Arrange
-        var mockConfig = new Mock<IBatchConfiguration>();
+        var mockConfig = Substitute.For<IBatchConfiguration>();
         var audioTracks = new List<TrackConfiguration> { new() { TrackType = TrackType.Audio } };
-        mockConfig.Setup(c => c.GetTrackListForType(TrackType.Audio)).Returns(audioTracks);
+        mockConfig.GetTrackListForType(TrackType.Audio).Returns(audioTracks);
 
-        var initializer = new BatchConfigurationTrackInitializer(mockConfig.Object);
+        var initializer = new BatchConfigurationTrackInitializer(mockConfig);
 
         var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = null! };
 
@@ -223,18 +236,18 @@ public class BatchConfigurationTrackInitializerTests
 
         // Assert
         Assert.Single(audioTracks);
-        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never);
+        mockConfig.DidNotReceive().GetTrackListForType(Arg.Any<TrackType>());
     }
 
     [Fact]
     public void EnsureTrackCount_ReferenceFileMediaIsNull_DoesNotModifyBatchConfig()
     {
         // Arrange
-        var mockConfig = new Mock<IBatchConfiguration>();
+        var mockConfig = Substitute.For<IBatchConfiguration>();
         var audioTracks = new List<TrackConfiguration> { new() { TrackType = TrackType.Audio } };
-        mockConfig.Setup(c => c.GetTrackListForType(TrackType.Audio)).Returns(audioTracks);
+        mockConfig.GetTrackListForType(TrackType.Audio).Returns(audioTracks);
 
-        var initializer = new BatchConfigurationTrackInitializer(mockConfig.Object);
+        var initializer = new BatchConfigurationTrackInitializer(mockConfig);
 
         var result = new MediaInfoResult(
             new MediaInfoResult.CreatingLibraryInfo("", "", ""),
@@ -247,18 +260,18 @@ public class BatchConfigurationTrackInitializerTests
 
         // Assert
         Assert.Single(audioTracks);
-        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never);
+        mockConfig.DidNotReceive().GetTrackListForType(Arg.Any<TrackType>());
     }
 
     [Fact]
     public void EnsureTrackCount_ReferenceFileMediaTrackIsNull_DoesNotModifyBatchConfig()
     {
         // Arrange
-        var mockConfig = new Mock<IBatchConfiguration>();
+        var mockConfig = Substitute.For<IBatchConfiguration>();
         var audioTracks = new List<TrackConfiguration> { new() { TrackType = TrackType.Audio } };
-        mockConfig.Setup(c => c.GetTrackListForType(TrackType.Audio)).Returns(audioTracks);
+        mockConfig.GetTrackListForType(TrackType.Audio).Returns(audioTracks);
 
-        var initializer = new BatchConfigurationTrackInitializer(mockConfig.Object);
+        var initializer = new BatchConfigurationTrackInitializer(mockConfig);
 
         var media = new MediaInfoResult.MediaInfo("ref", null!); // Track is null
         var result = new MediaInfoResult(
@@ -272,28 +285,30 @@ public class BatchConfigurationTrackInitializerTests
 
         // Assert
         Assert.Single(audioTracks);
-        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never);
+        mockConfig.DidNotReceive().GetTrackListForType(Arg.Any<TrackType>());
     }
 
     [Fact]
     public void EnsureTrackCount_TrackTypesIsNull_DoesNotModifyBatchConfig()
     {
         // Arrange
-        var mockConfig = new Mock<IBatchConfiguration>();
+        var mockConfig = Substitute.For<IBatchConfiguration>();
         var audioTracks = new List<TrackConfiguration> { new() { TrackType = TrackType.Audio } };
-        mockConfig.Setup(c => c.GetTrackListForType(TrackType.Audio)).Returns(audioTracks);
+        mockConfig.GetTrackListForType(TrackType.Audio).Returns(audioTracks);
 
-        var initializer = new BatchConfigurationTrackInitializer(mockConfig.Object);
+        var initializer = new BatchConfigurationTrackInitializer(mockConfig);
 
-        var builder = new MediaInfoResultBuilder().WithCreatingLibrary();
-        builder.AddTrack(new TrackInfoBuilder().WithType(TrackType.Audio).WithStreamKindID(0).Build());
-        var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = builder.Build() };
+        var mediaInfoResult = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .AddTrackOfType(TrackType.Audio)
+            .Build();
+        var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = mediaInfoResult };
 
         // Act
         initializer.EnsureTrackCount(referenceFile, null!);
 
         // Assert
         Assert.Single(audioTracks);
-        mockConfig.Verify(c => c.GetTrackListForType(It.IsAny<TrackType>()), Times.Never());
+        mockConfig.DidNotReceive().GetTrackListForType(Arg.Any<TrackType>());
     }
 }

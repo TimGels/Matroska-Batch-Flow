@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using MatroskaBatchFlow.Core.Enums;
 
 namespace MatroskaBatchFlow.Core.Tests.Builders;
@@ -5,10 +6,13 @@ namespace MatroskaBatchFlow.Core.Tests.Builders;
 /// <summary>
 /// A builder class for constructing MediaInfoResult objects with a fluent API.
 /// </summary>
+[ExcludeFromCodeCoverage(Justification = "Builder class for test data, not production code.")]
 public class MediaInfoResultBuilder
 {
     private MediaInfoResult.CreatingLibraryInfo _creatingLibrary;
     private MediaInfoResult.MediaInfo _media;
+    private int _nextStreamKindId = 0;
+    private readonly HashSet<int> _usedStreamKindIds = [];
 
     /// <summary>
     /// Initializes a new instance of the MediaInfoResultBuilder class with default values.
@@ -96,6 +100,41 @@ public class MediaInfoResultBuilder
         var tracks = new List<MediaInfoResult.MediaInfo.TrackInfo>(_media.Track) { track };
         _media = new MediaInfoResult.MediaInfo(_media.Ref, tracks);
         return this;
+    }
+
+    /// <summary>
+    /// Adds a track of the specified type using TrackInfoBuilder.
+    /// If streamKindId is not provided, assigns the next available unique ID.
+    /// </summary>
+    /// <param name="type">The type of the track (e.g., audio, video, subtitle).</param>
+    /// <returns>The current builder instance for method chaining.</returns>
+    public MediaInfoResultBuilder AddTrackOfType(TrackType type)
+    {
+        // Find the next available unique streamKindId
+        while (_usedStreamKindIds.Contains(_nextStreamKindId))
+            _nextStreamKindId++;
+        return AddTrackOfType(type, _nextStreamKindId++);
+    }
+
+    /// <summary>
+    /// Adds a new track of the specified type and associates it with the given stream kind identifier.
+    /// </summary>
+    /// <remarks>This method ensures that each track is uniquely associated with a stream kind identifier. Attempting
+    /// to reuse an existing <paramref name="streamKindId"/> will result in an exception.</remarks>
+    /// <param name="type">The type of the track to add. This determines the track's media category.</param>
+    /// <param name="streamKindId">The unique identifier for the stream kind to associate with the track.  Must not already be in use.</param>
+    /// <returns>The current <see cref="MediaInfoResultBuilder"/> instance, allowing for method chaining.</returns>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="streamKindId"/> is already in use.</exception>
+    public MediaInfoResultBuilder AddTrackOfType(TrackType type, int streamKindId)
+    {
+        if (_usedStreamKindIds.Contains(streamKindId))
+            throw new ArgumentException($"streamKindId {streamKindId} is already used.", nameof(streamKindId));
+        _usedStreamKindIds.Add(streamKindId);
+        var track = new TrackInfoBuilder()
+            .WithType(type)
+            .WithStreamKindID(streamKindId)
+            .Build();
+        return AddTrack(track);
     }
 
     /// <summary>
@@ -988,7 +1027,7 @@ public class ExtraInfoBuilder
     private string _dsurmod = string.Empty;
     private string _acmod = string.Empty;
     private string _lfeon = string.Empty;
-    private Dictionary<string, string> _chapters = new Dictionary<string, string>();
+    private Dictionary<string, string> _chapters = [];
 
     /// <summary>
     /// Sets the attachments.
@@ -1118,7 +1157,7 @@ public class ExtraInfoBuilder
     /// <returns>The current builder instance for method chaining.</returns>
     public ExtraInfoBuilder WithChapters(Dictionary<string, string> chapters)
     {
-        _chapters = chapters ?? new Dictionary<string, string>();
+        _chapters = chapters ?? [];
         return this;
     }
 
