@@ -24,10 +24,10 @@
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="BatchConfig:TrackConfiguration">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding TrackType}"/>
+                            <TextBlock Text="{x:Bind TrackType}"/>
                             <TextBlock Text="Track"
                                        Margin="5,0,0,0"/>
-                            <TextBlock Text="{Binding Position}"
+                            <TextBlock Text="{x:Bind Position}"
                                        Margin="10,0,0,0"
                                        Opacity="0.7"/>
                         </StackPanel>
