@@ -15,6 +15,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <!--Dropdown menu Tracks-->
         <StackPanel Grid.Row="0">
@@ -40,10 +41,12 @@
                                        IsDefaultTrack="{Binding IsDefaultTrack, Mode=TwoWay}"
                                        IsForcedTrack="{Binding IsForcedTrack, Mode=TwoWay}"
                                        AvailableLanguages="{Binding Languages, Mode=OneWay}"
-                                       IsEnabled="{Binding IsTrackSelected}"/>
+                                       TrackName="{Binding TrackName, Mode=TwoWay}"
+                                       IsEnabled="{Binding IsTrackSelected}" />
         <!--<Controls:TrackSettingsControl Grid.Row="1" Tracks="{Binding VideoTracks2, Mode=TwoWay}"
                                        AvailableLanguages="{Binding Languages, Mode=OneWay}"/>-->
 
         <Button Grid.Row="2" Content="Clear Video Tracks" Command="{Binding ClearVideoTracks}" />
+        <Button Grid.Row="3" Content="Mutate the name" Command="{Binding MutateNameTrack}" />
     </Grid>
 </Page>

@@ -14,6 +14,7 @@ public partial class VideoViewModel : ObservableObject
     private bool _isEnabledTrack = true;
     private bool _isForcedTrack = true;
     private string _trackName = string.Empty;
+    private bool _suppressBatchConfigUpdate = false;
     public bool IsTrackSelected => SelectedTrack is not null && VideoTracks.Count > 0;
     public ImmutableList<MatroskaLanguageOption> Languages
     {
@@ -104,11 +105,13 @@ public partial class VideoViewModel : ObservableObject
     }
 
     public ICommand ClearVideoTracks { get; }
+    public ICommand MutateNameTrack { get; }
 
     public VideoViewModel(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration)
     {
         _batchConfiguration = batchConfiguration;
         ClearVideoTracks = new RelayCommand(ClearVideoTracksAction);
+        MutateNameTrack = new RelayCommand(() => _batchConfiguration.VideoTracks[0].Name = DateTime.Now.ToString());
         _languages = languageProvider.Languages;
 
         SelectedTrack = _batchConfiguration.VideoTracks.FirstOrDefault();
@@ -125,12 +128,6 @@ public partial class VideoViewModel : ObservableObject
     private void SetupEventHandlers()
     {
         _batchConfiguration.PropertyChanged += OnBatchConfigurationChanged;
-
-        foreach (var track in VideoTracks)
-        {
-            // Subscribe to property changes for each track in the VideoTracks collection.
-            track.PropertyChanged += OnTrackPropertyChanged;
-        }
 
         // Subscribe to property changes for the VideoTracks collection itself.
         // This ensures that any changes to the VideoTracks collection in the ViewModel
@@ -175,40 +172,76 @@ public partial class VideoViewModel : ObservableObject
     /// <param name="e"></param>
     private void OnTrackPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        // If the model VideoTracks collection itself changed, update the local VideoTracks property
-        if (nameof(VideoTracks).Equals(e.PropertyName))
+        if (sender != SelectedTrack || SelectedTrack is null)
+            return;
+
+        // Suppress batch configuration updates while synchronizing properties to avoid (potential) recursion. 
+        _suppressBatchConfigUpdate = true;
+
+        switch (e.PropertyName)
         {
-            VideoTracks = [.. _batchConfiguration.VideoTracks];
+            case nameof(TrackConfiguration.Name):
+                TrackName = SelectedTrack.Name;
+                break;
+            case nameof(TrackConfiguration.Default):
+                IsDefaultTrack = SelectedTrack.Default;
+                break;
+            case nameof(TrackConfiguration.Forced):
+                IsForcedTrack = SelectedTrack.Forced;
+                break;
+            case nameof(TrackConfiguration.Remove):
+                IsEnabledTrack = !SelectedTrack.Remove;
+                break;
         }
+
+        _suppressBatchConfigUpdate = false;
     }
 
-
     /// <summary>
-    /// Handles changes to the SelectedTrack property.
+    /// Updates properties of the view model when the selected track changes to reflect the state of the newly selected track.
     /// </summary>
-    /// <param name="oldValue"></param>
-    /// <param name="newValue"></param>
+    /// <remarks>The method also ensures that during the update, batch configuration updates are suppressed to avoid potential recursion.</remarks>
+    /// <param name="oldValue">The previously selected <see cref="TrackConfiguration"/>, or <see langword="null"/> if no track was previously
+    /// selected.</param>
+    /// <param name="newValue">The newly selected <see cref="TrackConfiguration"/>, or <see langword="null"/> if no track is currently selected.</param>
     partial void OnSelectedTrackChanged(TrackConfiguration? oldValue, TrackConfiguration? newValue)
     {
         // Raise event to re-calculate IsTrackSelected
         OnPropertyChanged(nameof(IsTrackSelected));
 
-        if (newValue != null)
-        {
-            // Synchronize properties with the selected track
-            IsDefaultTrack = newValue.Default;
-            IsEnabledTrack = !newValue.Remove;
-            IsForcedTrack = newValue.Forced;
-            TrackName = newValue.Name;
-        }
+        if (newValue == null)
+            return;
+
+        // If suppressing updates, do nothing to avoid (potential) recursion.
+        _suppressBatchConfigUpdate = true;
+
+        // Synchronize properties with the selected track
+        IsDefaultTrack = newValue.Default;
+        IsEnabledTrack = !newValue.Remove;
+        IsForcedTrack = newValue.Forced;
+        TrackName = newValue.Name;
+
+        _suppressBatchConfigUpdate = false;
     }
 
     /// <summary>
-    /// Updates the properties of the selected track in the batch configuration.
+    /// Updates the properties of the currently selected video track in the batch configuration using the specified update
+    /// action.
     /// </summary>
-    /// <param name="updateAction"></param>
+    /// <remarks>This method performs no operation if: <list type="bullet"> <item><description>Updates are currently
+    /// suppressed.</description></item> <item><description>No track is selected.</description></item>
+    /// <item><description>The batch configuration does not contain any video tracks.</description></item> </list> The
+    /// method ensures that the selected track's position is valid within the bounds of the video tracks list before
+    /// applying the update action.</remarks>
+    /// <param name="updateAction">An <see cref="Action{TrackConfiguration}"/> delegate that defines the update to apply to the selected track's
+    /// configuration. This action is invoked with the current track's configuration as its parameter.</param>
     private void UpdateBatchConfigTrackProperty(Action<TrackConfiguration> updateAction)
     {
+        // If suppressing updates, do nothing to avoid (potential) recursion.
+        if (_suppressBatchConfigUpdate)
+            return;
+
+        // If no track is selected or the batch configuration does not contain video tracks, do nothing.
         if (SelectedTrack == null || _batchConfiguration.VideoTracks == null)
             return;
 

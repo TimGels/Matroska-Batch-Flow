@@ -86,7 +86,7 @@
                            Grid.Column="0"
                            VerticalAlignment="Center"/>
                 <TextBox Grid.Column="1"
-                         Text="{x:Bind SelectedTrack.Name, Mode=TwoWay}"/>
+                         Text="{x:Bind TrackName, Mode=TwoWay}"/>
             </Grid>
         </StackPanel>
 
