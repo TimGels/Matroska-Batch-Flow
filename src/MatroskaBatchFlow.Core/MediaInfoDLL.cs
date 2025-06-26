@@ -13,7 +13,7 @@
 // in the executable folder
 //
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+using System.Diagnostics.CodeAnalysis;
 using System;
 using System.Runtime.InteropServices;
 
@@ -71,6 +71,7 @@ namespace MediaInfoLib
         Finalized = 0x08,
     }
 
+    [ExcludeFromCodeCoverage(Justification = "MediaInfo DLL is a native wrapper")]
     public class MediaInfo
     {
         //Import of DLL functions. DO NOT USE until you know what you do (MediaInfo DLL do NOT use CoTaskMemAlloc to allocate memory)
@@ -230,22 +231,7 @@ namespace MediaInfoLib
         public int Count_Get(StreamKind StreamKind) { return Count_Get(StreamKind, -1); }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    [ExcludeFromCodeCoverage(Justification = "MediaInfoList is a thin managed wrapper over native MediaInfo DLL functions.")]
     public class MediaInfoList
     {
         //Import of DLL functions. DO NOT USE until you know what you do (MediaInfo DLL do NOT use CoTaskMemAlloc to allocate memory)

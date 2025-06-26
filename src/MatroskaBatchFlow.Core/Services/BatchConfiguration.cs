@@ -1,226 +1,225 @@
-﻿using MatroskaBatchFlow.Core.Enums;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using MatroskaBatchFlow.Core.Enums;
 
-namespace MatroskaBatchFlow.Core.Services
+namespace MatroskaBatchFlow.Core.Services;
+
+/// <summary>
+/// Represents the configuration for batch processing of media files.
+/// </summary>
+public class BatchConfiguration : INotifyPropertyChanged, IBatchConfiguration
 {
-    /// <summary>
-    /// Represents the configuration for batch processing of media files.
-    /// </summary>
-    public class BatchConfiguration : INotifyPropertyChanged, IBatchConfiguration
+    private string _directoryPath = string.Empty;
+    private string _title = string.Empty;
+    private ObservableCollection<TrackConfiguration> _audioTracks = [];
+    private ObservableCollection<TrackConfiguration> _videoTracks = [];
+    private ObservableCollection<TrackConfiguration> _subtitleTracks = [];
+    private static readonly ImmutableList<TrackConfiguration> _emptyTrackList = [];
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public string DirectoryPath
     {
-        private string _directoryPath = string.Empty;
-        private string _title = string.Empty;
-        private ObservableCollection<TrackConfiguration> _audioTracks = [];
-        private ObservableCollection<TrackConfiguration> _videoTracks = [];
-        private ObservableCollection<TrackConfiguration> _subtitleTracks = [];
-        private static readonly ImmutableList<TrackConfiguration> _emptyTrackList = [];
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        public string DirectoryPath
+        get => _directoryPath;
+        set
         {
-            get => _directoryPath;
-            set
+            if (_directoryPath != value)
             {
-                if (_directoryPath != value)
-                {
-                    _directoryPath = value;
-                    OnPropertyChanged(nameof(DirectoryPath));
-                }
+                _directoryPath = value;
+                OnPropertyChanged(nameof(DirectoryPath));
             }
-        }
-
-        public string Title
-        {
-            get => _title;
-            set
-            {
-                if (_title != value)
-                {
-                    _title = value;
-                    OnPropertyChanged(nameof(Title));
-                }
-            }
-        }
-
-        public ObservableCollection<TrackConfiguration> AudioTracks
-        {
-            get => _audioTracks;
-            set
-            {
-                if (!ReferenceEquals(_audioTracks, value))
-                {
-                    _audioTracks = value;
-                    OnPropertyChanged(nameof(AudioTracks));
-                }
-            }
-        }
-
-        public ObservableCollection<TrackConfiguration> VideoTracks
-        {
-            get => _videoTracks;
-            set
-            {
-                if (!ReferenceEquals(_videoTracks, value))
-                {
-                    _videoTracks = value;
-                    OnPropertyChanged(nameof(VideoTracks));
-                }
-            }
-        }
-
-        public ObservableCollection<TrackConfiguration> SubtitleTracks
-        {
-            get => _subtitleTracks;
-            set
-            {
-                if (!ReferenceEquals(_subtitleTracks, value))
-                {
-                    _subtitleTracks = value;
-                    OnPropertyChanged(nameof(SubtitleTracks));
-                }
-            }
-        }
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        /// <inheritdoc />
-        public void Clear()
-        {
-            DirectoryPath = string.Empty;
-            Title = string.Empty;
-            AudioTracks.Clear();
-            VideoTracks.Clear();
-            SubtitleTracks.Clear();
-        }
-
-        /// <inheritdoc />
-        public IList<TrackConfiguration> GetTrackListForType(TrackType trackType)
-        {
-            return trackType switch
-            {
-                TrackType.Audio => AudioTracks,
-                TrackType.Video => VideoTracks,
-                TrackType.Text => SubtitleTracks,
-                _ => _emptyTrackList
-            };
         }
     }
 
-    /// <summary>
-    /// Represents the configuration for a specific media track.
-    /// </summary>
-    public sealed class TrackConfiguration : INotifyPropertyChanged
+    public string Title
     {
-        private TrackType _trackType;
-        private int _position;
-        private string _name = string.Empty;
-        private string _language = string.Empty;
-        private bool _default;
-        private bool _forced;
-        private bool _remove;
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        public TrackType TrackType
+        get => _title;
+        set
         {
-            get => _trackType;
-            set
+            if (_title != value)
             {
-                if (_trackType != value)
-                {
-                    _trackType = value;
-                    OnPropertyChanged(nameof(TrackType));
-                }
+                _title = value;
+                OnPropertyChanged(nameof(Title));
             }
         }
+    }
 
-        public int Position
+    public ObservableCollection<TrackConfiguration> AudioTracks
+    {
+        get => _audioTracks;
+        set
         {
-            get => _position;
-            set
+            if (!ReferenceEquals(_audioTracks, value))
             {
-                if (_position != value)
-                {
-                    _position = value;
-                    OnPropertyChanged(nameof(Position));
-                }
+                _audioTracks = value;
+                OnPropertyChanged(nameof(AudioTracks));
             }
         }
+    }
 
-        public string Name
+    public ObservableCollection<TrackConfiguration> VideoTracks
+    {
+        get => _videoTracks;
+        set
         {
-            get => _name;
-            set
+            if (!ReferenceEquals(_videoTracks, value))
             {
-                if (_name != value)
-                {
-                    _name = value;
-                    OnPropertyChanged(nameof(Name));
-                }
+                _videoTracks = value;
+                OnPropertyChanged(nameof(VideoTracks));
             }
         }
+    }
 
-        public string Language
+    public ObservableCollection<TrackConfiguration> SubtitleTracks
+    {
+        get => _subtitleTracks;
+        set
         {
-            get => _language;
-            set
+            if (!ReferenceEquals(_subtitleTracks, value))
             {
-                if (_language != value)
-                {
-                    _language = value;
-                    OnPropertyChanged(nameof(Language));
-                }
+                _subtitleTracks = value;
+                OnPropertyChanged(nameof(SubtitleTracks));
             }
         }
+    }
 
-        public bool Default
+    protected virtual void OnPropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    /// <inheritdoc />
+    public void Clear()
+    {
+        DirectoryPath = string.Empty;
+        Title = string.Empty;
+        AudioTracks.Clear();
+        VideoTracks.Clear();
+        SubtitleTracks.Clear();
+    }
+
+    /// <inheritdoc />
+    public IList<TrackConfiguration> GetTrackListForType(TrackType trackType)
+    {
+        return trackType switch
         {
-            get => _default;
-            set
+            TrackType.Audio => AudioTracks,
+            TrackType.Video => VideoTracks,
+            TrackType.Text => SubtitleTracks,
+            _ => _emptyTrackList
+        };
+    }
+}
+
+/// <summary>
+/// Represents the configuration for a specific media track.
+/// </summary>
+public sealed class TrackConfiguration : INotifyPropertyChanged
+{
+    private TrackType _trackType;
+    private int _position;
+    private string _name = string.Empty;
+    private string _language = string.Empty;
+    private bool _default;
+    private bool _forced;
+    private bool _remove;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public TrackType TrackType
+    {
+        get => _trackType;
+        set
+        {
+            if (_trackType != value)
             {
-                if (_default != value)
-                {
-                    _default = value;
-                    OnPropertyChanged(nameof(Default));
-                }
+                _trackType = value;
+                OnPropertyChanged(nameof(TrackType));
             }
         }
+    }
 
-        public bool Forced
+    public int Position
+    {
+        get => _position;
+        set
         {
-            get => _forced;
-            set
+            if (_position != value)
             {
-                if (_forced != value)
-                {
-                    _forced = value;
-                    OnPropertyChanged(nameof(Forced));
-                }
+                _position = value;
+                OnPropertyChanged(nameof(Position));
             }
         }
+    }
 
-        public bool Remove
+    public string Name
+    {
+        get => _name;
+        set
         {
-            get => _remove;
-            set
+            if (_name != value)
             {
-                if (_remove != value)
-                {
-                    _remove = value;
-                    OnPropertyChanged(nameof(Remove));
-                }
+                _name = value;
+                OnPropertyChanged(nameof(Name));
             }
         }
+    }
 
-        private void OnPropertyChanged(string propertyName)
+    public string Language
+    {
+        get => _language;
+        set
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            if (_language != value)
+            {
+                _language = value;
+                OnPropertyChanged(nameof(Language));
+            }
         }
+    }
+
+    public bool Default
+    {
+        get => _default;
+        set
+        {
+            if (_default != value)
+            {
+                _default = value;
+                OnPropertyChanged(nameof(Default));
+            }
+        }
+    }
+
+    public bool Forced
+    {
+        get => _forced;
+        set
+        {
+            if (_forced != value)
+            {
+                _forced = value;
+                OnPropertyChanged(nameof(Forced));
+            }
+        }
+    }
+
+    public bool Remove
+    {
+        get => _remove;
+        set
+        {
+            if (_remove != value)
+            {
+                _remove = value;
+                OnPropertyChanged(nameof(Remove));
+            }
+        }
+    }
+
+    private void OnPropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

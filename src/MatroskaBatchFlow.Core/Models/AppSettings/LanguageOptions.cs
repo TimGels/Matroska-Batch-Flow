@@ -1,7 +1,6 @@
-﻿namespace MatroskaBatchFlow.Core.Models.AppSettings
+namespace MatroskaBatchFlow.Core.Models.AppSettings;
+
+public class LanguageOptions
 {
-    public class LanguageOptions
-    {
-        public string FilePath { get; set; } = string.Empty;
-    }
+    public string FilePath { get; set; } = string.Empty;
 }

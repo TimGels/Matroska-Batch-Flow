@@ -1,38 +1,37 @@
-﻿using MatroskaBatchFlow.Core.Enums;
+using MatroskaBatchFlow.Core.Enums;
 
-namespace MatroskaBatchFlow.Core.Services.TrackNamingRuleEngine
+namespace MatroskaBatchFlow.Core.Services.TrackNamingRuleEngine;
+
+public class SubtitleTrackNamingRule : IFileProcessingRule
 {
-    public class SubtitleTrackNamingRule : IFileProcessingRule
+    private readonly Dictionary<string, string> _supportedFormatMappings = new(StringComparer.OrdinalIgnoreCase)
     {
-        private readonly Dictionary<string, string> _supportedFormatMappings = new(StringComparer.OrdinalIgnoreCase)
-        {
-            { "SSA", "SSA / ASS" },
-            { "ASS", "SSA / ASS" },
-            { "WebVTT", "WebVTT" },
-            { "SRT", "SubRip" },
-            { "UTF-8", "SRT" }
-            // Add more mappings as needed
-        };
+        { "SSA", "SSA / ASS" },
+        { "ASS", "SSA / ASS" },
+        { "WebVTT", "WebVTT" },
+        { "SRT", "SubRip" },
+        { "UTF-8", "SRT" }
+        // Add more mappings as needed
+    };
 
-        public void Apply(ScannedFileInfo scannedFile, IBatchConfiguration batchConfig)
-        {
-            if (scannedFile?.Result?.Media?.Track == null || batchConfig?.SubtitleTracks == null)
-                return;
+    public void Apply(ScannedFileInfo scannedFile, IBatchConfiguration batchConfig)
+    {
+        if (scannedFile?.Result?.Media?.Track == null || batchConfig?.SubtitleTracks == null)
+            return;
 
-            foreach (var track in scannedFile.Result.Media.Track.Where(t => t.Type == TrackType.Text))
+        foreach (var track in scannedFile.Result.Media.Track.Where(t => t.Type == TrackType.Text))
+        {
+            if (!_supportedFormatMappings.TryGetValue(track.Format ?? string.Empty, out var name))
+                continue;
+
+            // Find the corresponding TrackConfiguration by position
+            if (!int.TryParse(track.StreamKindPos, out int position))
+                continue;
+
+            var config = batchConfig.SubtitleTracks.FirstOrDefault(t => t.Position == position);
+            if (config != null)
             {
-                if (!_supportedFormatMappings.TryGetValue(track.Format ?? string.Empty, out var name))
-                    continue;
-
-                // Find the corresponding TrackConfiguration by position
-                if (!int.TryParse(track.StreamKindPos, out int position))
-                    continue;
-
-                var config = batchConfig.SubtitleTracks.FirstOrDefault(t => t.Position == position);
-                if (config != null)
-                {
-                    config.Name = name;
-                }
+                config.Name = name;
             }
         }
     }
