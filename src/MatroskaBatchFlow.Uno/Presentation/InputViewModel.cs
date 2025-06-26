@@ -3,8 +3,8 @@ using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Core;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Core.Services.FileValidation;
-using MatroskaBatchFlow.Core.Services.TrackNamingRuleEngine;
 using MatroskaBatchFlow.Uno.Behavior;
 using MatroskaBatchFlow.Uno.Extensions;
 using MatroskaBatchFlow.Uno.Presentation.Dialogs;
@@ -22,9 +22,9 @@ public partial class InputViewModel :ObservableObject, IFilesDropped
 
     private IFileScanner _fileScanner;
 
-    private readonly IFileValidator _fileValidator;
+    private readonly IFileValidationEngine _fileValidator;
 
-    private readonly IFileProcessingRuleEngine _fileProcessingRuleEngine;
+    private readonly IFileProcessingEngine _fileProcessingRuleEngine;
 
     private readonly IBatchConfiguration _batchConfig;
 
@@ -34,8 +34,8 @@ public partial class InputViewModel :ObservableObject, IFilesDropped
 
     public InputViewModel(
         IFileScanner fileScanner,
-        IFileValidator fileValidator,
-        IFileProcessingRuleEngine fileProcessingRuleEngine,
+        IFileValidationEngine fileValidator,
+        IFileProcessingEngine fileProcessingRuleEngine,
         IBatchConfiguration batchConfig,
         IBatchConfigurationTrackInitializer batchConfigurationTrackInitializer
         )

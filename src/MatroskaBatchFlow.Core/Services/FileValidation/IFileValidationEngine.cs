@@ -3,7 +3,7 @@ namespace MatroskaBatchFlow.Core.Services.FileValidation;
 /// <summary>
 /// Defines a contract to coordinate and execute one or more validation rules over a set of files.
 /// </summary>
-public interface IFileValidator
+public interface IFileValidationEngine
 {
     /// <summary>
     /// Validates a collection of scanned files by use of defined validation rules.

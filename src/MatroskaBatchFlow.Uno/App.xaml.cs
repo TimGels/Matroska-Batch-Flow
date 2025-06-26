@@ -1,9 +1,9 @@
 using MatroskaBatchFlow.Core.Models.AppSettings;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Services.FileProcessing;
+using MatroskaBatchFlow.Core.Services.FileProcessing.TrackName;
 using MatroskaBatchFlow.Core.Services.FileValidation;
-using MatroskaBatchFlow.Core.Services.TrackNamingRuleEngine;
 using Uno.Resizetizer;
-using Windows.UI.ViewManagement;
 
 namespace MatroskaBatchFlow.Uno;
 public partial class App : Application
@@ -92,15 +92,16 @@ public partial class App : Application
                     services.AddSingleton<IBatchConfiguration, BatchConfiguration>();
 
                     // Register file validation rules engine service and it's accomadating rules.
-                    services.AddSingleton<IFileValidator, FileValidator>();
+                    services.AddSingleton<IFileValidationEngine, FileValidationEngine>();
                     services.AddSingleton<IFileValidationRule, LanguageConsistencyRule>();
                     services.AddSingleton<IFileValidationRule, TrackCountConsistencyRule>();
 
                     // Register file processing rule engine service and it's accomadating rules.
-                    services.AddSingleton<IFileProcessingRuleEngine, FileProcessingRuleEngine>();
+                    services.AddSingleton<IFileProcessingEngine, FileProcessingEngine>();
                     services.AddSingleton<IFileProcessingRule, SubtitleTrackNamingRule>();
                     services.AddSingleton<IFileProcessingRule, AudioTrackNamingRule>();
                     services.AddSingleton<IFileProcessingRule, VideoTrackNamingRule>();
+                    services.AddSingleton<IFileProcessingRule, TrackPositionRule>();
 
                     services.AddSingleton<IBatchConfigurationTrackInitializer, BatchConfigurationTrackInitializer>();
                 })

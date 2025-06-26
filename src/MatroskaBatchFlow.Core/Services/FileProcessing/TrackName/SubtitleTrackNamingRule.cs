@@ -1,6 +1,6 @@
 using MatroskaBatchFlow.Core.Enums;
 
-namespace MatroskaBatchFlow.Core.Services.TrackNamingRuleEngine;
+namespace MatroskaBatchFlow.Core.Services.FileProcessing.TrackName;
 
 public class SubtitleTrackNamingRule : IFileProcessingRule
 {
@@ -25,10 +25,10 @@ public class SubtitleTrackNamingRule : IFileProcessingRule
                 continue;
 
             // Find the corresponding TrackConfiguration by position
-            if (!int.TryParse(track.StreamKindPos, out int position))
-                continue;
+            //if (!int.TryParse(track.StreamKindID, out int position))
+            //    continue;
 
-            var config = batchConfig.SubtitleTracks.FirstOrDefault(t => t.Position == position);
+            var config = batchConfig.SubtitleTracks.FirstOrDefault(t => t.Position == track.StreamKindID);
             if (config != null)
             {
                 config.Name = name;

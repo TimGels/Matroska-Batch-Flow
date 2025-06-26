@@ -1,6 +1,6 @@
 namespace MatroskaBatchFlow.Core.Services.FileValidation;
 
-public class FileValidator(IEnumerable<IFileValidationRule> rules) : IFileValidator
+public class FileValidationEngine(IEnumerable<IFileValidationRule> rules) : IFileValidationEngine
 {
     private readonly List<IFileValidationRule> _rules = [.. rules];
 

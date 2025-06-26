@@ -1,6 +1,6 @@
 using MatroskaBatchFlow.Core.Enums;
 
-namespace MatroskaBatchFlow.Core.Services.TrackNamingRuleEngine;
+namespace MatroskaBatchFlow.Core.Services.FileProcessing.TrackName;
 
 public class VideoTrackNamingRule : IFileProcessingRule
 {
@@ -17,7 +17,7 @@ public class VideoTrackNamingRule : IFileProcessingRule
             var config = batchConfig.VideoTracks.FirstOrDefault(t => t.Position == track.StreamKindID);
             if (config != null)
             {
-                config.Name = string.Empty;
+                config.Name = "test name" + track.StreamKindID;
             }
         }
     }
