@@ -32,19 +32,6 @@ public class AudioTrackNamingRule : IFileProcessingRule
 
             if (!int.TryParse(track.StreamKindPos, out int position))
                 continue;
-
-            var config = new TrackConfiguration
-            {
-                TrackType = TrackType.Audio,
-                Position = position,
-                Name = name,
-                Language = track.Language ?? string.Empty,
-                Default = string.Equals(track.Default, "Yes", StringComparison.OrdinalIgnoreCase),
-                Forced = string.Equals(track.Forced, "Yes", StringComparison.OrdinalIgnoreCase),
-                Remove = false
-            };
-
-            batchConfig.AudioTracks.Add(config);
         }
     }
 }

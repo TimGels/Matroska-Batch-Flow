@@ -1,5 +1,5 @@
 ﻿<Page
-    x:Class="MatroskaBatchFlow.Uno.Presentation.VideoPage"
+    x:Class="MatroskaBatchFlow.Uno.Presentation.SubtitlePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MatroskaBatchFlow.Uno.Presentation"
@@ -19,8 +19,8 @@
         </Grid.RowDefinitions>
         <!--Dropdown menu Tracks-->
         <StackPanel Grid.Row="0">
-            <ComboBox ItemsSource="{Binding VideoTracks, Mode=OneWay}"
-                      SelectedItem="{Binding SelectedTrack, Mode=TwoWay}"  >
+            <ComboBox ItemsSource="{Binding SubtitleTracks, Mode=OneWay}"
+                      SelectedItem="{Binding SelectedTrack, Mode=TwoWay}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="BatchConfig:TrackConfiguration">
                         <StackPanel Orientation="Horizontal">
@@ -35,7 +35,7 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
         </StackPanel>
-        
+
         <!--Edit-->
         <Controls:TrackSettingsControl Grid.Row="1"
                                        IsDefaultTrack="{Binding IsDefaultTrack, Mode=TwoWay}"
@@ -45,7 +45,7 @@
                                        IsEnabled="{Binding IsTrackSelected}"
                                        SelectedLanguage="{Binding SelectedLanguage, Mode=TwoWay}" />
 
-        <Button Grid.Row="2" Content="Clear Video Tracks" Command="{Binding ClearVideoTracks}" />
+        <Button Grid.Row="2" Content="Clear Subtitle Tracks" Command="{Binding ClearSubtitleTracks}" />
         <Button Grid.Row="3" Content="Mutate the name" Command="{Binding MutateNameTrack}" />
     </Grid>
 </Page>

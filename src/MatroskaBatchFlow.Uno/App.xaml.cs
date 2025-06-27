@@ -76,8 +76,8 @@ public partial class App : Application
                 .UseHttp((context, services) =>
                 {
 #if DEBUG
-                // DelegatingHandler will be automatically injected
-                services.AddTransient<DelegatingHandler, DebugHttpHandler>();
+                    // DelegatingHandler will be automatically injected
+                    services.AddTransient<DelegatingHandler, DebugHttpHandler>();
 #endif
                     services.AddSingleton<IWeatherCache, WeatherCache>();
                     services.AddRefitClient<IApiClient>(context);
@@ -121,11 +121,11 @@ public partial class App : Application
     {
         views.Register(
             new ViewMap(ViewModel: typeof(ShellViewModel)),
-            new ViewMap<ProductsPage, ProductsViewModel>(),
             new ViewMap<InputPage, InputViewModel>(),
             new ViewMap<GeneralPage, GeneralViewModel>(),
             new ViewMap<VideoPage, VideoViewModel>(),
             new ViewMap<AudioPage, AudioViewModel>(),
+            new ViewMap<SubtitlePage, SubtitleViewModel>(),
             new ViewMap<MainPage, MainViewModel>(),
             new DataViewMap<SecondPage, SecondViewModel, Entity>()
         );
@@ -140,7 +140,8 @@ public partial class App : Application
                             new ("Input", View: views.FindByViewModel<InputViewModel>()),
                             new ("General", View: views.FindByViewModel<GeneralViewModel>()),
                             new ("Video", View: views.FindByViewModel<VideoViewModel>()),
-                            new ("Products", View: views.FindByViewModel<ProductsViewModel>()),
+                            new ("Audio", View: views.FindByViewModel<AudioViewModel>()),
+                            new ("Subtitle", View: views.FindByViewModel<SubtitleViewModel>()),
                         ]
                     ),
                     new ("Second", View: views.FindByViewModel<SecondViewModel>()),

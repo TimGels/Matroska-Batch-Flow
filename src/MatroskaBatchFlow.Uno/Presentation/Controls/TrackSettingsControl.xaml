@@ -104,6 +104,7 @@
                           Width="150"
                           IsEditable="True"
                           ItemsSource="{x:Bind AvailableLanguages, Mode=OneWay}"
+                          SelectedItem="{x:Bind SelectedLanguage, Mode=TwoWay}"
                           DisplayMemberPath="Name">
                 </ComboBox>
                 <!--<AutoSuggestBox 

@@ -96,6 +96,22 @@ public abstract partial class TrackViewModelBase : ObservableObject
     }
     protected string _trackName = string.Empty;
 
+    public MatroskaLanguageOption? SelectedLanguage
+    {
+        get => _selectedLanguage;
+        set
+        {
+            if(!EqualityComparer<MatroskaLanguageOption?>.Default.Equals(_selectedLanguage, value))
+            {
+                _selectedLanguage = value;
+                OnPropertyChanged(nameof(SelectedLanguage));
+                UpdateBatchConfigTrackProperty(tc => tc.Language = value);
+            }
+        }
+    }
+
+    protected MatroskaLanguageOption? _selectedLanguage = null;
+
     public bool IsTrackSelected => SelectedTrack is not null && GetTracks().Count > 0;
 
     protected readonly IBatchConfiguration _batchConfiguration;
@@ -150,6 +166,9 @@ public abstract partial class TrackViewModelBase : ObservableObject
             case nameof(TrackConfiguration.Remove):
                 IsEnabledTrack = !SelectedTrack.Remove;
                 break;
+            case nameof(TrackConfiguration.Language):
+                SelectedLanguage = SelectedTrack.Language;
+                break;
         }
 
         _suppressBatchConfigUpdate = false;
@@ -200,6 +219,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
         IsEnabledTrack = !newValue.Remove;
         IsForcedTrack = newValue.Forced;
         TrackName = newValue.Name;
+        SelectedLanguage = newValue.Language;
 
         _suppressBatchConfigUpdate = false;
     }

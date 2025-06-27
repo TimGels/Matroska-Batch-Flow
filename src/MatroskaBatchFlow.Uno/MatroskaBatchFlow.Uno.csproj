@@ -58,7 +58,7 @@
     <None Remove="Presentation\Dialogs\ErrorDialog.xaml" />
     <None Remove="Presentation\GeneralPage.xaml" />
     <None Remove="Presentation\InputPage.xaml" />
-    <None Remove="Presentation\ProductsPage.xaml" />
+    <None Remove="Presentation\SubtitlePage.xaml" />
     <None Remove="Presentation\VideoPage.xaml" />
     <None Remove="ReadMe.md" />
     <None Remove="Resources\languages.json" />
@@ -84,7 +84,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Presentation\ProductsPage.xaml">
+    <Page Update="Presentation\SubtitlePage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

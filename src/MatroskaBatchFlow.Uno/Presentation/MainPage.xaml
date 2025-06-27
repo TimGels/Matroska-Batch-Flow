@@ -29,21 +29,14 @@
                                     uen:Region.Name="Video" />
                 <NavigationViewItem Content="Audio"
                                     uen:Region.Name="Audio" />
-                <NavigationViewItem Content="Subtitles"
-                                    uen:Region.Name="Subtitles" />
+                <NavigationViewItem Content="Subtitle"
+                                    uen:Region.Name="Subtitle" />
                 <NavigationViewItem Content="Output"
                                     uen:Region.Name="Output" />
             </NavigationView.MenuItems>
 
             <Grid uen:Region.Attached="True"
                   uen:Region.Navigator="Visibility">
-                <Grid uen:Region.Name="Subtitles"
-                      Visibility="Collapsed">
-                    <TextBlock Text="Subtitles"
-                               FontSize="24"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center" />
-                </Grid>
                 <Grid uen:Region.Name="Output"
                       Visibility="Collapsed">
                     <TextBox TextWrapping="Wrap"

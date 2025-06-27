@@ -52,6 +52,20 @@ public sealed partial class TrackSettingsControl : UserControl
             typeof(TrackSettingsControl),
             new PropertyMetadata(false));
 
+    public static readonly DependencyProperty AvailableLanguagesProperty =
+        DependencyProperty.Register(
+            nameof(AvailableLanguages),
+            typeof(ImmutableList<MatroskaLanguageOption>),
+            typeof(TrackSettingsControl),
+            new PropertyMetadata(default(ImmutableList<MatroskaLanguageOption>)));
+
+    public static readonly DependencyProperty SelectedLanguageProperty =
+        DependencyProperty.Register(
+            nameof(SelectedLanguage),
+            typeof(MatroskaLanguageOption),
+            typeof(TrackSettingsControl),
+            new PropertyMetadata(null));
+
     public bool IsDefaultTrack
     {
         get => (bool)GetValue(IsDefaultTrackProperty);
@@ -82,17 +96,16 @@ public sealed partial class TrackSettingsControl : UserControl
         set => SetValue(SelectedTrackProperty, value);
     }
 
-    public static readonly DependencyProperty AvailableLanguagesProperty =
-        DependencyProperty.Register(
-            nameof(AvailableLanguages),
-            typeof(ImmutableList<MatroskaLanguageOption>),
-            typeof(TrackSettingsControl),
-            new PropertyMetadata(default(ImmutableList<MatroskaLanguageOption>)));
-
     public ImmutableList<MatroskaLanguageOption> AvailableLanguages
     {
         get => (ImmutableList<MatroskaLanguageOption>)GetValue(AvailableLanguagesProperty);
         set => SetValue(AvailableLanguagesProperty, value);
+    }
+
+    public MatroskaLanguageOption? SelectedLanguage
+    {
+        get => (MatroskaLanguageOption?)GetValue(SelectedLanguageProperty);
+        set => SetValue(SelectedLanguageProperty, value);
     }
 
     private void DefaultYesRadioButton_Checked(object sender, RoutedEventArgs e)

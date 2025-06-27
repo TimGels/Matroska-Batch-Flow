@@ -6,10 +6,46 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:Controls="using:MatroskaBatchFlow.Uno.Presentation.Controls"
+    xmlns:BatchConfig="using:MatroskaBatchFlow.Core.Services"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <Controls:TrackSettingsControl AvailableLanguages="{Binding Languages, Mode=OneWay}"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <!--Dropdown menu Tracks-->
+        <StackPanel Grid.Row="0">
+            <ComboBox ItemsSource="{Binding AudioTracks, Mode=OneWay}"
+                      SelectedItem="{Binding SelectedTrack, Mode=TwoWay}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="BatchConfig:TrackConfiguration">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{x:Bind TrackType}"/>
+                            <TextBlock Text="Track"
+                                       Margin="5,0,0,0"/>
+                            <TextBlock Text="{x:Bind Position}"
+                                       Margin="10,0,0,0"
+                                       Opacity="0.7"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+
+        <!--Edit-->
+        <Controls:TrackSettingsControl Grid.Row="1"
+                                       IsDefaultTrack="{Binding IsDefaultTrack, Mode=TwoWay}"
+                                       IsForcedTrack="{Binding IsForcedTrack, Mode=TwoWay}"
+                                       AvailableLanguages="{Binding Languages, Mode=OneWay}"
+                                       TrackName="{Binding TrackName, Mode=TwoWay}"
+                                       IsEnabled="{Binding IsTrackSelected}"
+                                       SelectedLanguage="{Binding SelectedLanguage, Mode=TwoWay}" />
+
+        <Button Grid.Row="2" Content="Clear Audio Tracks" Command="{Binding ClearAudioTracks}" />
+        <Button Grid.Row="3" Content="Mutate the name" Command="{Binding MutateNameTrack}" />
     </Grid>
 </Page>

@@ -1,7 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Reflection;
 using MatroskaBatchFlow.Core.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
@@ -29,7 +27,7 @@ public partial class VideoViewModel : TrackViewModelBase
         : base(languageProvider, batchConfiguration)
     {
         ClearVideoTracks = new RelayCommand(ClearVideoTracksAction);
-        MutateNameTrack = new RelayCommand(() => _batchConfiguration.VideoTracks[0].Name = DateTime.Now.ToString());
+        MutateNameTrack = new RelayCommand(() => _batchConfiguration.VideoTracks.RemoveAt(0));
         VideoTracks = [.. _batchConfiguration.VideoTracks];
     }
 
@@ -45,75 +43,48 @@ public partial class VideoViewModel : TrackViewModelBase
     /// as adding, removing, or resetting items in the collections.</remarks>
     protected override void SetupEventHandlers()
     {
-        _batchConfiguration.PropertyChanged += OnBatchConfigurationChanged;
-
-        // Subscribe to property changes for the VideoTracks collection itself.
-        // This ensures that any changes to the VideoTracks collection in the ViewModel
-        // (such as adding, removing, or reordering tracks) are immediately reflected
-        // in the BatchConfiguration's VideoTracks property. This keeps the ViewModel
-        // and the underlying batch configuration in sync, regardless of where the change originates.
+        // Subscribe to property changes in the VideoTracks collection from this ViewModel.
         VideoTracks.CollectionChanged += (s, e) =>
         {
             _batchConfiguration.VideoTracks = VideoTracks;
         };
 
         // Subscribe to changes in the VideoTracks collection of the batch configuration.
-        _batchConfiguration.VideoTracks.CollectionChanged += (s, e) =>
-        {
-            void Subscribe(IEnumerable<TrackConfiguration>? items) =>
-                items?.ToList().ForEach(t => t.PropertyChanged += OnTrackPropertyChanged);
-
-            void Unsubscribe(IEnumerable<TrackConfiguration>? items) =>
-                items?.ToList().ForEach(t => t.PropertyChanged -= OnTrackPropertyChanged);
-
-            if (e.NewItems != null)
-                Subscribe(e.NewItems.Cast<TrackConfiguration>());
-            if (e.OldItems != null)
-                Unsubscribe(e.OldItems.Cast<TrackConfiguration>());
-
-            // Handle the Reset action, which indicates that the entire collection has been replaced or cleared.
-            if (e.Action == NotifyCollectionChangedAction.Reset)
-            {
-                var all = _batchConfiguration.VideoTracks;
-                Unsubscribe(all);
-                Subscribe(all);
-            }
-
-            VideoTracks = [.. _batchConfiguration.VideoTracks];
-        };
+        _batchConfiguration.VideoTracks.CollectionChanged += OnBatchConfigurationVideoTracksChanged;
     }
 
     /// <summary>
-    /// Handles property change notifications from the batch configuration and its contained tracks.
-    /// Updates the <see cref="VideoTracks"/> property or synchronizes the <see cref="SelectedTrack"/> property
-    /// with the corresponding track in the batch configuration when a property changes.
+    /// Handles changes to the collection of video track configurations in a batch configuration.
     /// </summary>
-    /// <param name="sender">The source of the property change event (either the batch configuration or a track).</param>
-    /// <param name="e">The event arguments containing the name of the changed property.</param>
-    private void OnBatchConfigurationChanged(object? sender, PropertyChangedEventArgs e)
+    /// <remarks>This method responds to changes in the video track configurations by subscribing to or
+    /// unsubscribing from  property change notifications for the affected items. It also handles the <see
+    /// cref="NotifyCollectionChangedAction.Reset"/>  action, ensuring that all items in the collection are properly
+    /// updated when the collection is replaced or cleared.</remarks>
+    /// <param name="sender">The source of the event, typically the collection that was changed.</param>
+    /// <param name="eventArgs">The event data containing information about the changes to the collection, such as added, removed, or replaced
+    /// items.</param>
+    private void OnBatchConfigurationVideoTracksChanged(object? sender, NotifyCollectionChangedEventArgs eventArgs)
     {
-        if (e.PropertyName is null)
-            return;
+        void Subscribe(IEnumerable<TrackConfiguration>? items) =>
+            items?.ToList().ForEach(t => t.PropertyChanged += OnTrackPropertyChanged);
 
-        // If the VideoTracks collection itself changed, update the local VideoTracks property
-        if (nameof(VideoTracks).Equals(e.PropertyName))
+        void Unsubscribe(IEnumerable<TrackConfiguration>? items) =>
+            items?.ToList().ForEach(t => t.PropertyChanged -= OnTrackPropertyChanged);
+
+        if (eventArgs.NewItems != null)
+            Subscribe(eventArgs.NewItems.Cast<TrackConfiguration>());
+        if (eventArgs.OldItems != null)
+            Unsubscribe(eventArgs.OldItems.Cast<TrackConfiguration>());
+
+        // Handle the Reset action, which indicates that the entire collection has been replaced or cleared.
+        if (eventArgs.Action == NotifyCollectionChangedAction.Reset)
         {
-            VideoTracks = [.. _batchConfiguration.VideoTracks];
+            var all = _batchConfiguration.VideoTracks;
+            Unsubscribe(all);
+            Subscribe(all);
         }
-        // Otherwise, if a property of the currently selected track changed, update the SelectedTrack's property
-        else if (SelectedTrack != null && SelectedTrack.Position > 0 && SelectedTrack.Position <= _batchConfiguration.VideoTracks.Count)
-        {
-            // Get the updated track from the batch configuration by position (1-based index)
-            var updatedTrack = _batchConfiguration.VideoTracks[SelectedTrack.Position - 1];
-            // Use reflection to get the property info for the changed property
-            PropertyInfo? propInfo = typeof(TrackConfiguration).GetProperty(e.PropertyName);
-            if (propInfo != null && propInfo.CanRead && propInfo.CanWrite)
-            {
-                // Get the new value from the updated track and set it on the SelectedTrack
-                var value = propInfo.GetValue(updatedTrack);
-                propInfo.SetValue(SelectedTrack, value);
-            }
-        }
+
+        VideoTracks = [.. _batchConfiguration.VideoTracks];
     }
 
     /// <summary>

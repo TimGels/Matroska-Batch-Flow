@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
+using MatroskaBatchFlow.Core.Models;
 
 namespace MatroskaBatchFlow.Core.Services;
 
@@ -120,7 +121,7 @@ public sealed class TrackConfiguration : INotifyPropertyChanged
     private TrackType _trackType;
     private int _position;
     private string _name = string.Empty;
-    private string _language = string.Empty;
+    private MatroskaLanguageOption _language = null;
     private bool _default;
     private bool _forced;
     private bool _remove;
@@ -166,7 +167,7 @@ public sealed class TrackConfiguration : INotifyPropertyChanged
         }
     }
 
-    public string Language
+    public MatroskaLanguageOption Language
     {
         get => _language;
         set
