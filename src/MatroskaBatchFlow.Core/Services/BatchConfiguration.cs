@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
+using static MatroskaBatchFlow.Core.MediaInfoResult.MediaInfo;
 
 namespace MatroskaBatchFlow.Core.Services;
 
@@ -114,19 +115,46 @@ public class BatchConfiguration : INotifyPropertyChanged, IBatchConfiguration
 }
 
 /// <summary>
-/// Represents the configuration for a specific media track.
+/// Represents the configuration for a specific media track. Properties that are null should be seen as 
+/// missing from the scanned Matroska file.
 /// </summary>
-public sealed class TrackConfiguration : INotifyPropertyChanged
+/// <remarks>Constructor parameter <paramref name="trackInfo"/> is needed to due generation error when using object initializer syntax.</remarks>
+/// <param name="trackInfo">The <see cref="TrackInfo"/> instance containing the scanned track information. Must not be null.</param>
+public sealed class TrackConfiguration(TrackInfo trackInfo) : INotifyPropertyChanged
 {
     private TrackType _trackType;
+
     private int _position;
+    /// <summary>
+    /// Represents a human-readable label for a track or segment.
+    /// <para>
+    /// For <see cref="TrackType.Audio"/>, <see cref="TrackType.Video"/>, and <see cref="TrackType.Text"/>,
+    /// this property corresponds to the track's <i>Name</i> element as defined in the Matroska specification.
+    /// </para>
+    /// <para>
+    /// For <see cref="TrackType.General"/>, this property represents the segment's <i>Title</i> element.
+    /// </para>
+    /// <para>
+    /// See the Matroska specification for details:
+    /// <list type="bullet">
+    ///   <item>
+    ///     <i>Name</i> (track): <see href="https://www.matroska.org/technical/elements.html#Name">specification</see>
+    ///   </item>
+    ///   <item>
+    ///     <i>Title</i> (segment): <see href="https://www.matroska.org/technical/elements.html#Title">specification</see>
+    ///   </item>
+    /// </list>
+    /// </para>
+    /// </summary>
     private string _name = string.Empty;
-    private MatroskaLanguageOption _language = null;
+    private MatroskaLanguageOption _language = MatroskaLanguageOption.Undetermined;
     private bool _default;
     private bool _forced;
     private bool _remove;
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public TrackInfo ScannedTrackInfo { get; init; } = trackInfo ?? throw new ArgumentNullException(nameof(trackInfo));
 
     public TrackType TrackType
     {

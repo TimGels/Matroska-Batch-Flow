@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
@@ -6,8 +7,10 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 
 public abstract partial class TrackViewModelBase : ObservableObject
 {
-    protected ImmutableList<MatroskaLanguageOption> _languages = [];
     protected bool _suppressBatchConfigUpdate = false;
+    protected ObservableCollection<TrackConfiguration> _tracks = [];
+
+    protected ImmutableList<MatroskaLanguageOption> _languages = [];
     public ImmutableList<MatroskaLanguageOption> Languages
     {
         get => _languages;
@@ -36,6 +39,8 @@ public abstract partial class TrackViewModelBase : ObservableObject
         }
     }
 
+    protected bool _isDefaultTrack = true;
+
     public bool IsDefaultTrack
     {
         get => _isDefaultTrack;
@@ -49,7 +54,8 @@ public abstract partial class TrackViewModelBase : ObservableObject
             }
         }
     }
-    protected bool _isDefaultTrack = true;
+
+    protected bool _isEnabledTrack = true;
 
     public bool IsEnabledTrack
     {
@@ -64,7 +70,8 @@ public abstract partial class TrackViewModelBase : ObservableObject
             }
         }
     }
-    protected bool _isEnabledTrack = true;
+
+    protected bool _isForcedTrack = true;
 
     public bool IsForcedTrack
     {
@@ -79,7 +86,8 @@ public abstract partial class TrackViewModelBase : ObservableObject
             }
         }
     }
-    protected bool _isForcedTrack = true;
+
+    protected string _trackName = string.Empty;
 
     public string TrackName
     {
@@ -94,14 +102,15 @@ public abstract partial class TrackViewModelBase : ObservableObject
             }
         }
     }
-    protected string _trackName = string.Empty;
+
+    protected MatroskaLanguageOption? _selectedLanguage = null;
 
     public MatroskaLanguageOption? SelectedLanguage
     {
         get => _selectedLanguage;
         set
         {
-            if(!EqualityComparer<MatroskaLanguageOption?>.Default.Equals(_selectedLanguage, value))
+            if (!EqualityComparer<MatroskaLanguageOption?>.Default.Equals(_selectedLanguage, value))
             {
                 _selectedLanguage = value;
                 OnPropertyChanged(nameof(SelectedLanguage));
@@ -109,8 +118,6 @@ public abstract partial class TrackViewModelBase : ObservableObject
             }
         }
     }
-
-    protected MatroskaLanguageOption? _selectedLanguage = null;
 
     public bool IsTrackSelected => SelectedTrack is not null && GetTracks().Count > 0;
 
@@ -132,9 +139,16 @@ public abstract partial class TrackViewModelBase : ObservableObject
     protected abstract IList<TrackConfiguration> GetTracks();
 
     /// <summary>
-    /// Configures the event handlers.
+    /// Sets up event handlers for monitoring changes in the batch configuration and its specific tracks collection.
     /// </summary>
     protected abstract void SetupEventHandlers();
+
+    /// <summary>
+    /// Handles changes to the batch configuration and updates the relevant track collection property when the corresponding configuration property changes.
+    /// </summary>
+    /// <param name="sender">The source of the event. This parameter is typically the batch configuration object.</param>
+    /// <param name="eventArgs">The event data containing the name of the property that changed.</param>
+    protected abstract void OnBatchConfigurationChanged(object? sender, PropertyChangedEventArgs eventArgs);
 
     /// <summary>
     /// Handles property change notifications for the selected track and updates corresponding properties.
@@ -189,12 +203,11 @@ public abstract partial class TrackViewModelBase : ObservableObject
         if (SelectedTrack == null || GetTracks() == null)
             return;
 
-        // Position is 1-based, so we subtract 1.
-        int index = SelectedTrack.Position - 1;
+        int index = SelectedTrack.Position;
         var tracks = GetTracks();
         if (index >= 0 && index < tracks.Count)
         {
-            // Update the track in the batch configuration using the provided action.
+            // Apply the update action to the selected track.
             updateAction(tracks[index]);
         }
     }

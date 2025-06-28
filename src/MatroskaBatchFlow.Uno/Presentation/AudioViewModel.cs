@@ -1,21 +1,19 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Reflection;
 using MatroskaBatchFlow.Core.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 public partial class AudioViewModel : TrackViewModelBase
 {
-    private ObservableCollection<TrackConfiguration> _audioTracks = [];
     public ObservableCollection<TrackConfiguration> AudioTracks
     {
-        get => _audioTracks;
+        get => _tracks;
         set
         {
-            if (_audioTracks != value)
+            if (_tracks != value)
             {
-                _audioTracks = value;
+                _tracks = value;
                 OnPropertyChanged(nameof(AudioTracks));
                 OnPropertyChanged(nameof(IsTrackSelected));
             }
@@ -36,22 +34,14 @@ public partial class AudioViewModel : TrackViewModelBase
     /// <inheritdoc />
     protected override IList<TrackConfiguration> GetTracks() => AudioTracks;
 
-    /// <summary>
-    /// Sets up event handlers to synchronize the state between the <see cref="IBatchConfiguration"/> and the <see cref="AudioTracks"/> collection.
-    /// </summary>
-    /// <remarks>This method ensures that changes to the <see cref="AudioTracks"/> collection in the ViewModel
-    /// are reflected in the underlying batch configuration, and vice versa. It subscribes to property change
-    /// notifications and collection change events to maintain synchronization. Additionally, it handles scenarios such
-    /// as adding, removing, or resetting items in the collections.</remarks>
-    protected override void SetupEventHandlers()
+
+    /// <inheritdoc />
+    /// <remarks>This method subscribes to the <see cref="INotifyPropertyChanged.PropertyChanged"/> event of the 
+    /// batch configuration and the <see cref="INotifyCollectionChanged.CollectionChanged"/> event of the audio 
+    /// tracks collection.</remarks>
+    protected override void SetupEventHandlers() 
     {
         _batchConfiguration.PropertyChanged += OnBatchConfigurationChanged;
-
-        AudioTracks.CollectionChanged += (s, e) =>
-        {
-            _batchConfiguration.AudioTracks = AudioTracks;
-        };
-
         _batchConfiguration.AudioTracks.CollectionChanged += OnBatchConfigurationAudioTracksChanged;
     }
 
@@ -87,33 +77,24 @@ public partial class AudioViewModel : TrackViewModelBase
         AudioTracks = [.. _batchConfiguration.AudioTracks];
     }
 
-    /// <summary>
-    /// Handles changes to the batch configuration by updating the audio tracks or the selected track's properties.
-    /// </summary>
-    /// <remarks>This method updates the <see cref="AudioTracks"/> collection if the property name matches 
-    /// <see cref="AudioTracks"/>. If the property name corresponds to a property of the selected track  and the
-    /// selected track's position is valid, the method updates the corresponding property of the  selected track with
-    /// the value from the updated track in the batch configuration.</remarks>
-    /// <param name="sender">The source of the event. This parameter is not used in the method.</param>
-    /// <param name="eventArgs">The event arguments containing the name of the property that changed.</param>
-    private void OnBatchConfigurationChanged(object? sender, PropertyChangedEventArgs eventArgs)
+    /// <inheritdoc />
+    /// <remarks>
+    /// This method specifically listens for changes to the <c>AudioTracks</c> property of the batch
+    /// configuration. If the <c>AudioTracks</c> property changes, the <see cref="AudioTracks"/> property is updated
+    /// accordingly.
+    /// </remarks>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="eventArgs">The event data containing the name of the property that changed. The <see
+    /// cref="PropertyChangedEventArgs.PropertyName"/> must not be <see langword="null"/>.</param>
+    protected override void OnBatchConfigurationChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
         if (eventArgs.PropertyName is null)
             return;
+        // Replace AudioTracks only if corresponding property changed.
+        if (!nameof(_batchConfiguration.AudioTracks).Equals(eventArgs.PropertyName))
+            return;
 
-        if (nameof(AudioTracks).Equals(eventArgs.PropertyName))
-        {
-            AudioTracks = [.. _batchConfiguration.AudioTracks];
-        } else if (SelectedTrack != null && SelectedTrack.Position > 0 && SelectedTrack.Position <= _batchConfiguration.AudioTracks.Count)
-        {
-            var updatedTrack = _batchConfiguration.AudioTracks[SelectedTrack.Position - 1];
-            PropertyInfo? propInfo = typeof(TrackConfiguration).GetProperty(eventArgs.PropertyName);
-            if (propInfo != null && propInfo.CanRead && propInfo.CanWrite)
-            {
-                var value = propInfo.GetValue(updatedTrack);
-                propInfo.SetValue(SelectedTrack, value);
-            }
-        }
+        AudioTracks = [.. _batchConfiguration.AudioTracks];
     }
 
     /// <summary>

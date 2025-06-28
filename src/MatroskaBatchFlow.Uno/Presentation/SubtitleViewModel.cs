@@ -1,21 +1,19 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Reflection;
 using MatroskaBatchFlow.Core.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 public partial class SubtitleViewModel : TrackViewModelBase
 {
-    private ObservableCollection<TrackConfiguration> _subtitleTracks = [];
     public ObservableCollection<TrackConfiguration> SubtitleTracks
     {
-        get => _subtitleTracks;
+        get => _tracks;
         set
         {
-            if (_subtitleTracks != value)
+            if (_tracks != value)
             {
-                _subtitleTracks = value;
+                _tracks = value;
                 OnPropertyChanged(nameof(SubtitleTracks));
                 OnPropertyChanged(nameof(IsTrackSelected));
             }
@@ -29,29 +27,20 @@ public partial class SubtitleViewModel : TrackViewModelBase
         : base(languageProvider, batchConfiguration)
     {
         ClearSubtitleTracks = new RelayCommand(ClearSubtitleTracksAction);
-        MutateNameTrack = new RelayCommand(() => _batchConfiguration.SubtitleTracks[0].Name = DateTime.Now.ToString());
+        MutateNameTrack = new RelayCommand(() => _batchConfiguration.Title = DateTime.Now.ToString());
         SubtitleTracks = [.. _batchConfiguration.SubtitleTracks];
     }
 
     /// <inheritdoc />
     protected override IList<TrackConfiguration> GetTracks() => SubtitleTracks;
 
-    /// <summary>
-    /// Sets up event handlers to synchronize the state between the <see cref="IBatchConfiguration"/> and the <see cref="SubtitleTracks"/> collection.
-    /// </summary>
-    /// <remarks>This method ensures that changes to the <see cref="SubtitleTracks"/> collection in the ViewModel
-    /// are reflected in the underlying batch configuration, and vice versa. It subscribes to property change
-    /// notifications and collection change events to maintain synchronization. Additionally, it handles scenarios such
-    /// as adding, removing, or resetting items in the collections.</remarks>
+    /// <inheritdoc />
+    /// <remarks>This method subscribes to the <see cref="INotifyPropertyChanged.PropertyChanged"/> event of the 
+    /// batch configuration and the <see cref="INotifyCollectionChanged.CollectionChanged"/> event of the subtitle 
+    /// tracks collection.</remarks>
     protected override void SetupEventHandlers()
     {
         _batchConfiguration.PropertyChanged += OnBatchConfigurationChanged;
-
-        SubtitleTracks.CollectionChanged += (s, e) =>
-        {
-            _batchConfiguration.SubtitleTracks = SubtitleTracks;
-        };
-
         _batchConfiguration.SubtitleTracks.CollectionChanged += OnBatchConfigurationSubtitleTracksChanged;
     }
 
@@ -88,33 +77,24 @@ public partial class SubtitleViewModel : TrackViewModelBase
         SubtitleTracks = [.. _batchConfiguration.SubtitleTracks];
     }
 
-    /// <summary>
-    /// Handles changes to the batch configuration and updates the relevant subtitle track properties.
-    /// </summary>
-    /// <remarks>This method updates the <see cref="SubtitleTracks"/> collection or synchronizes the
-    /// properties of the currently selected track with the updated track in the batch configuration, depending on the
-    /// property that changed. If the property name is <see langword="null"/>, the method exits without making
-    /// changes.</remarks>
-    /// <param name="sender">The source of the event. This parameter is optional and can be <see langword="null"/>.</param>
-    /// <param name="eventArgs">The event data containing the name of the property that changed.</param>
-    private void OnBatchConfigurationChanged(object? sender, PropertyChangedEventArgs eventArgs)
+    /// <inheritdoc />
+    /// <remarks>
+    /// This method specifically listens for changes to the <c>SubtitleTracks</c> property of the batch
+    /// configuration. If the <c>SubtitleTracks</c> property changes, the <see cref="SubtitleTracks"/> property is updated
+    /// accordingly.
+    /// </remarks>
+    /// <param name="sender">The source of the event. This parameter is typically the batch configuration object.</param>
+    /// <param name="eventArgs">The event data containing the name of the property that changed. The <see
+    /// cref="PropertyChangedEventArgs.PropertyName"/> must not be <see langword="null"/>.</param>
+    protected override void OnBatchConfigurationChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
         if (eventArgs.PropertyName is null)
             return;
+        // Replace SubtitleTracks only if corresponding property changed.
+        if (!nameof(_batchConfiguration.SubtitleTracks).Equals(eventArgs.PropertyName))
+            return;
 
-        if (nameof(SubtitleTracks).Equals(eventArgs.PropertyName))
-        {
-            SubtitleTracks = [.. _batchConfiguration.SubtitleTracks];
-        } else if (SelectedTrack != null && SelectedTrack.Position > 0 && SelectedTrack.Position <= _batchConfiguration.SubtitleTracks.Count)
-        {
-            var updatedTrack = _batchConfiguration.SubtitleTracks[SelectedTrack.Position - 1];
-            PropertyInfo? propInfo = typeof(TrackConfiguration).GetProperty(eventArgs.PropertyName);
-            if (propInfo != null && propInfo.CanRead && propInfo.CanWrite)
-            {
-                var value = propInfo.GetValue(updatedTrack);
-                propInfo.SetValue(SelectedTrack, value);
-            }
-        }
+        SubtitleTracks = [.. _batchConfiguration.SubtitleTracks];
     }
 
     /// <summary>

@@ -1,19 +1,19 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using MatroskaBatchFlow.Core.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 public partial class VideoViewModel : TrackViewModelBase
 {
-    private ObservableCollection<TrackConfiguration> _videoTracks = [];
     public ObservableCollection<TrackConfiguration> VideoTracks
     {
-        get => _videoTracks;
+        get => _tracks;
         set
         {
-            if (_videoTracks != value)
+            if (_tracks != value)
             {
-                _videoTracks = value;
+                _tracks = value;
                 OnPropertyChanged(nameof(VideoTracks));
                 OnPropertyChanged(nameof(IsTrackSelected));
             }
@@ -34,22 +34,13 @@ public partial class VideoViewModel : TrackViewModelBase
     /// <inheritdoc />
     protected override IList<TrackConfiguration> GetTracks() => VideoTracks;
 
-    /// <summary>
-    /// Sets up event handlers to synchronize the state between the <see cref="IBatchConfiguration"/> and the <see cref="VideoTracks"/> collection.
-    /// </summary>
-    /// <remarks>This method ensures that changes to the <see cref="VideoTracks"/> collection in the ViewModel
-    /// are reflected in the underlying batch configuration, and vice versa. It subscribes to property change
-    /// notifications and collection change events to maintain synchronization. Additionally, it handles scenarios such
-    /// as adding, removing, or resetting items in the collections.</remarks>
+    /// <inheritdoc />
+    /// <remarks>This method subscribes to the <see cref="INotifyPropertyChanged.PropertyChanged"/> event of the 
+    /// batch configuration and the <see cref="INotifyCollectionChanged.CollectionChanged"/> event of the video 
+    /// tracks collection.</remarks>
     protected override void SetupEventHandlers()
     {
-        // Subscribe to property changes in the VideoTracks collection from this ViewModel.
-        VideoTracks.CollectionChanged += (s, e) =>
-        {
-            _batchConfiguration.VideoTracks = VideoTracks;
-        };
-
-        // Subscribe to changes in the VideoTracks collection of the batch configuration.
+        _batchConfiguration.PropertyChanged += OnBatchConfigurationChanged;
         _batchConfiguration.VideoTracks.CollectionChanged += OnBatchConfigurationVideoTracksChanged;
     }
 
@@ -83,6 +74,27 @@ public partial class VideoViewModel : TrackViewModelBase
             Unsubscribe(all);
             Subscribe(all);
         }
+
+        VideoTracks = [.. _batchConfiguration.VideoTracks];
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// This method listens for changes to the <c>VideoTracks</c> property in the batch configuration
+    /// and updates the <see cref="VideoTracks"/> property accordingly. If the <c>PropertyName</c> in <paramref
+    /// name="eventArgs"/> is <c>null</c> or does not match the <c>VideoTracks</c> property, the method exits without
+    /// making changes.
+    /// </remarks>
+    /// <param name="sender">The source of the event. This parameter is not used in the method.</param>
+    /// <param name="eventArgs">The event data containing the name of the changed property. The <see
+    /// cref="PropertyChangedEventArgs.PropertyName"/> must not be <see langword="null"/>.</param>
+    protected override void OnBatchConfigurationChanged(object? sender, PropertyChangedEventArgs eventArgs)
+    {
+        if (eventArgs.PropertyName is null)
+            return;
+        // Replace VideoTracks only if the corresponding property changed.
+        if (!nameof(_batchConfiguration.VideoTracks).Equals(eventArgs.PropertyName))
+            return;
 
         VideoTracks = [.. _batchConfiguration.VideoTracks];
     }

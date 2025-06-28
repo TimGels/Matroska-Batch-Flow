@@ -32,7 +32,13 @@ public class BatchConfigurationTrackInitializer(IBatchConfiguration _batchConfig
 
             // Add tracks until the count matches.
             while (batchTracks.Count < scannedTracks.Count)
-                batchTracks.Add(new TrackConfiguration { TrackType = trackType });
+            {
+                var scannedTrackInfo = scannedTracks[batchTracks.Count];
+                batchTracks.Add(new TrackConfiguration(scannedTrackInfo)
+                {
+                    TrackType = trackType,
+                });
+            }
             // Remove tracks until the count matches.
             while (batchTracks.Count > scannedTracks.Count)
                 batchTracks.RemoveAt(batchTracks.Count - 1);

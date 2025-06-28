@@ -6,9 +6,22 @@ namespace MatroskaBatchFlow.Core.Enums;
 /// </summary>
 public enum TrackType
 {
+
+    /// <summary>
+    /// Represents the "Info" element in the Matroska specification.
+    /// </summary>
     General,
+    /// <summary>
+    /// Representa the "Track" element in the Matroska specification. 
+    /// </summary>
     Video,
+    /// <summary>
+    /// Representa the "Track" element in the Matroska specification. 
+    /// </summary>
     Audio,
+    /// <summary>
+    /// Representa the "Track" element in the Matroska specification. 
+    /// </summary>
     Text,
     Other,
     Image,
@@ -21,11 +34,13 @@ public enum TrackType
 public static class TrackTypeExtensions
 {
     /// <summary>
-    /// Determines if the track type is editable in the application.
+    /// Determines whether the specified <see cref="TrackType"/> represents a Matroska 
+    /// <see href="https://www.matroska.org/technical/elements.html#Tracks">track element</see>.
     /// </summary>
-    /// <param name="trackType"></param>
-    /// <returns> True if the track type is editable; otherwise, false.</returns>
-    public static bool IsEditable(this TrackType trackType)
+    /// <param name="trackType">The <see cref="TrackType"/> to evaluate.</param>
+    /// <returns><see langword="true"/> if the <paramref name="trackType"/> is an actual Matroska 
+    /// Track element; otherwise, <see langword="false"/>.</returns>
+    public static bool IsMatroskaTrackElement(this TrackType trackType)
     {
         return trackType switch
         {

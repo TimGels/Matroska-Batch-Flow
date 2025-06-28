@@ -1,6 +1,6 @@
 using MatroskaBatchFlow.Core.Enums;
 
-namespace MatroskaBatchFlow.Core.Services.FileProcessing.TrackName;
+namespace MatroskaBatchFlow.Core.Services.FileProcessing.Track.Name;
 
 public class AudioTrackNamingRule : IFileProcessingRule
 {

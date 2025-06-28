@@ -1,7 +1,8 @@
 using MatroskaBatchFlow.Core.Models.AppSettings;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileProcessing;
-using MatroskaBatchFlow.Core.Services.FileProcessing.TrackName;
+using MatroskaBatchFlow.Core.Services.FileProcessing.Track;
+using MatroskaBatchFlow.Core.Services.FileProcessing.Track.Name;
 using MatroskaBatchFlow.Core.Services.FileValidation;
 using Uno.Resizetizer;
 
@@ -85,8 +86,6 @@ public partial class App : Application
                 })
                 .ConfigureServices((context, services) =>
                 {
-                    // TODO: Register your services
-                    //services.AddSingleton<IMyService, MyService>();
                     services.AddSingleton<ILanguageProvider, LanguageProvider>();
                     services.AddSingleton<IFileScanner, FileScanner>();
                     services.AddSingleton<IBatchConfiguration, BatchConfiguration>();
@@ -102,6 +101,7 @@ public partial class App : Application
                     services.AddSingleton<IFileProcessingRule, AudioTrackNamingRule>();
                     services.AddSingleton<IFileProcessingRule, VideoTrackNamingRule>();
                     services.AddSingleton<IFileProcessingRule, TrackPositionRule>();
+                    services.AddSingleton<IFileProcessingRule, TrackLanguageRule>();
 
                     services.AddSingleton<IBatchConfigurationTrackInitializer, BatchConfigurationTrackInitializer>();
                 })

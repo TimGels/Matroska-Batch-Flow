@@ -1,6 +1,6 @@
 using MatroskaBatchFlow.Core.Enums;
 
-namespace MatroskaBatchFlow.Core.Services.FileProcessing;
+namespace MatroskaBatchFlow.Core.Services.FileProcessing.Track;
 
 /// <summary>
 /// Assigns the Position property of each <see cref="TrackConfiguration"/> in the 
@@ -25,7 +25,7 @@ public class TrackPositionRule : IFileProcessingRule
         ArgumentNullException.ThrowIfNull(file);
         ArgumentNullException.ThrowIfNull(batchConfig);
 
-        foreach (var trackType in Enum.GetValues<TrackType>().Where(t => t.IsEditable()))
+        foreach (var trackType in Enum.GetValues<TrackType>().Where(t => t.IsMatroskaTrackElement()))
         {
             var scannedTracks = file.Result.Media.Track
                 .Where(t => t.Type == trackType)
@@ -35,11 +35,9 @@ public class TrackPositionRule : IFileProcessingRule
 
             for (int i = 0; i < batchTracks.Count && i < scannedTracks.Count; i++)
             {
-                var streamKindPos = scannedTracks[i].StreamKindPos;
-                if (string.IsNullOrWhiteSpace(streamKindPos) || !int.TryParse(streamKindPos, out int parsed))
-                    throw new InvalidOperationException($"StreamKindPos is missing or invalid for track {i} of type {trackType} in file '{file.Path}'.");
+                var streamKindID = scannedTracks[i].StreamKindID;
 
-                batchTracks[i].Position = parsed;
+                batchTracks[i].Position = streamKindID;
             }
         }
     }

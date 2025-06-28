@@ -57,7 +57,7 @@ public sealed partial class TrackSettingsControl : UserControl
             nameof(AvailableLanguages),
             typeof(ImmutableList<MatroskaLanguageOption>),
             typeof(TrackSettingsControl),
-            new PropertyMetadata(default(ImmutableList<MatroskaLanguageOption>)));
+            new PropertyMetadata(null));
 
     public static readonly DependencyProperty SelectedLanguageProperty =
         DependencyProperty.Register(

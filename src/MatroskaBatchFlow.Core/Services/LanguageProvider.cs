@@ -11,8 +11,6 @@ public class LanguageProvider : ILanguageProvider
     private readonly LanguageOptions _options;
     public ImmutableList<MatroskaLanguageOption> Languages { get; private set; } = [];
 
-
-
     public LanguageProvider(IOptions<LanguageOptions> options)
     {
         _options = options.Value;
@@ -43,7 +41,7 @@ public class LanguageProvider : ILanguageProvider
             //_languages = JsonSerializer.Deserialize<List<Language>>(stream)!
             //    .ToImmutableDictionary(x => x.Code);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             //_logger.LogError(ex, "Language load failed");
             //_languages = ImmutableDictionary<string, Language>.Empty;
