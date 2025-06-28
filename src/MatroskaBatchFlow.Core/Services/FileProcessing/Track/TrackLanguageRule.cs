@@ -6,14 +6,12 @@ namespace MatroskaBatchFlow.Core.Services.FileProcessing.Track;
 
 public class TrackLanguageRule(ILanguageProvider languageProvider) : IFileProcessingRule
 {
-    private readonly ILanguageProvider _languageProvider = languageProvider;
-
     public void Apply(ScannedFileInfo scannedFile, IBatchConfiguration batchConfig)
     {
         ArgumentNullException.ThrowIfNull(scannedFile);
         ArgumentNullException.ThrowIfNull(batchConfig);
 
-        var languages = _languageProvider.Languages;
+        var languages = languageProvider.Languages;
 
         foreach (var trackType in Enum.GetValues<TrackType>().Where(t => t.IsMatroskaTrackElement()))
         {
