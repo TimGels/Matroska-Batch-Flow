@@ -45,10 +45,24 @@
                 </Grid>
             </Grid>
         </NavigationView>
-        <Button Content="Process Files"
-                Grid.Row="1"
-                Margin="10,10,10,10"
-                HorizontalAlignment="Center"
-                Command="{Binding ScanFiles}"/>
+        <StackPanel Grid.Row="1"
+                    HorizontalAlignment="Center">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <Button Content="Process Files"
+                        Grid.Column="0"
+                        Margin="10,10,10,10"
+                        HorizontalAlignment="Center"
+                        Command="{Binding ScanFiles}"/>
+                <Button Content="Generate mkvpropedit"
+                        Grid.Column="1"
+                        Margin="10,10,10,10"
+                        HorizontalAlignment="Center"
+                        Command="{Binding GenerateMkvpropeditArguments}"/>
+            </Grid>
+        </StackPanel>
     </Grid>
 </Page>

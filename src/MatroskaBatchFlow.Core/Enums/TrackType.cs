@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace MatroskaBatchFlow.Core.Enums;
 
 /// <summary>
@@ -46,6 +48,22 @@ public static class TrackTypeExtensions
         {
             TrackType.Audio or TrackType.Video or TrackType.Text => true,
             _ => false
+        };
+    }
+
+    /// <summary>
+    /// Gets the Matroska track type prefix corresponding to the specified <see cref="TrackType"/>.
+    /// </summary>
+    /// <param name="trackType">The track type for which to retrieve the Matroska prefix.</param>
+    /// <returns>A string representing the Matroska track type prefix.</returns>
+    public static string GetMatroskaTrackTypePrefix(this TrackType trackType)
+    {
+        return trackType switch
+        {
+            TrackType.Video => "v",
+            TrackType.Audio => "a",
+            TrackType.Text => "s",
+            _ => string.Empty
         };
     }
 }
