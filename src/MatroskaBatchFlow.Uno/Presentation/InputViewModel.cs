@@ -12,11 +12,8 @@ using Uno.Extensions.Specialized;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
-public partial class InputViewModel :ObservableObject, IFilesDropped
+public partial class InputViewModel : ObservableObject, IFilesDropped
 {
-    [ObservableProperty]
-    private ObservableCollection<ScannedFileInfo> fileList = [];
-
     [ObservableProperty]
     private ObservableCollection<ScannedFileInfo> selectedFiles = [];
 
@@ -31,6 +28,8 @@ public partial class InputViewModel :ObservableObject, IFilesDropped
     private readonly IBatchConfigurationTrackInitializer _batchConfigurationTrackInitializer;
 
     public ICommand RemoveSelected { get; }
+
+    public ObservableCollection<ScannedFileInfo> FileList => _batchConfig.FileList;
 
     public InputViewModel(
         IFileScanner fileScanner,
@@ -53,13 +52,13 @@ public partial class InputViewModel :ObservableObject, IFilesDropped
     /// cref="FileList"/>.
     /// </summary>
     /// <remarks>This method processes the removal of selected files by iterating over a copy of the <see
-    /// cref="SelectedFiles"/> collection..</remarks>
+    /// cref="SelectedFiles"/> collection.</remarks>
     /// <returns>A completed <see cref="Task"/> representing the operation.</returns>
     private Task RemoveSelectedFiles()
     {
         // Convert SelectedFiles to an array to make a copy to avoid modifying the collection while iterating.
         foreach (ScannedFileInfo file in SelectedFiles.ToArray())
-            FileList.Remove(file);
+            _batchConfig.FileList.Remove(file);
 
         return Task.CompletedTask;
     }
@@ -77,7 +76,7 @@ public partial class InputViewModel :ObservableObject, IFilesDropped
             return;
 
         var newFiles = await _fileScanner.ScanAsync(files.ToFileInfo());
-        var combinedFiles = FileList.Concat(newFiles).ToList();
+        var combinedFiles = _batchConfig.FileList.Concat(newFiles).ToList();
 
         // Validate the combined list of files, including both existing and newly added files.
         var validationResults = _fileValidator.Validate(combinedFiles).ToList();
@@ -91,7 +90,7 @@ public partial class InputViewModel :ObservableObject, IFilesDropped
             _fileProcessingRuleEngine.Apply(file, _batchConfig);
         }
 
-        FileList.AddRange(newFiles);
+        _batchConfig.FileList.AddRange(newFiles);
     }
 
     /// <summary>

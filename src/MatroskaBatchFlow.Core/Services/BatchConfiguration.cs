@@ -14,6 +14,7 @@ public class BatchConfiguration : INotifyPropertyChanged, IBatchConfiguration
 {
     private string _directoryPath = string.Empty;
     private string _title = string.Empty;
+    private readonly ObservableCollection<ScannedFileInfo> _fileList = [];
     private ObservableCollection<TrackConfiguration> _audioTracks = [];
     private ObservableCollection<TrackConfiguration> _videoTracks = [];
     private ObservableCollection<TrackConfiguration> _subtitleTracks = [];
@@ -46,6 +47,8 @@ public class BatchConfiguration : INotifyPropertyChanged, IBatchConfiguration
             }
         }
     }
+
+    public ObservableCollection<ScannedFileInfo> FileList => _fileList;
 
     public ObservableCollection<TrackConfiguration> AudioTracks
     {
@@ -96,6 +99,7 @@ public class BatchConfiguration : INotifyPropertyChanged, IBatchConfiguration
     {
         DirectoryPath = string.Empty;
         Title = string.Empty;
+        FileList.Clear();
         AudioTracks.Clear();
         VideoTracks.Clear();
         SubtitleTracks.Clear();

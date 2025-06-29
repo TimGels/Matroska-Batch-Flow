@@ -14,6 +14,8 @@ public interface IBatchConfiguration : INotifyPropertyChanged
 {
     string DirectoryPath { get; set; }
     string Title { get; set; }
+
+    ObservableCollection<ScannedFileInfo> FileList { get; }
     ObservableCollection<TrackConfiguration> AudioTracks { get; set; }
     ObservableCollection<TrackConfiguration> VideoTracks { get; set; }
     ObservableCollection<TrackConfiguration> SubtitleTracks { get; set; }
