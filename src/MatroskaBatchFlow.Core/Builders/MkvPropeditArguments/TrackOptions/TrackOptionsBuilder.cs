@@ -96,7 +96,6 @@ internal class TrackOptionsBuilder : ITrackOptionsBuilder
         return this;
     }
 
-
     /// <inheritdoc />
     /// <remarks>This method constructs a list of arguments related to a track in the Matroska 
     /// segment (file) for mkvpropedit, incorporating options provided. The resulting array can be 
@@ -120,27 +119,42 @@ internal class TrackOptionsBuilder : ITrackOptionsBuilder
         args.Add("--edit");
         args.Add(selector);
 
-        void AddSet(string key, string value)
-        {
-            args.Add("--set");
-            args.Add($"{key}={value}");
-        }
-
-        if (t.Language is not null)
-            AddSet("language", t.Language);
-
-        if (t.Name is not null)
-            AddSet("name", t.Name);
-
-        if (t.IsDefault.HasValue)
-            AddSet("flag-default", t.IsDefault.Value ? "1" : "0");
-
-        if (t.IsForced.HasValue)
-            AddSet("flag-forced", t.IsForced.Value ? "1" : "0");
-
-        if (t.IsEnabled.HasValue)
-            AddSet("flag-enabled", t.IsEnabled.Value ? "1" : "0");
+        AddTrackArguments(args, t);
 
         return [.. args];
+    }
+
+    /// <summary>
+    /// Adds track-specific arguments to the provided list based on the properties of the specified <see
+    /// cref="TrackOptions"/> object.
+    /// </summary>
+    /// <remarks>This method processes the properties of the <paramref name="trackOptions"/> object and adds
+    /// corresponding arguments to the <paramref name="trackArguments"/> list. Only non-null properties of <paramref
+    /// name="trackOptions"/> are included as arguments.</remarks>
+    /// <param name="trackArguments">The list to which the track arguments will be added. This list is modified in place.</param>
+    /// <param name="trackOptions">The <see cref="TrackOptions"/> object containing track metadata and flags to be converted into arguments.</param>
+    private static void AddTrackArguments(List<string> trackArguments, TrackOptions trackOptions)
+    {
+        // Add the track "set" argument.
+        void AddSet(string key, string value)
+        {
+            trackArguments.Add("--set");
+            trackArguments.Add($"{key}={value}");
+        }
+
+        if (trackOptions.Language is not null)
+            AddSet("language", $"\"{trackOptions.Language}\"");
+
+        if (trackOptions.Name is not null)
+            AddSet("name", $"\"{trackOptions.Name}\"");
+
+        if (trackOptions.IsDefault.HasValue)
+            AddSet("flag-default", trackOptions.IsDefault.Value ? "1" : "0");
+
+        if (trackOptions.IsForced.HasValue)
+            AddSet("flag-forced", trackOptions.IsForced.Value ? "1" : "0");
+
+        if (trackOptions.IsEnabled.HasValue)
+            AddSet("flag-enabled", trackOptions.IsEnabled.Value ? "1" : "0");
     }
 }
