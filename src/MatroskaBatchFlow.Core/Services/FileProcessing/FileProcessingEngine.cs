@@ -3,7 +3,7 @@ namespace MatroskaBatchFlow.Core.Services.FileProcessing;
 /// <summary>
 /// Applies a set of rules to process scanned file information and update batch configuration.
 /// </summary>
-public class FileProcessingEngine(IEnumerable<IFileProcessingRule> rules): IFileProcessingEngine
+public class FileProcessingEngine(IEnumerable<IFileProcessingRule> rules) : IFileProcessingEngine
 {
     private readonly List<IFileProcessingRule> _rules = [.. rules];
 

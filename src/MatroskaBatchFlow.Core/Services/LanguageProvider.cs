@@ -40,8 +40,7 @@ public class LanguageProvider : ILanguageProvider
 
             //_languages = JsonSerializer.Deserialize<List<Language>>(stream)!
             //    .ToImmutableDictionary(x => x.Code);
-        }
-        catch (Exception)
+        } catch (Exception)
         {
             //_logger.LogError(ex, "Language load failed");
             //_languages = ImmutableDictionary<string, Language>.Empty;
