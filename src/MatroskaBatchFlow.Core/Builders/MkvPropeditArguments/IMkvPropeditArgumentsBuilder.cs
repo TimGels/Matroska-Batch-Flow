@@ -1,6 +1,6 @@
-using MatroskaBatchFlow.Core.Services.Builders.MkvPropeditArguments.TrackOptions;
+using MatroskaBatchFlow.Core.Builders.MkvPropeditArguments.TrackOptions;
 
-namespace MatroskaBatchFlow.Core.Services.Builders.MkvPropeditArguments;
+namespace MatroskaBatchFlow.Core.Builders.MkvPropeditArguments;
 public interface IMkvPropeditArgumentsBuilder
 {
     /// <summary>

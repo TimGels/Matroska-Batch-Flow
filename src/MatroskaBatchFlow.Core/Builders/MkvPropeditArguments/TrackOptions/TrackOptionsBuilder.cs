@@ -1,6 +1,6 @@
 using MatroskaBatchFlow.Core.Enums;
 
-namespace MatroskaBatchFlow.Core.Services.Builders.MkvPropeditArguments.TrackOptions;
+namespace MatroskaBatchFlow.Core.Builders.MkvPropeditArguments.TrackOptions;
 internal class TrackOptionsBuilder : ITrackOptionsBuilder
 {
     private readonly TrackOptions _trackOptions = new();
