@@ -110,16 +110,16 @@ internal class TrackOptionsBuilder : ITrackOptionsBuilder
         if (_trackOptions.TrackType is null)
             throw new InvalidOperationException("Track type must be specified.");
 
-        var t = _trackOptions;
+        var trackOptions = _trackOptions;
         var args = new List<string>();
         // e.g., "track:v1" for video track 1.
-        string selector = $"track:{t.TrackType.Value.GetMatroskaTrackTypePrefix()}{t.TrackId}";
+        string selector = $"track:{trackOptions.TrackType.Value.GetMatroskaTrackTypePrefix()}{trackOptions.TrackId}";
 
         // Begin editing this track.
         args.Add("--edit");
         args.Add(selector);
 
-        AddTrackArguments(args, t);
+        AddTrackArguments(args, trackOptions);
 
         return [.. args];
     }
