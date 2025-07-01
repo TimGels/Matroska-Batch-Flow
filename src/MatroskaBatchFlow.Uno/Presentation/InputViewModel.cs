@@ -56,6 +56,7 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
     /// <returns>A completed <see cref="Task"/> representing the operation.</returns>
     private Task RemoveSelectedFiles()
     {
+        // TODO: Consider doing a batchconfiguration files reset when the last file is removed.
         // Convert SelectedFiles to an array to make a copy to avoid modifying the collection while iterating.
         foreach (ScannedFileInfo file in SelectedFiles.ToArray())
             _batchConfig.FileList.Remove(file);
