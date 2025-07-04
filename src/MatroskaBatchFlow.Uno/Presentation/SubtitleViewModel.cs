@@ -29,6 +29,8 @@ public partial class SubtitleViewModel : TrackViewModelBase
         ClearSubtitleTracks = new RelayCommand(ClearSubtitleTracksAction);
         MutateNameTrack = new RelayCommand(() => _batchConfiguration.Title = DateTime.Now.ToString());
         SubtitleTracks = [.. _batchConfiguration.SubtitleTracks];
+
+        SetupEventHandlers();
     }
 
     /// <inheritdoc />
@@ -38,7 +40,7 @@ public partial class SubtitleViewModel : TrackViewModelBase
     /// <remarks>This method subscribes to the <see cref="INotifyPropertyChanged.PropertyChanged"/> event of the 
     /// batch configuration and the <see cref="INotifyCollectionChanged.CollectionChanged"/> event of the subtitle 
     /// tracks collection.</remarks>
-    protected override void SetupEventHandlers()
+    protected sealed override void SetupEventHandlers()
     {
         _batchConfiguration.PropertyChanged += OnBatchConfigurationChanged;
         _batchConfiguration.SubtitleTracks.CollectionChanged += OnBatchConfigurationSubtitleTracksChanged;

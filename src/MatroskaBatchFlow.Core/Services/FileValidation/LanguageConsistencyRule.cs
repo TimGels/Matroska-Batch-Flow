@@ -50,7 +50,7 @@ public class LanguageConsistencyRule : IFileValidationRule
     /// the enumerable will be empty.</returns>
     private static IEnumerable<FileValidationResult> CompareLanguages(List<List<string>> languageMatrix, List<ScannedFileInfo> scannedFiles, TrackType type)
     {
-        var referenceFileLanguages = languageMatrix.First();
+        var referenceFileLanguages = languageMatrix[0];
         // Check if the first file's (reference) languages are consistent across the rest of the files.
         for (int i = 1; i < languageMatrix.Count; i++)
         {

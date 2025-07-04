@@ -127,8 +127,6 @@ public abstract partial class TrackViewModelBase : ObservableObject
     {
         _batchConfiguration = batchConfiguration;
         _languages = languageProvider.Languages;
-        SelectedTrack = GetTracks().FirstOrDefault();
-        SetupEventHandlers();
     }
 
     /// <summary>
@@ -139,7 +137,8 @@ public abstract partial class TrackViewModelBase : ObservableObject
     protected abstract IList<TrackConfiguration> GetTracks();
 
     /// <summary>
-    /// Sets up event handlers for monitoring changes in the batch configuration and its specific tracks collection.
+    /// Sets up event handlers for monitoring changes in the batch configuration and its specific tracks collection. 
+    /// Needs to be called in the constructor of derived classes.
     /// </summary>
     protected abstract void SetupEventHandlers();
 

@@ -29,6 +29,8 @@ public partial class VideoViewModel : TrackViewModelBase
         ClearVideoTracks = new RelayCommand(ClearVideoTracksAction);
         MutateNameTrack = new RelayCommand(() => _batchConfiguration.VideoTracks.RemoveAt(0));
         VideoTracks = [.. _batchConfiguration.VideoTracks];
+
+        SetupEventHandlers();
     }
 
     /// <inheritdoc />
@@ -38,7 +40,7 @@ public partial class VideoViewModel : TrackViewModelBase
     /// <remarks>This method subscribes to the <see cref="INotifyPropertyChanged.PropertyChanged"/> event of the 
     /// batch configuration and the <see cref="INotifyCollectionChanged.CollectionChanged"/> event of the video 
     /// tracks collection.</remarks>
-    protected override void SetupEventHandlers()
+    protected sealed override void SetupEventHandlers()
     {
         _batchConfiguration.PropertyChanged += OnBatchConfigurationChanged;
         _batchConfiguration.VideoTracks.CollectionChanged += OnBatchConfigurationVideoTracksChanged;

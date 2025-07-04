@@ -29,6 +29,8 @@ public partial class AudioViewModel : TrackViewModelBase
         ClearAudioTracks = new RelayCommand(ClearAudioTracksAction);
         MutateNameTrack = new RelayCommand(() => _batchConfiguration.AudioTracks[0].Name = DateTime.Now.ToString());
         AudioTracks = [.. _batchConfiguration.AudioTracks];
+
+        SetupEventHandlers();
     }
 
     /// <inheritdoc />
@@ -39,7 +41,7 @@ public partial class AudioViewModel : TrackViewModelBase
     /// <remarks>This method subscribes to the <see cref="INotifyPropertyChanged.PropertyChanged"/> event of the 
     /// batch configuration and the <see cref="INotifyCollectionChanged.CollectionChanged"/> event of the audio 
     /// tracks collection.</remarks>
-    protected override void SetupEventHandlers() 
+    protected sealed override void SetupEventHandlers() 
     {
         _batchConfiguration.PropertyChanged += OnBatchConfigurationChanged;
         _batchConfiguration.AudioTracks.CollectionChanged += OnBatchConfigurationAudioTracksChanged;
