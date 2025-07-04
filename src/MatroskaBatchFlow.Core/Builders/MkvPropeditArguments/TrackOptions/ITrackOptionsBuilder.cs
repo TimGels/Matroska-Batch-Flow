@@ -17,32 +17,32 @@ public interface ITrackOptionsBuilder
     /// <summary>
     /// Sets the language for the track options.
     /// </summary>
-    ITrackOptionsBuilder WithLanguage(string language);
+    ITrackOptionsBuilder WithLanguage(string? language = null);
 
     /// <summary>
     /// Sets the name for the track options.
     /// </summary>
-    ITrackOptionsBuilder WithName(string name);
+    ITrackOptionsBuilder WithName(string? name = null);
 
     /// <summary>
     /// Sets the Matroska <c>FlagDefault</c> element.
     /// </summary>
-    ITrackOptionsBuilder WithIsDefault(bool isDefault);
+    ITrackOptionsBuilder WithIsDefault(bool isDefault = false);
 
     /// <summary>
     /// Sets the Matroska <c>FlagForced</c> element.
     /// </summary>
-    ITrackOptionsBuilder WithIsForced(bool isForced);
+    ITrackOptionsBuilder WithIsForced(bool isForced = false);
 
     /// <summary>
     /// Sets the Matroska <c>FlagEnabled</c> element.
     /// </summary>
-    ITrackOptionsBuilder WithIsEnabled(bool isEnabled);
+    ITrackOptionsBuilder WithIsEnabled(bool isEnabled = true);
 
     /// <summary>
     /// Sets the Matroska <c>FlagCommentary</c> element.
     /// </summary>
-    ITrackOptionsBuilder WithIsCommentary(bool isCommentary);
+    ITrackOptionsBuilder WithIsCommentary(bool isCommentary = false);
 
     /// <summary>
     /// Builds and returns an array of command-line arguments based on the specified track options.

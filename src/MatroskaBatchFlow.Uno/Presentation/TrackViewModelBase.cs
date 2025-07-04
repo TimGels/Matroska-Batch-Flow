@@ -10,7 +10,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
     protected bool _suppressBatchConfigUpdate = false;
     protected ObservableCollection<TrackConfiguration> _tracks = [];
 
-    protected ImmutableList<MatroskaLanguageOption> _languages = [];
+    protected ImmutableList<MatroskaLanguageOption> _languages;
     public ImmutableList<MatroskaLanguageOption> Languages
     {
         get => _languages;

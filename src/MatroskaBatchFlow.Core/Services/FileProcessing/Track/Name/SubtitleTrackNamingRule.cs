@@ -24,10 +24,6 @@ public class SubtitleTrackNamingRule : IFileProcessingRule
             if (!_supportedFormatMappings.TryGetValue(track.Format ?? string.Empty, out var name))
                 continue;
 
-            // Find the corresponding TrackConfiguration by position
-            //if (!int.TryParse(track.StreamKindID, out int position))
-            //    continue;
-
             var config = batchConfig.SubtitleTracks.FirstOrDefault(t => t.Position == track.StreamKindID);
             if (config != null)
             {

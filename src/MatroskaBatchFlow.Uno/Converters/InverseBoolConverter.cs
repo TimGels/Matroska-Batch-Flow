@@ -23,7 +23,7 @@ public class InverseBoolConverter : IValueConverter
     {
         if (value is not bool boolValue)
             return value;
-        
+
         return !boolValue;
     }
 
@@ -35,11 +35,13 @@ public class InverseBoolConverter : IValueConverter
     /// <param name="parameter">An optional parameter for the conversion. This parameter is not used in this implementation.</param>
     /// <param name="language">The culture information for the conversion. This parameter is not used in this implementation.</param>
     /// <returns>The negated boolean value of the input <paramref name="value"/>.</returns>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S4144:Methods should not have identical implementations",
+        Justification = "This is intentional as the Convert and ConvertBack methods are logically the same for this converter.")]
     public object ConvertBack(object value, Type targetType, object parameter, string language)
     {
         if (value is not bool boolValue)
             return value;
-        
+
         return !boolValue;
     }
 }

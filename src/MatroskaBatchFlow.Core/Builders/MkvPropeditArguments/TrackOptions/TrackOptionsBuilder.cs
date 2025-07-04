@@ -49,7 +49,7 @@ internal class TrackOptionsBuilder : ITrackOptionsBuilder
     /// <remarks> Set if that track (<see cref="TrackType.Audio"/>, <see cref="TrackType.Video"/> 
     /// or <see cref="TrackType.Text"/>) is eligible for automatic selection by the player. See 
     /// Matroska specifications for more details.</remarks>
-    /// <param name="isDefault"> The default value is <see langword="false"/>.</param>
+    /// <param name="isDefault">The default value is <see langword="false"/>.</param>
     /// <returns><see cref="ITrackOptionsBuilder"/></returns>
     public ITrackOptionsBuilder WithIsDefault(bool isDefault = false)
     {

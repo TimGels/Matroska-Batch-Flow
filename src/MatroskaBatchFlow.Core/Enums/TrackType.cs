@@ -1,5 +1,3 @@
-using System.ComponentModel;
-
 namespace MatroskaBatchFlow.Core.Enums;
 
 /// <summary>
@@ -8,7 +6,6 @@ namespace MatroskaBatchFlow.Core.Enums;
 /// </summary>
 public enum TrackType
 {
-
     /// <summary>
     /// Represents the "Info" element in the Matroska specification.
     /// </summary>

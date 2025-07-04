@@ -28,10 +28,10 @@ public interface IBatchConfiguration : INotifyPropertyChanged
     /// <summary>
     /// Returns the list of <see cref="TrackConfiguration"/> objects for the specified <see cref="TrackType"/>.
     /// </summary>
-    /// <param name="type">The track type.</param>
+    /// <param name="trackType">The track type.</param>
     /// <returns>
     /// The corresponding list of <see cref="TrackConfiguration"/> objects for the given track type.
     /// If the track type is not <see cref="TrackType.Audio"/>, <see cref="TrackType.Video"/>, or <see cref="TrackType.Text"/>, it returns an empty list.
     /// </returns>
-    public IList<TrackConfiguration> GetTrackListForType(TrackType type);
+    public IList<TrackConfiguration> GetTrackListForType(TrackType trackType);
 }

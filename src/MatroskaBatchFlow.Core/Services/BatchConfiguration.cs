@@ -11,7 +11,7 @@ namespace MatroskaBatchFlow.Core.Services;
 /// <summary>
 /// Represents the configuration for batch processing of media files.
 /// </summary>
-public class BatchConfiguration : INotifyPropertyChanged, IBatchConfiguration
+public class BatchConfiguration : IBatchConfiguration
 {
     private string _directoryPath = string.Empty;
     private string _title = string.Empty;
