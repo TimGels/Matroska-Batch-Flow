@@ -25,7 +25,7 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
 
     private readonly IBatchConfiguration _batchConfig;
 
-    private readonly IBatchConfigurationTrackInitializer _batchConfigurationTrackInitializer;
+    private readonly IBatchTrackCountSynchronizer _BatchTrackCountSynchronizer;
 
     public ICommand RemoveSelected { get; }
 
@@ -36,7 +36,7 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
         IFileValidationEngine fileValidator,
         IFileProcessingEngine fileProcessingRuleEngine,
         IBatchConfiguration batchConfig,
-        IBatchConfigurationTrackInitializer batchConfigurationTrackInitializer
+        IBatchTrackCountSynchronizer batchConfigurationTrackInitializer
         )
     {
         _fileScanner = fileScanner;
@@ -44,7 +44,7 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
         _fileValidator = fileValidator;
         _fileProcessingRuleEngine = fileProcessingRuleEngine;
         _batchConfig = batchConfig;
-        _batchConfigurationTrackInitializer = batchConfigurationTrackInitializer;
+        _BatchTrackCountSynchronizer = batchConfigurationTrackInitializer;
     }
 
     /// <summary>
@@ -67,7 +67,7 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
         if (HandleValidationErrors(validationResults))
             return;
 
-        _batchConfigurationTrackInitializer.EnsureTrackCount(newFiles.First(), TrackType.Audio, TrackType.Video, TrackType.Text);
+        _BatchTrackCountSynchronizer.SynchronizeTrackCount(newFiles.First(), TrackType.Audio, TrackType.Video, TrackType.Text);
         // If validation passed, apply processing rules to the new files.
         foreach (var file in newFiles)
         {

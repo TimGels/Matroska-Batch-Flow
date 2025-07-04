@@ -103,7 +103,7 @@ public partial class App : Application
                     services.AddSingleton<IFileProcessingRule, TrackPositionRule>();
                     services.AddSingleton<IFileProcessingRule, TrackLanguageRule>();
 
-                    services.AddSingleton<IBatchConfigurationTrackInitializer, BatchConfigurationTrackInitializer>();
+                    services.AddSingleton<IBatchTrackCountSynchronizer, BatchTrackCountSynchronizer>();
                 })
                 .UseNavigation(RegisterRoutes)
             );

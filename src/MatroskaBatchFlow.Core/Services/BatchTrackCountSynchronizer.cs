@@ -10,14 +10,14 @@ namespace MatroskaBatchFlow.Core.Services;
 /// with the number of tracks found in a scanned media file. It does not modify track properties, only the
 /// count.</remarks>
 /// <param name="_batchConfig">The batch configuration to be modified.</param>
-public class BatchConfigurationTrackInitializer(IBatchConfiguration _batchConfig) : IBatchConfigurationTrackInitializer
+public class BatchTrackCountSynchronizer(IBatchConfiguration _batchConfig) : IBatchTrackCountSynchronizer
 {
     /// <inheritdoc/>
     /// <remarks>
     /// <b>CAUTION</b> - This is a <b>destructive</b> operation: it will <b>delete</b> or <b>add</b> <see cref="BatchConfiguration"/> 
     /// tracks as necessary to match the count of <paramref name="referenceFile"/> for the specified <paramref name="trackTypes"/>.
     /// </remarks>
-    public void EnsureTrackCount(ScannedFileInfo referenceFile, params TrackType[] trackTypes)
+    public void SynchronizeTrackCount(ScannedFileInfo referenceFile, params TrackType[] trackTypes)
     {
         if (referenceFile?.Result?.Media?.Track == null || trackTypes == null || trackTypes.Length == 0)
             return;
