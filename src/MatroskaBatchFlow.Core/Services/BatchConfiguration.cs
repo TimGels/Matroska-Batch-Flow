@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
@@ -21,6 +22,19 @@ public class BatchConfiguration : INotifyPropertyChanged, IBatchConfiguration
     private static readonly ImmutableList<TrackConfiguration> _emptyTrackList = [];
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public BatchConfiguration()
+    {
+        FileList.CollectionChanged += (sender, e) =>
+        {
+            // We only care about removals or resets.
+            if (e.Action is not NotifyCollectionChangedAction.Remove
+            and not NotifyCollectionChangedAction.Reset)
+                return;
+
+            OnFileRemoval(sender, e);
+        };
+    }
 
     public string DirectoryPath
     {
@@ -115,6 +129,33 @@ public class BatchConfiguration : INotifyPropertyChanged, IBatchConfiguration
             TrackType.Text => SubtitleTracks,
             _ => _emptyTrackList
         };
+    }
+
+    /// <summary>
+    /// Clears all audio, video, and subtitle tracks from the current collection.
+    /// </summary>
+    private void ClearTracks()
+    {
+        AudioTracks.Clear();
+        VideoTracks.Clear();
+        SubtitleTracks.Clear();
+    }
+
+    /// <summary>
+    /// Handles the removal of a file and updates the state of the application accordingly.
+    /// </summary>
+    /// <remarks>This method is triggered when a file is removed from the file list. If the file list becomes
+    /// empty, it clears the application state.</remarks>
+    /// <param name="sender">The source of the event. This parameter can be <see langword="null"/>.</param>
+    /// <param name="eventArgs">The event data associated with the file removal.</param>
+    private void OnFileRemoval(object? sender, EventArgs eventArgs)
+    {
+        if (FileList.Count is not 0)
+            return;
+
+        Title = string.Empty;
+        DirectoryPath = string.Empty;
+        ClearTracks();
     }
 }
 

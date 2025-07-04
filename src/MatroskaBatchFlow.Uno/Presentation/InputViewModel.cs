@@ -48,23 +48,6 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
     }
 
     /// <summary>
-    /// Removes all files currently selected in the <see cref="SelectedFiles"/> collection from the <see
-    /// cref="FileList"/>.
-    /// </summary>
-    /// <remarks>This method processes the removal of selected files by iterating over a copy of the <see
-    /// cref="SelectedFiles"/> collection.</remarks>
-    /// <returns>A completed <see cref="Task"/> representing the operation.</returns>
-    private Task RemoveSelectedFiles()
-    {
-        // TODO: Consider doing a batchconfiguration files reset when the last file is removed.
-        // Convert SelectedFiles to an array to make a copy to avoid modifying the collection while iterating.
-        foreach (ScannedFileInfo file in SelectedFiles.ToArray())
-            _batchConfig.FileList.Remove(file);
-
-        return Task.CompletedTask;
-    }
-
-    /// <summary>
     /// Handles the event when files are dropped, processing and validating the provided files.
     /// </summary>
     /// <remarks>This method scans the dropped files, validates them, and adds them to the file list if they
@@ -92,6 +75,22 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
         }
 
         _batchConfig.FileList.AddRange(newFiles);
+    }
+
+    /// <summary>
+    /// Removes all files currently selected in the <see cref="SelectedFiles"/> collection from the <see
+    /// cref="FileList"/>.
+    /// </summary>
+    /// <remarks>This method processes the removal of selected files by iterating over a copy of the <see
+    /// cref="SelectedFiles"/> collection.</remarks>
+    /// <returns>A completed <see cref="Task"/> representing the operation.</returns>
+    private Task RemoveSelectedFiles()
+    {
+        // Convert SelectedFiles to an array to make a copy to avoid modifying the collection while iterating.
+        foreach (ScannedFileInfo file in SelectedFiles.ToArray())
+            _batchConfig.FileList.Remove(file);
+
+        return Task.CompletedTask;
     }
 
     /// <summary>
