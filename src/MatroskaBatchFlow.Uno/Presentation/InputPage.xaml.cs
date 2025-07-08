@@ -11,6 +11,9 @@ public sealed partial class InputPage : Page
     {
         this.InitializeComponent();
 
+        // Retrieve InputViewModel as a service and set as DataContext
+        this.DataContext = App.GetService<InputViewModel>();
+
         WeakReferenceMessenger.Default.Register<DialogStatusMessage>(this, (r, dialogMessage) =>
         {
             // If the dialog is open, disable file drop on the ListView.

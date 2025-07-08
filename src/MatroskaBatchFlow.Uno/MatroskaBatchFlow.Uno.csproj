@@ -54,10 +54,15 @@
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" />
+    <None Remove="Assets\Icons\AppList.scale-400.png" />
+    <None Remove="Assets\Icons\AppTitleBar.scale-200.png" />
     <None Remove="Presentation\AudioPage.xaml" />
     <None Remove="Presentation\Dialogs\ErrorDialog.xaml" />
     <None Remove="Presentation\GeneralPage.xaml" />
     <None Remove="Presentation\InputPage.xaml" />
+    <None Remove="Presentation\OutputPage.xaml" />
+    <None Remove="Presentation\SettingsPage.xaml" />
     <None Remove="Presentation\SubtitlePage.xaml" />
     <None Remove="Presentation\VideoPage.xaml" />
     <None Remove="ReadMe.md" />
@@ -98,6 +103,17 @@
     <AppxManifest Update="Package.appxmanifest">
       <CopyToOutputDirectory></CopyToOutputDirectory>
     </AppxManifest>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Presentation\OutputPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Presentation\SettingsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Presentation\Dialogs\ErrorDialog.xaml">

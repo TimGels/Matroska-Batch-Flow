@@ -8,13 +8,14 @@
       NavigationCacheMode="Required"
       Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Grid utu:SafeArea.Insets="Bottom, Left, Right"
+    <Grid
           uen:Region.Attached="True">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <NavigationView uen:Region.Attached="true"
+        <!--<NavigationView uen:Region.Attached="true"
+                        x:Name="MainNavigationView"
                         PaneDisplayMode="Top"
                         IsBackButtonVisible="Collapsed"
                         Grid.Row="0" >
@@ -44,6 +45,17 @@
                              AcceptsReturn="True"/>
                 </Grid>
             </Grid>
+        </NavigationView>-->
+        <NavigationView x:Name="nvSample" SelectionChanged="nvSample_SelectionChanged" IsBackButtonVisible="Collapsed" PaneDisplayMode="Top">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Input" Tag="InputPage" />
+                <NavigationViewItem Content="General" Tag="GeneralPage" />
+                <NavigationViewItem Content="Video" Tag="VideoPage" />
+                <NavigationViewItem Content="Audio" Tag="AudioPage" />
+                <NavigationViewItem Content="Subtitle" Tag="SubtitlePage" />
+                <NavigationViewItem Content="Output" Tag="OutputPage" />
+            </NavigationView.MenuItems>
+            <Frame x:Name="contentFrame" />
         </NavigationView>
         <StackPanel Grid.Row="1"
                     HorizontalAlignment="Center">

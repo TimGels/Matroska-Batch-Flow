@@ -9,6 +9,17 @@ using Uno.Resizetizer;
 namespace MatroskaBatchFlow.Uno;
 public partial class App : Application
 {
+    public static T GetService<T>()
+    where T : class
+    {
+        if ((App.Current as App)!.Host.Services.GetService(typeof(T)) is not T service)
+        {
+            throw new ArgumentException($"{typeof(T)} needs to be registered in ConfigureServices within App.xaml.cs.");
+        }
+
+        return service;
+    }
+
     /// <summary>
     /// Initializes the singleton application object. This is the first line of authored code
     /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -103,6 +114,14 @@ public partial class App : Application
                     services.AddSingleton<IFileProcessingRule, TrackPositionRule>();
                     services.AddSingleton<IFileProcessingRule, TrackLanguageRule>();
 
+                    // Register view models.
+                    services.AddSingleton<InputViewModel, InputViewModel>();
+                    services.AddSingleton<GeneralViewModel, GeneralViewModel>();
+                    services.AddSingleton<VideoViewModel, VideoViewModel>();
+                    services.AddSingleton<AudioViewModel, AudioViewModel>();
+                    services.AddSingleton<SubtitleViewModel, SubtitleViewModel>();
+                    services.AddSingleton<OutputViewModel, OutputViewModel>();
+
                     services.AddSingleton<IBatchTrackCountSynchronizer, BatchTrackCountSynchronizer>();
                 })
                 .UseNavigation(RegisterRoutes)
@@ -117,34 +136,19 @@ public partial class App : Application
         Host = await builder.NavigateAsync<Shell>();
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3878:Arrays should not be created for params parameters", Justification = "<Pending>")]
     private static void RegisterRoutes(IViewRegistry views, IRouteRegistry routes)
     {
         views.Register(
             new ViewMap(ViewModel: typeof(ShellViewModel)),
-            new ViewMap<InputPage, InputViewModel>(),
-            new ViewMap<GeneralPage, GeneralViewModel>(),
-            new ViewMap<VideoPage, VideoViewModel>(),
-            new ViewMap<AudioPage, AudioViewModel>(),
-            new ViewMap<SubtitlePage, SubtitleViewModel>(),
-            new ViewMap<MainPage, MainViewModel>(),
-            new DataViewMap<SecondPage, SecondViewModel, Entity>()
+            new ViewMap<MainPage, MainViewModel>()
         );
 
         routes.Register(
             new RouteMap("", View: views.FindByViewModel<ShellViewModel>(),
                 Nested:
                 [
-                    new RouteMap("Main", View: views.FindByViewModel<MainViewModel>(), IsDefault: true,
-                        Nested:
-                        [
-                            new ("Input", View: views.FindByViewModel<InputViewModel>()),
-                            new ("General", View: views.FindByViewModel<GeneralViewModel>()),
-                            new ("Video", View: views.FindByViewModel<VideoViewModel>()),
-                            new ("Audio", View: views.FindByViewModel<AudioViewModel>()),
-                            new ("Subtitle", View: views.FindByViewModel<SubtitleViewModel>()),
-                        ]
-                    ),
-                    new ("Second", View: views.FindByViewModel<SecondViewModel>()),
+                    new RouteMap("Main", View: views.FindByViewModel<MainViewModel>(), IsDefault: true)
                 ]
             )
         );
