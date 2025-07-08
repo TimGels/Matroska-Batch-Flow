@@ -7,5 +7,6 @@ public sealed partial class GeneralPage : Page
     public GeneralPage()
     {
         this.InitializeComponent();
+        this.DataContext = App.GetService<GeneralViewModel>();
     }
 }

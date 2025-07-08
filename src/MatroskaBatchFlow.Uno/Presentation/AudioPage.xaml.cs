@@ -7,5 +7,6 @@ public sealed partial class AudioPage : Page
     public AudioPage()
     {
         this.InitializeComponent();
+        this.DataContext = App.GetService<AudioViewModel>();
     }
 }

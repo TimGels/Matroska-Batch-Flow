@@ -7,5 +7,6 @@ public sealed partial class VideoPage : Page
     public VideoPage()
     {
         this.InitializeComponent();
+        this.DataContext = App.GetService<VideoViewModel>();
     }
 }

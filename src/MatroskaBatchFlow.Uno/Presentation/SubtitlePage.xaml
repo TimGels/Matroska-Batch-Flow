@@ -9,7 +9,8 @@
     xmlns:Controls="using:MatroskaBatchFlow.Uno.Presentation.Controls"
     xmlns:BatchConfig="using:MatroskaBatchFlow.Core.Services"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    NavigationCacheMode="Required">
 
     <UserControl.Resources>
         <Converters:ZeroBasedToOneBasedConverter x:Key="ZeroBasedToOneBasedConverter" />
