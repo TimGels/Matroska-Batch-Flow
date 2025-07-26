@@ -30,14 +30,14 @@
                       Background="{ThemeResource ControlStrokeColorDefaultBrush}"
                       CornerRadius="{ThemeResource ControlCornerRadius}"
                       Actions:DropFilesBehavior.IsEnabled="True"
-                      Actions:DropFilesBehavior.FileDropTarget="{Binding}"
-                      ItemsSource="{Binding FileList}"
+                      Actions:DropFilesBehavior.FileDropTarget="{x:Bind ViewModel}"
+                      ItemsSource="{x:Bind ViewModel.FileList}"
                       AllowDrop="True"
                       ScrollViewer.HorizontalScrollBarVisibility="Auto"
                       ScrollViewer.VerticalScrollBarVisibility="Auto"
                       HorizontalContentAlignment="Stretch"
                       SelectionMode="Extended"
-                      Actions:ListViewSelectedItemsBehavior.BoundSelectedItems="{Binding SelectedFiles}">
+                      Actions:ListViewSelectedItemsBehavior.BoundSelectedItems="{x:Bind ViewModel.SelectedFiles, Mode=TwoWay}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Path}"
@@ -68,7 +68,7 @@
               Margin="10,10,10,10"
               VerticalAlignment="Top">
             <Button Content="Remove Selection"
-                    Command="{Binding RemoveSelected}" />
+                    Command="{x:Bind ViewModel.RemoveSelected}" />
         </Grid>
     </Grid>
 </Page>

@@ -1,4 +1,5 @@
 namespace MatroskaBatchFlow.Uno.Presentation;
-internal class GeneralViewModel
+
+public partial class GeneralViewModel : ObservableObject
 {
 }

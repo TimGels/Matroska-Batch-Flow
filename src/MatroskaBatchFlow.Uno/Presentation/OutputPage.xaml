@@ -10,7 +10,7 @@
 
     <Grid>
         <TextBox TextWrapping="Wrap"
-         Text="{Binding ScanResult}"
+         Text="{x:Bind ViewModel.ScanResult}"
          AcceptsReturn="True"/>
     </Grid>
 </Page>

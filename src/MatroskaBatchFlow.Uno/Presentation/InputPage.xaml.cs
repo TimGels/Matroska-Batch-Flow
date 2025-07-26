@@ -2,17 +2,18 @@ using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Uno.Presentation.Dialogs;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
+
 /// <summary>
-/// An empty page that can be used on its own or navigated to within a Frame.
+/// Represents a page for adding and managing matroska files.
 /// </summary>
 public sealed partial class InputPage : Page
 {
+    public InputViewModel ViewModel { get; }
+
     public InputPage()
     {
+        ViewModel = App.GetService<InputViewModel>();
         this.InitializeComponent();
-
-        // Retrieve InputViewModel as a service and set as DataContext
-        this.DataContext = App.GetService<InputViewModel>();
 
         WeakReferenceMessenger.Default.Register<DialogStatusMessage>(this, (r, dialogMessage) =>
         {

@@ -2,9 +2,10 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 
 public sealed partial class OutputPage : Page
 {
+    public OutputViewModel ViewModel { get; }
     public OutputPage()
     {
-        this.InitializeComponent();
-        this.DataContext = App.GetService<OutputViewModel>();
+        ViewModel = App.GetService<OutputViewModel>();
+        this.InitializeComponent();  
     }
 }
