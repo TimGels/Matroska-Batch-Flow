@@ -4,9 +4,9 @@ using MatroskaBatchFlow.Uno.Contracts.ViewModels;
 using MatroskaBatchFlow.Uno.Extensions;
 
 namespace MatroskaBatchFlow.Uno.Services;
-public class NavigationService : INavigationService
+
+public class NavigationService(IPageService pageService) : INavigationService
 {
-    private readonly IPageService _pageService;
     private object? _lastParameterUsed;
     private Frame? _frame;
 
@@ -36,25 +36,9 @@ public class NavigationService : INavigationService
     [MemberNotNullWhen(true, nameof(Frame), nameof(_frame))]
     public bool CanGoBack => Frame != null && Frame.CanGoBack;
 
-    public NavigationService(IPageService pageService)
+    public void SetListDataItemForNextConnectedAnimation(object item)
     {
-        _pageService = pageService;
-    }
-
-    private void RegisterFrameEvents()
-    {
-        if (_frame != null)
-        {
-            _frame.Navigated += OnNavigated;
-        }
-    }
-
-    private void UnregisterFrameEvents()
-    {
-        if (_frame != null)
-        {
-            _frame.Navigated -= OnNavigated;
-        }
+        //Frame.SetListDataItemForNextConnectedAnimation(item);
     }
 
     public bool GoBack()
@@ -74,34 +58,47 @@ public class NavigationService : INavigationService
         return false;
     }
 
-    public bool NavigateTo(string pageKey, object? parameter = null, bool clearNavigation = false)
-    {
-        var pageType = _pageService.GetPageType(pageKey);
-
-        if (_frame != null
-            && (_frame.Content?.GetType() != pageType
-                || (parameter != null
-                    && !parameter.Equals(_lastParameterUsed)
-                    )
-                )
-            )
-        {
-            _frame.Tag = clearNavigation;
-            var vmBeforeNavigation = _frame.GetPageViewModel();
-            var navigated = _frame.Navigate(pageType, parameter);
-            if (navigated)
-            {
-                _lastParameterUsed = parameter;
-                if (vmBeforeNavigation is INavigationAware navigationAware)
-                {
-                    navigationAware.OnNavigatedFrom();
-                }
-            }
-
-            return navigated;
-        }
-
+    /// <inheritdoc/>
+    /// <remarks>The method will only navigate if the target page is different from the current page or if the
+    /// parameter differs from the last used parameter.</remarks>
+public bool NavigateTo(string pageKey, object? parameter = null, bool clearNavigation = false)
+{
+    if (_frame == null)
         return false;
+
+    var pageType = pageService.GetPageType(pageKey);
+    var frameContentType = _frame.Content?.GetType();
+    var isDifferentPage = frameContentType != pageType;
+    var isDifferentParameter = parameter != null && !parameter.Equals(_lastParameterUsed);
+    var shouldNavigate = isDifferentPage || isDifferentParameter;
+
+    if (!shouldNavigate)
+        return false;
+
+    _frame.Tag = clearNavigation;
+
+    var vmBeforeNavigation = _frame.GetPageViewModel();
+    var navigated = _frame.Navigate(pageType, parameter);
+    if (navigated)
+    {
+        _lastParameterUsed = parameter;
+        NotifyViewModelNavigatedFrom(vmBeforeNavigation);
+    }
+
+    return navigated;
+}
+
+    /// <summary>
+    /// Notifies the specified view model that a navigation event has occurred, indicating that the view model is being
+    /// navigated away from. Requires the view model to implement the <see cref="INavigationAware"/> interface.
+    /// </summary>
+    /// <param name="viewModel">The view model to notify.</param>
+    private static void NotifyViewModelNavigatedFrom(object? viewModel)
+    {
+        if (viewModel is INavigationAware navigationAware)
+        {
+            navigationAware.OnNavigatedFrom();
+        }
     }
 
     private void OnNavigated(object sender, NavigationEventArgs e)
@@ -123,8 +120,19 @@ public class NavigationService : INavigationService
         }
     }
 
-    public void SetListDataItemForNextConnectedAnimation(object item)
+    private void RegisterFrameEvents()
     {
-        //Frame.SetListDataItemForNextConnectedAnimation(item);
+        if (_frame != null)
+        {
+            _frame.Navigated += OnNavigated;
+        }
+    }
+
+    private void UnregisterFrameEvents()
+    {
+        if (_frame != null)
+        {
+            _frame.Navigated -= OnNavigated;
+        }
     }
 }
