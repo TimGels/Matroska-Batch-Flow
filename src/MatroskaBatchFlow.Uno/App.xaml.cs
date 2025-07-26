@@ -175,9 +175,5 @@ public partial class App : Application
             //shell.RootFrame.Navigate(typeof(MainPage), args.Arguments);
             await App.GetService<IActivationService>().ActivateAsync(args);
         }
-
-        MainWindow.Activate();
     }
-
-
 }
