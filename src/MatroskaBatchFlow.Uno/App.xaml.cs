@@ -96,7 +96,10 @@ public partial class App : Application
 #if DEBUG
         MainWindow.UseStudio();
 #endif
-        //MainWindow.SetWindowIcon();
+
+#if WINDOWS10_0_19041_0_OR_GREATER
+        MainWindow.SetWindowIcon();
+#endif
 
         Host = Microsoft.Extensions.Hosting.Host.
         CreateDefaultBuilder().
