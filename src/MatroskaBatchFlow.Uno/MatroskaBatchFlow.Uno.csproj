@@ -44,7 +44,6 @@
         HttpRefit;
         Serialization;
         Localization;
-        Navigation;
         ThemeService;
         SkiaRenderer;
     </UnoFeatures>
@@ -52,6 +51,7 @@
     <PackageCertificateThumbprint>E620B8DF242BDECF6EF3C921BED1FCC5F8E819EF</PackageCertificateThumbprint>
     <PackageCertificateKeyFile>MatroskaBatchFlow.Uno_TemporaryKey.pfx</PackageCertificateKeyFile>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+    <PublishAot>False</PublishAot>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" />
@@ -119,5 +119,10 @@
     <Page Update="Presentation\Dialogs\ErrorDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

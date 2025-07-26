@@ -2,6 +2,7 @@ using System.Text.Json;
 using MatroskaBatchFlow.Core.Builders.MkvPropeditArguments;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Uno.Contracts.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
@@ -10,20 +11,35 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _scanResult = string.Empty;
 
-    private readonly IFileScanner _fileScanner;
+    [ObservableProperty]
+    private bool isBackEnabled;
 
+    [ObservableProperty]
+    private object? selected;
+
+    public INavigationService NavigationService { get; }
+    public INavigationViewService NavigationViewService { get; }
+
+    private readonly IFileScanner _fileScanner;
     private readonly IBatchConfiguration _batchConfiguration;
 
     public ICommand ScanFiles { get; }
 
     public ICommand GenerateMkvpropeditArguments { get; }
 
-    public MainViewModel(IFileScanner fileScanner, IBatchConfiguration batchConfiguration)
+    public MainViewModel(
+        IFileScanner fileScanner,
+        IBatchConfiguration batchConfiguration,
+        INavigationService navigationService,
+        INavigationViewService navigationViewService)
     {
         _fileScanner = fileScanner;
         _batchConfiguration = batchConfiguration;
+        NavigationService = navigationService;
+        NavigationViewService = navigationViewService;
         ScanFiles = new AsyncRelayCommand(ScanFilesAsync);
         GenerateMkvpropeditArguments = new RelayCommand(GenerateMkvpropeditArgumentsCommand);
+        NavigationService.Navigated += OnNavigated;
     }
 
     private async Task ScanFilesAsync()
@@ -88,6 +104,28 @@ public partial class MainViewModel : ObservableObject
                 .WithIsDefault(track.Default)
                 .WithIsForced(track.Forced)
             );
+        }
+    }
+
+    /// <summary>
+    /// Handles navigation events to update the navigation view's selected item and back navigation state.
+    /// </summary>
+    /// <param name="sender">The source of the navigation event.</param>
+    /// <param name="eventArgs">The event data containing information about the navigation event, including the destination page type.</param>
+    private void OnNavigated(object sender, NavigationEventArgs eventArgs)
+    {
+        IsBackEnabled = NavigationService.CanGoBack;
+
+        if (eventArgs.SourcePageType == typeof(SettingsPage))
+        {
+            Selected = NavigationViewService.SettingsItem;
+            return;
+        }
+
+        var selectedItem = NavigationViewService.GetSelectedItem(eventArgs.SourcePageType);
+        if (selectedItem != null)
+        {
+            Selected = selectedItem;
         }
     }
 }

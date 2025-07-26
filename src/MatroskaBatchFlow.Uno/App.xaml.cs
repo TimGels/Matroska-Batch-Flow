@@ -4,7 +4,9 @@ using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Core.Services.FileProcessing.Track;
 using MatroskaBatchFlow.Core.Services.FileProcessing.Track.Name;
 using MatroskaBatchFlow.Core.Services.FileValidation;
-using Uno.Resizetizer;
+using MatroskaBatchFlow.Uno.Activation;
+using MatroskaBatchFlow.Uno.Contracts.Services;
+using MatroskaBatchFlow.Uno.Services;
 
 namespace MatroskaBatchFlow.Uno;
 public partial class App : Application
@@ -12,7 +14,8 @@ public partial class App : Application
     public static T GetService<T>()
     where T : class
     {
-        if ((App.Current as App)!.Host.Services.GetService(typeof(T)) is not T service)
+        var app = App.Current as App;
+        if (app?.Host?.Services.GetService(typeof(T)) is not T service)
         {
             throw new ArgumentException($"{typeof(T)} needs to be registered in ConfigureServices within App.xaml.cs.");
         }
@@ -29,14 +32,12 @@ public partial class App : Application
         this.InitializeComponent();
     }
 
-    protected Window? MainWindow { get; private set; }
+    public static Window MainWindow { get; private set; }
     protected IHost? Host { get; private set; }
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {
         var builder = this.CreateBuilder(args)
-            // Add navigation support for toolkit controls such as TabBar and NavigationView
-            .UseToolkitNavigation()
             .Configure(host => host
 #if DEBUG
                 // Switch to Development environment when running in DEBUG
@@ -73,12 +74,6 @@ public partial class App : Application
 
                 }, enableUnoLogging: true)
                 .UseSerilog(consoleLoggingEnabled: true, fileLoggingEnabled: true)
-                .UseConfiguration(configure: configBuilder =>
-                    configBuilder
-                        .EmbeddedSource<App>()
-                        .Section<ScanOptions>()
-                        .Section<LanguageOptions>()
-                )
                 // Enable localization (see appsettings.json for supported languages)
                 .UseLocalization()
                 // Register Json serializers (ISerializer and ISerializer)
@@ -95,62 +90,94 @@ public partial class App : Application
                     services.AddRefitClient<IApiClient>(context);
 
                 })
-                .ConfigureServices((context, services) =>
-                {
-                    services.AddSingleton<ILanguageProvider, LanguageProvider>();
-                    services.AddSingleton<IFileScanner, FileScanner>();
-                    services.AddSingleton<IBatchConfiguration, BatchConfiguration>();
-
-                    // Register file validation rules engine service and it's accomadating rules.
-                    services.AddSingleton<IFileValidationEngine, FileValidationEngine>();
-                    services.AddSingleton<IFileValidationRule, LanguageConsistencyRule>();
-                    services.AddSingleton<IFileValidationRule, TrackCountConsistencyRule>();
-
-                    // Register file processing rule engine service and it's accomadating rules.
-                    services.AddSingleton<IFileProcessingEngine, FileProcessingEngine>();
-                    services.AddSingleton<IFileProcessingRule, SubtitleTrackNamingRule>();
-                    services.AddSingleton<IFileProcessingRule, AudioTrackNamingRule>();
-                    services.AddSingleton<IFileProcessingRule, VideoTrackNamingRule>();
-                    services.AddSingleton<IFileProcessingRule, TrackPositionRule>();
-                    services.AddSingleton<IFileProcessingRule, TrackLanguageRule>();
-
-                    // Register view models.
-                    services.AddSingleton<InputViewModel, InputViewModel>();
-                    services.AddSingleton<GeneralViewModel, GeneralViewModel>();
-                    services.AddSingleton<VideoViewModel, VideoViewModel>();
-                    services.AddSingleton<AudioViewModel, AudioViewModel>();
-                    services.AddSingleton<SubtitleViewModel, SubtitleViewModel>();
-                    services.AddSingleton<OutputViewModel, OutputViewModel>();
-
-                    services.AddSingleton<IBatchTrackCountSynchronizer, BatchTrackCountSynchronizer>();
-                })
-                .UseNavigation(RegisterRoutes)
             );
         MainWindow = builder.Window;
 
 #if DEBUG
         MainWindow.UseStudio();
 #endif
-        MainWindow.SetWindowIcon();
+        //MainWindow.SetWindowIcon();
 
-        Host = await builder.NavigateAsync<Shell>();
+        Host = Microsoft.Extensions.Hosting.Host.
+        CreateDefaultBuilder().
+        ConfigureServices((context, services) =>
+        {
+            // Register services.
+            services.AddSingleton<IBatchTrackCountSynchronizer, BatchTrackCountSynchronizer>();
+            services.AddSingleton<IActivationService, ActivationService>();
+            services.AddSingleton<ActivationHandler<LaunchActivatedEventArgs>, DefaultActivationHandler>();
+            services.AddSingleton<IPageService, PageService>();
+            services.AddSingleton<INavigationService, NavigationService>();
+            services.AddSingleton<INavigationViewService, NavigationViewService>();
+            services.AddSingleton<ILanguageProvider, LanguageProvider>();
+            services.AddSingleton<IFileScanner, FileScanner>();
+            services.AddSingleton<IBatchConfiguration, BatchConfiguration>();
+
+            // Register file validation rules engine service and it's accomadating rules.
+            services.AddSingleton<IFileValidationEngine, FileValidationEngine>();
+            services.AddSingleton<IFileValidationRule, LanguageConsistencyRule>();
+            services.AddSingleton<IFileValidationRule, TrackCountConsistencyRule>();
+
+            // Register file processing rule engine service and it's accomadating rules.
+            services.AddSingleton<IFileProcessingEngine, FileProcessingEngine>();
+            services.AddSingleton<IFileProcessingRule, SubtitleTrackNamingRule>();
+            services.AddSingleton<IFileProcessingRule, AudioTrackNamingRule>();
+            services.AddSingleton<IFileProcessingRule, VideoTrackNamingRule>();
+            services.AddSingleton<IFileProcessingRule, TrackPositionRule>();
+            services.AddSingleton<IFileProcessingRule, TrackLanguageRule>();
+
+            // Register view models.
+            services.AddSingleton<InputViewModel, InputViewModel>();
+            services.AddSingleton<GeneralViewModel, GeneralViewModel>();
+            services.AddSingleton<VideoViewModel, VideoViewModel>();
+            services.AddSingleton<AudioViewModel, AudioViewModel>();
+            services.AddSingleton<SubtitleViewModel, SubtitleViewModel>();
+            services.AddSingleton<OutputViewModel, OutputViewModel>();
+            services.AddSingleton<ShellViewModel, ShellViewModel>();
+            services.AddSingleton<MainViewModel, MainViewModel>();
+
+            // Register pages.
+            services.AddSingleton<Shell>();
+            services.AddSingleton<MainPage>();
+            services.AddSingleton<InputPage>();
+
+            //Configure the app settings.
+            services.Configure<LanguageOptions>(context.Configuration.GetSection(nameof(LanguageOptions)));
+            services.Configure<ScanOptions>(context.Configuration.GetSection(nameof(ScanOptions)));
+        }).
+        Build();
+
+        //MainWindow.Content = new Shell();
+        MainWindow.Activate();
+
+        //MainWindow.Content = new TextBlock() { Text = "Welcome!" };
+
+        //await App.GetService<IActivationService>().ActivateAsync(args);
+
+        //Host = builder.Build();
+
+        // Do not repeat app initialization when the Window already has content,
+        // just ensure that the window is active
+        if (MainWindow.Content is not Shell shell)
+        {
+            shell = new Shell();
+
+            MainWindow.Content = shell;
+            await Task.Delay(1000);
+            //shell.RootFrame.NavigationFailed += OnNavigationFailed;
+        }
+
+        if (shell.RootFrame.Content == null)
+        {
+            // When the navigation stack isn't restored navigate to the first page,
+            // configuring the new page by passing required information as a navigation
+            // parameter
+            //shell.RootFrame.Navigate(typeof(MainPage), args.Arguments);
+            await App.GetService<IActivationService>().ActivateAsync(args);
+        }
+
+        MainWindow.Activate();
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3878:Arrays should not be created for params parameters", Justification = "<Pending>")]
-    private static void RegisterRoutes(IViewRegistry views, IRouteRegistry routes)
-    {
-        views.Register(
-            new ViewMap(ViewModel: typeof(ShellViewModel)),
-            new ViewMap<MainPage, MainViewModel>()
-        );
 
-        routes.Register(
-            new RouteMap("", View: views.FindByViewModel<ShellViewModel>(),
-                Nested:
-                [
-                    new RouteMap("Main", View: views.FindByViewModel<MainViewModel>(), IsDefault: true)
-                ]
-            )
-        );
-    }
 }

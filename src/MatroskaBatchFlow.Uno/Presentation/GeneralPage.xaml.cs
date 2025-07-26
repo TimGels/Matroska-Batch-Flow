@@ -1,12 +1,14 @@
 namespace MatroskaBatchFlow.Uno.Presentation;
+
 /// <summary>
-/// An empty page that can be used on its own or navigated to within a Frame.
+/// Represents a page for general-related matroska file configuration.
 /// </summary>
 public sealed partial class GeneralPage : Page
 {
+    public GeneralViewModel ViewModel { get; }
     public GeneralPage()
     {
+        ViewModel = App.GetService<GeneralViewModel>();
         this.InitializeComponent();
-        this.DataContext = App.GetService<GeneralViewModel>();
     }
 }

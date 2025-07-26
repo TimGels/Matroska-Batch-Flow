@@ -1,12 +1,14 @@
 namespace MatroskaBatchFlow.Uno.Presentation;
+
 /// <summary>
-/// An empty page that can be used on its own or navigated to within a Frame.
+/// Represents a page for audio-related track configuration.
 /// </summary>
 public sealed partial class AudioPage : Page
 {
+    public AudioViewModel ViewModel { get; }
     public AudioPage()
     {
+        ViewModel = App.GetService<AudioViewModel>();
         this.InitializeComponent();
-        this.DataContext = App.GetService<AudioViewModel>();
     }
 }

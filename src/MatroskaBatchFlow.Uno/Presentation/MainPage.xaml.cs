@@ -1,15 +1,20 @@
 using CommunityToolkit.Mvvm.Messaging;
+using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Presentation.Dialogs;
-using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
 public sealed partial class MainPage : Page
 {
-    public MainPage()
+    public MainViewModel ViewModel { get; }
+    public MainPage(MainViewModel mainViewModel)
     {
+        ViewModel = mainViewModel;
         this.InitializeComponent();
+
+        ViewModel.NavigationService.Frame = contentFrame;
+        ViewModel.NavigationViewService.Initialize(NavigationView);
 
         WeakReferenceMessenger.Default.Register<DialogMessage>(this, async (r, m) =>
         {
@@ -20,41 +25,20 @@ public sealed partial class MainPage : Page
                 XamlRoot = XamlRoot,
             }.ShowAsync();
         });
-
-        this.Loaded += MainPage_Loaded;
-    }
-    private void MainPage_Loaded(object sender, RoutedEventArgs e)
-    {
-        // No automatic navigation to Settings on load
-        //this.Navigator()?.NavigateRouteAsync(this, "Settings");
+        Loaded += MainPage_Loaded;
     }
 
-    // Handles navigation when a NavigationView item is invoked
-    private void MainNavigationView_ItemInvoked_1(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+    /// <summary>
+    /// Handles the Loaded event of the MainPage, initializing the default navigation view item.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="args">The event data.</param>
+    private void MainPage_Loaded(object sender, RoutedEventArgs args)
     {
-        if (args.IsSettingsInvoked)
+        // Only set the default navigation view item if not already loaded.
+        if (contentFrame.Content == null)
         {
-            this.Navigator()?.NavigateRouteAsync(this, "Settings");
-            //_ = this.Navigator()?.NavigateViewModelAsync<SettingsViewModel>(this);
-        }
-    }
-
-    private void nvSample_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
-    {
-        if (args.IsSettingsSelected)
-        {
-            contentFrame.Navigate(typeof(SettingsPage));
-        } else
-        {
-            var selectedItem = (Microsoft.UI.Xaml.Controls.NavigationViewItem)args.SelectedItem;
-            if (selectedItem != null)
-            {
-                string selectedItemTag = ((string)selectedItem.Tag);
-                //sender.Header = "Sample Page " + selectedItemTag.Substring(selectedItemTag.Length - 1);
-                string pageName = "MatroskaBatchFlow.Uno.Presentation." + selectedItemTag;
-                Type pageType = Type.GetType(pageName);
-                contentFrame.Navigate(pageType, null, new SuppressNavigationTransitionInfo());
-            }
+            NavigationView.SelectedItem = InputPageNavItem;
         }
     }
 }

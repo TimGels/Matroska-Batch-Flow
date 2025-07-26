@@ -25,8 +25,8 @@
         </Grid.RowDefinitions>
         <!--Dropdown menu Tracks-->
         <StackPanel Grid.Row="0">
-            <ComboBox ItemsSource="{Binding AudioTracks, Mode=OneWay}"
-                      SelectedItem="{Binding SelectedTrack, Mode=TwoWay}">
+            <ComboBox ItemsSource="{x:Bind ViewModel.AudioTracks, Mode=OneWay}"
+                      SelectedItem="{x:Bind ViewModel.SelectedTrack, Mode=TwoWay}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="BatchConfig:TrackConfiguration">
                         <StackPanel Orientation="Horizontal">
@@ -44,14 +44,14 @@
 
         <!--Edit-->
         <Controls:TrackSettingsControl Grid.Row="1"
-                                       IsDefaultTrack="{Binding IsDefaultTrack, Mode=TwoWay}"
-                                       IsForcedTrack="{Binding IsForcedTrack, Mode=TwoWay}"
-                                       AvailableLanguages="{Binding Languages, Mode=OneWay}"
-                                       TrackName="{Binding TrackName, Mode=TwoWay}"
-                                       IsEnabled="{Binding IsTrackSelected}"
-                                       SelectedLanguage="{Binding SelectedLanguage, Mode=TwoWay}" />
+                                       IsDefaultTrack="{x:Bind ViewModel.IsDefaultTrack, Mode=TwoWay}"
+                                       IsForcedTrack="{x:Bind ViewModel.IsForcedTrack, Mode=TwoWay}"
+                                       AvailableLanguages="{x:Bind ViewModel.Languages, Mode=OneWay}"
+                                       TrackName="{x:Bind ViewModel.TrackName, Mode=TwoWay}"
+                                       IsEnabled="{x:Bind ViewModel.IsTrackSelected, Mode=OneWay}"
+                                       SelectedLanguage="{x:Bind ViewModel.SelectedLanguage, Mode=TwoWay}" />
 
-        <Button Grid.Row="2" Content="Clear Audio Tracks" Command="{Binding ClearAudioTracks}" />
-        <Button Grid.Row="3" Content="Mutate the name" Command="{Binding MutateNameTrack}" />
+        <Button Grid.Row="2" Content="Clear Audio Tracks" Command="{x:Bind ViewModel.ClearAudioTracks}" />
+        <Button Grid.Row="3" Content="Mutate the name" Command="{x:Bind ViewModel.MutateNameTrack}" />
     </Grid>
 </Page>

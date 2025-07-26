@@ -6,18 +6,19 @@ using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Uno.Behavior;
+using MatroskaBatchFlow.Uno.Contracts.ViewModels;
 using MatroskaBatchFlow.Uno.Extensions;
 using MatroskaBatchFlow.Uno.Presentation.Dialogs;
 using Uno.Extensions.Specialized;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
-public partial class InputViewModel : ObservableObject, IFilesDropped
+public partial class InputViewModel : ObservableObject, IFilesDropped, INavigationAware
 {
     [ObservableProperty]
     private ObservableCollection<ScannedFileInfo> selectedFiles = [];
 
-    private IFileScanner _fileScanner;
+    private readonly IFileScanner _fileScanner;
 
     private readonly IFileValidationEngine _fileValidator;
 
@@ -117,5 +118,15 @@ public partial class InputViewModel : ObservableObject, IFilesDropped
             )
         );
         return true;
+    }
+
+    public void OnNavigatedTo(object parameter)
+    {
+        // Implementation for when the view model is navigated to.
+    }
+
+    public void OnNavigatedFrom()
+    {
+        // Implementation for when the view model is navigated away from.
     }
 }

@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Diagnostics;
 
 namespace MatroskaBatchFlow.Uno.Behavior;
 
@@ -65,11 +64,12 @@ public static class ListViewSelectedItemsBehavior
     /// <param name="e">Event arguments for the Unloaded event.</param>
     private static void OnListViewUnloaded(object sender, RoutedEventArgs e)
     {
-        Debug.WriteLine("unloading listview listener");
-        if (sender is ListView listView)
-        {
-            listView.SelectionChanged -= OnListViewSelectionChanged;
-        }
+        // TODO: See if uploading is necessary. Disabling this for now as it breaks the behavior after navigation.
+        //Debug.WriteLine("unloading listview listener");
+        //if (sender is ListView listView)
+        //{
+        //    listView.SelectionChanged -= OnListViewSelectionChanged;
+        //}
     }
 
     /// <summary>
