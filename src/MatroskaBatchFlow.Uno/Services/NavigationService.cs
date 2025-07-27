@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Contracts.ViewModels;
 using MatroskaBatchFlow.Uno.Extensions;
+using Microsoft.UI.Xaml.Media.Animation;
 
 namespace MatroskaBatchFlow.Uno.Services;
 
@@ -61,32 +62,37 @@ public class NavigationService(IPageService pageService) : INavigationService
     /// <inheritdoc/>
     /// <remarks>The method will only navigate if the target page is different from the current page or if the
     /// parameter differs from the last used parameter.</remarks>
-public bool NavigateTo(string pageKey, object? parameter = null, bool clearNavigation = false)
-{
-    if (_frame == null)
-        return false;
-
-    var pageType = pageService.GetPageType(pageKey);
-    var frameContentType = _frame.Content?.GetType();
-    var isDifferentPage = frameContentType != pageType;
-    var isDifferentParameter = parameter != null && !parameter.Equals(_lastParameterUsed);
-    var shouldNavigate = isDifferentPage || isDifferentParameter;
-
-    if (!shouldNavigate)
-        return false;
-
-    _frame.Tag = clearNavigation;
-
-    var vmBeforeNavigation = _frame.GetPageViewModel();
-    var navigated = _frame.Navigate(pageType, parameter);
-    if (navigated)
+    public bool NavigateTo(string pageKey, object? parameter = null, bool clearNavigation = false, NavigationTransitionInfo? transitionInfo = null)
     {
-        _lastParameterUsed = parameter;
-        NotifyViewModelNavigatedFrom(vmBeforeNavigation);
-    }
+        if (_frame == null)
+            return false;
 
-    return navigated;
-}
+        var pageType = pageService.GetPageType(pageKey);
+        var frameContentType = _frame.Content?.GetType();
+        bool isDifferentPage = frameContentType != pageType;
+        bool isDifferentParameter = parameter != null && !parameter.Equals(_lastParameterUsed);
+        bool shouldNavigate = isDifferentPage || isDifferentParameter;
+
+        if (!shouldNavigate)
+            return false;
+
+        _frame.Tag = clearNavigation;
+
+        bool navigated;
+        if (transitionInfo != null)
+            navigated = _frame.Navigate(pageType, parameter, transitionInfo);
+        else
+            navigated = _frame.Navigate(pageType, parameter);
+
+        if (navigated)
+        {
+            var vmBeforeNavigation = _frame.GetPageViewModel();
+            _lastParameterUsed = parameter;
+            NotifyViewModelNavigatedFrom(vmBeforeNavigation);
+        }
+
+        return navigated;
+    }
 
     /// <summary>
     /// Notifies the specified view model that a navigation event has occurred, indicating that the view model is being

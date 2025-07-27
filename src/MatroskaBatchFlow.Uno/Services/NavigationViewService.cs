@@ -45,14 +45,14 @@ public class NavigationViewService(INavigationService navigationService, IPageSe
     {
         if (args.IsSettingsInvoked)
         {
-            navigationService.NavigateTo(typeof(SettingsViewModel).FullName!);
+            navigationService.NavigateTo(pageKey: typeof(SettingsViewModel).FullName!, transitionInfo: args.RecommendedNavigationTransitionInfo);
         } else
         {
             var selectedItem = args.InvokedItemContainer as NavigationViewItem;
 
             if (selectedItem?.GetValue(NavigationHelper.NavigateToProperty) is string pageKey)
             {
-                navigationService.NavigateTo(pageKey);
+                navigationService.NavigateTo(pageKey: pageKey, transitionInfo: args.RecommendedNavigationTransitionInfo);
             }
         }
     }
