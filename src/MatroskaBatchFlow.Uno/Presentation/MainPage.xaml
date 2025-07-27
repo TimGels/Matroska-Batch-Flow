@@ -5,18 +5,23 @@
       xmlns:utu="using:Uno.Toolkit.UI"
       xmlns:dialogs="using:MatroskaBatchFlow.Uno.Presentation.Dialogs"
       xmlns:helpers="using:MatroskaBatchFlow.Uno.Helpers"
-      NavigationCacheMode="Required"
-      Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+      NavigationCacheMode="Required" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <DataTemplate x:Key="NavigationViewHeaderTemplate">
 
+        </DataTemplate>
+    </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <NavigationView x:Name="NavigationView"
                         IsBackButtonVisible="Collapsed" 
                         IsBackEnabled="{x:Bind ViewModel.IsBackEnabled, Mode=OneWay}"
                         SelectedItem="{x:Bind ViewModel.Selected, Mode=TwoWay}"
+                        
                         PaneDisplayMode="Top">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Input" Tag="InputPage"
@@ -33,10 +38,28 @@
                 <NavigationViewItem Content="Output" Tag="OutputPage"
                                     helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.OutputViewModel" />
             </NavigationView.MenuItems>
-            <Frame x:Name="contentFrame" />
+            <NavigationView.Content>
+                <Grid x:Name="ContentHost">
+                    <Grid.Clip>
+                        <RectangleGeometry x:Name="ContentClip" />
+                    </Grid.Clip>
+                    <Frame x:Name="contentFrame"
+                           Padding="36"  />
+                </Grid>
+            </NavigationView.Content>
         </NavigationView>
-        <StackPanel Grid.Row="1"
-                    HorizontalAlignment="Center">
+        
+        <!--Mimic the navigation view's content separator-->
+        <Grid Grid.Row="1">
+            <Border Background="{ThemeResource NavigationViewDefaultPaneBackground}" />
+            <Border BorderThickness="0,1,0,0"
+            BorderBrush="{ThemeResource NavigationViewContentGridBorderBrush}"
+            HorizontalAlignment="Stretch" />
+        </Grid>
+        
+        <StackPanel Grid.Row="2"
+                    HorizontalAlignment="Center"
+                    Canvas.ZIndex="20">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />

@@ -30,6 +30,9 @@ public partial class App : Application
     public App()
     {
         this.InitializeComponent();
+#if DEBUG
+        RequestedTheme = ApplicationTheme.Dark;
+#endif
     }
 
     public static Window MainWindow { get; private set; }

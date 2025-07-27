@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
-using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Presentation.Dialogs;
-using Microsoft.UI.Xaml.Media.Animation;
+using Windows.Foundation;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
@@ -25,6 +24,13 @@ public sealed partial class MainPage : Page
                 XamlRoot = XamlRoot,
             }.ShowAsync();
         });
+
+        // Clip navigation view content to the content host's bounds to prevent navigation transitions from overlapping other UI elements.
+        ContentHost.SizeChanged += (s, e) =>
+        {
+            ContentClip.Rect = new Rect(0, 0, ContentHost.ActualWidth, ContentHost.ActualHeight);
+        };
+
         Loaded += MainPage_Loaded;
     }
 
