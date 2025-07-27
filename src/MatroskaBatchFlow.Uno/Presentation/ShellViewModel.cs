@@ -1,9 +1,8 @@
+using MatroskaBatchFlow.Uno.Contracts.Services;
+
 namespace MatroskaBatchFlow.Uno.Presentation;
 
-public class ShellViewModel
+public partial class ShellViewModel(INavigationService navigationServicem) : ObservableObject
 {
-
-    public ShellViewModel()
-    {
-    }
+    public INavigationService NavigationService { get; } = navigationServicem;
 }

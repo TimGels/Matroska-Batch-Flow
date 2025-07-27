@@ -6,20 +6,18 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 public sealed partial class Shell : UserControl, IContentControlProvider
 {
     private readonly SplashScreenLoadable _loadable = new();
+    public ShellViewModel ViewModel { get; }
     public Shell()
     {
+        ViewModel = App.GetService<ShellViewModel>();
         this.InitializeComponent();
-        Loaded += OnLoaded;
+        _loadable.Execute();
         Splash.Source = _loadable;
+        ViewModel.NavigationService.Frame = ShellFrame;
     }
     public ContentControl ContentControl => Splash;
 
     public Frame RootFrame => ShellFrame;
-
-    private void OnLoaded(object sender, RoutedEventArgs e)
-    {
-        _loadable.Execute();
-    }
 
     public class SplashScreenLoadable : ILoadable
     {
@@ -42,7 +40,6 @@ public sealed partial class Shell : UserControl, IContentControlProvider
         public void Execute()
         {
             IsExecuting = true;
-            //await Task.Delay(5000);
             WeakReferenceMessenger.Default.Register<ActivationCompletedMessage>(this, (r, m) => OnActivationCompleted());
         }
 

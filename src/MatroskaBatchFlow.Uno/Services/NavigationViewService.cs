@@ -18,6 +18,7 @@ public class NavigationViewService(INavigationService navigationService, IPageSe
         _navigationView = navigationView;
         _navigationView.BackRequested += OnBackRequested;
         _navigationView.ItemInvoked += OnItemInvoked;
+        _navigationView.Loaded += OnLoaded;
     }
 
     public void UnregisterEvents()
@@ -54,6 +55,39 @@ public class NavigationViewService(INavigationService navigationService, IPageSe
             {
                 navigationService.NavigateTo(pageKey: pageKey, transitionInfo: args.RecommendedNavigationTransitionInfo);
             }
+        }
+    }
+
+    /// <summary>
+    /// Handles the loading event of the navigation view, setting the selected item to the first default item.
+    /// </summary>
+    /// <remarks>This method sets the selected item in the navigation view to the first item marked as default
+    /// and navigates to the associated page. It only performs these actions if the navigation frame is empty, ensuring
+    /// that navigation occurs only once during the initial load.</remarks>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="args">The event data.</param>
+    private void OnLoaded(object sender, RoutedEventArgs args)
+    {
+        if (_navigationView == null)
+            return;
+
+        // Only set the default navigation view item if the frame is not already loaded.
+        var frame = navigationService.Frame;
+        if (frame?.Content != null)
+            return;
+
+        // Find the (first) default item.
+        var defaultItem = _navigationView.MenuItems
+            .OfType<NavigationViewItem>()
+            .FirstOrDefault(item => NavigationHelper.GetIsDefault(item));
+
+        if (defaultItem == null)
+            return;
+
+        _navigationView.SelectedItem = defaultItem;
+        if (defaultItem.GetValue(NavigationHelper.NavigateToProperty) is string pageKey)
+        {
+            navigationService.NavigateTo(pageKey);
         }
     }
 

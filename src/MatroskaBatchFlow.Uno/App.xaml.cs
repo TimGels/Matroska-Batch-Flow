@@ -7,6 +7,7 @@ using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Uno.Activation;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Services;
+using Serilog.Core;
 
 namespace MatroskaBatchFlow.Uno;
 public partial class App : Application
@@ -42,40 +43,8 @@ public partial class App : Application
     {
         var builder = this.CreateBuilder(args)
             .Configure(host => host
-#if DEBUG
                 // Switch to Development environment when running in DEBUG
                 .UseEnvironment(Environments.Development)
-#endif
-                .UseLogging(configure: (context, logBuilder) =>
-                {
-                    // Configure log levels for different categories of logging
-                    logBuilder
-                        .SetMinimumLevel(
-                            context.HostingEnvironment.IsDevelopment() ?
-                                LogLevel.Information :
-                                LogLevel.Warning)
-
-                        // Default filters for core Uno Platform namespaces
-                        .CoreLogLevel(LogLevel.Warning);
-
-                    // Uno Platform namespace filter groups
-                    // Uncomment individual methods to see more detailed logging
-                    //// Generic Xaml events
-                    //logBuilder.XamlLogLevel(LogLevel.Debug);
-                    //// Layout specific messages
-                    //logBuilder.XamlLayoutLogLevel(LogLevel.Debug);
-                    //// Storage messages
-                    //logBuilder.StorageLogLevel(LogLevel.Debug);
-                    //// Binding related messages
-                    //logBuilder.XamlBindingLogLevel(LogLevel.Debug);
-                    //// Binder memory references tracking
-                    //logBuilder.BinderMemoryReferenceLogLevel(LogLevel.Debug);
-                    //// DevServer and HotReload related
-                    //logBuilder.HotReloadCoreLogLevel(LogLevel.Information);
-                    //// Debug JS interop
-                    //logBuilder.WebAssemblyLogLevel(LogLevel.Debug);
-
-                }, enableUnoLogging: true)
                 .UseSerilog(consoleLoggingEnabled: true, fileLoggingEnabled: true)
                 // Enable localization (see appsettings.json for supported languages)
                 .UseLocalization()
@@ -118,6 +87,7 @@ public partial class App : Application
             services.AddSingleton<ILanguageProvider, LanguageProvider>();
             services.AddSingleton<IFileScanner, FileScanner>();
             services.AddSingleton<IBatchConfiguration, BatchConfiguration>();
+            services.AddSingleton<ILogger, Logger<Logger>>();
 
             // Register file validation rules engine service and it's accomadating rules.
             services.AddSingleton<IFileValidationEngine, FileValidationEngine>();
@@ -153,32 +123,9 @@ public partial class App : Application
         }).
         Build();
 
-        //MainWindow.Content = new Shell();
-        MainWindow.Activate();
-
-        //MainWindow.Content = new TextBlock() { Text = "Welcome!" };
-
-        //await App.GetService<IActivationService>().ActivateAsync(args);
-
-        //Host = builder.Build();
-
-        // Do not repeat app initialization when the Window already has content,
-        // just ensure that the window is active
-        if (MainWindow.Content is not Shell shell)
+        // Only initialize the application if the main window is not already set.
+        if (MainWindow.Content is not Shell)
         {
-            shell = new Shell();
-
-            MainWindow.Content = shell;
-            await Task.Delay(1000);
-            //shell.RootFrame.NavigationFailed += OnNavigationFailed;
-        }
-
-        if (shell.RootFrame.Content == null)
-        {
-            // When the navigation stack isn't restored navigate to the first page,
-            // configuring the new page by passing required information as a navigation
-            // parameter
-            //shell.RootFrame.Navigate(typeof(MainPage), args.Arguments);
             await App.GetService<IActivationService>().ActivateAsync(args);
         }
     }

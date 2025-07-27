@@ -7,9 +7,9 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 public sealed partial class MainPage : Page
 {
     public MainViewModel ViewModel { get; }
-    public MainPage(MainViewModel mainViewModel)
+    public MainPage()
     {
-        ViewModel = mainViewModel;
+        ViewModel = App.GetService<MainViewModel>();
         this.InitializeComponent();
 
         ViewModel.NavigationService.Frame = contentFrame;

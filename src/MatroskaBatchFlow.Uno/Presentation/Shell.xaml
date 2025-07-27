@@ -19,20 +19,29 @@
                 <DataTemplate>
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="2*" />
+                            <RowDefinition Height="4*" />
+                            <RowDefinition />
                             <RowDefinition />
                         </Grid.RowDefinitions>
 
                         <ProgressRing IsActive="True"
-                  Grid.Row="1"
-                  VerticalAlignment="Center"
-                  HorizontalAlignment="Center"
-                  Height="100"
-                  Width="100" />
+                                      Grid.Row="1"
+                                      VerticalAlignment="Bottom"
+                                      HorizontalAlignment="Center"
+                                      Height="60"
+                                      Width="60" />
+                        
+                        <TextBlock Grid.Row="2"
+                                   Text="Matroska Batch Flow"
+                                   Foreground="LightGray"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Bottom"
+                                   FontSize="24"
+                                   FontWeight="Bold"
+                                   Padding="24"/>
                     </Grid>
                 </DataTemplate>
             </utu:ExtendedSplashScreen.LoadingContentTemplate>
-
             <!-- App Content "layer" -->
             <utu:ExtendedSplashScreen.Content>
                 <Frame x:Name="ShellFrame" />

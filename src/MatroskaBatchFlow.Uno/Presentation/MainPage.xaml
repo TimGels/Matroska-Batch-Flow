@@ -21,7 +21,8 @@
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Input" Tag="InputPage"
                                     x:Name="InputPageNavItem"
-                                    helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.InputViewModel" />
+                                    helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.InputViewModel"
+                                    helpers:NavigationHelper.IsDefault="True" />
                 <NavigationViewItem Content="General" Tag="GeneralPage"
                                     helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.GeneralViewModel" />
                 <NavigationViewItem Content="Video" Tag="VideoPage"
