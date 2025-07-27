@@ -6,11 +6,7 @@
       xmlns:dialogs="using:MatroskaBatchFlow.Uno.Presentation.Dialogs"
       xmlns:helpers="using:MatroskaBatchFlow.Uno.Helpers"
       NavigationCacheMode="Required" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <Page.Resources>
-        <DataTemplate x:Key="NavigationViewHeaderTemplate">
-
-        </DataTemplate>
-    </Page.Resources>
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -20,8 +16,7 @@
         <NavigationView x:Name="NavigationView"
                         IsBackButtonVisible="Collapsed" 
                         IsBackEnabled="{x:Bind ViewModel.IsBackEnabled, Mode=OneWay}"
-                        SelectedItem="{x:Bind ViewModel.Selected, Mode=TwoWay}"
-                        
+                        SelectedItem="{x:Bind ViewModel.Selected, Mode=TwoWay}" 
                         PaneDisplayMode="Top">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Input" Tag="InputPage"
