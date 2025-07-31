@@ -1,6 +1,9 @@
+using MatroskaBatchFlow.Core.Services;
+
 namespace MatroskaBatchFlow.Uno.Presentation;
-public partial class OutputViewModel : ObservableObject
+
+public partial class OutputViewModel(IBatchConfiguration batchConfiguration) : ObservableObject
 {
     [ObservableProperty]
-    private string _scanResult = string.Empty;
+    private IBatchConfiguration _batchConfiguration = batchConfiguration;
 }

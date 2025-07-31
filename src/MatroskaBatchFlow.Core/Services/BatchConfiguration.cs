@@ -20,6 +20,7 @@ public class BatchConfiguration : IBatchConfiguration
     private ObservableCollection<TrackConfiguration> _videoTracks = [];
     private ObservableCollection<TrackConfiguration> _subtitleTracks = [];
     private static readonly ImmutableList<TrackConfiguration> _emptyTrackList = [];
+    private string _mkvpropeditArguments = string.Empty;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -103,6 +104,19 @@ public class BatchConfiguration : IBatchConfiguration
         }
     }
 
+    public string MkvpropeditArguments
+    {
+        get => _mkvpropeditArguments;
+        set
+        {
+            if (_mkvpropeditArguments != value)
+            {
+                _mkvpropeditArguments = value;
+                OnPropertyChanged(nameof(MkvpropeditArguments));
+            }
+        }
+    }
+
     protected virtual void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -117,6 +131,7 @@ public class BatchConfiguration : IBatchConfiguration
         AudioTracks.Clear();
         VideoTracks.Clear();
         SubtitleTracks.Clear();
+        MkvpropeditArguments = string.Empty;
     }
 
     /// <inheritdoc />
@@ -155,6 +170,7 @@ public class BatchConfiguration : IBatchConfiguration
 
         Title = string.Empty;
         DirectoryPath = string.Empty;
+        MkvpropeditArguments = string.Empty;
         ClearTracks();
     }
 }

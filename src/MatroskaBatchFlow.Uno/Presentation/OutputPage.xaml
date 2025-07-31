@@ -9,7 +9,7 @@
 
     <Grid>
         <TextBox TextWrapping="Wrap"
-         Text="{x:Bind ViewModel.ScanResult}"
+         Text="{x:Bind ViewModel.BatchConfiguration.MkvpropeditArguments, Mode=OneWay}"
          AcceptsReturn="True"/>
     </Grid>
 </Page>

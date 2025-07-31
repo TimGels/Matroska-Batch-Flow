@@ -9,9 +9,6 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 public partial class MainViewModel : ObservableObject
 {
     [ObservableProperty]
-    private string _scanResult = string.Empty;
-
-    [ObservableProperty]
     private bool isBackEnabled;
 
     [ObservableProperty]
@@ -53,7 +50,7 @@ public partial class MainViewModel : ObservableObject
         );
 
         // Serialize the dictionary to JSON
-        ScanResult = JsonSerializer.Serialize(scanResults, new JsonSerializerOptions
+        _batchConfiguration.MkvpropeditArguments = JsonSerializer.Serialize(scanResults, new JsonSerializerOptions
         {
             WriteIndented = true // For pretty-printing
         });
@@ -78,7 +75,7 @@ public partial class MainViewModel : ObservableObject
             results.Add(string.Join(" ", args));
         }
 
-        ScanResult = string.Join(Environment.NewLine + Environment.NewLine, results);
+        _batchConfiguration.MkvpropeditArguments = string.Join(Environment.NewLine + Environment.NewLine, results);
     }
 
     /// <summary>
