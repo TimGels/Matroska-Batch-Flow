@@ -50,7 +50,5 @@
                                        IsEnabled="{x:Bind ViewModel.IsTrackSelected,Mode=OneWay}"
                                        SelectedLanguage="{x:Bind ViewModel.SelectedLanguage, Mode=TwoWay}" />
 
-        <Button Grid.Row="2" Content="Clear Video Tracks" Command="{x:Bind ViewModel.ClearVideoTracks}" />
-        <Button Grid.Row="3" Content="Mutate the name" Command="{x:Bind ViewModel.MutateNameTrack}" />
     </Grid>
 </Page>

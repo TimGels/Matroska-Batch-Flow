@@ -49,8 +49,6 @@
                                        TrackName="{x:Bind ViewModel.TrackName, Mode=TwoWay}"
                                        IsEnabled="{x:Bind ViewModel.IsTrackSelected, Mode=OneWay}"
                                        SelectedLanguage="{x:Bind ViewModel.SelectedLanguage, Mode=TwoWay}" />
-
-        <Button Grid.Row="2" Content="Clear Subtitle Tracks" Command="{x:Bind ViewModel.ClearSubtitleTracks}" />
-        <Button Grid.Row="3" Content="Mutate the name" Command="{x:Bind ViewModel.MutateNameTrack}" />
+        
     </Grid>
 </Page>

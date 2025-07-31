@@ -29,7 +29,8 @@
         </Grid.RowDefinitions>
 
         <!--Default track-->
-        <StackPanel Grid.Row="1">
+        <StackPanel Grid.Row="1"
+                    Padding="0,16,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="80" />
@@ -38,7 +39,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="Default: "
                            Grid.Column="0"
-                           VerticalAlignment="Center"/>
+                           VerticalAlignment="Center" />
                 <RadioButton Content="Yes"
                              Grid.Column="1"
                              IsChecked="{x:Bind IsDefaultTrack, Mode=TwoWay}"
@@ -52,7 +53,8 @@
         </StackPanel>
 
         <!--Forced track-->
-        <StackPanel Grid.Row="2">
+        <StackPanel Grid.Row="2"
+                    Padding="0,0,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="80" />
@@ -75,7 +77,8 @@
         </StackPanel>
 
         <!--Track name-->
-        <StackPanel Grid.Row="3">
+        <StackPanel Grid.Row="3"
+                    Padding="0,16,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="80" />
@@ -91,7 +94,8 @@
         </StackPanel>
 
 
-        <StackPanel Grid.Row="4">
+        <StackPanel Grid.Row="4"
+                    Padding="0,16,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="80" />

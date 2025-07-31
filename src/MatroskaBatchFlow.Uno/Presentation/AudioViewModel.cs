@@ -20,14 +20,9 @@ public partial class AudioViewModel : TrackViewModelBase
         }
     }
 
-    public ICommand ClearAudioTracks { get; }
-    public ICommand MutateNameTrack { get; }
-
     public AudioViewModel(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration)
         : base(languageProvider, batchConfiguration)
     {
-        ClearAudioTracks = new RelayCommand(ClearAudioTracksAction);
-        MutateNameTrack = new RelayCommand(() => _batchConfiguration.AudioTracks[0].Name = DateTime.Now.ToString());
         AudioTracks = [.. _batchConfiguration.AudioTracks];
 
         SetupEventHandlers();
@@ -97,14 +92,5 @@ public partial class AudioViewModel : TrackViewModelBase
             return;
 
         AudioTracks = [.. _batchConfiguration.AudioTracks];
-    }
-
-    /// <summary>
-    /// Clears all audio tracks in the batch configuration.
-    /// </summary>
-    /// <remarks>Used during development only.</remarks>
-    private void ClearAudioTracksAction()
-    {
-        _batchConfiguration.AudioTracks.Clear();
     }
 }

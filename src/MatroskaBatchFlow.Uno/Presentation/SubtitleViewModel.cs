@@ -20,14 +20,9 @@ public partial class SubtitleViewModel : TrackViewModelBase
         }
     }
 
-    public ICommand ClearSubtitleTracks { get; }
-    public ICommand MutateNameTrack { get; }
-
     public SubtitleViewModel(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration)
         : base(languageProvider, batchConfiguration)
     {
-        ClearSubtitleTracks = new RelayCommand(ClearSubtitleTracksAction);
-        MutateNameTrack = new RelayCommand(() => _batchConfiguration.Title = DateTime.Now.ToString());
         SubtitleTracks = [.. _batchConfiguration.SubtitleTracks];
 
         SetupEventHandlers();
@@ -97,14 +92,5 @@ public partial class SubtitleViewModel : TrackViewModelBase
             return;
 
         SubtitleTracks = [.. _batchConfiguration.SubtitleTracks];
-    }
-
-    /// <summary>
-    /// Clears all subtitle tracks in the batch configuration.
-    /// </summary>
-    /// <remarks>Used during development only.</remarks>
-    private void ClearSubtitleTracksAction()
-    {
-        _batchConfiguration.SubtitleTracks.Clear();
     }
 }

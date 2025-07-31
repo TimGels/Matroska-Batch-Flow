@@ -20,14 +20,9 @@ public partial class VideoViewModel : TrackViewModelBase
         }
     }
 
-    public ICommand ClearVideoTracks { get; }
-    public ICommand MutateNameTrack { get; }
-
     public VideoViewModel(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration)
         : base(languageProvider, batchConfiguration)
     {
-        ClearVideoTracks = new RelayCommand(ClearVideoTracksAction);
-        MutateNameTrack = new RelayCommand(() => _batchConfiguration.VideoTracks.RemoveAt(0));
         VideoTracks = [.. _batchConfiguration.VideoTracks];
 
         SetupEventHandlers();
@@ -99,15 +94,5 @@ public partial class VideoViewModel : TrackViewModelBase
             return;
 
         VideoTracks = [.. _batchConfiguration.VideoTracks];
-    }
-
-    /// <summary>
-    /// Clears all video tracks from the batch configuration.
-    /// <br />
-    /// Temporary development method to reset video tracks.
-    /// </summary>
-    private void ClearVideoTracksAction()
-    {
-        _batchConfiguration.Clear();
     }
 }
