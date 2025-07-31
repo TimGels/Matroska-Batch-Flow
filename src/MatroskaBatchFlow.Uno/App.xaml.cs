@@ -12,6 +12,8 @@ using Serilog.Core;
 namespace MatroskaBatchFlow.Uno;
 public partial class App : Application
 {
+    private const string AppName = "Matroska Batch Flow";
+
     public static T GetService<T>()
     where T : class
     {
@@ -36,43 +38,11 @@ public partial class App : Application
 #endif
     }
 
-    public static Window MainWindow { get; private set; }
+    public static MainWindow? MainWindow { get; private set; }
     protected IHost? Host { get; private set; }
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        var builder = this.CreateBuilder(args)
-            .Configure(host => host
-                // Switch to Development environment when running in DEBUG
-                .UseEnvironment(Environments.Development)
-                .UseSerilog(consoleLoggingEnabled: true, fileLoggingEnabled: true)
-                // Enable localization (see appsettings.json for supported languages)
-                .UseLocalization()
-                // Register Json serializers (ISerializer and ISerializer)
-                .UseSerialization((context, services) => services
-                    .AddContentSerializer(context)
-                    .AddJsonTypeInfo(WeatherForecastContext.Default.IImmutableListWeatherForecast))
-                .UseHttp((context, services) =>
-                {
-#if DEBUG
-                    // DelegatingHandler will be automatically injected
-                    services.AddTransient<DelegatingHandler, DebugHttpHandler>();
-#endif
-                    services.AddSingleton<IWeatherCache, WeatherCache>();
-                    services.AddRefitClient<IApiClient>(context);
-
-                })
-            );
-        MainWindow = builder.Window;
-
-#if DEBUG
-        MainWindow.UseStudio();
-#endif
-
-#if WINDOWS10_0_19041_0_OR_GREATER
-        MainWindow.SetWindowIcon();
-#endif
-
         Host = Microsoft.Extensions.Hosting.Host.
         CreateDefaultBuilder().
         ConfigureServices((context, services) =>
@@ -123,8 +93,21 @@ public partial class App : Application
         }).
         Build();
 
-        // Only initialize the application if the main window is not already set.
-        if (MainWindow.Content is not Shell)
+        MainWindow = new MainWindow
+        {
+            Title = AppName,
+            Content = Host.Services.GetRequiredService<Shell>(),
+        };
+
+#if DEBUG
+        //MainWindow.UseStudio();
+#endif
+
+#if WINDOWS10_0_19041_0_OR_GREATER
+        MainWindow.SetWindowIcon();
+#endif
+
+        if (MainWindow?.Content is not null)
         {
             await App.GetService<IActivationService>().ActivateAsync(args);
         }

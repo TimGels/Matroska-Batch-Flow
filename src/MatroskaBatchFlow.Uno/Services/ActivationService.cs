@@ -12,8 +12,11 @@ public class ActivationService(
 
     public async Task ActivateAsync(object activationArgs)
     {
-        // Ensure the main window is initialized with a Shell instance.
-        App.MainWindow.Content = new Shell();
+        // Ensure that the MainWindow is initialized before activation.
+        if (App.MainWindow is null)
+            throw new InvalidOperationException("MainWindow must be initialized before activation.");
+
+        // Set the MainWindow as the active window.
         App.MainWindow.Activate();
 
         // Wait for the Shell to be loaded (visual tree ready).
@@ -60,7 +63,7 @@ public class ActivationService(
     private static Task WaitForShellLoaded()
     {
         var tcs = new TaskCompletionSource();
-        if (App.MainWindow.Content is Shell shell)
+        if (App.MainWindow?.Content is Shell shell)
         {
             shell.Loaded += (s, e) => tcs.SetResult();
         } else
