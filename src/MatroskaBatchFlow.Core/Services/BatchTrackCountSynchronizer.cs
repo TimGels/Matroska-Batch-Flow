@@ -36,7 +36,7 @@ public class BatchTrackCountSynchronizer(IBatchConfiguration _batchConfig) : IBa
                 var scannedTrackInfo = scannedTracks[batchTracks.Count];
                 batchTracks.Add(new TrackConfiguration(scannedTrackInfo)
                 {
-                    TrackType = trackType,
+                    Type = trackType,
                 });
             }
             // Remove tracks until the count matches.

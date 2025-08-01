@@ -3,17 +3,17 @@ using MatroskaBatchFlow.Core.Enums;
 namespace MatroskaBatchFlow.Core.Services.FileProcessing.Track;
 
 /// <summary>
-/// Assigns the Position property of each <see cref="TrackConfiguration"/> in the 
+/// Assigns the Index property of each <see cref="TrackConfiguration"/> in the 
 /// <see cref="IBatchConfiguration"/>" to match the StreamKindPos of tracks in the scanned file info.
 /// </summary>
 public class TrackPositionRule : IFileProcessingRule
 {
 
     /// <summary>
-    /// Assigns the <c>Position</c> property of each <see cref="TrackConfiguration"/> in the batch configuration.
+    /// Assigns the <c>Index</c> property of each <see cref="TrackConfiguration"/> in the batch configuration.
     /// </summary>
     /// <remarks>
-    /// For each supported <see cref="TrackType"/>, this method will assign the <c>Position</c> property of each 
+    /// For each supported <see cref="TrackType"/>, this method will assign the <c>Index</c> property of each 
     /// <see cref="TrackConfiguration"/> in the <paramref name="batchConfig"/>.
     /// </remarks>
     /// <param name="scannedFile">The <see cref="ScannedFileInfo"/> containing the scanned media file and its tracks. Must not be null.</param>
@@ -37,7 +37,7 @@ public class TrackPositionRule : IFileProcessingRule
             {
                 var streamKindID = scannedTracks[i].StreamKindID;
 
-                batchTracks[i].Position = streamKindID;
+                batchTracks[i].Index = streamKindID;
             }
         }
     }

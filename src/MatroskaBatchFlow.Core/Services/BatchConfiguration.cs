@@ -183,9 +183,9 @@ public class BatchConfiguration : IBatchConfiguration
 /// <param name="trackInfo">The <see cref="TrackInfo"/> instance containing the scanned track information. Must not be null.</param>
 public sealed class TrackConfiguration(TrackInfo trackInfo) : INotifyPropertyChanged
 {
-    private TrackType _trackType;
+    private TrackType _type;
 
-    private int _position;
+    private int _index;
     /// <summary>
     /// Represents a human-readable label for a track or segment.
     /// <para>
@@ -217,28 +217,28 @@ public sealed class TrackConfiguration(TrackInfo trackInfo) : INotifyPropertyCha
 
     public TrackInfo ScannedTrackInfo { get; init; } = trackInfo ?? throw new ArgumentNullException(nameof(trackInfo));
 
-    public TrackType TrackType
+    public TrackType Type
     {
-        get => _trackType;
+        get => _type;
         set
         {
-            if (_trackType != value)
+            if (_type != value)
             {
-                _trackType = value;
-                OnPropertyChanged(nameof(TrackType));
+                _type = value;
+                OnPropertyChanged(nameof(Type));
             }
         }
     }
 
-    public int Position
+    public int Index
     {
-        get => _position;
+        get => _index;
         set
         {
-            if (_position != value)
+            if (_index != value)
             {
-                _position = value;
-                OnPropertyChanged(nameof(Position));
+                _index = value;
+                OnPropertyChanged(nameof(Index));
             }
         }
     }

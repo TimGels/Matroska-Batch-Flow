@@ -15,7 +15,7 @@ public class VideoTrackNamingRule : IFileProcessingRule
 
         foreach (var streamKindID in videoTrackIds)
         {
-            var config = batchConfig.VideoTracks.FirstOrDefault(t => t.Position == streamKindID);
+            var config = batchConfig.VideoTracks.FirstOrDefault(t => t.Index == streamKindID);
             if (config != null)
             {
                 config.Name = "test name" + streamKindID;

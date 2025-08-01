@@ -94,7 +94,7 @@ public partial class MainViewModel : ObservableObject
         foreach (var track in tracks)
         {
             builder.AddTrack(t => t
-                .SetTrackId(track.Position)
+                .SetTrackId(track.Index)
                 .SetTrackType(type)
                 .WithLanguage(track.Language.Code)
                 .WithName(track.Name)

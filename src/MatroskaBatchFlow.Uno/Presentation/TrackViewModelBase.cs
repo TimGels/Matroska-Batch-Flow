@@ -202,7 +202,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
         if (SelectedTrack == null || GetTracks() == null)
             return;
 
-        int index = SelectedTrack.Position;
+        int index = SelectedTrack.Index;
         var tracks = GetTracks();
         if (index >= 0 && index < tracks.Count)
         {
