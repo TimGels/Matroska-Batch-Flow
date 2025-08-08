@@ -50,7 +50,7 @@ public class MkvPropeditArgumentsBuilder : IMkvPropeditArgumentsBuilder
 
         var args = new List<string>
         {
-            $"{_inputFile}"
+            $"\"{_inputFile}\""
         };
 
         // Add the segment title if specified.

@@ -1,4 +1,6 @@
-﻿namespace MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Models;
+
+namespace MatroskaBatchFlow.Core.Services;
 
 public interface IFileScanner
 {

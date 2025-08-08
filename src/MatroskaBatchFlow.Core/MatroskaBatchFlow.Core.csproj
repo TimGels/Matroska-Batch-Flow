@@ -22,10 +22,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="libmediainfo.so">
+    <Content Include="Binaries\libmediainfo.so">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="MediaInfo.dll">
+    <Content Include="Binaries\MediaInfo.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Binaries\mkvpropedit.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

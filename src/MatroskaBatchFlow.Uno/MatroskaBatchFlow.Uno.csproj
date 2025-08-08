@@ -55,6 +55,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" />
+    <PackageReference Include="Microsoft.Extensions.Options" />
+    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
     <None Remove="Assets\Icons\AppList.scale-400.png" />
     <None Remove="Assets\Icons\AppTitleBar.scale-200.png" />
     <None Remove="Presentation\AudioPage.xaml" />

@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.Messaging;
-using MatroskaBatchFlow.Core;
 using MatroskaBatchFlow.Core.Enums;
+using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Core.Services.FileValidation;
@@ -17,15 +17,10 @@ public partial class InputViewModel : ObservableObject, IFilesDropped, INavigati
 {
     [ObservableProperty]
     private ObservableCollection<ScannedFileInfo> selectedFiles = [];
-
     private readonly IFileScanner _fileScanner;
-
     private readonly IFileValidationEngine _fileValidator;
-
     private readonly IFileProcessingEngine _fileProcessingRuleEngine;
-
     private readonly IBatchConfiguration _batchConfig;
-
     private readonly IBatchTrackCountSynchronizer _BatchTrackCountSynchronizer;
 
     public ICommand RemoveSelected { get; }

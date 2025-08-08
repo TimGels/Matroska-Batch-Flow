@@ -65,12 +65,12 @@
                         Grid.Column="0"
                         Margin="10,10,10,10"
                         HorizontalAlignment="Center"
-                        Command="{x:Bind ViewModel.ScanFiles}"/>
+                        Command="{x:Bind ViewModel.ProcessFileCommand}"/>
                 <Button Content="Generate mkvpropedit"
                         Grid.Column="1"
                         Margin="10,10,10,10"
                         HorizontalAlignment="Center"
-                        Command="{x:Bind ViewModel.GenerateMkvpropeditArguments}"/>
+                        Command="{x:Bind ViewModel.GenerateMkvpropeditArgumentsCommand}"/>
             </Grid>
         </StackPanel>
     </Grid>

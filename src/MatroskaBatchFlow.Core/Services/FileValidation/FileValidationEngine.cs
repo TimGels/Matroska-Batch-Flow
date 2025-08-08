@@ -1,3 +1,5 @@
+using MatroskaBatchFlow.Core.Models;
+
 namespace MatroskaBatchFlow.Core.Services.FileValidation;
 
 public class FileValidationEngine(IEnumerable<IFileValidationRule> rules) : IFileValidationEngine

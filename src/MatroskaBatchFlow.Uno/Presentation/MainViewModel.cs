@@ -1,13 +1,18 @@
-using System.Text.Json;
+using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Core.Builders.MkvPropeditArguments;
 using MatroskaBatchFlow.Core.Enums;
+using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Uno.Contracts.Services;
+using MatroskaBatchFlow.Uno.Presentation.Dialogs;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
 public partial class MainViewModel : ObservableObject
 {
+    private readonly IBatchConfiguration _batchConfiguration;
+    private readonly IMkvPropeditService _mkvPropeditService;
+
     [ObservableProperty]
     private bool isBackEnabled;
 
@@ -16,92 +21,35 @@ public partial class MainViewModel : ObservableObject
 
     public INavigationService NavigationService { get; }
     public INavigationViewService NavigationViewService { get; }
-
-    private readonly IFileScanner _fileScanner;
-    private readonly IBatchConfiguration _batchConfiguration;
-
-    public ICommand ScanFiles { get; }
-
-    public ICommand GenerateMkvpropeditArguments { get; }
+    public ICommand GenerateMkvpropeditArgumentsCommand { get; }
+    public ICommand ProcessFileCommand { get; }
 
     public MainViewModel(
         IFileScanner fileScanner,
         IBatchConfiguration batchConfiguration,
         INavigationService navigationService,
-        INavigationViewService navigationViewService)
+        INavigationViewService navigationViewService,
+        IMkvPropeditService mkvPropeditService)
     {
-        _fileScanner = fileScanner;
         _batchConfiguration = batchConfiguration;
         NavigationService = navigationService;
         NavigationViewService = navigationViewService;
-        ScanFiles = new AsyncRelayCommand(ScanFilesAsync);
-        GenerateMkvpropeditArguments = new RelayCommand(GenerateMkvpropeditArgumentsCommand);
+        _mkvPropeditService = mkvPropeditService;
+        GenerateMkvpropeditArgumentsCommand = new RelayCommand(GenerateMkvpropeditArgumentsHandler);
+        ProcessFileCommand = new AsyncRelayCommand(ProcessFileAsync);
         NavigationService.Navigated += OnNavigated;
     }
 
-    private async Task ScanFilesAsync()
-    {
-        var scannedFiles = await _fileScanner.ScanWithMediaInfoAsync();
-
-        // Create a dictionary to map each file to its scan result
-        var scanResults = scannedFiles.ToDictionary(
-            file => file.Path,
-            file => file.Result
-        );
-
-        // Serialize the dictionary to JSON
-        _batchConfiguration.MkvpropeditArguments = JsonSerializer.Serialize(scanResults, new JsonSerializerOptions
-        {
-            WriteIndented = true // For pretty-printing
-        });
-    }
-
-    private void GenerateMkvpropeditArgumentsCommand()
-    {
-        var results = new List<string>();
-
-        foreach (var file in _batchConfiguration.FileList)
-        {
-            var builder = new MkvPropeditArgumentsBuilder()
-                .SetInputFile(file.Path)
-                .WithTitle(_batchConfiguration.Title);
-
-            // Add all tracks to the builder.
-            AddTracksToBuilder(builder, _batchConfiguration.AudioTracks, TrackType.Audio);
-            AddTracksToBuilder(builder, _batchConfiguration.VideoTracks, TrackType.Video);
-            AddTracksToBuilder(builder, _batchConfiguration.SubtitleTracks, TrackType.Text);
-
-            var args = builder.Build();
-            results.Add(string.Join(" ", args));
-        }
-
-        _batchConfiguration.MkvpropeditArguments = string.Join(Environment.NewLine + Environment.NewLine, results);
-    }
-
     /// <summary>
-    /// Adds a collection of track configurations to the specified mkvpropedit arguments builder.
+    /// Generates the <c>mkvpropedit</c> command-line arguments based on the current batch configuration.
     /// </summary>
-    /// <param name="builder">The builder to which the track configurations will be added.</param>
-    /// <param name="tracks">A collection of track configurations to add. Each specifies properties such as position, 
-    /// language, name, and flags.</param>
-    /// <param name="type">The type of tracks to add. Only tracks of a type that corresponds to a Matroska track element 
-    /// will be processed.</param>
-    private static void AddTracksToBuilder(IMkvPropeditArgumentsBuilder builder, IEnumerable<TrackConfiguration> tracks, TrackType type)
+    private void GenerateMkvpropeditArgumentsHandler()
     {
-        if (!type.IsMatroskaTrackElement())
-            return;
+        // Generate the mkvpropedit arguments for the current batch configuration.
+        string[] arguments = GenerateMkvpropeditArguments(_batchConfiguration);
+        var argumentsString = string.Join(Environment.NewLine + Environment.NewLine, arguments);
 
-        foreach (var track in tracks)
-        {
-            builder.AddTrack(t => t
-                .SetTrackId(track.Index)
-                .SetTrackType(type)
-                .WithLanguage(track.Language.Code)
-                .WithName(track.Name)
-                .WithIsDefault(track.Default)
-                .WithIsForced(track.Forced)
-            );
-        }
+        _batchConfiguration.MkvpropeditArguments = argumentsString;
     }
 
     /// <summary>
@@ -123,6 +71,97 @@ public partial class MainViewModel : ObservableObject
         if (selectedItem != null)
         {
             Selected = selectedItem;
+        }
+    }
+
+    /// <summary>
+    /// Processes the current file by executing the <c>mkvpropedit</c> command with the arguments generated from the batch configuration.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    private async Task ProcessFileAsync()
+    {
+        // Generate the mkvpropedit arguments for the current batch.
+        string[] arguments = GenerateMkvpropeditArguments(_batchConfiguration);
+        var argumentsString = string.Join(Environment.NewLine + Environment.NewLine, arguments);
+
+        var result = await _mkvPropeditService.ExecuteAsync(argumentsString);
+
+        string dialogTitle = result.Status switch
+        {
+            MkvPropeditStatus.Success => "Success",
+            MkvPropeditStatus.Warning => "Warning",
+            _ => "Error"
+        };
+
+        WeakReferenceMessenger.Default.Send(new DialogMessage(dialogTitle, result.Output));
+    }
+
+    /// <summary>
+    /// Generates an array of command-line argument strings for <c>mkvpropedit</c> based on the provided batch configuration.
+    /// Each string in the returned array corresponds to the arguments for a single file in the batch.
+    /// </summary>
+    /// <param name="batchConfiguration">The batch configuration containing the list of files and associated settings.</param>
+    /// <returns>
+    /// An array of strings, where each string represents the command-line arguments for <c>mkvpropedit</c> for a specific file.
+    /// </returns>
+    private static string[] GenerateMkvpropeditArguments(IBatchConfiguration batchConfiguration)
+    {
+        List<string> results = [];
+
+        foreach (var file in batchConfiguration.FileList)
+        {
+            string[] arguments = GenerateMkvpropeditArgumentsForFile(file, batchConfiguration);
+            results.Add(string.Join(" ", arguments));
+        }
+
+        return [.. results];
+    }
+
+    /// <summary>
+    /// Generates an array of command-line arguments for <c>mkvpropedit</c> based on the specified file and batch configuration.
+    /// </summary>
+    /// <param name="scannedFile">The file to be processed, containing information such as the file path.</param>
+    /// <param name="batchConfiguration">The batch configuration specifying the title and track information to include in the arguments.</param>
+    /// <returns>
+    /// An array of strings representing the arguments to be passed to <c>mkvpropedit</c> for the specified file.
+    /// </returns>
+    private static string[] GenerateMkvpropeditArgumentsForFile(ScannedFileInfo scannedFile, IBatchConfiguration batchConfiguration)
+    {
+        var builder = new MkvPropeditArgumentsBuilder()
+            .SetInputFile(scannedFile.Path)
+            .WithTitle(batchConfiguration.Title);
+
+        // Add track configurations to the builder for audio, video, and subtitle tracks.
+        AddTracksToBuilder(builder, batchConfiguration.AudioTracks, TrackType.Audio);
+        AddTracksToBuilder(builder, batchConfiguration.VideoTracks, TrackType.Video);
+        AddTracksToBuilder(builder, batchConfiguration.SubtitleTracks, TrackType.Text);
+
+       return builder.Build();
+    }
+
+    /// <summary>
+    /// Adds a collection of track configurations to the specified mkvpropedit arguments builder.
+    /// </summary>
+    /// <param name="builder">The builder to which the track configurations will be added.</param>
+    /// <param name="tracks">A collection of track configurations to add. Each specifies properties such as position, 
+    /// language, name, and flags.</param>
+    /// <param name="type">The type of tracks to add. Only tracks of a type that corresponds to a Matroska track element 
+    /// will be processed.</param>
+    private static void AddTracksToBuilder(IMkvPropeditArgumentsBuilder builder, IEnumerable<TrackConfiguration> tracks, TrackType type)
+    {
+        if (!type.IsMatroskaTrackElement())
+            return;
+
+        foreach (var track in tracks)
+        {
+            builder.AddTrack(t => t
+                .SetTrackId(track.Index + 1) // Convert to 1-based index for mkvpropedit
+                .SetTrackType(type)
+                .WithLanguage(track.Language.Code)
+                .WithName(track.Name)
+                .WithIsDefault(track.Default)
+                .WithIsForced(track.Forced)
+            );
         }
     }
 }

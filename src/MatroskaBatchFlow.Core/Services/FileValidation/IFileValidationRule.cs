@@ -1,3 +1,5 @@
+using MatroskaBatchFlow.Core.Models;
+
 namespace MatroskaBatchFlow.Core.Services.FileValidation;
 
 /// <summary>

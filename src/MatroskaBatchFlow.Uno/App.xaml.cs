@@ -58,6 +58,7 @@ public partial class App : Application
             services.AddSingleton<IFileScanner, FileScanner>();
             services.AddSingleton<IBatchConfiguration, BatchConfiguration>();
             services.AddSingleton<ILogger, Logger<Logger>>();
+            services.AddSingleton<IMkvPropeditService, MkvPropeditService>();
 
             // Register file validation rules engine service and it's accomadating rules.
             services.AddSingleton<IFileValidationEngine, FileValidationEngine>();
@@ -88,8 +89,17 @@ public partial class App : Application
             services.AddSingleton<InputPage>();
 
             //Configure the app settings.
-            services.Configure<LanguageOptions>(context.Configuration.GetSection(nameof(LanguageOptions)));
-            services.Configure<ScanOptions>(context.Configuration.GetSection(nameof(ScanOptions)));
+            services.AddOptions<LanguageOptions>()
+                .Bind(context.Configuration.GetSection(nameof(LanguageOptions)))
+                .ValidateDataAnnotations();
+
+            services.AddOptions<ScanOptions>()
+                .Bind(context.Configuration.GetSection(nameof(ScanOptions)))
+                .ValidateDataAnnotations();
+
+            services.AddOptions<AppConfigOptions>()
+                .Bind(context.Configuration.GetSection(nameof(AppConfigOptions)))
+                .ValidateDataAnnotations();
         }).
         Build();
 
@@ -111,5 +121,7 @@ public partial class App : Application
         {
             await App.GetService<IActivationService>().ActivateAsync(args);
         }
+
+       
     }
 }
