@@ -14,5 +14,4 @@ public sealed record ScannedFileInfo()
     /// Resulting details from the MediaInfo scan.
     /// </summary>
     public MediaInfoResult Result { get; set; }
-
 }
