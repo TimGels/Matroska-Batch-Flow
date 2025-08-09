@@ -64,6 +64,7 @@ public partial class App : Application
             services.AddSingleton<IFileValidationEngine, FileValidationEngine>();
             services.AddSingleton<IFileValidationRule, LanguageConsistencyRule>();
             services.AddSingleton<IFileValidationRule, TrackCountConsistencyRule>();
+            services.AddSingleton<IFileValidationRule, FileFormatValidationRule>();
 
             // Register file processing rule engine service and it's accomadating rules.
             services.AddSingleton<IFileProcessingEngine, FileProcessingEngine>();
