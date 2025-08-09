@@ -18,9 +18,16 @@ public class LanguageProvider : ILanguageProvider
     }
 
     // Helper methods
-    private static ImmutableList<MatroskaLanguageOption> LoadFromFile(string path) =>
-        JsonSerializer.Deserialize<ImmutableList<MatroskaLanguageOption>>(File.ReadAllText(path))!
-            .ToImmutableList();
+    private static ImmutableList<MatroskaLanguageOption> LoadFromFile(string path)
+    {
+        var json = File.ReadAllText(path);
+        var options = new JsonSerializerOptions
+        {
+            ReadCommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true
+        };
+        return JsonSerializer.Deserialize<ImmutableList<MatroskaLanguageOption>>(json, options)!;
+    }
 
     public void LoadLanguages()
     {
@@ -40,7 +47,8 @@ public class LanguageProvider : ILanguageProvider
 
             //_languages = JsonSerializer.Deserialize<List<Language>>(stream)!
             //    .ToImmutableDictionary(x => x.Code);
-        } catch (Exception)
+        }
+        catch (Exception)
         {
             //_logger.LogError(ex, "Language load failed");
             //_languages = ImmutableDictionary<string, Language>.Empty;

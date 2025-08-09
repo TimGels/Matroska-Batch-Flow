@@ -19,20 +19,22 @@ public class AudioTrackNamingRule : IFileProcessingRule
 
         foreach (var track in scannedFile.Result.Media.Track.Where(t => t.Type == TrackType.Audio))
         {
-            var format = track.Format ?? string.Empty;
-            var layout = track.ChannelLayout ?? string.Empty;
+            var config = batchConfig.AudioTracks.First(t => t.Index == track.StreamKindID);
+            config.Name = track.Title;
+            //var format = track.Format ?? string.Empty;
+            //var layout = track.ChannelLayout ?? string.Empty;
 
-            // Map channel layout to friendly name
-            var layoutName = _channelLayoutMappings.TryGetValue(layout, out var friendly)
-                ? friendly
-                : layout;
+            //// Map channel layout to friendly name
+            //var layoutName = _channelLayoutMappings.TryGetValue(layout, out var friendly)
+            //    ? friendly
+            //    : layout;
 
-            var name = string.IsNullOrWhiteSpace(layoutName)
-                ? format
-                : $"{layoutName} {format}";
+            //var name = string.IsNullOrWhiteSpace(layoutName)
+            //    ? format
+            //    : $"{layoutName} {format}";
 
-            if (!int.TryParse(track.StreamKindPos, out int position))
-                continue;
+            //if (!int.TryParse(track.StreamKindPos, out int position))
+            //    continue;
         }
     }
 }

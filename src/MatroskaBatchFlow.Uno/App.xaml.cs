@@ -72,6 +72,8 @@ public partial class App : Application
             services.AddSingleton<IFileProcessingRule, VideoTrackNamingRule>();
             services.AddSingleton<IFileProcessingRule, TrackPositionRule>();
             services.AddSingleton<IFileProcessingRule, TrackLanguageRule>();
+            services.AddSingleton<IFileProcessingRule, TrackDefaultRule>();
+            services.AddSingleton<IFileProcessingRule, TrackForcedRule>();
 
             // Register view models.
             services.AddSingleton<InputViewModel, InputViewModel>();

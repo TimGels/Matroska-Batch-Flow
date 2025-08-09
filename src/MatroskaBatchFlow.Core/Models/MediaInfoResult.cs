@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using MatroskaBatchFlow.Core.Converters.JsonConverters;
 using MatroskaBatchFlow.Core.Enums;
 using static MatroskaBatchFlow.Core.Models.MediaInfoResult;
 using static MatroskaBatchFlow.Core.Models.MediaInfoResult.MediaInfo;
@@ -354,7 +355,8 @@ public sealed record MediaInfoResult(
             /// <summary>
             /// Indicates if the track is the default track.
             /// </summary>
-            string Default,
+            [property: JsonConverter(typeof(YesNoBooleanJsonConverter))]
+            bool Default,
 
             /// <summary>
             /// A string representation of the default status.
@@ -364,7 +366,8 @@ public sealed record MediaInfoResult(
             /// <summary>
             /// Indicates if the track is forced (e.g., forced subtitle track).
             /// </summary>
-            string Forced,
+            [property: JsonConverter(typeof(YesNoBooleanJsonConverter))]
+            bool Forced,
 
             /// <summary>
             /// A string representation of the forced status.

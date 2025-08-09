@@ -105,10 +105,12 @@
                           Grid.Column="0"
                           VerticalAlignment="Center" />
                 <ComboBox Grid.Column="1"
+                          x:Name="LanguagesComboBox"
                           Width="150"
                           IsEditable="True"
                           ItemsSource="{x:Bind AvailableLanguages, Mode=OneWay}"
                           SelectedItem="{x:Bind SelectedLanguage, Mode=TwoWay}"
+                          TextSubmitted="LanguagesComboBox_TextSubmitted"
                           DisplayMemberPath="Name">
                 </ComboBox>
                 <!--<AutoSuggestBox 

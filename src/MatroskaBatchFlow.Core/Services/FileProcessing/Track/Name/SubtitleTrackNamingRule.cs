@@ -22,14 +22,16 @@ public class SubtitleTrackNamingRule : IFileProcessingRule
 
         foreach (var track in scannedFile.Result.Media.Track.Where(t => t.Type == TrackType.Text))
         {
-            if (!_supportedFormatMappings.TryGetValue(track.Format ?? string.Empty, out var name))
-                continue;
+            var config = batchConfig.SubtitleTracks.First(t => t.Index == track.StreamKindID);
+            config.Name = track.Title;
+            //if (!_supportedFormatMappings.TryGetValue(track.Format ?? string.Empty, out var name))
+            //    continue;
 
-            var config = batchConfig.SubtitleTracks.FirstOrDefault(t => t.Index == track.StreamKindID);
-            if (config != null)
-            {
-                config.Name = name;
-            }
+            //var config = batchConfig.SubtitleTracks.FirstOrDefault(t => t.Index == track.StreamKindID);
+            //if (config != null)
+            //{
+            //    config.Name = name;
+            //}
         }
     }
 }

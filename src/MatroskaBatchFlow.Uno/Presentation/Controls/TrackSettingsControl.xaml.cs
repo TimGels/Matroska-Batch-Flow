@@ -117,4 +117,39 @@ public sealed partial class TrackSettingsControl : UserControl
     {
 
     }
+
+    /// <summary>
+    /// Handles the TextSubmitted event for the LanguagesComboBox.
+    /// </summary>
+    /// <param name="sender">The ComboBox that triggered the event.</param>
+    /// <param name="args">The event arguments containing the submitted text.</param>
+    private void LanguagesComboBox_TextSubmitted(ComboBox sender, ComboBoxTextSubmittedEventArgs args)
+    {
+        // Try to find a matching language, or fall back to Undetermined.
+        var selectedLanguage = FindLanguageOrUndetermined(args.Text);
+        SelectedLanguage = selectedLanguage;
+
+        // Prevent further processing of the event 
+        // since we have handled the text submission.
+        args.Handled = true; 
+    }
+
+    /// <summary>
+    /// Finds a matching language from the available languages or returns the Undetermined option.
+    /// </summary>
+    /// <param name="input">The input string to match against available languages.</param>
+    /// <returns>A <see cref="MatroskaLanguageOption"/> that matches the input, or the Undetermined option if no match is found.</returns>
+    private MatroskaLanguageOption FindLanguageOrUndetermined(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input) || AvailableLanguages is null)
+            return MatroskaLanguageOption.Undetermined;
+
+        return AvailableLanguages.FirstOrDefault(lang =>
+            string.Equals(lang.Name, input, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(lang.Iso639_1, input, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(lang.Iso639_2_b, input, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(lang.Iso639_2_t, input, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(lang.Iso639_3, input, StringComparison.OrdinalIgnoreCase))
+            ?? MatroskaLanguageOption.Undetermined;
+    }
 }

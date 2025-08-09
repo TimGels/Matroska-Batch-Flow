@@ -10,17 +10,19 @@ public class VideoTrackNamingRule : IFileProcessingRule
         if (scannedFile?.Result?.Media?.Track == null || batchConfig?.VideoTracks == null)
             return;
 
-        var videoTrackIds = scannedFile.Result.Media.Track
-            .Where(t => t.Type == TrackType.Video && t.StreamKindID >= 0)
-            .Select(track => track.StreamKindID);
+        //var videoTrackIds = scannedFile.Result.Media.Track
+        //    .Where(t => t.Type == TrackType.Video && t.StreamKindID >= 0)
+        //    .Select(track => track.StreamKindID);
 
-        foreach (var streamKindID in videoTrackIds)
+        foreach (var streamKindID in scannedFile.Result.Media.Track.Where(t => t.Type == TrackType.Video))
         {
-            var config = batchConfig.VideoTracks.FirstOrDefault(t => t.Index == streamKindID);
-            if (config != null)
-            {
-                config.Name = "test name" + streamKindID;
-            }
+            var config = batchConfig.VideoTracks.First(t => t.Index == streamKindID.StreamKindID);
+            config.Name = streamKindID.Title;
+            //var config = batchConfig.VideoTracks.FirstOrDefault(t => t.Index == streamKindID);
+            //if (config != null)
+            //{
+            //    config.Name = "test name" + streamKindID;
+            //}
         }
     }
 }
