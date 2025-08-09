@@ -17,7 +17,8 @@
                         IsBackButtonVisible="Collapsed" 
                         IsBackEnabled="{x:Bind ViewModel.IsBackEnabled, Mode=OneWay}"
                         SelectedItem="{x:Bind ViewModel.Selected, Mode=TwoWay}" 
-                        PaneDisplayMode="Top">
+                        PaneDisplayMode="Top"
+                        IsSettingsVisible="False">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Input" Tag="InputPage"
                                     x:Name="InputPageNavItem"
