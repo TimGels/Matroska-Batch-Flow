@@ -201,9 +201,6 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Presentation\Controls\" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\MatroskaBatchFlow.Core\MatroskaBatchFlow.Core.csproj" />
   </ItemGroup>
   <ItemGroup>

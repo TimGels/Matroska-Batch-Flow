@@ -75,6 +75,7 @@ public partial class App : Application
             services.AddSingleton<IFileProcessingRule, TrackLanguageRule>();
             services.AddSingleton<IFileProcessingRule, TrackDefaultRule>();
             services.AddSingleton<IFileProcessingRule, TrackForcedRule>();
+            services.AddSingleton<IFileProcessingRule, FileTitleNamingRule>();
 
             // Register view models.
             services.AddSingleton<InputViewModel, InputViewModel>();

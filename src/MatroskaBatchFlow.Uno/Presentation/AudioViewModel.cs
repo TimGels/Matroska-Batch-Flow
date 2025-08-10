@@ -20,6 +20,11 @@ public partial class AudioViewModel : TrackViewModelBase
         }
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the audio page is enabled based on whether files have been added to the program.
+    /// </summary>
+    public bool IsFileListPopulated => _batchConfiguration.FileList.Count > 0;
+
     public AudioViewModel(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration)
         : base(languageProvider, batchConfiguration)
     {
@@ -31,15 +36,27 @@ public partial class AudioViewModel : TrackViewModelBase
     /// <inheritdoc />
     protected override IList<TrackConfiguration> GetTracks() => AudioTracks;
 
-
     /// <inheritdoc />
     /// <remarks>This method subscribes to the <see cref="INotifyPropertyChanged.PropertyChanged"/> event of the 
     /// batch configuration and the <see cref="INotifyCollectionChanged.CollectionChanged"/> event of the audio 
     /// tracks collection.</remarks>
-    protected sealed override void SetupEventHandlers() 
+    protected sealed override void SetupEventHandlers()
     {
         _batchConfiguration.PropertyChanged += OnBatchConfigurationChanged;
         _batchConfiguration.AudioTracks.CollectionChanged += OnBatchConfigurationAudioTracksChanged;
+
+        // Subscribe to FileList changes to update IsFileListPopulated property.
+        _batchConfiguration.FileList.CollectionChanged += OnFileListChanged;
+    }
+
+    /// <summary>
+    /// Handles changes to the FileList collection to update the IsFileListPopulated property.
+    /// </summary>
+    /// <param name="sender">The source of the event, typically the FileList collection.</param>
+    /// <param name="eventArgs">The event data containing information about the changes to the collection.</param>
+    private void OnFileListChanged(object? sender, NotifyCollectionChangedEventArgs eventArgs)
+    {
+        OnPropertyChanged(nameof(IsFileListPopulated));
     }
 
     /// <summary>

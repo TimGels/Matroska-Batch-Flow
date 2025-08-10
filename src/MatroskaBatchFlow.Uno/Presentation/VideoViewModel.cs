@@ -20,6 +20,11 @@ public partial class VideoViewModel : TrackViewModelBase
         }
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the video page is enabled based on whether files have been added to the program.
+    /// </summary>
+    public bool IsFileListPopulated => _batchConfiguration.FileList.Count > 0;
+
     public VideoViewModel(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration)
         : base(languageProvider, batchConfiguration)
     {
@@ -39,6 +44,19 @@ public partial class VideoViewModel : TrackViewModelBase
     {
         _batchConfiguration.PropertyChanged += OnBatchConfigurationChanged;
         _batchConfiguration.VideoTracks.CollectionChanged += OnBatchConfigurationVideoTracksChanged;
+        
+        // Subscribe to FileList changes to update IsFileListPopulated property.
+        _batchConfiguration.FileList.CollectionChanged += OnFileListChanged;
+    }
+
+    /// <summary>
+    /// Handles changes to the FileList collection to update the IsFileListPopulated property.
+    /// </summary>
+    /// <param name="sender">The source of the event, typically the FileList collection.</param>
+    /// <param name="eventArgs">The event data containing information about the changes to the collection.</param>
+    private void OnFileListChanged(object? sender, NotifyCollectionChangedEventArgs eventArgs)
+    {
+        OnPropertyChanged(nameof(IsFileListPopulated));
     }
 
     /// <summary>

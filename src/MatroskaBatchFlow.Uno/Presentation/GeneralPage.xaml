@@ -6,12 +6,30 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    NavigationCacheMode="Required">
+    NavigationCacheMode="Required"
+    IsEnabled="{x:Bind ViewModel.IsFileListPopulated, Mode=OneWay}">
 
     <Grid>
-        <TextBlock Text="General Page"
-                   FontSize="40"
-                   Margin="20,20,0,0"
-                   HorizontalAlignment="Left" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="80" />
+                    <ColumnDefinition Width="*" MaxWidth="400" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Title: "
+                           Grid.Column="0"
+                           VerticalAlignment="Center"/>
+                <TextBox Grid.Column="1"
+                         Text="{x:Bind ViewModel.Title, Mode=TwoWay}" />
+            </Grid>
+        </StackPanel>
     </Grid>
 </Page>
