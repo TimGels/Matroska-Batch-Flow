@@ -15,6 +15,7 @@ public interface IBatchConfiguration : INotifyPropertyChanged
 {
     string DirectoryPath { get; set; }
     string Title { get; set; }
+    bool ShouldModifyTitle { get; set; }
     string MkvpropeditArguments { get; set; }
 
     ObservableCollection<ScannedFileInfo> FileList { get; }

@@ -11,6 +11,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
     protected ObservableCollection<TrackConfiguration> _tracks = [];
 
     protected ImmutableList<MatroskaLanguageOption> _languages;
+
     public ImmutableList<MatroskaLanguageOption> Languages
     {
         get => _languages;
@@ -25,6 +26,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
     }
 
     private TrackConfiguration? _selectedTrack;
+
     public TrackConfiguration? SelectedTrack
     {
         get => _selectedTrack;
@@ -55,6 +57,22 @@ public abstract partial class TrackViewModelBase : ObservableObject
         }
     }
 
+    protected bool _isDefaultFlagModificationEnabled = false;
+
+    public bool IsDefaultFlagModificationEnabled
+    {
+        get => _isDefaultFlagModificationEnabled;
+        set
+        {
+            if (_isDefaultFlagModificationEnabled != value)
+            {
+                _isDefaultFlagModificationEnabled = value;
+                OnPropertyChanged(nameof(IsDefaultFlagModificationEnabled));
+                UpdateBatchConfigTrackProperty(tc => tc.ShouldModifyDefaultFlag = value);
+            }
+        }
+    }
+
     protected bool _isEnabledTrack = true;
 
     public bool IsEnabledTrack
@@ -66,7 +84,23 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isEnabledTrack = value;
                 OnPropertyChanged(nameof(IsEnabledTrack));
-                UpdateBatchConfigTrackProperty(tc => tc.Remove = !value);
+                UpdateBatchConfigTrackProperty(tc => tc.Enabled = value);
+            }
+        }
+    }
+
+    protected bool _isEnabledFlagModificationEnabled = false;
+
+    public bool IsEnabledFlagModificationEnabled
+    {
+        get => _isEnabledFlagModificationEnabled;
+        set
+        {
+            if (_isEnabledFlagModificationEnabled != value)
+            {
+                _isEnabledFlagModificationEnabled = value;
+                OnPropertyChanged(nameof(IsEnabledFlagModificationEnabled));
+                UpdateBatchConfigTrackProperty(tc => tc.ShouldModifyEnabledFlag = value);
             }
         }
     }
@@ -87,6 +121,22 @@ public abstract partial class TrackViewModelBase : ObservableObject
         }
     }
 
+    protected bool _isForcedFlagModificationEnabled = false;
+
+    public bool IsForcedFlagModificationEnabled
+    {
+        get => _isForcedFlagModificationEnabled;
+        set
+        {
+            if (_isForcedFlagModificationEnabled != value)
+            {
+                _isForcedFlagModificationEnabled = value;
+                OnPropertyChanged(nameof(IsForcedFlagModificationEnabled));
+                UpdateBatchConfigTrackProperty(tc => tc.ShouldModifyForcedFlag = value);
+            }
+        }
+    }
+
     protected string _trackName = string.Empty;
 
     public string TrackName
@@ -103,6 +153,22 @@ public abstract partial class TrackViewModelBase : ObservableObject
         }
     }
 
+    protected bool _isTrackNameModificationEnabled = false;
+
+    public bool IsTrackNameModificationEnabled
+    {
+        get => _isTrackNameModificationEnabled;
+        set
+        {
+            if (_isTrackNameModificationEnabled != value)
+            {
+                _isTrackNameModificationEnabled = value;
+                OnPropertyChanged(nameof(IsTrackNameModificationEnabled));
+                UpdateBatchConfigTrackProperty(tc => tc.ShouldModifyName = value);
+            }
+        }
+    }
+
     protected MatroskaLanguageOption? _selectedLanguage = null;
 
     public MatroskaLanguageOption? SelectedLanguage
@@ -115,6 +181,22 @@ public abstract partial class TrackViewModelBase : ObservableObject
                 _selectedLanguage = value;
                 OnPropertyChanged(nameof(SelectedLanguage));
                 UpdateBatchConfigTrackProperty(tc => tc.Language = value);
+            }
+        }
+    }
+
+    protected bool _isSelectedLanguageModificationEnabled = false;
+
+    public bool IsSelectedLanguageModificationEnabled
+    {
+        get => _isSelectedLanguageModificationEnabled;
+        set
+        {
+            if (_isSelectedLanguageModificationEnabled != value)
+            {
+                _isSelectedLanguageModificationEnabled = value;
+                OnPropertyChanged(nameof(IsSelectedLanguageModificationEnabled));
+                UpdateBatchConfigTrackProperty(tc => tc.ShouldModifyLanguage = value);
             }
         }
     }
@@ -176,11 +258,26 @@ public abstract partial class TrackViewModelBase : ObservableObject
             case nameof(TrackConfiguration.Forced):
                 IsForcedTrack = SelectedTrack.Forced;
                 break;
-            case nameof(TrackConfiguration.Remove):
-                IsEnabledTrack = !SelectedTrack.Remove;
+            case nameof(TrackConfiguration.Enabled):
+                IsEnabledTrack = SelectedTrack.Enabled;
                 break;
             case nameof(TrackConfiguration.Language):
                 SelectedLanguage = SelectedTrack.Language;
+                break;
+            case nameof(TrackConfiguration.ShouldModifyDefaultFlag):
+                IsDefaultFlagModificationEnabled = SelectedTrack.ShouldModifyDefaultFlag;
+                break;
+            case nameof(TrackConfiguration.ShouldModifyEnabledFlag):
+                IsEnabledFlagModificationEnabled = SelectedTrack.ShouldModifyEnabledFlag;
+                break;
+            case nameof(TrackConfiguration.ShouldModifyForcedFlag):
+                IsForcedFlagModificationEnabled = SelectedTrack.ShouldModifyForcedFlag;
+                break;
+            case nameof(TrackConfiguration.ShouldModifyName):
+                IsTrackNameModificationEnabled = SelectedTrack.ShouldModifyName;
+                break;
+            case nameof(TrackConfiguration.ShouldModifyLanguage):
+                IsSelectedLanguageModificationEnabled = SelectedTrack.ShouldModifyLanguage;
                 break;
         }
 
@@ -228,10 +325,15 @@ public abstract partial class TrackViewModelBase : ObservableObject
 
         // Synchronize properties with the selected track
         IsDefaultTrack = newValue.Default;
-        IsEnabledTrack = !newValue.Remove;
+        IsEnabledTrack = newValue.Enabled;
         IsForcedTrack = newValue.Forced;
         TrackName = newValue.Name;
         SelectedLanguage = newValue.Language;
+        IsDefaultFlagModificationEnabled = newValue.ShouldModifyDefaultFlag;
+        IsEnabledFlagModificationEnabled = newValue.ShouldModifyEnabledFlag;
+        IsForcedFlagModificationEnabled = newValue.ShouldModifyForcedFlag;
+        IsTrackNameModificationEnabled = newValue.ShouldModifyName;
+        IsSelectedLanguageModificationEnabled = newValue.ShouldModifyLanguage;
 
         _suppressBatchConfigUpdate = false;
     }

@@ -21,6 +21,19 @@ public partial class GeneralViewModel : ObservableObject
         }
     }
 
+    public bool ShouldModifyTitle
+    {
+        get => _batchConfiguration.ShouldModifyTitle;
+        set
+        {
+            if (_batchConfiguration.ShouldModifyTitle != value)
+            {
+                _batchConfiguration.ShouldModifyTitle = value;
+                OnPropertyChanged(nameof(ShouldModifyTitle));
+            }
+        }
+    }
+
     /// <summary>
     /// Gets a value indicating whether the general page is enabled based on whether files have been added to the program.
     /// </summary>

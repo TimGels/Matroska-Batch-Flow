@@ -21,6 +21,7 @@ public class BatchConfiguration : IBatchConfiguration
     private ObservableCollection<TrackConfiguration> _subtitleTracks = [];
     private static readonly ImmutableList<TrackConfiguration> _emptyTrackList = [];
     private string _mkvpropeditArguments = string.Empty;
+    private bool _shouldModifyTitle = false;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -59,6 +60,19 @@ public class BatchConfiguration : IBatchConfiguration
             {
                 _title = value;
                 OnPropertyChanged(nameof(Title));
+            }
+        }
+    }
+
+    public bool ShouldModifyTitle
+    {
+        get => _shouldModifyTitle;
+        set
+        {
+            if (_shouldModifyTitle != value)
+            {
+                _shouldModifyTitle = value;
+                OnPropertyChanged(nameof(ShouldModifyTitle));
             }
         }
     }
@@ -212,6 +226,11 @@ public sealed class TrackConfiguration(TrackInfo trackInfo) : INotifyPropertyCha
     private bool _default;
     private bool _forced;
     private bool _remove;
+    private bool _shouldModifyDefaultFlag = false;
+    private bool _shouldModifyForcedFlag = false;
+    private bool _shouldModifyEnabledFlag = false;
+    private bool _shouldModifyName = false;
+    private bool _shouldModifyLanguage = false;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -256,6 +275,19 @@ public sealed class TrackConfiguration(TrackInfo trackInfo) : INotifyPropertyCha
         }
     }
 
+   public bool ShouldModifyName
+    {
+        get => _shouldModifyName;
+        set
+        {
+            if (_shouldModifyName != value)
+            {
+                _shouldModifyName = value;
+                OnPropertyChanged(nameof(ShouldModifyName));
+            }
+        }
+    }
+
     public MatroskaLanguageOption Language
     {
         get => _language;
@@ -265,6 +297,19 @@ public sealed class TrackConfiguration(TrackInfo trackInfo) : INotifyPropertyCha
             {
                 _language = value;
                 OnPropertyChanged(nameof(Language));
+            }
+        }
+    }
+
+    public bool ShouldModifyLanguage
+    {
+        get => _shouldModifyLanguage;
+        set
+        {
+            if (_shouldModifyLanguage != value)
+            {
+                _shouldModifyLanguage = value;
+                OnPropertyChanged(nameof(ShouldModifyLanguage));
             }
         }
     }
@@ -282,6 +327,19 @@ public sealed class TrackConfiguration(TrackInfo trackInfo) : INotifyPropertyCha
         }
     }
 
+    public bool ShouldModifyDefaultFlag
+    {
+        get => _shouldModifyDefaultFlag;
+        set
+        {
+            if (_shouldModifyDefaultFlag != value)
+            {
+                _shouldModifyDefaultFlag = value;
+                OnPropertyChanged(nameof(ShouldModifyDefaultFlag));
+            }
+        }
+    }
+
     public bool Forced
     {
         get => _forced;
@@ -295,7 +353,20 @@ public sealed class TrackConfiguration(TrackInfo trackInfo) : INotifyPropertyCha
         }
     }
 
-    public bool Remove
+    public bool ShouldModifyForcedFlag
+    {
+        get => _shouldModifyForcedFlag;
+        set
+        {
+            if (_shouldModifyForcedFlag != value)
+            {
+                _shouldModifyForcedFlag = value;
+                OnPropertyChanged(nameof(ShouldModifyForcedFlag));
+            }
+        }
+    }
+
+    public bool Enabled
     {
         get => _remove;
         set
@@ -303,7 +374,20 @@ public sealed class TrackConfiguration(TrackInfo trackInfo) : INotifyPropertyCha
             if (_remove != value)
             {
                 _remove = value;
-                OnPropertyChanged(nameof(Remove));
+                OnPropertyChanged(nameof(Enabled));
+            }
+        }
+    }
+
+    public bool ShouldModifyEnabledFlag
+    {
+        get => _shouldModifyEnabledFlag;
+        set
+        {
+            if (_shouldModifyEnabledFlag != value)
+            {
+                _shouldModifyEnabledFlag = value;
+                OnPropertyChanged(nameof(ShouldModifyEnabledFlag));
             }
         }
     }

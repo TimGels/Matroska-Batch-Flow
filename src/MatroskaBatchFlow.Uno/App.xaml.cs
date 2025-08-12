@@ -68,10 +68,10 @@ public partial class App : Application
 
             // Register file processing rule engine service and it's accomadating rules.
             services.AddSingleton<IFileProcessingEngine, FileProcessingEngine>();
+            services.AddSingleton<IFileProcessingRule, TrackPositionRule>();
             services.AddSingleton<IFileProcessingRule, SubtitleTrackNamingRule>();
             services.AddSingleton<IFileProcessingRule, AudioTrackNamingRule>();
             services.AddSingleton<IFileProcessingRule, VideoTrackNamingRule>();
-            services.AddSingleton<IFileProcessingRule, TrackPositionRule>();
             services.AddSingleton<IFileProcessingRule, TrackLanguageRule>();
             services.AddSingleton<IFileProcessingRule, TrackDefaultRule>();
             services.AddSingleton<IFileProcessingRule, TrackForcedRule>();

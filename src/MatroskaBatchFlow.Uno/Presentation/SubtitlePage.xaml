@@ -26,16 +26,16 @@
         <!--Dropdown menu Tracks-->
         <StackPanel Grid.Row="0">
             <ComboBox ItemsSource="{x:Bind ViewModel.SubtitleTracks, Mode=OneWay}"
-                  SelectedItem="{x:Bind ViewModel.SelectedTrack, Mode=TwoWay}">
+                      SelectedItem="{x:Bind ViewModel.SelectedTrack, Mode=TwoWay}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="BatchConfig:TrackConfiguration">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{x:Bind Type}"/>
                             <TextBlock Text="Track"
-                                   Margin="5,0,0,0"/>
+                                       Margin="5,0,0,0"/>
                             <TextBlock Text="{x:Bind Index, Converter={StaticResource ZeroBasedToOneBasedConverter}}"
-                                   Margin="10,0,0,0"
-                                   Opacity="0.7"/>
+                                       Margin="10,0,0,0"
+                                       Opacity="0.7"/>
                         </StackPanel>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
@@ -44,12 +44,17 @@
 
         <!--Edit-->
         <Controls:TrackSettingsControl Grid.Row="1"
-                                   IsDefaultTrack="{x:Bind ViewModel.IsDefaultTrack, Mode=TwoWay}"
-                                   IsForcedTrack="{x:Bind ViewModel.IsForcedTrack, Mode=TwoWay}"
-                                   AvailableLanguages="{x:Bind ViewModel.Languages, Mode=OneWay}"
-                                   TrackName="{x:Bind ViewModel.TrackName, Mode=TwoWay}"
-                                   IsEnabled="{x:Bind ViewModel.IsTrackSelected, Mode=OneWay}"
-                                   SelectedLanguage="{x:Bind ViewModel.SelectedLanguage, Mode=TwoWay}" />
+                                       IsDefaultTrack="{x:Bind ViewModel.IsDefaultTrack, Mode=TwoWay}"
+                                       IsForcedTrack="{x:Bind ViewModel.IsForcedTrack, Mode=TwoWay}"
+                                       AvailableLanguages="{x:Bind ViewModel.Languages, Mode=OneWay}"
+                                       TrackName="{x:Bind ViewModel.TrackName, Mode=TwoWay}"
+                                       IsEnabled="{x:Bind ViewModel.IsTrackSelected, Mode=OneWay}"
+                                       SelectedLanguage="{x:Bind ViewModel.SelectedLanguage, Mode=TwoWay}"
+                                       ShouldModifyForcedFlag="{x:Bind ViewModel.IsForcedFlagModificationEnabled, Mode=TwoWay}"
+                                       ShouldModifyEnabledFlag="{x:Bind ViewModel.IsEnabledFlagModificationEnabled, Mode=TwoWay}"
+                                       ShouldModifyName="{x:Bind ViewModel.IsTrackNameModificationEnabled, Mode=TwoWay}"
+                                       ShouldModifyDefaultFlag="{x:Bind ViewModel.IsDefaultFlagModificationEnabled, Mode=TwoWay}"
+                                       ShouldModifyLanguage="{x:Bind ViewModel.IsSelectedLanguageModificationEnabled, Mode=TwoWay}" />
 
     </Grid>
 </Page>

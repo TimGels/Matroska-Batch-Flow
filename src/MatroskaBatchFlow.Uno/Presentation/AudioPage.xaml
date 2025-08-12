@@ -48,7 +48,12 @@
                                        AvailableLanguages="{x:Bind ViewModel.Languages, Mode=OneWay}"
                                        TrackName="{x:Bind ViewModel.TrackName, Mode=TwoWay}"
                                        IsEnabled="{x:Bind ViewModel.IsTrackSelected, Mode=OneWay}"
-                                       SelectedLanguage="{x:Bind ViewModel.SelectedLanguage, Mode=TwoWay}" />
+                                       SelectedLanguage="{x:Bind ViewModel.SelectedLanguage, Mode=TwoWay}"
+                                       ShouldModifyForcedFlag="{x:Bind ViewModel.IsForcedFlagModificationEnabled, Mode=TwoWay}"
+                                       ShouldModifyEnabledFlag="{x:Bind ViewModel.IsEnabledFlagModificationEnabled, Mode=TwoWay}"
+                                       ShouldModifyName="{x:Bind ViewModel.IsTrackNameModificationEnabled, Mode=TwoWay}"
+                                       ShouldModifyDefaultFlag="{x:Bind ViewModel.IsDefaultFlagModificationEnabled, Mode=TwoWay}"
+                                       ShouldModifyLanguage="{x:Bind ViewModel.IsSelectedLanguageModificationEnabled, Mode=TwoWay}" />
 
     </Grid>
 </Page>

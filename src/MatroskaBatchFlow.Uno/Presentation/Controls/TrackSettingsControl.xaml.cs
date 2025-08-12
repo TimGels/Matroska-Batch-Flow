@@ -66,6 +66,41 @@ public sealed partial class TrackSettingsControl : UserControl
             typeof(TrackSettingsControl),
             new PropertyMetadata(null));
 
+    public static readonly DependencyProperty ShouldModifyDefaultFlagProperty =
+        DependencyProperty.Register(
+            nameof(ShouldModifyDefaultFlag),
+            typeof(bool),
+            typeof(TrackSettingsControl),
+            new PropertyMetadata(false));
+
+    public static readonly DependencyProperty ShouldModifyForcedFlagProperty =
+        DependencyProperty.Register(
+            nameof(ShouldModifyForcedFlag),
+            typeof(bool),
+            typeof(TrackSettingsControl),
+            new PropertyMetadata(false));
+
+    public static readonly DependencyProperty ShouldModifyEnabledFlagProperty =
+        DependencyProperty.Register(
+            nameof(ShouldModifyEnabledFlag),
+            typeof(bool),
+            typeof(TrackSettingsControl),
+            new PropertyMetadata(false));
+
+    public static readonly DependencyProperty ShouldModifyNameProperty =
+        DependencyProperty.Register(
+            nameof(ShouldModifyName),
+            typeof(bool),
+            typeof(TrackSettingsControl),
+            new PropertyMetadata(false));
+
+    public static readonly DependencyProperty ShouldModifyLanguageProperty =
+        DependencyProperty.Register(
+            nameof(ShouldModifyLanguage),
+            typeof(bool),
+            typeof(TrackSettingsControl),
+            new PropertyMetadata(false));
+
     public bool IsDefaultTrack
     {
         get => (bool)GetValue(IsDefaultTrackProperty);
@@ -106,6 +141,36 @@ public sealed partial class TrackSettingsControl : UserControl
     {
         get => (MatroskaLanguageOption?)GetValue(SelectedLanguageProperty);
         set => SetValue(SelectedLanguageProperty, value);
+    }
+
+    public bool ShouldModifyDefaultFlag
+    {
+        get => (bool)GetValue(ShouldModifyDefaultFlagProperty);
+        set => SetValue(ShouldModifyDefaultFlagProperty, value);
+    }
+
+    public bool ShouldModifyForcedFlag
+    {
+        get => (bool)GetValue(ShouldModifyForcedFlagProperty);
+        set => SetValue(ShouldModifyForcedFlagProperty, value);
+    }
+
+    public bool ShouldModifyEnabledFlag
+    {
+        get => (bool)GetValue(ShouldModifyEnabledFlagProperty);
+        set => SetValue(ShouldModifyEnabledFlagProperty, value);
+    }
+
+    public bool ShouldModifyName
+    {
+        get => (bool)GetValue(ShouldModifyNameProperty);
+        set => SetValue(ShouldModifyNameProperty, value);
+    }
+
+    public bool ShouldModifyLanguage
+    {
+        get => (bool)GetValue(ShouldModifyLanguageProperty);
+        set => SetValue(ShouldModifyLanguageProperty, value);
     }
 
     private void DefaultYesRadioButton_Checked(object sender, RoutedEventArgs e)

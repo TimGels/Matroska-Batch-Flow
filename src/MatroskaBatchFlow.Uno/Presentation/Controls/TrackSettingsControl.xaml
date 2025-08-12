@@ -16,116 +16,143 @@
         <x:Int32 x:Key="SettingLabelColWidth">80</x:Int32>
     </UserControl.Resources>
 
-
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!--Default track-->
-        <StackPanel Grid.Row="1"
-                    Padding="0,16,0,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="80" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="Default: "
-                           Grid.Column="0"
-                           VerticalAlignment="Center" />
-                <RadioButton Content="Yes"
-                             Grid.Column="1"
-                             IsChecked="{x:Bind IsDefaultTrack, Mode=TwoWay}"
-                             MinWidth="0"
-                             Margin="0,0,20,0"/>
-                <RadioButton Content="No"
-                             Grid.Column="2"
-                             IsChecked="{x:Bind IsDefaultTrack, Mode=TwoWay, Converter={StaticResource InverseBoolConverter}}"
-                             MinWidth="0"/>
-            </Grid>
-        </StackPanel>
+        <Grid Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
 
-        <!--Forced track-->
-        <StackPanel Grid.Row="2"
-                    Padding="0,0,0,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="80" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="Forced: "
-                           Grid.Column="0"
-                           VerticalAlignment="Center" />
-                <RadioButton Content="Yes"
-                             Grid.Column="1"
-                             IsChecked="{x:Bind IsForcedTrack, Mode=TwoWay}"
-                             MinWidth="0"
-                             Margin="0,0,20,0" />
-                <RadioButton Content="No"
-                             Grid.Column="2"
-                             IsChecked="{x:Bind IsForcedTrack, Mode=TwoWay, Converter={StaticResource InverseBoolConverter}}"
-                             MinWidth="0" />
-            </Grid>
-        </StackPanel>
+            <!--Default track-->
+            <ToggleSwitch Grid.Column="0"
+                          Grid.Row="1"
+                          IsOn="{x:Bind ShouldModifyDefaultFlag, Mode=TwoWay}"
+                          OffContent=""
+                          OnContent=""
+                          VerticalContentAlignment="Center"
+                          MinWidth="0" />
+            <TextBlock Grid.Column="1"
+                       Grid.Row="1"
+                       Text="Default: "
+                       Margin="0,0,20,0"
+                       VerticalAlignment="Center" />
+            <StackPanel Grid.Column="2"
+                        Grid.Row="1"
+                        VerticalAlignment="Center">
+                <ContentControl IsEnabled="{x:Bind ShouldModifyDefaultFlag, Mode=OneWay}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
-        <!--Track name-->
-        <StackPanel Grid.Row="3"
-                    Padding="0,16,0,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="80" />
-                    <ColumnDefinition Width="*" />
-                    <!--<ColumnDefinition Width="Auto" />-->
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="Name: "
-                           Grid.Column="0"
-                           VerticalAlignment="Center"/>
-                <TextBox Grid.Column="1"
-                         Text="{x:Bind TrackName, Mode=TwoWay}"/>
-            </Grid>
-        </StackPanel>
+                        <RadioButton Content="Yes"
+                                     Grid.Column="0"
+                                     IsChecked="{x:Bind IsDefaultTrack, Mode=TwoWay}"
+                                     MinWidth="0"
+                                     Margin="0,0,20,0" />
+                        <RadioButton Content="No"
+                                     Grid.Column="1"
+                                     IsChecked="{x:Bind IsDefaultTrack, Mode=TwoWay, Converter={StaticResource InverseBoolConverter}}"
+                                     MinWidth="0" />
+                    </Grid>
+                </ContentControl>
+            </StackPanel>
 
+            <!--Forced track-->
+            <ToggleSwitch Grid.Column="0"
+                          Grid.Row="2"
+                          IsOn="{x:Bind ShouldModifyForcedFlag, Mode=TwoWay}"
+                          OffContent=""
+                          OnContent=""
+                          VerticalContentAlignment="Center"
+                          MinWidth="0" />
+            <TextBlock Grid.Column="1"
+                       Grid.Row="2"
+                       Text="Forced: "
+                       Margin="0,0,20,0"
+                       VerticalAlignment="Center" />
+            <StackPanel Grid.Column="2"
+                        Grid.Row="2"
+                        VerticalAlignment="Center">
+                <ContentControl IsEnabled="{x:Bind ShouldModifyForcedFlag, Mode=OneWay}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Row="4"
-                    Padding="0,16,0,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="80" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="Language: "
-                          Grid.Column="0"
-                          VerticalAlignment="Center" />
-                <ComboBox Grid.Column="1"
-                          x:Name="LanguagesComboBox"
-                          Width="150"
-                          IsEditable="True"
-                          ItemsSource="{x:Bind AvailableLanguages, Mode=OneWay}"
-                          SelectedItem="{x:Bind SelectedLanguage, Mode=TwoWay}"
-                          TextSubmitted="LanguagesComboBox_TextSubmitted"
-                          DisplayMemberPath="Name">
-                </ComboBox>
-                <!--<AutoSuggestBox 
-                                TextChanged="AutoSuggestBox_TextChanged"
-                                HorizontalAlignment="Left"
-                                Width="300"
-                                AutomationProperties.Name="Basic AutoSuggestBox"/>-->
+                        <RadioButton Content="Yes"
+                                     Grid.Column="0"
+                                     IsChecked="{x:Bind IsForcedTrack, Mode=TwoWay}"
+                                     MinWidth="0"
+                                     Margin="0,0,20,0" />
+                        <RadioButton Content="No"
+                                     Grid.Column="1"
+                                     IsChecked="{x:Bind IsForcedTrack, Mode=TwoWay, Converter={StaticResource InverseBoolConverter}}"
+                                     MinWidth="0" />
+                    </Grid>
+                </ContentControl>
+            </StackPanel>
 
-                
+            <!--Track name-->
+            <ToggleSwitch Grid.Column="0"
+                          Grid.Row="3"
+                          IsOn="{x:Bind ShouldModifyName, Mode=TwoWay}"
+                          OffContent=""
+                          OnContent=""
+                          VerticalContentAlignment="Center"
+                          MinWidth="0" />
+            <TextBlock Grid.Column="1"
+                       Grid.Row="3"
+                       Text="Name: "
+                       VerticalAlignment="Center" />
+            <TextBox Grid.Column="2"
+                     Grid.Row="3"
+                     Grid.ColumnSpan="3"
+                     MinWidth="500"
+                     VerticalAlignment="Center"
+                     Text="{x:Bind TrackName, Mode=TwoWay}"
+                     IsEnabled="{x:Bind ShouldModifyName, Mode=OneWay}" />
 
-                <!--<AutoSuggestBox ItemsSource="{x:Bind FilteredLanguages, Mode=OneWay}"
-                                TextChanged="OnLanguageTextChanged"
-                                DisplayMemberPath="Name"/>-->
-
-            </Grid>
-        </StackPanel>
+            <!--Track Language-->
+            <ToggleSwitch Grid.Column="0"
+                          Grid.Row="4"
+                          IsOn="{x:Bind ShouldModifyLanguage, Mode=TwoWay}"
+                          OffContent=""
+                          OnContent=""
+                          VerticalContentAlignment="Center"
+                          MinWidth="0" />
+            <TextBlock Grid.Column="1"
+                       Grid.Row="4"
+                       Margin="0,0,20,0"
+                       Text="Language: "
+                       VerticalAlignment="Center" />
+            <ComboBox Grid.Column="2"
+                      Grid.ColumnSpan="3"
+                      Grid.Row="4"
+                      x:Name="LanguagesComboBox"
+                      VerticalAlignment="Center"
+                      MinWidth="150"
+                      IsEditable="True"
+                      ItemsSource="{x:Bind AvailableLanguages, Mode=OneWay}"
+                      SelectedItem="{x:Bind SelectedLanguage, Mode=TwoWay}"
+                      IsEnabled="{x:Bind ShouldModifyLanguage, Mode=OneWay}"
+                      TextSubmitted="LanguagesComboBox_TextSubmitted" />
+        </Grid>
     </Grid>
 </UserControl>

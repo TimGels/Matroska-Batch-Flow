@@ -9,27 +9,30 @@
     NavigationCacheMode="Required"
     IsEnabled="{x:Bind ViewModel.IsFileListPopulated, Mode=OneWay}">
 
+
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" MinWidth="400" />
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="80" />
-                    <ColumnDefinition Width="*" MaxWidth="400" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-
-                <TextBlock Text="Title: "
-                           Grid.Column="0"
-                           VerticalAlignment="Center"/>
-                <TextBox Grid.Column="1"
-                         Text="{x:Bind ViewModel.Title, Mode=TwoWay}" />
-            </Grid>
-        </StackPanel>
+        <ToggleSwitch Grid.Column="0"
+                      IsOn="{x:Bind ViewModel.ShouldModifyTitle, Mode=TwoWay}"
+                      OffContent=""
+                      OnContent=""
+                      VerticalContentAlignment="Center"
+                      MinWidth="0" />
+        <TextBlock Grid.Column="1"
+                   Margin="0,0,20,0"
+                   Text="Title: "
+                   VerticalAlignment="Center" />
+        <TextBox Grid.Column="2"
+                 VerticalAlignment="Center"
+                 Text="{x:Bind ViewModel.Title, Mode=TwoWay}"
+                 IsEnabled="{x:Bind ViewModel.ShouldModifyTitle, Mode=OneWay}" />
     </Grid>
 </Page>
