@@ -97,7 +97,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Generates an array of command-line argument strings for <c>mkvpropedit</c> based on the provided batch configuration.
+    /// Generates an array of command-line arguments for <c>mkvpropedit</c> based on the provided batch configuration.
     /// Each string in the returned array corresponds to the arguments for a single file in the batch.
     /// </summary>
     /// <param name="batchConfiguration">The batch configuration containing the list of files and associated settings.</param>
@@ -118,29 +118,48 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Generates an array of command-line arguments for <c>mkvpropedit</c> based on the specified file and batch configuration.
+    /// Generates an array of command-line arguments for <c>mkvpropedit</c> for the specified file and batch configuration.
+    /// The generated arguments will only include the title if <see cref="IBatchConfiguration.ShouldModifyTitle"/> is <c>true</c>.
+    /// Track-related arguments are included only for properties whose corresponding <c>ShouldModify*</c> flags are set to <c>true</c>
+    /// in each <see cref="TrackConfiguration"/> (see <see cref="AddTracksToBuilder"/> for details).
     /// </summary>
     /// <param name="scannedFile">The file to be processed, containing information such as the file path.</param>
-    /// <param name="batchConfiguration">The batch configuration specifying the title and track information to include in the arguments.</param>
+    /// <param name="batchConfiguration">
+    /// The batch configuration specifying the title and track information to include in the arguments.
+    /// Only properties with their <c>ShouldModify*</c> flags set to <c>true</c> will be included.
+    /// </param>
     /// <returns>
     /// An array of strings representing the arguments to be passed to <c>mkvpropedit</c> for the specified file.
     /// </returns>
     private static string[] GenerateMkvpropeditArgumentsForFile(ScannedFileInfo scannedFile, IBatchConfiguration batchConfiguration)
     {
-        var builder = new MkvPropeditArgumentsBuilder()
-            .SetInputFile(scannedFile.Path)
-            .WithTitle(batchConfiguration.Title);
+        var builder = new MkvPropeditArgumentsBuilder();
+
+        if (batchConfiguration.ShouldModifyTitle)
+        {
+            builder.WithTitle(batchConfiguration.Title);
+        }
 
         // Add track configurations to the builder for audio, video, and subtitle tracks.
         AddTracksToBuilder(builder, batchConfiguration.AudioTracks, TrackType.Audio);
         AddTracksToBuilder(builder, batchConfiguration.VideoTracks, TrackType.Video);
         AddTracksToBuilder(builder, batchConfiguration.SubtitleTracks, TrackType.Text);
 
-       return builder.Build();
+        // If no modifications are specified, we do not need to generate any arguments.
+        if (builder.IsEmpty())
+        {
+            return [];
+        }
+
+        builder.SetInputFile(scannedFile.Path);
+
+        return builder.Build();
     }
 
     /// <summary>
     /// Adds a collection of track configurations to the specified mkvpropedit arguments builder.
+    /// For each track, only properties with their corresponding <c>ShouldModify*</c> flag set to <c>true</c>
+    /// will be included in the generated arguments
     /// </summary>
     /// <param name="builder">The builder to which the track configurations will be added.</param>
     /// <param name="tracks">A collection of track configurations to add. Each specifies properties such as position, 
@@ -154,14 +173,38 @@ public partial class MainViewModel : ObservableObject
 
         foreach (var track in tracks)
         {
-            builder.AddTrack(t => t
-                .SetTrackId(track.Index + 1) // Convert to 1-based index for mkvpropedit
-                .SetTrackType(type)
-                .WithLanguage(track.Language.Code)
-                .WithName(track.Name)
-                .WithIsDefault(track.Default)
-                .WithIsForced(track.Forced)
-            );
+            // Only add the track if at least one property should be modified.
+            if (!(track.ShouldModifyLanguage ||
+                  track.ShouldModifyName ||
+                  track.ShouldModifyDefaultFlag ||
+                  track.ShouldModifyForcedFlag ||
+                  track.ShouldModifyEnabledFlag))
+            {
+                continue;
+            }
+
+            builder.AddTrack(tb =>
+            {
+                tb.SetTrackId(track.Index + 1) // Convert to 1-based index for mkvpropedit
+                .SetTrackType(type);
+
+                if (track.ShouldModifyLanguage)
+                    tb.WithLanguage(track.Language.Code);
+
+                if (track.ShouldModifyName)
+                    tb.WithName(track.Name);
+
+                if (track.ShouldModifyDefaultFlag)
+                    tb.WithIsDefault(track.Default);
+
+                if (track.ShouldModifyForcedFlag)
+                    tb.WithIsForced(track.Forced);
+
+                if (track.ShouldModifyEnabledFlag)
+                    tb.WithIsEnabled(track.Enabled);
+
+                return tb;
+            });
         }
     }
 }

@@ -32,7 +32,7 @@ public class FileTitleNamingRule : IFileProcessingRule
 
         if (scannedTrack is not null)
         {
-            batchConfig.Title = scannedTrack.Title;
+            batchConfig.Title = scannedTrack.Title ?? string.Empty;
         }
     }
 }

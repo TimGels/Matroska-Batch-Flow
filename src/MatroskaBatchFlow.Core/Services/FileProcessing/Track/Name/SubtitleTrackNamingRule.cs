@@ -23,7 +23,7 @@ public class SubtitleTrackNamingRule : IFileProcessingRule
         foreach (var track in scannedFile.Result.Media.Track.Where(t => t.Type == TrackType.Text))
         {
             var config = batchConfig.SubtitleTracks.First(t => t.Index == track.StreamKindID);
-            config.Name = track.Title;
+            config.Name = track.Title ?? string.Empty;
             //if (!_supportedFormatMappings.TryGetValue(track.Format ?? string.Empty, out var name))
             //    continue;
 

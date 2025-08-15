@@ -68,4 +68,14 @@ public class MkvPropeditArgumentsBuilder : IMkvPropeditArgumentsBuilder
 
         return [.. args];
     }
+
+    /// <inheritdoc />
+    public bool IsEmpty()
+    {
+        // Check if title is not set and no tracks have been added
+        bool hasNoTitle = _title is null;
+        bool hasNoTracks = _trackOptionsBuilders is null || _trackOptionsBuilders.Count is 0;
+
+        return hasNoTitle && hasNoTracks;
+    }
 }

@@ -20,7 +20,7 @@ public class AudioTrackNamingRule : IFileProcessingRule
         foreach (var track in scannedFile.Result.Media.Track.Where(t => t.Type == TrackType.Audio))
         {
             var config = batchConfig.AudioTracks.First(t => t.Index == track.StreamKindID);
-            config.Name = track.Title;
+            config.Name = track.Title ?? string.Empty;
             //var format = track.Format ?? string.Empty;
             //var layout = track.ChannelLayout ?? string.Empty;
 

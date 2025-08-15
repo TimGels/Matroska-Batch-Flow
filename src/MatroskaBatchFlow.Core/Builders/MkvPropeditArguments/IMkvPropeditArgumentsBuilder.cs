@@ -23,4 +23,10 @@ public interface IMkvPropeditArgumentsBuilder
     /// options.
     /// </summary>
     string[] Build();
+
+    /// <summary>
+    /// Determines whether the current instance has no properties set, including no tracks.
+    /// </summary>
+    /// <returns><see langword="true"/> if no properties are set, including tracks; otherwise, <see langword="false"/>.</returns>
+    bool IsEmpty();
 }

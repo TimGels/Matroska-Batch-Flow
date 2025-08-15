@@ -17,7 +17,7 @@ public class VideoTrackNamingRule : IFileProcessingRule
         foreach (var streamKindID in scannedFile.Result.Media.Track.Where(t => t.Type == TrackType.Video))
         {
             var config = batchConfig.VideoTracks.First(t => t.Index == streamKindID.StreamKindID);
-            config.Name = streamKindID.Title;
+            config.Name = streamKindID.Title ?? string.Empty;
             //var config = batchConfig.VideoTracks.FirstOrDefault(t => t.Index == streamKindID);
             //if (config != null)
             //{
