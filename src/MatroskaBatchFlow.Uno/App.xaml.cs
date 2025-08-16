@@ -59,6 +59,7 @@ public partial class App : Application
             services.AddSingleton<IBatchConfiguration, BatchConfiguration>();
             services.AddSingleton<ILogger, Logger<Logger>>();
             services.AddSingleton<IMkvPropeditService, MkvPropeditService>();
+            services.AddSingleton<IFileListAdapter, FileListAdapter>();
 
             // Register file validation rules engine service and it's accomadating rules.
             services.AddSingleton<IFileValidationEngine, FileValidationEngine>();

@@ -9,7 +9,8 @@
     xmlns:Controls="using:MatroskaBatchFlow.Uno.Presentation.Controls"
     xmlns:BatchConfig="using:MatroskaBatchFlow.Core.Services"
     mc:Ignorable="d"
-    NavigationCacheMode="Required">
+    NavigationCacheMode="Required"
+    IsEnabled="{x:Bind ViewModel.IsFileListPopulated, Mode=OneWay}">
 
     <UserControl.Resources>
         <Converters:ZeroBasedToOneBasedConverter x:Key="ZeroBasedToOneBasedConverter" />

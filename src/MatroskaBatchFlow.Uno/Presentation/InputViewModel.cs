@@ -1,11 +1,11 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Core.Enums;
-using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Uno.Behavior;
+using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Contracts.ViewModels;
 using MatroskaBatchFlow.Uno.Extensions;
 using MatroskaBatchFlow.Uno.Presentation.Dialogs;
@@ -16,18 +16,24 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 public partial class InputViewModel : ObservableObject, IFilesDropped, INavigationAware
 {
     [ObservableProperty]
-    private ObservableCollection<ScannedFileInfo> selectedFiles = [];
+    private ObservableCollection<ScannedFileViewModel> selectedFiles = [];
+
+    private readonly IFileListAdapter _fileListAdapter;
     private readonly IFileScanner _fileScanner;
     private readonly IFileValidationEngine _fileValidator;
     private readonly IFileProcessingEngine _fileProcessingRuleEngine;
     private readonly IBatchConfiguration _batchConfig;
     private readonly IBatchTrackCountSynchronizer _BatchTrackCountSynchronizer;
 
-    public ICommand RemoveSelected { get; }
+    public ObservableCollection<ScannedFileViewModel> FileList => _fileListAdapter.ScannedFileViewModels;
 
-    public ObservableCollection<ScannedFileInfo> FileList => _batchConfig.FileList;
+    public ICommand RemoveSelected { get; }
+    public ICommand RemoveAll { get; }
+    public ICommand ClearSelection { get; }
+    public ICommand SelectAll { get; }
 
     public InputViewModel(
+        IFileListAdapter fileListAdapter,
         IFileScanner fileScanner,
         IFileValidationEngine fileValidator,
         IFileProcessingEngine fileProcessingRuleEngine,
@@ -35,12 +41,16 @@ public partial class InputViewModel : ObservableObject, IFilesDropped, INavigati
         IBatchTrackCountSynchronizer batchConfigurationTrackInitializer
         )
     {
+        _fileListAdapter = fileListAdapter;
         _fileScanner = fileScanner;
-        RemoveSelected = new AsyncRelayCommand(RemoveSelectedFiles);
         _fileValidator = fileValidator;
         _fileProcessingRuleEngine = fileProcessingRuleEngine;
         _batchConfig = batchConfig;
         _BatchTrackCountSynchronizer = batchConfigurationTrackInitializer;
+        RemoveSelected = new AsyncRelayCommand(RemoveSelectedFiles);
+        RemoveAll = new AsyncRelayCommand(RemoveAllFiles);
+        ClearSelection = new AsyncRelayCommand(ClearFileSelection);
+        SelectAll = new AsyncRelayCommand(SelectAllFiles);
     }
 
     /// <summary>
@@ -70,12 +80,12 @@ public partial class InputViewModel : ObservableObject, IFilesDropped, INavigati
             _fileProcessingRuleEngine.Apply(file, _batchConfig);
         }
 
-        _batchConfig.FileList.AddRange(newFiles);
+        // Add files via the adapter to keep everything in sync
+        _fileListAdapter.AddFiles(newFiles);
     }
 
     /// <summary>
-    /// Removes all files currently selected in the <see cref="SelectedFiles"/> collection from the <see
-    /// cref="FileList"/>.
+    /// Removes all files currently selected in the <see cref="SelectedFiles"/> collection from the file list.
     /// </summary>
     /// <remarks>This method processes the removal of selected files by iterating over a copy of the <see
     /// cref="SelectedFiles"/> collection.</remarks>
@@ -83,9 +93,48 @@ public partial class InputViewModel : ObservableObject, IFilesDropped, INavigati
     private Task RemoveSelectedFiles()
     {
         // Convert SelectedFiles to an array to make a copy to avoid modifying the collection while iterating.
-        foreach (ScannedFileInfo file in SelectedFiles.ToArray())
-            _batchConfig.FileList.Remove(file);
+        foreach (ScannedFileViewModel file in SelectedFiles.ToArray())
+            _fileListAdapter.RemoveFile(file.File);
 
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Removes all files from the internal file list.
+    /// </summary>
+    /// <remarks>This method clears the file list by iterating over a copy of the current file collection
+    /// to avoid issues with modifying the collection during enumeration.</remarks>
+    /// <returns>A completed <see cref="Task"/> representing the operation.</returns>
+    private Task RemoveAllFiles()
+    {
+        // Make array copy to prevent recursive clearing.
+        foreach (ScannedFileViewModel file in _fileListAdapter.ScannedFileViewModels.ToArray())
+            _fileListAdapter.RemoveFile(file.File);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Clears the current selection of files.
+    /// </summary>
+    /// <remarks>This method removes all items from the <see cref="SelectedFiles"/> collection.</remarks>
+    /// <returns>A completed <see cref="Task"/> representing the operation.</returns>
+    private Task ClearFileSelection()
+    {
+        SelectedFiles.Clear();
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Selects all files by adding them to the <see cref="SelectedFiles"/> collection.
+    /// </summary>
+    /// <returns>A completed <see cref="Task"/> representing the operation.</returns>
+    private Task SelectAllFiles()
+    {
+        // Select all files by adding them to the SelectedFiles collection.
+        foreach (var file in _fileListAdapter.ScannedFileViewModels)
+        {
+            SelectedFiles.Add(file);
+        }
         return Task.CompletedTask;
     }
 
