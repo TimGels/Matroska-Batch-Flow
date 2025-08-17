@@ -71,9 +71,11 @@
                     <CommandBar.PrimaryCommands>
                         <AppBarButton Icon="Remove"
                                       Label="Remove"
+                                      IsEnabled="{x:Bind ViewModel.SelectedFiles.Count, Mode=OneWay, Converter={StaticResource GreaterThanZeroConverter}}"
                                       Command="{x:Bind ViewModel.RemoveSelected}" />
                         <AppBarSeparator />
                         <AppBarButton Label="Clear"
+                                      IsEnabled="{x:Bind ViewModel.FileList.Count, Mode=OneWay, Converter={StaticResource GreaterThanZeroConverter}}"
                                       Command="{x:Bind ViewModel.RemoveAll}">
                             <FontIcon Glyph="&#xEA99;" />
                         </AppBarButton>
