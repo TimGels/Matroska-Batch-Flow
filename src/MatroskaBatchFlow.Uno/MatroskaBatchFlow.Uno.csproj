@@ -1,22 +1,22 @@
 ﻿<Project Sdk="Uno.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>net9.0-windows10.0.19041;net9.0-desktop;net9.0</TargetFrameworks>
+    <PropertyGroup>
+        <TargetFrameworks>net9.0-windows10.0.19041;net9.0-desktop;net9.0</TargetFrameworks>
 
-    <OutputType>Exe</OutputType>
-    <UnoSingleProject>true</UnoSingleProject>
+        <OutputType>Exe</OutputType>
+        <UnoSingleProject>true</UnoSingleProject>
 
-    <!-- Display name -->
-    <ApplicationTitle>MatroskaBatchFlow.Uno</ApplicationTitle>
-    <!-- App Identifier -->
-    <ApplicationId>com.companyname.MatroskaBatchFlow.Uno</ApplicationId>
-    <!-- Versions -->
-    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-    <ApplicationVersion>1</ApplicationVersion>
-    <!-- Package Publisher -->
-    <ApplicationPublisher>Tim</ApplicationPublisher>
-    <!-- Package Description -->
-    <Description>MatroskaBatchFlow.Uno powered by Uno Platform.</Description>
-    <!--
+        <!-- Display name -->
+        <ApplicationTitle>MatroskaBatchFlow.Uno</ApplicationTitle>
+        <!-- App Identifier -->
+        <ApplicationId>com.companyname.MatroskaBatchFlow.Uno</ApplicationId>
+        <!-- Versions -->
+        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        <ApplicationVersion>1</ApplicationVersion>
+        <!-- Package Publisher -->
+        <ApplicationPublisher>Tim</ApplicationPublisher>
+        <!-- Package Description -->
+        <Description>MatroskaBatchFlow.Uno powered by Uno Platform.</Description>
+        <!--
       If you encounter this error message:
 
         error NETSDK1148: A referenced assembly was compiled using a newer version of Microsoft.Windows.SDK.NET.dll.
@@ -26,210 +26,210 @@
       the "Microsoft.Windows.SDK.BuildTools" package above, and the "revision" version number
       must be the highest found in https://www.nuget.org/packages/Microsoft.Windows.SDK.NET.Ref.
     -->
-    <!-- <WindowsSdkPackageVersion>10.0.22621.28</WindowsSdkPackageVersion> -->
+        <!-- <WindowsSdkPackageVersion>10.0.22621.28</WindowsSdkPackageVersion> -->
 
-    <!--
+        <!--
       UnoFeatures let's you quickly add and manage implicit package references based on the features you want to use.
       https://aka.platform.uno/singleproject-features
     -->
-    <UnoFeatures>
-        Lottie;
-        MediaElement;
-        Hosting;
-        Toolkit;
-        Logging;
-        LoggingSerilog;
-        Mvvm;
-        Configuration;
-        HttpRefit;
-        Serialization;
-        Localization;
-        ThemeService;
-        SkiaRenderer;
-    </UnoFeatures>
-    <Platforms>AnyCPU;x64</Platforms>
-    <PackageCertificateThumbprint>12EAC5770DC633D8CDB178DC2233641C0F4652C7</PackageCertificateThumbprint>
-    <PackageCertificateKeyFile>MatroskaBatchFlow.Uno_TemporaryKey.pfx</PackageCertificateKeyFile>
-    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-    <PublishAot>False</PublishAot>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" />
-    <PackageReference Include="Microsoft.Extensions.Options" />
-    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
-    <None Remove="Assets\Icons\AppList.scale-400.png" />
-    <None Remove="Assets\Icons\AppTitleBar.scale-200.png" />
-    <None Remove="Presentation\AudioPage.xaml" />
-    <None Remove="Presentation\Dialogs\ErrorDialog.xaml" />
-    <None Remove="Presentation\GeneralPage.xaml" />
-    <None Remove="Presentation\InputPage.xaml" />
-    <None Remove="Presentation\MainWindow.xaml" />
-    <None Remove="Presentation\OutputPage.xaml" />
-    <None Remove="Presentation\SettingsPage.xaml" />
-    <None Remove="Presentation\SubtitlePage.xaml" />
-    <None Remove="Presentation\VideoPage.xaml" />
-    <None Remove="ReadMe.md" />
-    <None Remove="Resources\Assets\AppIcon.scale-100.png" />
-    <None Remove="Resources\Assets\AppIcon.scale-125.png" />
-    <None Remove="Resources\Assets\AppIcon.scale-150.png" />
-    <None Remove="Resources\Assets\AppIcon.scale-200.png" />
-    <None Remove="Resources\Assets\AppIcon.scale-400.png" />
-    <None Remove="Resources\Assets\AppIcon.targetsize-16.png" />
-    <None Remove="Resources\Assets\AppIcon.targetsize-16_altform-lightunplated.png" />
-    <None Remove="Resources\Assets\AppIcon.targetsize-16_altform-unplated.png" />
-    <None Remove="Resources\Assets\AppIcon.targetsize-24.png" />
-    <None Remove="Resources\Assets\AppIcon.targetsize-24_altform-lightunplated.png" />
-    <None Remove="Resources\Assets\AppIcon.targetsize-24_altform-unplated.png" />
-    <None Remove="Resources\Assets\AppIcon.targetsize-256.png" />
-    <None Remove="Resources\Assets\AppIcon.targetsize-256_altform-lightunplated.png" />
-    <None Remove="Resources\Assets\AppIcon.targetsize-256_altform-unplated.png" />
-    <None Remove="Resources\Assets\AppIcon.targetsize-32.png" />
-    <None Remove="Resources\Assets\AppIcon.targetsize-32_altform-lightunplated.png" />
-    <None Remove="Resources\Assets\AppIcon.targetsize-32_altform-unplated.png" />
-    <None Remove="Resources\Assets\AppIcon.targetsize-48.png" />
-    <None Remove="Resources\Assets\AppIcon.targetsize-48_altform-lightunplated.png" />
-    <None Remove="Resources\Assets\AppIcon.targetsize-48_altform-unplated.png" />
-    <None Remove="Resources\Assets\BadgeLogo.scale-400.png" />
-    <None Remove="Resources\Assets\LargeTile.scale-100.png" />
-    <None Remove="Resources\Assets\LargeTile.scale-125.png" />
-    <None Remove="Resources\Assets\LargeTile.scale-150.png" />
-    <None Remove="Resources\Assets\LargeTile.scale-200.png" />
-    <None Remove="Resources\Assets\LargeTile.scale-400.png" />
-    <None Remove="Resources\Assets\MediumTile.scale-100.png" />
-    <None Remove="Resources\Assets\MediumTile.scale-125.png" />
-    <None Remove="Resources\Assets\MediumTile.scale-150.png" />
-    <None Remove="Resources\Assets\MediumTile.scale-200.png" />
-    <None Remove="Resources\Assets\MediumTile.scale-400.png" />
-    <None Remove="Resources\Assets\PackageLogo.scale-100.png" />
-    <None Remove="Resources\Assets\PackageLogo.scale-125.png" />
-    <None Remove="Resources\Assets\PackageLogo.scale-150.png" />
-    <None Remove="Resources\Assets\PackageLogo.scale-200.png" />
-    <None Remove="Resources\Assets\PackageLogo.scale-400.png" />
-    <None Remove="Resources\Assets\SmallTile.scale-100.png" />
-    <None Remove="Resources\Assets\SmallTile.scale-125.png" />
-    <None Remove="Resources\Assets\SmallTile.scale-150.png" />
-    <None Remove="Resources\Assets\SmallTile.scale-200.png" />
-    <None Remove="Resources\Assets\SmallTile.scale-400.png" />
-    <None Remove="Resources\Assets\SplashScreen.scale-100.png" />
-    <None Remove="Resources\Assets\SplashScreen.scale-125.png" />
-    <None Remove="Resources\Assets\SplashScreen.scale-150.png" />
-    <None Remove="Resources\Assets\SplashScreen.scale-200.png" />
-    <None Remove="Resources\Assets\SplashScreen.scale-400.png" />
-    <None Remove="Resources\Assets\WideTile.scale-100.png" />
-    <None Remove="Resources\Assets\WideTile.scale-125.png" />
-    <None Remove="Resources\Assets\WideTile.scale-150.png" />
-    <None Remove="Resources\Assets\WideTile.scale-200.png" />
-    <None Remove="Resources\Assets\WideTile.scale-400.png" />
-    <None Remove="Resources\languages.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Resources\Assets\AppIcon.scale-100.png" />
-    <Content Include="Resources\Assets\AppIcon.scale-125.png" />
-    <Content Include="Resources\Assets\AppIcon.scale-150.png" />
-    <Content Include="Resources\Assets\AppIcon.scale-200.png" />
-    <Content Include="Resources\Assets\AppIcon.scale-400.png" />
-    <Content Include="Resources\Assets\AppIcon.targetsize-16.png" />
-    <Content Include="Resources\Assets\AppIcon.targetsize-16_altform-lightunplated.png" />
-    <Content Include="Resources\Assets\AppIcon.targetsize-16_altform-unplated.png" />
-    <Content Include="Resources\Assets\AppIcon.targetsize-24.png" />
-    <Content Include="Resources\Assets\AppIcon.targetsize-24_altform-lightunplated.png" />
-    <Content Include="Resources\Assets\AppIcon.targetsize-24_altform-unplated.png" />
-    <Content Include="Resources\Assets\AppIcon.targetsize-256.png" />
-    <Content Include="Resources\Assets\AppIcon.targetsize-256_altform-lightunplated.png" />
-    <Content Include="Resources\Assets\AppIcon.targetsize-256_altform-unplated.png" />
-    <Content Include="Resources\Assets\AppIcon.targetsize-32.png" />
-    <Content Include="Resources\Assets\AppIcon.targetsize-32_altform-lightunplated.png" />
-    <Content Include="Resources\Assets\AppIcon.targetsize-32_altform-unplated.png" />
-    <Content Include="Resources\Assets\AppIcon.targetsize-48.png" />
-    <Content Include="Resources\Assets\AppIcon.targetsize-48_altform-lightunplated.png" />
-    <Content Include="Resources\Assets\AppIcon.targetsize-48_altform-unplated.png" />
-    <Content Include="Resources\Assets\BadgeLogo.scale-400.png" />
-    <Content Include="Resources\Assets\LargeTile.scale-100.png" />
-    <Content Include="Resources\Assets\LargeTile.scale-125.png" />
-    <Content Include="Resources\Assets\LargeTile.scale-150.png" />
-    <Content Include="Resources\Assets\LargeTile.scale-200.png" />
-    <Content Include="Resources\Assets\LargeTile.scale-400.png" />
-    <Content Include="Resources\Assets\MediumTile.scale-100.png" />
-    <Content Include="Resources\Assets\MediumTile.scale-125.png" />
-    <Content Include="Resources\Assets\MediumTile.scale-150.png" />
-    <Content Include="Resources\Assets\MediumTile.scale-200.png" />
-    <Content Include="Resources\Assets\MediumTile.scale-400.png" />
-    <Content Include="Resources\Assets\PackageLogo.scale-100.png" />
-    <Content Include="Resources\Assets\PackageLogo.scale-125.png" />
-    <Content Include="Resources\Assets\PackageLogo.scale-150.png" />
-    <Content Include="Resources\Assets\PackageLogo.scale-200.png" />
-    <Content Include="Resources\Assets\PackageLogo.scale-400.png" />
-    <Content Include="Resources\Assets\SmallTile.scale-100.png" />
-    <Content Include="Resources\Assets\SmallTile.scale-125.png" />
-    <Content Include="Resources\Assets\SmallTile.scale-150.png" />
-    <Content Include="Resources\Assets\SmallTile.scale-200.png" />
-    <Content Include="Resources\Assets\SmallTile.scale-400.png" />
-    <Content Include="Resources\Assets\SplashScreen.scale-100.png" />
-    <Content Include="Resources\Assets\SplashScreen.scale-125.png" />
-    <Content Include="Resources\Assets\SplashScreen.scale-150.png" />
-    <Content Include="Resources\Assets\SplashScreen.scale-200.png" />
-    <Content Include="Resources\Assets\SplashScreen.scale-400.png" />
-    <Content Include="Resources\Assets\WideTile.scale-100.png" />
-    <Content Include="Resources\Assets\WideTile.scale-125.png" />
-    <Content Include="Resources\Assets\WideTile.scale-150.png" />
-    <Content Include="Resources\Assets\WideTile.scale-200.png" />
-    <Content Include="Resources\Assets\WideTile.scale-400.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\languages.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Presentation\VideoPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Presentation\GeneralPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Presentation\InputPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Presentation\SubtitlePage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\MatroskaBatchFlow.Core\MatroskaBatchFlow.Core.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <AppxManifest Update="Package.appxmanifest">
-      <CopyToOutputDirectory></CopyToOutputDirectory>
-    </AppxManifest>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Presentation\OutputPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
+        <UnoFeatures>
+            Lottie;
+            MediaElement;
+            Hosting;
+            Toolkit;
+            Logging;
+            LoggingSerilog;
+            Mvvm;
+            Configuration;
+            HttpRefit;
+            Serialization;
+            Localization;
+            ThemeService;
+            SkiaRenderer;
+        </UnoFeatures>
+        <Platforms>AnyCPU;x64</Platforms>
+        <PackageCertificateThumbprint>12EAC5770DC633D8CDB178DC2233641C0F4652C7</PackageCertificateThumbprint>
+        <PackageCertificateKeyFile>MatroskaBatchFlow.Uno_TemporaryKey.pfx</PackageCertificateKeyFile>
+        <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+        <PublishAot>False</PublishAot>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" />
+        <PackageReference Include="Microsoft.Extensions.Options" />
+        <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
+        <None Remove="Assets\Icons\AppList.scale-400.png" />
+        <None Remove="Assets\Icons\AppTitleBar.scale-200.png" />
+        <None Remove="Presentation\AudioPage.xaml" />
+        <None Remove="Presentation\Dialogs\ErrorDialog.xaml" />
+        <None Remove="Presentation\GeneralPage.xaml" />
+        <None Remove="Presentation\InputPage.xaml" />
+        <None Remove="Presentation\MainWindow.xaml" />
+        <None Remove="Presentation\OutputPage.xaml" />
+        <None Remove="Presentation\SettingsPage.xaml" />
+        <None Remove="Presentation\SubtitlePage.xaml" />
+        <None Remove="Presentation\VideoPage.xaml" />
+        <None Remove="ReadMe.md" />
+        <None Remove="Resources\Assets\AppIcon.scale-100.png" />
+        <None Remove="Resources\Assets\AppIcon.scale-125.png" />
+        <None Remove="Resources\Assets\AppIcon.scale-150.png" />
+        <None Remove="Resources\Assets\AppIcon.scale-200.png" />
+        <None Remove="Resources\Assets\AppIcon.scale-400.png" />
+        <None Remove="Resources\Assets\AppIcon.targetsize-16.png" />
+        <None Remove="Resources\Assets\AppIcon.targetsize-16_altform-lightunplated.png" />
+        <None Remove="Resources\Assets\AppIcon.targetsize-16_altform-unplated.png" />
+        <None Remove="Resources\Assets\AppIcon.targetsize-24.png" />
+        <None Remove="Resources\Assets\AppIcon.targetsize-24_altform-lightunplated.png" />
+        <None Remove="Resources\Assets\AppIcon.targetsize-24_altform-unplated.png" />
+        <None Remove="Resources\Assets\AppIcon.targetsize-256.png" />
+        <None Remove="Resources\Assets\AppIcon.targetsize-256_altform-lightunplated.png" />
+        <None Remove="Resources\Assets\AppIcon.targetsize-256_altform-unplated.png" />
+        <None Remove="Resources\Assets\AppIcon.targetsize-32.png" />
+        <None Remove="Resources\Assets\AppIcon.targetsize-32_altform-lightunplated.png" />
+        <None Remove="Resources\Assets\AppIcon.targetsize-32_altform-unplated.png" />
+        <None Remove="Resources\Assets\AppIcon.targetsize-48.png" />
+        <None Remove="Resources\Assets\AppIcon.targetsize-48_altform-lightunplated.png" />
+        <None Remove="Resources\Assets\AppIcon.targetsize-48_altform-unplated.png" />
+        <None Remove="Resources\Assets\BadgeLogo.scale-400.png" />
+        <None Remove="Resources\Assets\LargeTile.scale-100.png" />
+        <None Remove="Resources\Assets\LargeTile.scale-125.png" />
+        <None Remove="Resources\Assets\LargeTile.scale-150.png" />
+        <None Remove="Resources\Assets\LargeTile.scale-200.png" />
+        <None Remove="Resources\Assets\LargeTile.scale-400.png" />
+        <None Remove="Resources\Assets\MediumTile.scale-100.png" />
+        <None Remove="Resources\Assets\MediumTile.scale-125.png" />
+        <None Remove="Resources\Assets\MediumTile.scale-150.png" />
+        <None Remove="Resources\Assets\MediumTile.scale-200.png" />
+        <None Remove="Resources\Assets\MediumTile.scale-400.png" />
+        <None Remove="Resources\Assets\PackageLogo.scale-100.png" />
+        <None Remove="Resources\Assets\PackageLogo.scale-125.png" />
+        <None Remove="Resources\Assets\PackageLogo.scale-150.png" />
+        <None Remove="Resources\Assets\PackageLogo.scale-200.png" />
+        <None Remove="Resources\Assets\PackageLogo.scale-400.png" />
+        <None Remove="Resources\Assets\SmallTile.scale-100.png" />
+        <None Remove="Resources\Assets\SmallTile.scale-125.png" />
+        <None Remove="Resources\Assets\SmallTile.scale-150.png" />
+        <None Remove="Resources\Assets\SmallTile.scale-200.png" />
+        <None Remove="Resources\Assets\SmallTile.scale-400.png" />
+        <None Remove="Resources\Assets\SplashScreen.scale-100.png" />
+        <None Remove="Resources\Assets\SplashScreen.scale-125.png" />
+        <None Remove="Resources\Assets\SplashScreen.scale-150.png" />
+        <None Remove="Resources\Assets\SplashScreen.scale-200.png" />
+        <None Remove="Resources\Assets\SplashScreen.scale-400.png" />
+        <None Remove="Resources\Assets\WideTile.scale-100.png" />
+        <None Remove="Resources\Assets\WideTile.scale-125.png" />
+        <None Remove="Resources\Assets\WideTile.scale-150.png" />
+        <None Remove="Resources\Assets\WideTile.scale-200.png" />
+        <None Remove="Resources\Assets\WideTile.scale-400.png" />
+        <None Remove="Resources\languages.json" />
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="Resources\Assets\AppIcon.scale-100.png" />
+        <Content Include="Resources\Assets\AppIcon.scale-125.png" />
+        <Content Include="Resources\Assets\AppIcon.scale-150.png" />
+        <Content Include="Resources\Assets\AppIcon.scale-200.png" />
+        <Content Include="Resources\Assets\AppIcon.scale-400.png" />
+        <Content Include="Resources\Assets\AppIcon.targetsize-16.png" />
+        <Content Include="Resources\Assets\AppIcon.targetsize-16_altform-lightunplated.png" />
+        <Content Include="Resources\Assets\AppIcon.targetsize-16_altform-unplated.png" />
+        <Content Include="Resources\Assets\AppIcon.targetsize-24.png" />
+        <Content Include="Resources\Assets\AppIcon.targetsize-24_altform-lightunplated.png" />
+        <Content Include="Resources\Assets\AppIcon.targetsize-24_altform-unplated.png" />
+        <Content Include="Resources\Assets\AppIcon.targetsize-256.png" />
+        <Content Include="Resources\Assets\AppIcon.targetsize-256_altform-lightunplated.png" />
+        <Content Include="Resources\Assets\AppIcon.targetsize-256_altform-unplated.png" />
+        <Content Include="Resources\Assets\AppIcon.targetsize-32.png" />
+        <Content Include="Resources\Assets\AppIcon.targetsize-32_altform-lightunplated.png" />
+        <Content Include="Resources\Assets\AppIcon.targetsize-32_altform-unplated.png" />
+        <Content Include="Resources\Assets\AppIcon.targetsize-48.png" />
+        <Content Include="Resources\Assets\AppIcon.targetsize-48_altform-lightunplated.png" />
+        <Content Include="Resources\Assets\AppIcon.targetsize-48_altform-unplated.png" />
+        <Content Include="Resources\Assets\BadgeLogo.scale-400.png" />
+        <Content Include="Resources\Assets\LargeTile.scale-100.png" />
+        <Content Include="Resources\Assets\LargeTile.scale-125.png" />
+        <Content Include="Resources\Assets\LargeTile.scale-150.png" />
+        <Content Include="Resources\Assets\LargeTile.scale-200.png" />
+        <Content Include="Resources\Assets\LargeTile.scale-400.png" />
+        <Content Include="Resources\Assets\MediumTile.scale-100.png" />
+        <Content Include="Resources\Assets\MediumTile.scale-125.png" />
+        <Content Include="Resources\Assets\MediumTile.scale-150.png" />
+        <Content Include="Resources\Assets\MediumTile.scale-200.png" />
+        <Content Include="Resources\Assets\MediumTile.scale-400.png" />
+        <Content Include="Resources\Assets\PackageLogo.scale-100.png" />
+        <Content Include="Resources\Assets\PackageLogo.scale-125.png" />
+        <Content Include="Resources\Assets\PackageLogo.scale-150.png" />
+        <Content Include="Resources\Assets\PackageLogo.scale-200.png" />
+        <Content Include="Resources\Assets\PackageLogo.scale-400.png" />
+        <Content Include="Resources\Assets\SmallTile.scale-100.png" />
+        <Content Include="Resources\Assets\SmallTile.scale-125.png" />
+        <Content Include="Resources\Assets\SmallTile.scale-150.png" />
+        <Content Include="Resources\Assets\SmallTile.scale-200.png" />
+        <Content Include="Resources\Assets\SmallTile.scale-400.png" />
+        <Content Include="Resources\Assets\SplashScreen.scale-100.png" />
+        <Content Include="Resources\Assets\SplashScreen.scale-125.png" />
+        <Content Include="Resources\Assets\SplashScreen.scale-150.png" />
+        <Content Include="Resources\Assets\SplashScreen.scale-200.png" />
+        <Content Include="Resources\Assets\SplashScreen.scale-400.png" />
+        <Content Include="Resources\Assets\WideTile.scale-100.png" />
+        <Content Include="Resources\Assets\WideTile.scale-125.png" />
+        <Content Include="Resources\Assets\WideTile.scale-150.png" />
+        <Content Include="Resources\Assets\WideTile.scale-200.png" />
+        <Content Include="Resources\Assets\WideTile.scale-400.png" />
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="Resources\languages.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </EmbeddedResource>
+    </ItemGroup>
+    <ItemGroup>
+        <Page Update="Presentation\VideoPage.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+    </ItemGroup>
+    <ItemGroup>
+        <Page Update="Presentation\GeneralPage.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+    </ItemGroup>
+    <ItemGroup>
+        <Page Update="Presentation\InputPage.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+    </ItemGroup>
+    <ItemGroup>
+        <Page Update="Presentation\SubtitlePage.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\MatroskaBatchFlow.Core\MatroskaBatchFlow.Core.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <AppxManifest Update="Package.appxmanifest">
+            <CopyToOutputDirectory></CopyToOutputDirectory>
+        </AppxManifest>
+    </ItemGroup>
+    <ItemGroup>
+        <Page Update="Presentation\OutputPage.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Page Update="Presentation\SettingsPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Presentation\Dialogs\ErrorDialog.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <Page Update="Presentation\MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
+    <ItemGroup>
+        <Page Update="Presentation\SettingsPage.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+    </ItemGroup>
+    <ItemGroup>
+        <Page Update="Presentation\Dialogs\ErrorDialog.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+    </ItemGroup>
+    <ItemGroup>
+        <None Update="appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <Page Update="Presentation\MainWindow.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+    </ItemGroup>
 </Project>

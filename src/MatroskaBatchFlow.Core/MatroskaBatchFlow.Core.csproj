@@ -1,48 +1,44 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>net9.0;net9.0-windows10.0.19041</TargetFrameworks>
-    <RootNamespace>MatroskaBatchFlow.Core</RootNamespace>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>net9.0;net9.0-windows10.0.19041</TargetFrameworks>
+        <RootNamespace>MatroskaBatchFlow.Core</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <!-- Enable Windows-specific targeting on other platforms -->
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <!-- Enable Windows-specific targeting on other platforms -->
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <DefineConstants>LINUX;MACOS;$(DefineConstants)</DefineConstants>
-  </PropertyGroup>
+    <ItemGroup>
+        <Compile Remove="Parsers\**" />
+        <Compile Remove="Tests\**" />
+        <EmbeddedResource Remove="Parsers\**" />
+        <EmbeddedResource Remove="Tests\**" />
+        <None Remove="Parsers\**" />
+        <None Remove="Tests\**" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="Parsers\**" />
-    <Compile Remove="Tests\**" />
-    <EmbeddedResource Remove="Parsers\**" />
-    <EmbeddedResource Remove="Tests\**" />
-    <None Remove="Parsers\**" />
-    <None Remove="Tests\**" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Remove="MediaInfo.dll" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Remove="MediaInfo.dll" />
-  </ItemGroup>
+    <ItemGroup>
+        <Content Include="Binaries\libmediainfo.so">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="Binaries\MediaInfo.dll">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="Binaries\mkvpropedit.exe">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="Binaries\libmediainfo.so">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Binaries\MediaInfo.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Binaries\mkvpropedit.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
-    <PackageReference Include="Microsoft.Extensions.Options" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Configuration" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
+        <PackageReference Include="Microsoft.Extensions.Options" />
+    </ItemGroup>
 
 </Project>
