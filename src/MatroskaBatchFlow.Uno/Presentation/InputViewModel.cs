@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Services;
@@ -9,11 +10,10 @@ using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Contracts.ViewModels;
 using MatroskaBatchFlow.Uno.Extensions;
 using MatroskaBatchFlow.Uno.Presentation.Dialogs;
-using Uno.Extensions.Specialized;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
-public partial class InputViewModel : ObservableObject, IFilesDropped, INavigationAware
+public sealed partial class InputViewModel : ObservableObject, IFilesDropped, INavigationAware, IDisposable
 {
     [ObservableProperty]
     private ObservableCollection<ScannedFileViewModel> selectedFiles = [];
@@ -25,6 +25,7 @@ public partial class InputViewModel : ObservableObject, IFilesDropped, INavigati
     private readonly IBatchConfiguration _batchConfig;
     private readonly IBatchTrackCountSynchronizer _BatchTrackCountSynchronizer;
 
+    public bool CanSelectAll => _batchConfig.FileList.Count > SelectedFiles.Count;
     public ObservableCollection<ScannedFileViewModel> FileList => _fileListAdapter.ScannedFileViewModels;
 
     public ICommand RemoveSelected { get; }
@@ -51,6 +52,9 @@ public partial class InputViewModel : ObservableObject, IFilesDropped, INavigati
         RemoveAll = new AsyncRelayCommand(RemoveAllFiles);
         ClearSelection = new AsyncRelayCommand(ClearFileSelection);
         SelectAll = new AsyncRelayCommand(SelectAllFiles);
+
+        _batchConfig.FileList.CollectionChanged += BatchConfigFileList_CollectionChanged;
+        SelectedFiles.CollectionChanged += SelectedFiles_CollectionChanged;
     }
 
     /// <summary>
@@ -164,6 +168,24 @@ public partial class InputViewModel : ObservableObject, IFilesDropped, INavigati
         return true;
     }
 
+    /// <summary>
+    /// Handles changes to the <see cref="IBatchConfiguration.FileList"/> collection.
+    /// </summary>
+    /// <param name="sender">The source of the event, typically the collection that triggered the change.</param>
+    /// <param name="eventArgs">The event data containing details about the change to the collection.</param>
+    private void BatchConfigFileList_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs eventArgs)
+    {
+        OnPropertyChanged(nameof(CanSelectAll));
+    }
+
+    /// <summary>
+    /// Handles changes to the <see cref="SelectedFiles"/> collection.
+    /// </summary>
+    private void SelectedFiles_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs eventArgs)
+    {
+        OnPropertyChanged(nameof(CanSelectAll));
+    }
+
     public void OnNavigatedTo(object parameter)
     {
         // Implementation for when the view model is navigated to.
@@ -172,5 +194,16 @@ public partial class InputViewModel : ObservableObject, IFilesDropped, INavigati
     public void OnNavigatedFrom()
     {
         // Implementation for when the view model is navigated away from.
+    }
+
+    /// <summary>
+    /// Disposes of the resources used by the <see cref="InputViewModel"/> instance.
+    /// </summary>
+    public void Dispose()
+    {
+        _batchConfig.FileList.CollectionChanged -= BatchConfigFileList_CollectionChanged;
+        SelectedFiles.CollectionChanged -= SelectedFiles_CollectionChanged;
+
+        GC.SuppressFinalize(this);
     }
 }

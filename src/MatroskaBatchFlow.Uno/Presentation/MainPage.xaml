@@ -5,12 +5,17 @@
       xmlns:utu="using:Uno.Toolkit.UI"
       xmlns:dialogs="using:MatroskaBatchFlow.Uno.Presentation.Dialogs"
       xmlns:helpers="using:MatroskaBatchFlow.Uno.Helpers"
-      NavigationCacheMode="Required" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    
+      xmlns:skia="http://uno.ui/skia"
+      xmlns:win="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      mc:Ignorable="d skia"
+      NavigationCacheMode="Required"
+      skia:Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <NavigationView x:Name="NavigationView"
@@ -45,34 +50,29 @@
                 </Grid>
             </NavigationView.Content>
         </NavigationView>
-        
-        <!--Mimic the navigation view's content separator-->
-        <Grid Grid.Row="1">
+
+        <!--Mimic the navigation view's content separator for Skia renderer-->
+        <skia:Grid Grid.Row="1">
             <Border Background="{ThemeResource NavigationViewDefaultPaneBackground}" />
             <Border BorderThickness="0,1,0,0"
             BorderBrush="{ThemeResource NavigationViewContentGridBorderBrush}"
             HorizontalAlignment="Stretch" />
-        </Grid>
-        
-        <StackPanel Grid.Row="2"
-                    HorizontalAlignment="Center"
-                    Canvas.ZIndex="20">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="auto" />
-                </Grid.ColumnDefinitions>
-                <Button Content="Process Files"
-                        Grid.Column="0"
-                        Margin="10,10,10,10"
-                        HorizontalAlignment="Center"
-                        Command="{x:Bind ViewModel.ProcessFileCommand}"/>
-                <Button Content="Generate mkvpropedit"
-                        Grid.Column="1"
-                        Margin="10,10,10,10"
-                        HorizontalAlignment="Center"
-                        Command="{x:Bind ViewModel.GenerateMkvpropeditArgumentsCommand}"/>
-            </Grid>
+        </skia:Grid>
+
+        <StackPanel Grid.Row="1">
+            <CommandBar HorizontalAlignment="Center"
+                        DefaultLabelPosition="Right">
+                <CommandBar.PrimaryCommands>
+                    <AppBarButton Label="Generate Arguments"
+                                  Icon="ShowResults"
+                                  Command="{x:Bind ViewModel.GenerateMkvpropeditArgumentsCommand}" />
+                    <AppBarSeparator />
+                    <AppBarButton Label="Process Files"
+                                  Command="{x:Bind ViewModel.ProcessFileCommand}">
+                        <FontIcon Glyph="&#xE9F5;" />
+                    </AppBarButton>
+                </CommandBar.PrimaryCommands>
+            </CommandBar>
         </StackPanel>
     </Grid>
 </Page>

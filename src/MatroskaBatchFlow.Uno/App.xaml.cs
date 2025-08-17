@@ -112,6 +112,7 @@ public partial class App : Application
         {
             Title = AppName,
             Content = Host.Services.GetRequiredService<Shell>(),
+            ExtendsContentIntoTitleBar = false,
         };
 
 #if DEBUG

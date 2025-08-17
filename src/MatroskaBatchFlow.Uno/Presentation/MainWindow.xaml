@@ -9,10 +9,6 @@
     Title="MainWindow">
 
     <Window.SystemBackdrop>
-        <MicaBackdrop />
+        <MicaBackdrop Kind="Base" />
     </Window.SystemBackdrop>
-
-    <Grid>
-
-    </Grid>
 </Window>
