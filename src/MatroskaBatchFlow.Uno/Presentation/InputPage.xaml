@@ -49,6 +49,7 @@
                             Width="Auto">
                     <CommandBar.PrimaryCommands>
                         <AppBarButton Icon="Add"
+                                      Command="{x:Bind ViewModel.AddFilesCommand}"
                                       Label="Add Files" />
                         <AppBarSeparator />
                         <AppBarButton Icon="SelectAll"

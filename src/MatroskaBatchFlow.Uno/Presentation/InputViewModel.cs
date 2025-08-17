@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Core.Enums;
+using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Core.Services.FileValidation;
@@ -24,6 +25,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     private readonly IFileProcessingEngine _fileProcessingRuleEngine;
     private readonly IBatchConfiguration _batchConfig;
     private readonly IBatchTrackCountSynchronizer _BatchTrackCountSynchronizer;
+    private readonly IFilePickerDialogService _filePickerDialogService;
 
     public bool CanSelectAll => _batchConfig.FileList.Count > SelectedFiles.Count;
     public ObservableCollection<ScannedFileViewModel> FileList => _fileListAdapter.ScannedFileViewModels;
@@ -32,6 +34,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     public ICommand RemoveAll { get; }
     public ICommand ClearSelection { get; }
     public ICommand SelectAll { get; }
+    public ICommand AddFilesCommand { get; }
 
     public InputViewModel(
         IFileListAdapter fileListAdapter,
@@ -39,7 +42,8 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         IFileValidationEngine fileValidator,
         IFileProcessingEngine fileProcessingRuleEngine,
         IBatchConfiguration batchConfig,
-        IBatchTrackCountSynchronizer batchConfigurationTrackInitializer
+        IBatchTrackCountSynchronizer batchConfigurationTrackInitializer,
+        IFilePickerDialogService filePickerDialogService
         )
     {
         _fileListAdapter = fileListAdapter;
@@ -48,43 +52,94 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         _fileProcessingRuleEngine = fileProcessingRuleEngine;
         _batchConfig = batchConfig;
         _BatchTrackCountSynchronizer = batchConfigurationTrackInitializer;
-        RemoveSelected = new AsyncRelayCommand(RemoveSelectedFiles);
-        RemoveAll = new AsyncRelayCommand(RemoveAllFiles);
-        ClearSelection = new AsyncRelayCommand(ClearFileSelection);
-        SelectAll = new AsyncRelayCommand(SelectAllFiles);
+        _filePickerDialogService = filePickerDialogService;
+        RemoveSelected = new RelayCommand(RemoveSelectedFiles);
+        RemoveAll = new RelayCommand(RemoveAllFiles);
+        ClearSelection = new RelayCommand(ClearFileSelection);
+        SelectAll = new RelayCommand(SelectAllFiles);
+        AddFilesCommand = new AsyncRelayCommand(AddFilesAsync);
 
         _batchConfig.FileList.CollectionChanged += BatchConfigFileList_CollectionChanged;
         SelectedFiles.CollectionChanged += SelectedFiles_CollectionChanged;
     }
 
     /// <summary>
-    /// Handles the event when files are dropped, processing and validating the provided files.
+    /// Handles the event when files are dropped onto the application.
     /// </summary>
-    /// <remarks>This method scans the dropped files, validates them, and adds them to the file list if they
-    /// pass validation. If validation errors are encountered, the method handles them and stops further
-    /// processing.</remarks>
-    /// <param name="files">An array of <see cref="IStorageItem"/> representing the files that were dropped.</param>
-    public async Task OnFilesDropped(IStorageItem[] files)
+    /// <remarks>This method filters the dropped items to include only <see cref="StorageFile"/> instances. If
+    /// any non-file items (e.g., folders) are detected, a dialog message is sent to notify the user, and no further
+    /// processing occurs. Valid files are imported asynchronously for further processing.</remarks>
+    /// <param name="files">An array of <see cref="IStorageItem"/> objects representing the dropped items. Only files are processed; folders
+    /// are ignored.</param>
+    /// <returns>A completed <see cref="Task"/> representing the asynchronous operation.</returns>
+    public async Task OnFilesDroppedAsync(IStorageItem[] files)
     {
-        if (files == null || files.Length == 0)
+        if (files is null or { Length: 0 })
             return;
 
-        var newFiles = await _fileScanner.ScanAsync(files.ToFileInfo());
-        var combinedFiles = _batchConfig.FileList.Concat(newFiles).ToList();
+        // Filter out only StorageFile instances from the dropped items.
+        List<StorageFile> storageFiles = [.. files.OfType<StorageFile>().Where(sf => sf is not null)];
+        var containsNonFiles = files.Length != storageFiles.Count;
 
-        // Validate the combined list of files, including both existing and newly added files.
-        var validationResults = _fileValidator.Validate(combinedFiles).ToList();
+        if (containsNonFiles)
+        {
+            WeakReferenceMessenger.Default.Send(
+                new DialogMessage("Invalid Files", "Only files can be added, not folders.")
+            );
+
+            return;
+        }
+
+        // Import the files for further processing and validation.
+        await ImportStorageFilesAsync(storageFiles);
+    }
+
+    /// <summary>
+    /// Asynchronously imports a collection of <see cref="StorageFile"/> objects into the batch configuration.
+    /// Scans, validates, synchronizes track counts, applies processing rules, and adds valid files to the file list.
+    /// </summary>
+    /// <param name="files">
+    /// A read-only list of <see cref="StorageFile"/> objects to import. 
+    /// Must not be <see langword="null"/>. If empty, the method returns immediately.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous operation.
+    /// </returns>
+    private async Task ImportStorageFilesAsync(IReadOnlyList<StorageFile> files)
+    {
+        if (files is null or not { Count: > 0 })
+            return;
+
+        // Scan the files to get their information.
+        IEnumerable<ScannedFileInfo> newFiles = await _fileScanner.ScanAsync(files.ToFileInfo());
+        if (!newFiles.Any())
+            return;
+
+        // Combine existing files with new files.
+        List<ScannedFileInfo> combinedFiles = [.. _batchConfig.FileList, .. newFiles];
+        if (combinedFiles.Count == 0)
+            return;
+
+        // Validate the combined list of files.
+        List<FileValidationResult> validationResults = [.. _fileValidator.Validate(combinedFiles)];
         if (HandleValidationErrors(validationResults))
             return;
 
-        _BatchTrackCountSynchronizer.SynchronizeTrackCount(newFiles.First(), TrackType.Audio, TrackType.Video, TrackType.Text);
-        // If validation passed, apply processing rules to the new files.
+        // Synchronize track counts for the first file in the new files.
+        _BatchTrackCountSynchronizer.SynchronizeTrackCount(
+            newFiles.First(),
+            TrackType.Audio,
+            TrackType.Video,
+            TrackType.Text
+        );
+
+        // Apply processing rules to the new files.
         foreach (var file in newFiles)
         {
             _fileProcessingRuleEngine.Apply(file, _batchConfig);
         }
 
-        // Add files via the adapter to keep everything in sync
+        // Add files via the adapter to keep everything in sync.
         _fileListAdapter.AddFiles(newFiles);
     }
 
@@ -93,14 +148,13 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     /// </summary>
     /// <remarks>This method processes the removal of selected files by iterating over a copy of the <see
     /// cref="SelectedFiles"/> collection.</remarks>
-    /// <returns>A completed <see cref="Task"/> representing the operation.</returns>
-    private Task RemoveSelectedFiles()
+    private void RemoveSelectedFiles()
     {
         // Convert SelectedFiles to an array to make a copy to avoid modifying the collection while iterating.
         foreach (ScannedFileViewModel file in SelectedFiles.ToArray())
+        {
             _fileListAdapter.RemoveFile(file.File);
-
-        return Task.CompletedTask;
+        }  
     }
 
     /// <summary>
@@ -108,38 +162,49 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     /// </summary>
     /// <remarks>This method clears the file list by iterating over a copy of the current file collection
     /// to avoid issues with modifying the collection during enumeration.</remarks>
-    /// <returns>A completed <see cref="Task"/> representing the operation.</returns>
-    private Task RemoveAllFiles()
+    private void RemoveAllFiles()
     {
         // Make array copy to prevent recursive clearing.
         foreach (ScannedFileViewModel file in _fileListAdapter.ScannedFileViewModels.ToArray())
+        {
             _fileListAdapter.RemoveFile(file.File);
-        return Task.CompletedTask;
+        }
     }
 
     /// <summary>
     /// Clears the current selection of files.
     /// </summary>
     /// <remarks>This method removes all items from the <see cref="SelectedFiles"/> collection.</remarks>
-    /// <returns>A completed <see cref="Task"/> representing the operation.</returns>
-    private Task ClearFileSelection()
+    private void ClearFileSelection()
     {
         SelectedFiles.Clear();
-        return Task.CompletedTask;
     }
 
     /// <summary>
     /// Selects all files by adding them to the <see cref="SelectedFiles"/> collection.
     /// </summary>
-    /// <returns>A completed <see cref="Task"/> representing the operation.</returns>
-    private Task SelectAllFiles()
+    private void SelectAllFiles()
     {
         // Select all files by adding them to the SelectedFiles collection.
         foreach (var file in _fileListAdapter.ScannedFileViewModels)
         {
             SelectedFiles.Add(file);
         }
-        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Opens a file picker dialog to allow the user to select files for import.
+    /// </summary>
+    /// <remarks>If no files are selected, the method exits without performing any operation.</remarks>
+    /// <returns>A completed <see cref="Task"/> representing the asynchronous operation.</returns>
+    private async Task AddFilesAsync()
+    {
+        IReadOnlyList<StorageFile> files = await _filePickerDialogService.PickFilesAsync();
+
+        if (files.Count == 0)
+            return;
+
+        await ImportStorageFilesAsync(files);
     }
 
     /// <summary>
@@ -165,6 +230,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
                 string.Join(Environment.NewLine, errorMessages)
             )
         );
+
         return true;
     }
 

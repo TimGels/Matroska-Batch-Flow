@@ -55,8 +55,8 @@
         <skia:Grid Grid.Row="1">
             <Border Background="{ThemeResource NavigationViewDefaultPaneBackground}" />
             <Border BorderThickness="0,1,0,0"
-            BorderBrush="{ThemeResource NavigationViewContentGridBorderBrush}"
-            HorizontalAlignment="Stretch" />
+                    BorderBrush="{ThemeResource NavigationViewContentGridBorderBrush}"
+                    HorizontalAlignment="Stretch" />
         </skia:Grid>
 
         <StackPanel Grid.Row="1">

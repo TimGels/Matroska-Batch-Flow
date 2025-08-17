@@ -1,5 +1,6 @@
 namespace MatroskaBatchFlow.Uno.Behavior;
+
 public interface IFilesDropped
 {
-    Task OnFilesDropped(IStorageItem[] files);
+    Task OnFilesDroppedAsync(IStorageItem[] files);
 }

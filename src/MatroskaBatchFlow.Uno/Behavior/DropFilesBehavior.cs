@@ -123,6 +123,6 @@ public class DropFilesBehavior
             return;
         }
 
-        await filesDropped.OnFilesDropped(files.ToArray());
+        await filesDropped.OnFilesDroppedAsync(files.ToArray());
     }
 }
