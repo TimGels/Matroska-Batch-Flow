@@ -8,6 +8,12 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- Enable Windows-specific targeting on other platforms -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <DefineConstants>LINUX;MACOS;$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Parsers\**" />
     <Compile Remove="Tests\**" />
