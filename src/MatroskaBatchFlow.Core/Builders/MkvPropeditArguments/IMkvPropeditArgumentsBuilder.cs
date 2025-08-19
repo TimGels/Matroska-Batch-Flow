@@ -14,6 +14,18 @@ public interface IMkvPropeditArgumentsBuilder
     IMkvPropeditArgumentsBuilder WithTitle(string title);
 
     /// <summary>
+    /// Adds a track statistics tags argument to the command.
+    /// </summary>
+    /// <returns></returns>
+    IMkvPropeditArgumentsBuilder WithAddTrackStatisticsTags();
+
+    /// <summary>
+    /// Adds a delete track statistics tags argument to the command.
+    /// </summary>
+    /// <returns></returns>
+    IMkvPropeditArgumentsBuilder WithDeleteTrackStatisticsTags();
+
+    /// <summary>
     /// Adds a track configuration argument.
     /// </summary>
     IMkvPropeditArgumentsBuilder AddTrack(Func<ITrackOptionsBuilder, ITrackOptionsBuilder> func);

@@ -140,6 +140,18 @@ public partial class MainViewModel : ObservableObject
             builder.WithTitle(batchConfiguration.Title);
         }
 
+        if (batchConfiguration.ShouldModifyTrackStatisticsTags)
+        {
+            if (batchConfiguration.AddTrackStatisticsTags)
+            {
+                builder.WithAddTrackStatisticsTags();
+            }
+            if (batchConfiguration.DeleteTrackStatisticsTags)
+            {
+                builder.WithDeleteTrackStatisticsTags();
+            }
+        }
+
         // Add track configurations to the builder for audio, video, and subtitle tracks.
         AddTracksToBuilder(builder, batchConfiguration.AudioTracks, TrackType.Audio);
         AddTracksToBuilder(builder, batchConfiguration.VideoTracks, TrackType.Video);

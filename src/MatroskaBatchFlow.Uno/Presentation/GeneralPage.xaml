@@ -3,36 +3,84 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MatroskaBatchFlow.Uno.Presentation"
+    xmlns:Converters="using:MatroskaBatchFlow.Uno.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     NavigationCacheMode="Required"
     IsEnabled="{x:Bind ViewModel.IsFileListPopulated, Mode=OneWay}">
 
+    <UserControl.Resources>
+        <Converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+    </UserControl.Resources>
 
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="Auto" MinWidth="400" />
-        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <ToggleSwitch Grid.Column="0"
-                      IsOn="{x:Bind ViewModel.ShouldModifyTitle, Mode=TwoWay}"
-                      OffContent=""
-                      OnContent=""
-                      VerticalContentAlignment="Center"
-                      MinWidth="0" />
-        <TextBlock Grid.Column="1"
-                   Margin="0,0,20,0"
-                   Text="Title: "
-                   VerticalAlignment="Center" />
-        <TextBox Grid.Column="2"
-                 VerticalAlignment="Center"
-                 Text="{x:Bind ViewModel.Title, Mode=TwoWay}"
-                 IsEnabled="{x:Bind ViewModel.ShouldModifyTitle, Mode=OneWay}" />
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto"
+                                  MinWidth="400" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <ToggleSwitch Grid.Column="0"
+                          IsOn="{x:Bind ViewModel.ShouldModifyTitle, Mode=TwoWay}"
+                          OffContent=""
+                          OnContent=""
+                          VerticalContentAlignment="Center"
+                          MinWidth="0" />
+            <TextBlock Grid.Column="1"
+                       Margin="0,0,20,0"
+                       Text="Title: "
+                       VerticalAlignment="Center" />
+            <TextBox Grid.Column="2"
+                     VerticalAlignment="Center"
+                     Text="{x:Bind ViewModel.Title, Mode=TwoWay}"
+                     IsEnabled="{x:Bind ViewModel.ShouldModifyTitle, Mode=OneWay}" />
+        </Grid>
+
+        <!--Statistics tags option-->
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0"
+                        Grid.Row="2"
+                         Margin="0,24,0,0">
+                <ToggleSwitch Header="Modify Track Statistics Tags:"
+                              IsOn="{x:Bind ViewModel.ShouldModifyTrackStatisticsTags, Mode=TwoWay}"
+                              OffContent=""
+                              OnContent=""
+                              Margin="0,0,0,0" />
+
+                <StackPanel Orientation="Vertical"
+                            Margin="24,0,0,0">
+                    <RadioButton Content="Add Track Statistics"
+                                 GroupName="TrackStatisticsTags"
+                                 IsChecked="{x:Bind ViewModel.AddTrackStatisticsTags, Mode=TwoWay}"
+                                 IsEnabled="{x:Bind ViewModel.ShouldModifyTrackStatisticsTags, Mode=OneWay}" />
+                    <RadioButton Content="Delete Track Statistics"
+                                 GroupName="TrackStatisticsTags"
+                                 IsChecked="{x:Bind ViewModel.DeleteTrackStatisticsTags, Mode=TwoWay}"
+                                 IsEnabled="{x:Bind ViewModel.ShouldModifyTrackStatisticsTags, Mode=OneWay}" />
+                </StackPanel>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Page>

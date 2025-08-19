@@ -14,9 +14,12 @@ namespace MatroskaBatchFlow.Core.Services;
 public interface IBatchConfiguration : INotifyPropertyChanged
 {
     string DirectoryPath { get; set; }
+    string MkvpropeditArguments { get; set; }
     string Title { get; set; }
     bool ShouldModifyTitle { get; set; }
-    string MkvpropeditArguments { get; set; }
+    bool AddTrackStatisticsTags { get; set; }
+    bool DeleteTrackStatisticsTags { get; set; }
+    bool ShouldModifyTrackStatisticsTags { get; set; }
 
     ObservableCollection<ScannedFileInfo> FileList { get; }
     ObservableCollection<TrackConfiguration> AudioTracks { get; set; }

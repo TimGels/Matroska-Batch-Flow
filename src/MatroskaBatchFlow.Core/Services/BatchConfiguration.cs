@@ -14,14 +14,17 @@ namespace MatroskaBatchFlow.Core.Services;
 public class BatchConfiguration : IBatchConfiguration
 {
     private string _directoryPath = string.Empty;
+    private bool _shouldModifyTitle = false;
     private string _title = string.Empty;
+    private bool _addTrackStatisticsTags = true;
+    private bool _deleteTrackStatisticsTags = false;
+    private bool _shouldModifyTrackStatisticsTags = false;
     private readonly ObservableCollection<ScannedFileInfo> _fileList = [];
     private ObservableCollection<TrackConfiguration> _audioTracks = [];
     private ObservableCollection<TrackConfiguration> _videoTracks = [];
     private ObservableCollection<TrackConfiguration> _subtitleTracks = [];
     private static readonly ImmutableList<TrackConfiguration> _emptyTrackList = [];
     private string _mkvpropeditArguments = string.Empty;
-    private bool _shouldModifyTitle = false;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -76,6 +79,46 @@ public class BatchConfiguration : IBatchConfiguration
             }
         }
     }
+
+    public bool AddTrackStatisticsTags
+    {
+        get => _addTrackStatisticsTags;
+        set
+        {
+            if (_addTrackStatisticsTags != value)
+            {
+                _addTrackStatisticsTags = value;
+                OnPropertyChanged(nameof(AddTrackStatisticsTags));
+            }
+        }
+    }
+
+    public bool DeleteTrackStatisticsTags
+    {
+        get => _deleteTrackStatisticsTags;
+        set
+        {
+            if (_deleteTrackStatisticsTags != value)
+            {
+                _deleteTrackStatisticsTags = value;
+                OnPropertyChanged(nameof(DeleteTrackStatisticsTags));
+            }
+        }
+    }
+
+    public bool ShouldModifyTrackStatisticsTags
+    {
+        get => _shouldModifyTrackStatisticsTags;
+        set
+        {
+            if (_shouldModifyTrackStatisticsTags != value)
+            {
+                _shouldModifyTrackStatisticsTags = value;
+                OnPropertyChanged(nameof(ShouldModifyTrackStatisticsTags));
+            }
+        }
+    }
+
 
     public ObservableCollection<ScannedFileInfo> FileList => _fileList;
 
@@ -275,7 +318,7 @@ public sealed class TrackConfiguration(TrackInfo trackInfo) : INotifyPropertyCha
         }
     }
 
-   public bool ShouldModifyName
+    public bool ShouldModifyName
     {
         get => _shouldModifyName;
         set

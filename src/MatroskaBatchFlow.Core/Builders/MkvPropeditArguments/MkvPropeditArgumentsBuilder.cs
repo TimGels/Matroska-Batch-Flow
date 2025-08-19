@@ -1,11 +1,14 @@
 using MatroskaBatchFlow.Core.Builders.MkvPropeditArguments.TrackOptions;
 
 namespace MatroskaBatchFlow.Core.Builders.MkvPropeditArguments;
+
 public class MkvPropeditArgumentsBuilder : IMkvPropeditArgumentsBuilder
 {
     private readonly List<TrackOptionsBuilder> _trackOptionsBuilders = [];
     private string? _inputFile;
     private string? _title;
+    private bool _addTrackStatisticsTags = false;
+    private bool _deleteTrackStatisticsTags = false;
 
     /// <inheritdoc />
     /// <param name="filePath">The full path to the input file. This must be a valid, non-null, and non-empty string representing the file
@@ -23,6 +26,24 @@ public class MkvPropeditArgumentsBuilder : IMkvPropeditArgumentsBuilder
     public IMkvPropeditArgumentsBuilder WithTitle(string title)
     {
         _title = title;
+        return this;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Adds an argument to the command that will calculate and add track statistics tags to the Matroska file.</remarks>
+    /// <returns><see cref="IMkvPropeditArgumentsBuilder"/></returns>
+    public IMkvPropeditArgumentsBuilder WithAddTrackStatisticsTags()
+    {
+        _addTrackStatisticsTags = true;
+        return this;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Adds an argument to the command that will delete track statistics tags from the Matroska file.</remarks>
+    /// <returns><see cref="IMkvPropeditArgumentsBuilder"/></returns>
+    public IMkvPropeditArgumentsBuilder WithDeleteTrackStatisticsTags()
+    {
+        _deleteTrackStatisticsTags = true;
         return this;
     }
 
@@ -62,6 +83,16 @@ public class MkvPropeditArgumentsBuilder : IMkvPropeditArgumentsBuilder
             args.Add($"title=\"{_title}\"");
         }
 
+        if (_addTrackStatisticsTags)
+        {
+            args.Add("--add-track-statistics-tags");
+        }
+
+        if (_deleteTrackStatisticsTags)
+        {
+            args.Add("--delete-track-statistics-tags");
+        }
+
         // Add each track's options.
         foreach (var tob in _trackOptionsBuilders)
             args.AddRange(tob.Build());
@@ -72,10 +103,15 @@ public class MkvPropeditArgumentsBuilder : IMkvPropeditArgumentsBuilder
     /// <inheritdoc />
     public bool IsEmpty()
     {
-        // Check if title is not set and no tracks have been added
-        bool hasNoTitle = _title is null;
-        bool hasNoTracks = _trackOptionsBuilders is null || _trackOptionsBuilders.Count is 0;
+        if (_addTrackStatisticsTags || _deleteTrackStatisticsTags)
+            return false;
 
-        return hasNoTitle && hasNoTracks;
+        if (_title is not null)
+            return false;
+
+        if (_trackOptionsBuilders is { Count: > 0 })
+            return false;
+
+        return true;
     }
 }
