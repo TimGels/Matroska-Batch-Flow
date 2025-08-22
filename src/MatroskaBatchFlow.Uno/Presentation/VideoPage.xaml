@@ -23,14 +23,22 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <TextBlock FontSize="28"
+                       Text="Video options"
+                       Margin="0,0,0,24" />
+        </Grid>
+        
         <!--Dropdown menu Tracks-->
-        <StackPanel Grid.Row="0">
+        <StackPanel Grid.Row="1">
             <ComboBox ItemsSource="{x:Bind ViewModel.VideoTracks, Mode=OneWay}"
-                      SelectedItem="{x:Bind ViewModel.SelectedTrack, Mode=TwoWay}">
+                      SelectedItem="{x:Bind ViewModel.SelectedTrack, Mode=TwoWay}"
+                      ToolTipService.ToolTip="Select a track to edit its settings."
+                      Header="Select track">
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="BatchConfig:TrackConfiguration">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{x:Bind Type}"/>
                             <TextBlock Text="Track"
                                        Margin="5,0,0,0" />
                             <TextBlock Text="{x:Bind Index, Converter={StaticResource ZeroBasedToOneBasedConverter}}"
@@ -43,7 +51,7 @@
         </StackPanel>
 
         <!--Edit-->
-        <Controls:TrackSettingsControl Grid.Row="1"
+        <Controls:TrackSettingsControl Grid.Row="2"
                                        IsDefaultTrack="{x:Bind ViewModel.IsDefaultTrack, Mode=TwoWay}"
                                        IsForcedTrack="{x:Bind ViewModel.IsForcedTrack, Mode=TwoWay}"
                                        AvailableLanguages="{x:Bind ViewModel.Languages, Mode=OneWay}"

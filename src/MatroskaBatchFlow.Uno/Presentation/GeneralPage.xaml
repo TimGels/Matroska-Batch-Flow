@@ -22,6 +22,12 @@
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0">
+            <TextBlock FontSize="28"
+                       Text="General options"
+                       Margin="0,0,0,24" />
+        </Grid>
+        
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -44,12 +50,13 @@
                        VerticalAlignment="Center" />
             <TextBox Grid.Column="2"
                      VerticalAlignment="Center"
+                     ToolTipService.ToolTip="The title of the media file."
                      Text="{x:Bind ViewModel.Title, Mode=TwoWay}"
                      IsEnabled="{x:Bind ViewModel.ShouldModifyTitle, Mode=OneWay}" />
         </Grid>
 
         <!--Statistics tags option-->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -62,8 +69,8 @@
 
             <StackPanel Grid.Column="0"
                         Grid.Row="2"
-                         Margin="0,24,0,0">
-                <ToggleSwitch Header="Modify Track Statistics Tags:"
+                        Margin="0,24,0,0">
+                <ToggleSwitch Header="Modify track statistics tags"
                               IsOn="{x:Bind ViewModel.ShouldModifyTrackStatisticsTags, Mode=TwoWay}"
                               OffContent=""
                               OnContent=""
@@ -73,10 +80,12 @@
                             Margin="24,0,0,0">
                     <RadioButton Content="Add Track Statistics"
                                  GroupName="TrackStatisticsTags"
+                                 ToolTipService.ToolTip="Calculates statistics for all tracks in the file and adds new statistics tags for them."
                                  IsChecked="{x:Bind ViewModel.AddTrackStatisticsTags, Mode=TwoWay}"
                                  IsEnabled="{x:Bind ViewModel.ShouldModifyTrackStatisticsTags, Mode=OneWay}" />
                     <RadioButton Content="Delete Track Statistics"
                                  GroupName="TrackStatisticsTags"
+                                 ToolTipService.ToolTip="Deletes all existing track statistics tags from the file."
                                  IsChecked="{x:Bind ViewModel.DeleteTrackStatisticsTags, Mode=TwoWay}"
                                  IsEnabled="{x:Bind ViewModel.ShouldModifyTrackStatisticsTags, Mode=OneWay}" />
                 </StackPanel>
