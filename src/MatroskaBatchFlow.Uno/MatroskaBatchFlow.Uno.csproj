@@ -61,6 +61,7 @@
         <None Remove="Assets\Icons\AppTitleBar.scale-200.png" />
         <None Remove="Presentation\AudioPage.xaml" />
         <None Remove="Presentation\Dialogs\ErrorDialog.xaml" />
+        <None Remove="Presentation\Dialogs\MkvPropeditArgumentsDialog.xaml" />
         <None Remove="Presentation\GeneralPage.xaml" />
         <None Remove="Presentation\InputPage.xaml" />
         <None Remove="Presentation\MainWindow.xaml" />
@@ -228,6 +229,9 @@
         <None Update="appsettings.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <Page Update="Presentation\Dialogs\MkvPropeditArgumentsDialog.xaml">
+          <Generator>MSBuild:Compile</Generator>
+        </Page>
         <Page Update="Presentation\MainWindow.xaml">
             <Generator>MSBuild:Compile</Generator>
         </Page>

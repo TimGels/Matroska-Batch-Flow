@@ -10,7 +10,7 @@ using MatroskaBatchFlow.Uno.Behavior;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Contracts.ViewModels;
 using MatroskaBatchFlow.Uno.Extensions;
-using MatroskaBatchFlow.Uno.Presentation.Dialogs;
+using MatroskaBatchFlow.Uno.Messages;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 

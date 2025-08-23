@@ -63,7 +63,7 @@
             <CommandBar HorizontalAlignment="Center"
                         DefaultLabelPosition="Right">
                 <CommandBar.PrimaryCommands>
-                    <AppBarButton Label="Generate Arguments"
+                    <AppBarButton Label="Show Arguments"
                                   Icon="ShowResults"
                                   Command="{x:Bind ViewModel.GenerateMkvpropeditArgumentsCommand}" />
                     <AppBarSeparator />

@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.Messaging;
+using MatroskaBatchFlow.Uno.Messages;
 
 namespace MatroskaBatchFlow.Uno.Presentation.Dialogs;
+
 public sealed partial class ErrorDialog : ContentDialog
 {
     public string MessageText { get; set; } = string.Empty;

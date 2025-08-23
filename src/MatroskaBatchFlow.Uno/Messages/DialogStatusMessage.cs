@@ -1,4 +1,4 @@
-namespace MatroskaBatchFlow.Uno.Presentation.Dialogs;
+namespace MatroskaBatchFlow.Uno.Messages;
 
 /// <summary>
 /// Represents the status of a dialog, including its name and whether it is currently open.

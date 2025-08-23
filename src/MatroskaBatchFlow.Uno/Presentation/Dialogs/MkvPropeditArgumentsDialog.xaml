@@ -1,0 +1,21 @@
+﻿<ContentDialog
+    x:Class="MatroskaBatchFlow.Uno.Presentation.Dialogs.MkvPropeditArgumentsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MatroskaBatchFlow.Uno.Presentation.Dialogs"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="Mkvpropedit command-line arguments"
+    Style="{ThemeResource DefaultContentDialogStyle}"
+    PrimaryButtonText="{x:Bind PrimaryButtonDefaultText}"
+    DefaultButton="Primary"
+    CloseButtonText="Close"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick">
+    <Grid>
+        <ScrollViewer>
+            <TextBlock x:Name="CliArgumentsTextBlock"
+                       IsTextSelectionEnabled="True"
+                       Text="{x:Bind ArgumentsText, Mode=OneWay}"
+                       TextWrapping="Wrap" />
+        </ScrollViewer>
+    </Grid>
+</ContentDialog>

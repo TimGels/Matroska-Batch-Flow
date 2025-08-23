@@ -1,5 +1,5 @@
 using CommunityToolkit.Mvvm.Messaging;
-using MatroskaBatchFlow.Uno.Presentation.Dialogs;
+using MatroskaBatchFlow.Uno.Messages;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml.Input;
 

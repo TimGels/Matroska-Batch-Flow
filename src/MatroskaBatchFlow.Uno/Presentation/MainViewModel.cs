@@ -4,7 +4,7 @@ using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Uno.Contracts.Services;
-using MatroskaBatchFlow.Uno.Presentation.Dialogs;
+using MatroskaBatchFlow.Uno.Messages;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
@@ -48,6 +48,9 @@ public partial class MainViewModel : ObservableObject
         // Generate the mkvpropedit arguments for the current batch configuration.
         string[] arguments = GenerateMkvpropeditArguments(_batchConfiguration);
         var argumentsString = string.Join(Environment.NewLine + Environment.NewLine, arguments);
+
+        // Show the generated arguments in a dialog.
+        WeakReferenceMessenger.Default.Send(new MkvPropeditArgumentsDialogMessage(argumentsString));
 
         _batchConfiguration.MkvpropeditArguments = argumentsString;
     }
