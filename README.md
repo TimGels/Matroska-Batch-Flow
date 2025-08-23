@@ -4,7 +4,8 @@
 
 Originally inspired by the now-abandoned [jmkvpropedit](https://github.com/BrunoReX/jmkvpropedit), Matroska Batch Flow aims to become a modern and straightforward replacement for users who need an easy-to-use application for Matroska batch processing tasks.
 
-> **Warning:** This project is under active development. Features and behavior may change, and it may not be suitable for production use.
+> [!WARNING]
+> This project is under active development. Features and behavior may change, and it may not be suitable for production use.
 
 ## Features
 
