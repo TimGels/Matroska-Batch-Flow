@@ -56,7 +56,8 @@ public partial class MainViewModel : ObservableObject
     /// Handles navigation events to update the navigation view's selected item and back navigation state.
     /// </summary>
     /// <param name="sender">The source of the navigation event.</param>
-    /// <param name="eventArgs">The event data containing information about the navigation event, including the destination page type.</param>
+    /// <param name="eventArgs">The event data containing information about the navigation event, including 
+    /// the destination page type.</param>
     private void OnNavigated(object sender, NavigationEventArgs eventArgs)
     {
         IsBackEnabled = NavigationService.CanGoBack;
@@ -75,25 +76,35 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Processes the current file by executing the <c>mkvpropedit</c> command with the arguments generated from the batch configuration.
+    /// Processes the current file by executing the <c>mkvpropedit</c> command with the arguments 
+    /// generated from the batch configuration.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
     private async Task ProcessFileAsync()
     {
         // Generate the mkvpropedit arguments for the current batch.
-        string[] arguments = GenerateMkvpropeditArguments(_batchConfiguration);
-        var argumentsString = string.Join(Environment.NewLine + Environment.NewLine, arguments);
+        string[] commands = GenerateMkvpropeditArguments(_batchConfiguration);
 
-        var result = await _mkvPropeditService.ExecuteAsync(argumentsString);
-
-        string dialogTitle = result.Status switch
+        // No need to proceed if there are no commands to execute.
+        if (commands is { Length: 0 })
         {
-            MkvPropeditStatus.Success => "Success",
-            MkvPropeditStatus.Warning => "Warning",
-            _ => "Error"
-        };
+            WeakReferenceMessenger.Default.Send(
+                new DialogMessage("Info", "Command list is empty. Nothing to process.")
+            );
+            return;
+        }
 
-        WeakReferenceMessenger.Default.Send(new DialogMessage(dialogTitle, result.Output));
+        await foreach (var result in _mkvPropeditService.ExecuteAsync(commands))
+        {
+            string dialogTitle = result.Status switch
+            {
+                MkvPropeditStatus.Success => "Success",
+                MkvPropeditStatus.Warning => "Warning",
+                _ => "Error"
+            };
+
+            WeakReferenceMessenger.Default.Send(new DialogMessage(dialogTitle, result.Output));
+        }
     }
 
     /// <summary>
