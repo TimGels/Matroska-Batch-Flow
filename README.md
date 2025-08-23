@@ -9,7 +9,7 @@ Originally inspired by the now-abandoned [jmkvpropedit](https://github.com/Bruno
 
 ## Features
 
-- **Batch Editing:** Modify container properties (such as track names, languages, and flags) for multiple files at once using mkvpropedit.
+- **Batch Editing:** Modify container properties (such as track names, languages, and flags) for multiple files at once.
 - **Modern Graphical User Interface:** A modern GUI built with WinUI 3 and Uno Platform for an intuitive user experience.
 - **Drag-and-Drop Support:** Easily add files or folders to the batch by dragging them into the application.
 - **Validation:** Ensures only supported Matroska files are processed, and checks compatibility (e.g., matching tracks) to prevent accidental modification of files with differing structures or properties.
