@@ -85,63 +85,61 @@
             </Grid>
         </StackPanel>
 
-        <ScrollViewer
-            Grid.Column="1"
-            Grid.Row="1"
-            HorizontalScrollBarVisibility="Auto">
-            <ListView x:Name="FileDropListView"
-                      skia:Background="{ThemeResource ControlStrokeColorDefaultBrush}"
-                      win:Background="{ThemeResource LayerOnMicaBaseAltFillColorSecondary}"
-                      CornerRadius="{ThemeResource ControlCornerRadius}"
-                      Actions:DropFilesBehavior.IsEnabled="True"
-                      Actions:DropFilesBehavior.FileDropTarget="{x:Bind ViewModel}"
-                      ItemsSource="{x:Bind ViewModel.FileList}"
-                      AllowDrop="True"
-                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                      ScrollViewer.VerticalScrollBarVisibility="Auto"
-                      HorizontalContentAlignment="Stretch"
-                      SelectionMode="Extended"
-                      Actions:ListViewSelectedItemsBehavior.BoundSelectedItems="{x:Bind ViewModel.SelectedFiles, Mode=TwoWay}">
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="local:ScannedFileViewModel">
-                        <UserControl PointerEntered="ListViewItem_PointerEntered"
-                                     PointerExited="ListViewItem_PointerExited">
-                            <Grid Background="Transparent">
-                                <TextBlock HorizontalAlignment="Left"
-                                           VerticalAlignment="Center"
-                                           Text="{x:Bind File.Path}" />
+        <ListView x:Name="FileDropListView"
+                  Grid.Column="1"
+                  Grid.Row="1"
+                  skia:Background="{ThemeResource ControlStrokeColorDefaultBrush}"
+                  win:Background="{ThemeResource LayerOnMicaBaseAltFillColorSecondary}"
+                  CornerRadius="{ThemeResource ControlCornerRadius}"
+                  Actions:DropFilesBehavior.IsEnabled="True"
+                  Actions:DropFilesBehavior.FileDropTarget="{x:Bind ViewModel}"
+                  ItemsSource="{x:Bind ViewModel.FileList}"
+                  AllowDrop="True"
+                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                  ScrollViewer.HorizontalScrollMode="Enabled"
+                  HorizontalContentAlignment="Stretch"
+                  SelectionMode="Extended"
+                  Actions:ListViewSelectedItemsBehavior.BoundSelectedItems="{x:Bind ViewModel.SelectedFiles, Mode=TwoWay}">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="local:ScannedFileViewModel">
+                    <UserControl PointerEntered="ListViewItem_PointerEntered"
+                                 PointerExited="ListViewItem_PointerExited">
+                        <Grid Background="Transparent">
+                            <TextBlock HorizontalAlignment="Left"
+                                       VerticalAlignment="Center"
+                                       Text="{x:Bind File.Path}" />
 
-                                <CommandBar x:Name="CommandBar">
-                                    <AppBarButton LabelPosition="Collapsed"
-                                                  x:Name="HoverButton"
-                                                  HorizontalAlignment="Right"
-                                                  Command="{x:Bind RemoveSelf}"
-                                                  CommandParameter="{x:Bind}"
-                                                  IsTabStop="False"
-                                                  Visibility="Collapsed">
-                                        <AppBarButton.Icon>
-                                            <SymbolIcon Symbol="Remove" />
-                                        </AppBarButton.Icon>
-                                    </AppBarButton>
-                                </CommandBar>
+                            <CommandBar x:Name="CommandBar">
+                                <AppBarButton LabelPosition="Collapsed"
+                                              x:Name="HoverButton"
+                                              HorizontalAlignment="Right"
+                                              Command="{x:Bind RemoveSelf}"
+                                              CommandParameter="{x:Bind}"
+                                              IsTabStop="False"
+                                              Visibility="Collapsed">
+                                    <AppBarButton.Icon>
+                                        <SymbolIcon Symbol="Remove" />
+                                    </AppBarButton.Icon>
+                                </AppBarButton>
+                            </CommandBar>
 
-                                <VisualStateManager.VisualStateGroups>
-                                    <VisualStateGroup x:Name="HoveringStates">
-                                        <VisualState x:Name="HoverButtonsHidden" />
-                                        <VisualState x:Name="HoverButtonsShown">
-                                            <VisualState.Setters>
-                                                <Setter Target="HoverButton.Visibility"
-                                                        Value="Visible" />
-                                            </VisualState.Setters>
-                                        </VisualState>
-                                    </VisualStateGroup>
-                                </VisualStateManager.VisualStateGroups>
-                            </Grid>
-                        </UserControl>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </ScrollViewer>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="HoveringStates">
+                                    <VisualState x:Name="HoverButtonsHidden" />
+                                    <VisualState x:Name="HoverButtonsShown">
+                                        <VisualState.Setters>
+                                            <Setter Target="HoverButton.Visibility"
+                                                    Value="Visible" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                        </Grid>
+                    </UserControl>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
 
         <!--Drag and Drop text-->
         <StackPanel Grid.Row="1"
