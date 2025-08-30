@@ -27,18 +27,99 @@ public class BatchConfiguration : IBatchConfiguration
     private string _mkvpropeditArguments = string.Empty;
 
     public event PropertyChangedEventHandler? PropertyChanged;
+    public event EventHandler? StateChanged;
 
     public BatchConfiguration()
     {
         FileList.CollectionChanged += (sender, e) =>
         {
-            // We only care about removals or resets.
+            // We only care about removals, resets, and replacements for the purpose of clearing state.
             if (e.Action is not NotifyCollectionChangedAction.Remove
-            and not NotifyCollectionChangedAction.Reset)
+            and not NotifyCollectionChangedAction.Reset and not NotifyCollectionChangedAction.Replace)
                 return;
 
             OnFileRemoval(sender, e);
+            OnStateChanged();
         };
+        AudioTracks.CollectionChanged += (s, e) => TrackCollectionChanged(AudioTracks, e);
+        VideoTracks.CollectionChanged += (s, e) => TrackCollectionChanged(VideoTracks, e);
+        SubtitleTracks.CollectionChanged += (s, e) => TrackCollectionChanged(SubtitleTracks, e);
+    }
+
+    /// <summary>
+    /// Handles changes to an <see cref="ObservableCollection{T}"/> of <see cref="TrackConfiguration"/> objects and
+    /// updates subscriptions to their <see cref="INotifyPropertyChanged.PropertyChanged"/> events accordingly.
+    /// </summary>
+    /// <param name="collection">The collection of <see cref="TrackConfiguration"/> objects being tracked.</param>
+    /// <param name="eventArgs">The event data describing the changes to the collection.</param>
+    private void TrackCollectionChanged(ObservableCollection<TrackConfiguration> collection, NotifyCollectionChangedEventArgs eventArgs)
+    {
+        void Subscribe(IEnumerable<TrackConfiguration> trackConfigurations)
+        {
+            foreach (var trackConfiguration in trackConfigurations)
+            {
+                trackConfiguration.PropertyChanged += TrackConfiguration_PropertyChanged;
+            }
+        }
+
+        void Unsubscribe(IEnumerable<TrackConfiguration> trackConfigurations)
+        {
+            foreach (var trackConfiguration in trackConfigurations)
+            {
+                trackConfiguration.PropertyChanged -= TrackConfiguration_PropertyChanged;
+            }
+        }
+
+        bool stateChanged = false;
+
+        switch (eventArgs.Action)
+        {
+            case NotifyCollectionChangedAction.Add:
+                if (eventArgs.NewItems is IList<TrackConfiguration> { Count: > 0 } addedNewItems)
+                {
+                    Subscribe(addedNewItems);
+                    stateChanged = true;
+                }
+                break;
+            case NotifyCollectionChangedAction.Remove:
+                if (eventArgs.OldItems is IList<TrackConfiguration> { Count: > 0 } removedOldItems)
+                {
+                    Unsubscribe(removedOldItems);
+                    stateChanged = true;
+                }
+                break;
+            case NotifyCollectionChangedAction.Replace:
+                if (eventArgs.OldItems is IList<TrackConfiguration> { Count: > 0 } replacedOldItems)
+                {
+                    Unsubscribe(replacedOldItems);
+                }
+
+                if (eventArgs.NewItems is IList<TrackConfiguration> { Count: > 0 } replacedNewItems)
+                {
+                    Subscribe(replacedNewItems);
+                }
+
+                stateChanged = true;
+                break;
+            case NotifyCollectionChangedAction.Reset:
+                if (collection.Count > 0)
+                {
+                    Unsubscribe(collection);
+                    Subscribe(collection);
+                    stateChanged = true;
+                }
+                break;
+        }
+
+        if (stateChanged)
+        {
+            OnStateChanged();
+        }
+    }
+
+    private void TrackConfiguration_PropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
+    {
+        OnStateChanged();
     }
 
     public string DirectoryPath
@@ -177,6 +258,7 @@ public class BatchConfiguration : IBatchConfiguration
     protected virtual void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        OnStateChanged();
     }
 
     /// <inheritdoc />
@@ -229,6 +311,14 @@ public class BatchConfiguration : IBatchConfiguration
         DirectoryPath = string.Empty;
         MkvpropeditArguments = string.Empty;
         ClearTracks();
+    }
+
+    /// <summary>
+    /// Raises the <see cref="StateChanged"/> event to notify subscribers of a state change within this object.
+    /// </summary>
+    private void OnStateChanged()
+    {
+        StateChanged?.Invoke(this, EventArgs.Empty);
     }
 }
 

@@ -18,6 +18,7 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+        
         <NavigationView x:Name="NavigationView"
                         IsBackButtonVisible="Collapsed" 
                         IsBackEnabled="{x:Bind ViewModel.IsBackEnabled, Mode=OneWay}"
@@ -65,9 +66,11 @@
                 <CommandBar.PrimaryCommands>
                     <AppBarButton Label="Show Arguments"
                                   Icon="ShowResults"
+                                  IsEnabled="{x:Bind ViewModel.CanProcessBatch, Mode=OneWay}"
                                   Command="{x:Bind ViewModel.GenerateMkvpropeditArgumentsCommand}" />
                     <AppBarSeparator />
                     <AppBarButton Label="Process Files"
+                                  IsEnabled="{x:Bind ViewModel.CanProcessBatch, Mode=OneWay}"
                                   Command="{x:Bind ViewModel.ProcessFileCommand}">
                         <FontIcon Glyph="&#xE9F5;" />
                     </AppBarButton>

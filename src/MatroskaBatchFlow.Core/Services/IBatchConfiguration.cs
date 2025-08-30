@@ -26,6 +26,8 @@ public interface IBatchConfiguration : INotifyPropertyChanged
     ObservableCollection<TrackConfiguration> VideoTracks { get; set; }
     ObservableCollection<TrackConfiguration> SubtitleTracks { get; set; }
 
+    event EventHandler? StateChanged;
+
     /// <summary>
     /// Clears the configuration settings.
     /// </summary>

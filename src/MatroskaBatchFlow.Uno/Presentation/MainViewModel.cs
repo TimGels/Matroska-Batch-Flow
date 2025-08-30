@@ -19,6 +19,9 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private object? selected;
 
+    [ObservableProperty]
+    private bool canProcessBatch;
+
     public INavigationService NavigationService { get; }
     public INavigationViewService NavigationViewService { get; }
     public ICommand GenerateMkvpropeditArgumentsCommand { get; }
@@ -38,6 +41,7 @@ public partial class MainViewModel : ObservableObject
         GenerateMkvpropeditArgumentsCommand = new RelayCommand(GenerateMkvpropeditArgumentsHandler);
         ProcessFileCommand = new AsyncRelayCommand(ProcessFileAsync);
         NavigationService.Navigated += OnNavigated;
+        _batchConfiguration.StateChanged += BatchConfigurationOnStateChangedHandler;
     }
 
     /// <summary>
@@ -45,9 +49,17 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     private void GenerateMkvpropeditArgumentsHandler()
     {
-        // Generate the mkvpropedit arguments for the current batch configuration.
-        string[] arguments = GenerateMkvpropeditArguments(_batchConfiguration);
-        var argumentsString = string.Join(Environment.NewLine + Environment.NewLine, arguments);
+        // Generate the mkvpropedit commands arguments for the current batch operation.
+        string[] commands = GenerateMkvpropeditArguments(_batchConfiguration);
+
+        // Any empty or whitespace-only arguments indicates a problem.
+        if (commands.Any(arg => string.IsNullOrWhiteSpace(arg)))
+        {
+            WeakReferenceMessenger.Default.Send(new DialogMessage("Error", "One or more command arguments are invalid."));
+            return;
+        }
+
+        var argumentsString = string.Join(Environment.NewLine + Environment.NewLine, commands);
 
         // Show the generated arguments in a dialog.
         WeakReferenceMessenger.Default.Send(new MkvPropeditArgumentsDialogMessage(argumentsString));
@@ -85,15 +97,23 @@ public partial class MainViewModel : ObservableObject
     /// <returns>A task that represents the asynchronous operation.</returns>
     private async Task ProcessFileAsync()
     {
+        if (_batchConfiguration.FileList.Count == 0)
+        {
+            WeakReferenceMessenger.Default.Send(
+                new DialogMessage("Info", "File list is empty. Please add files to process.")
+            );
+            return;
+        }
+
         // Generate the mkvpropedit arguments for the current batch.
         string[] commands = GenerateMkvpropeditArguments(_batchConfiguration);
 
-        // No need to proceed if there are no commands to execute.
-        if (commands is { Length: 0 })
+        // Any empty or whitespace-only arguments indicates a problem.
+        var (isValid, errorMessage) = ValidateMkvpropeditArguments(commands);
+
+        if (!isValid)
         {
-            WeakReferenceMessenger.Default.Send(
-                new DialogMessage("Info", "Command list is empty. Nothing to process.")
-            );
+            WeakReferenceMessenger.Default.Send(new DialogMessage("Error", errorMessage));
             return;
         }
 
@@ -108,6 +128,14 @@ public partial class MainViewModel : ObservableObject
 
             WeakReferenceMessenger.Default.Send(new DialogMessage(dialogTitle, result.Output));
         }
+    }
+
+    private void BatchConfigurationOnStateChangedHandler(object? sender, EventArgs eventArgs)
+    {
+        // Re-evaluate if the batch can be processed based on the current configuration.
+        string[] commands = GenerateMkvpropeditArguments(_batchConfiguration);
+        (bool isValid, _) = ValidateMkvpropeditArguments(commands);
+        CanProcessBatch = isValid;
     }
 
     /// <summary>
@@ -232,5 +260,32 @@ public partial class MainViewModel : ObservableObject
                 return tb;
             });
         }
+    }
+
+    /// <summary>
+    /// Validates the provided MKVPropEdit command arguments to ensure they are valid.
+    /// </summary>
+    /// <param name="commands">An array of command arguments to validate.</param>
+    /// <returns>A tuple where the first value is <see langword="true"/> if all arguments are valid; otherwise, <see
+    /// langword="false"/>. The second value contains an error message if validation fails, or an empty string if
+    /// validation succeeds.</returns>
+    private static (bool, string) ValidateMkvpropeditArguments(string[] commands)
+    {
+        if (commands is { Length: 0 })
+        {
+            return (false, "No commands to process.");
+        }
+
+        if (commands.All(arg => string.IsNullOrWhiteSpace(arg)))
+        {
+            return (false, "All command arguments are empty or whitespace.");
+        }
+
+        if (commands.Any(arg => string.IsNullOrWhiteSpace(arg)))
+        {
+            return (false, "One or more command arguments are invalid.");
+        }
+
+        return (true, string.Empty);
     }
 }
