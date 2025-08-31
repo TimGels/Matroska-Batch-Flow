@@ -75,28 +75,28 @@ public class BatchConfiguration : IBatchConfiguration
         switch (eventArgs.Action)
         {
             case NotifyCollectionChangedAction.Add:
-                if (eventArgs.NewItems is IList<TrackConfiguration> { Count: > 0 } addedNewItems)
+                if (eventArgs.NewItems?.Count > 0)
                 {
-                    Subscribe(addedNewItems);
+                    Subscribe(eventArgs.NewItems.Cast<TrackConfiguration>());
                     stateChanged = true;
                 }
                 break;
             case NotifyCollectionChangedAction.Remove:
-                if (eventArgs.OldItems is IList<TrackConfiguration> { Count: > 0 } removedOldItems)
+                if (eventArgs.OldItems?.Count > 0)
                 {
-                    Unsubscribe(removedOldItems);
+                    Unsubscribe(eventArgs.OldItems.Cast<TrackConfiguration>());
                     stateChanged = true;
                 }
                 break;
             case NotifyCollectionChangedAction.Replace:
-                if (eventArgs.OldItems is IList<TrackConfiguration> { Count: > 0 } replacedOldItems)
+                if (eventArgs.OldItems?.Count > 0)
                 {
-                    Unsubscribe(replacedOldItems);
+                    Unsubscribe(eventArgs.OldItems.Cast<TrackConfiguration>());
                 }
 
-                if (eventArgs.NewItems is IList<TrackConfiguration> { Count: > 0 } replacedNewItems)
+                if (eventArgs.NewItems?.Count > 0)
                 {
-                    Subscribe(replacedNewItems);
+                    Subscribe(eventArgs.NewItems.Cast<TrackConfiguration>());
                 }
 
                 stateChanged = true;
@@ -331,7 +331,6 @@ public class BatchConfiguration : IBatchConfiguration
 public sealed class TrackConfiguration(TrackInfo trackInfo) : INotifyPropertyChanged
 {
     private TrackType _type;
-
     private int _index;
     /// <summary>
     /// Represents a human-readable label for a track or segment.

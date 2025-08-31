@@ -311,29 +311,53 @@ public abstract partial class TrackViewModelBase : ObservableObject
     /// <summary>
     /// Updates the bound view properties when the selected track changes to reflect the state of the newly selected track.
     /// </summary>
-    /// <param name="newValue">The newly selected <see cref="TrackConfiguration"/>, or <see langword="null"/> if no track is currently selected.</param>
-    protected virtual void OnSelectedTrackChanged(TrackConfiguration? newValue)
+    /// <param name="newSelectedTrack">The newly selected <see cref="TrackConfiguration"/>, or <see langword="null"/> if no track is currently selected.</param>
+    protected virtual void OnSelectedTrackChanged(TrackConfiguration? newSelectedTrack)
     {
         // Raise event to re-calculate IsTrackSelected
         OnPropertyChanged(nameof(IsTrackSelected));
 
-        if (newValue == null)
-            return;
+        ApplyTrackProperties(newSelectedTrack);
+    }
 
+    /// <summary>
+    /// Updates the track-related properties based on the specified <see cref="TrackConfiguration"/> instance.
+    /// </summary>
+    /// <param name="track">The <see cref="TrackConfiguration"/> instance containing the track properties to apply. If <paramref
+    /// name="track"/> is <see langword="null"/>, all track-related properties are reset to default values.</param>
+    private void ApplyTrackProperties(TrackConfiguration? track)
+    {
         // If suppressing updates, do nothing to avoid (potential) recursion.
         _suppressBatchConfigUpdate = true;
 
-        // Synchronize properties with the selected track
-        IsDefaultTrack = newValue.Default;
-        IsEnabledTrack = newValue.Enabled;
-        IsForcedTrack = newValue.Forced;
-        TrackName = newValue.Name;
-        SelectedLanguage = newValue.Language;
-        IsDefaultFlagModificationEnabled = newValue.ShouldModifyDefaultFlag;
-        IsEnabledFlagModificationEnabled = newValue.ShouldModifyEnabledFlag;
-        IsForcedFlagModificationEnabled = newValue.ShouldModifyForcedFlag;
-        IsTrackNameModificationEnabled = newValue.ShouldModifyName;
-        IsSelectedLanguageModificationEnabled = newValue.ShouldModifyLanguage;
+        // TODO: Need a better way to reset properties when no track is provided.
+        if (track is null)
+        {
+            IsDefaultTrack = false;
+            IsEnabledTrack = true;
+            IsForcedTrack = false;
+            TrackName = string.Empty;
+            SelectedLanguage = null;
+            IsDefaultFlagModificationEnabled = false;
+            IsEnabledFlagModificationEnabled = false;
+            IsForcedFlagModificationEnabled = false;
+            IsTrackNameModificationEnabled = false;
+            IsSelectedLanguageModificationEnabled = false;
+
+            return;
+        }
+
+        // Synchronize properties with the selected track.
+        IsDefaultTrack = track.Default;
+        IsEnabledTrack = track.Enabled;
+        IsForcedTrack = track.Forced;
+        TrackName = track.Name;
+        SelectedLanguage = track.Language;
+        IsDefaultFlagModificationEnabled = track.ShouldModifyDefaultFlag;
+        IsEnabledFlagModificationEnabled = track.ShouldModifyEnabledFlag;
+        IsForcedFlagModificationEnabled = track.ShouldModifyForcedFlag;
+        IsTrackNameModificationEnabled = track.ShouldModifyName;
+        IsSelectedLanguageModificationEnabled = track.ShouldModifyLanguage;
 
         _suppressBatchConfigUpdate = false;
     }
