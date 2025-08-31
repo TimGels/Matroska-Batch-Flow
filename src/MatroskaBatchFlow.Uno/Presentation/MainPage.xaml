@@ -38,7 +38,7 @@
                                     helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.AudioViewModel" />
                 <NavigationViewItem Content="Subtitle" Tag="SubtitlePage"
                                     helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.SubtitleViewModel" />
-                <NavigationViewItem Content="Output" Tag="OutputPage"
+                <NavigationViewItem Content="Output" Tag="OutputPage" Visibility="Collapsed"
                                     helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.OutputViewModel" />
             </NavigationView.MenuItems>
             <NavigationView.Content>
