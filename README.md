@@ -1,8 +1,8 @@
 ![Matroska Batch Flow Banner](Assets/Title-Banner.png)
 
-**Matroska Batch Flow** is a powerful tool for batch processing Matroska (`.mkv`) files, designed to help you efficiently manage and modify large collections with ease. It features a modern graphical user interface built with WinUI 3 and Uno Platform, and integrates [MediaInfo](https://mediaarea.net/en/MediaInfo) for extracting detailed file information as well as [MKVToolNix's](https://mkvtoolnix.org) mkvpropedit for fast, direct container property editing.
+**Matroska Batch Flow** is a powerful tool for batch processing Matroska (`.mkv`) files, designed to help you efficiently manage and modify large collections. It features a modern graphical user interface built with WinUI 3 and Uno Platform, and integrates [MediaInfo](https://mediaarea.net/en/MediaInfo) for extracting detailed file information, as well as [MKVToolNix's](https://mkvtoolnix.org) mkvpropedit for fast, direct container property editing.
 
-Originally inspired by the now-abandoned [jmkvpropedit](https://github.com/BrunoReX/jmkvpropedit), Matroska Batch Flow aims to become a modern and straightforward replacement for users who need an easy-to-use application for Matroska batch processing tasks.
+Whether you're an archivist, home theater enthusiast, or anyone who works with Matroska files, Matroska Batch Flow helps you save time and effort. Quickly perform tasks like fixing language tags, updating track names, or preparing files for media servers such as Jellyfin. The tool is suitable for both small batches and large collections, making repetitive editing tasks efficient and ensuring consistency throughout your library.
 
 > [!WARNING]
 > This project is under active development. Features and behavior may change, and it may not be suitable for production use.
