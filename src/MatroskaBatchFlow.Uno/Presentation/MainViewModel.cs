@@ -117,16 +117,24 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
+        var errorResults = new List<string>();
         await foreach (var result in _mkvPropeditService.ExecuteAsync(commands))
         {
-            string dialogTitle = result.Status switch
+            if (result.Status == MkvPropeditStatus.Error)
             {
-                MkvPropeditStatus.Success => "Success",
-                MkvPropeditStatus.Warning => "Warning",
-                _ => "Error"
-            };
+                errorResults.Add(result.Output);
+            }
+        }
 
-            WeakReferenceMessenger.Default.Send(new DialogMessage(dialogTitle, result.Output));
+        if (errorResults.Count > 0)
+        {
+            var summaryMessage = "Some files failed to process:" + Environment.NewLine +
+                                 string.Join(Environment.NewLine, errorResults);
+            WeakReferenceMessenger.Default.Send(new DialogMessage("Batch Completed with Errors", summaryMessage));
+        }
+        else
+        {
+            WeakReferenceMessenger.Default.Send(new DialogMessage("Batch Completed", "All files processed successfully."));
         }
     }
 
