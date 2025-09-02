@@ -131,7 +131,7 @@
                      ToolTipService.ToolTip="The name of this track."
                      MinWidth="500"
                      VerticalAlignment="Center"
-                     Text="{x:Bind TrackName, Mode=TwoWay}"
+                     Text="{x:Bind TrackName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      IsEnabled="{x:Bind ShouldModifyName, Mode=OneWay}" />
 
             <!--Track Language-->

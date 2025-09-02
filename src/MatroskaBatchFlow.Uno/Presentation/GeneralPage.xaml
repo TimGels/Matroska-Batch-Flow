@@ -51,7 +51,7 @@
             <TextBox Grid.Column="2"
                      VerticalAlignment="Center"
                      ToolTipService.ToolTip="The title of the media file."
-                     Text="{x:Bind ViewModel.Title, Mode=TwoWay}"
+                     Text="{x:Bind ViewModel.Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      IsEnabled="{x:Bind ViewModel.ShouldModifyTitle, Mode=OneWay}" />
         </Grid>
 
