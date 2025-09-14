@@ -107,7 +107,7 @@ body:
       description: |
         Please provide any other relevant details about your environment (e.g. hardware, etc.).
       placeholder: |
-        - Any other relevant details:
+        Any other relevant details:
   - type: textarea
     id: screenshots
     attributes:
