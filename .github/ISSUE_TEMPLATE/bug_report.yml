@@ -1,7 +1,6 @@
 name: Bug Report
 description: File a bug report for Matroska Batch Flow
 labels: [bug]
-type: Bug
 body:
   - type: markdown
     id: introduction
