@@ -103,40 +103,19 @@
                   Actions:ListViewSelectedItemsBehavior.BoundSelectedItems="{x:Bind ViewModel.SelectedFiles, Mode=TwoWay}">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:ScannedFileViewModel">
-                    <UserControl PointerEntered="ListViewItem_PointerEntered"
-                                 PointerExited="ListViewItem_PointerExited">
-                        <Grid Background="Transparent">
-                            <TextBlock HorizontalAlignment="Left"
-                                       VerticalAlignment="Center"
-                                       Text="{x:Bind File.Path}" />
-
-                            <CommandBar x:Name="CommandBar">
-                                <AppBarButton LabelPosition="Collapsed"
-                                              x:Name="HoverButton"
-                                              HorizontalAlignment="Right"
-                                              Command="{x:Bind RemoveSelf}"
-                                              CommandParameter="{x:Bind}"
-                                              IsTabStop="False"
-                                              Visibility="Collapsed">
-                                    <AppBarButton.Icon>
-                                        <SymbolIcon Symbol="Remove" />
-                                    </AppBarButton.Icon>
-                                </AppBarButton>
-                            </CommandBar>
-
-                            <VisualStateManager.VisualStateGroups>
-                                <VisualStateGroup x:Name="HoveringStates">
-                                    <VisualState x:Name="HoverButtonsHidden" />
-                                    <VisualState x:Name="HoverButtonsShown">
-                                        <VisualState.Setters>
-                                            <Setter Target="HoverButton.Visibility"
-                                                    Value="Visible" />
-                                        </VisualState.Setters>
-                                    </VisualState>
-                                </VisualStateGroup>
-                            </VisualStateManager.VisualStateGroups>
-                        </Grid>
-                    </UserControl>
+                    <Grid Margin="0,6,0,6">
+                        <Grid.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="Delete"
+                                                Command="{x:Bind RemoveSelf}" />
+                            </MenuFlyout>
+                        </Grid.ContextFlyout>
+                        <TextBlock HorizontalAlignment="Left"
+                                   Grid.Column="0"
+                                   VerticalAlignment="Center"
+                                   Text="{x:Bind File.Path}"
+                                   TextWrapping="Wrap" />
+                    </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
