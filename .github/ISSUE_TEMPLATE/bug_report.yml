@@ -1,0 +1,121 @@
+name: Bug Report
+description: File a bug report for Matroska Batch Flow
+labels: [bug]
+type: Bug
+body:
+  - type: markdown
+    id: introduction
+    attributes:
+      value: |
+        ### Thank you for taking the time to report a bug!
+        Please keep in mind that Matroska Batch Flow is a free and open-source project maintained by volunteers in their spare time. Please provide as much detail as possible so we can help resolve the issue more effectively.
+  - type: checkboxes
+    id: before-posting
+    attributes:
+      label: "Before submitting this bug report:"
+      options:
+        - label: This is a **bug**, not a question or feature request.
+          required: true
+        - label: I have searched existing issues to make sure this bug has not already been reported.
+          required: true
+        - label: I am using the latest version of Matroska Batch Flow.
+          required: true
+        - label: This report addresses only a single issue.
+          required: true
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Description of the bug
+      description: Please provide a clear and detailed description of the bug.
+      placeholder: |
+        Describe what you were doing, what happened, and what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Steps to reproduce
+      description: List the steps needed to reproduce the bug.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual behavior
+      description: What actually happened?
+      placeholder: |
+        What did you observe?
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+      placeholder: |
+        What should have happened instead?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Matroska Batch Flow version
+      description: What version of the application are you using?
+      placeholder: |
+        e.g. 1.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: app-target
+    attributes:
+      label: Application target
+      description: Which version of Matroska Batch Flow are you using?
+      options:
+        - Windows App SDK (WinUI 3)
+        - Desktop (Skia)
+    validations:
+      required: true
+  - type: dropdown
+    id: distribution-method
+    attributes:
+      label: Distribution method
+      description: How did you install Matroska Batch Flow?
+      options:
+        - Sideloading (MSIX)
+        - Portable Executable
+        - Microsoft Store
+        - Build from source (Please specify commit hash in "Additional information")
+        - Other (Please specify in "Additional information")
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: What operating system are you using?
+      placeholder: |
+        e.g. Windows 11 24H2 26100.6584
+    validations:
+      required: true
+  - type: textarea
+    id: environment-information
+    attributes:
+      label: Additional environment details
+      description: |
+        Please provide any other relevant details about your environment (e.g. hardware, etc.).
+      value: |
+        - Any other relevant details:
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or videos
+      description: Attach relevant screenshots or videos related to this report.
+  - type: textarea
+    id: additional-information
+    attributes:
+      label: Additional information
+      description: Any other information that might be useful for diagnosing the issue.
