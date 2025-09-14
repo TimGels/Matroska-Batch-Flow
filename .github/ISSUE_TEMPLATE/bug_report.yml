@@ -72,7 +72,7 @@ body:
     id: app-target
     attributes:
       label: Application target
-      description: Which version of Matroska Batch Flow are you using?
+      description: Which application of Matroska Batch Flow are you using?
       options:
         - Windows App SDK (WinUI 3)
         - Desktop (Skia)
@@ -84,9 +84,9 @@ body:
       label: Distribution method
       description: How did you install Matroska Batch Flow?
       options:
-        - Sideloading (MSIX)
-        - Portable Executable
         - Microsoft Store
+        - Portable Executable
+        - Sideloading (MSIX)
         - Build from source (Please specify commit hash in "Additional information")
         - Other (Please specify in "Additional information")
     validations:
@@ -106,7 +106,7 @@ body:
       label: Additional environment details
       description: |
         Please provide any other relevant details about your environment (e.g. hardware, etc.).
-      value: |
+      placeholder: |
         - Any other relevant details:
   - type: textarea
     id: screenshots
