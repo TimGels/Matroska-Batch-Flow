@@ -26,7 +26,9 @@ public class LanguageProvider : ILanguageProvider
             ReadCommentHandling = JsonCommentHandling.Skip,
             AllowTrailingCommas = true
         };
-        return JsonSerializer.Deserialize<ImmutableList<MatroskaLanguageOption>>(json, options)!;
+        using var doc = JsonDocument.Parse(json);
+        var languagesElement = doc.RootElement.GetProperty("languages");
+        return JsonSerializer.Deserialize<ImmutableList<MatroskaLanguageOption>>(languagesElement.GetRawText(), options)!;
     }
 
     public void LoadLanguages()
