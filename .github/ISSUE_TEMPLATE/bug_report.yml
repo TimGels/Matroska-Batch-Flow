@@ -8,19 +8,6 @@ body:
       value: |
         ### Thank you for taking the time to report a bug!
         Please keep in mind that Matroska Batch Flow is a free and open-source project maintained by volunteers in their spare time. Please provide as much detail as possible so we can help resolve the issue more effectively.
-  - type: checkboxes
-    id: before-posting
-    attributes:
-      label: "Before submitting this bug report:"
-      options:
-        - label: This is a **bug**, not a question or feature request.
-          required: true
-        - label: I have searched existing issues to make sure this bug has not already been reported.
-          required: true
-        - label: I am using the latest version of Matroska Batch Flow.
-          required: true
-        - label: This report addresses only a single issue.
-          required: true
   - type: textarea
     id: bug-description
     attributes:

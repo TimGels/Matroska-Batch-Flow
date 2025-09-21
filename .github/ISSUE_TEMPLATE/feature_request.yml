@@ -8,17 +8,6 @@ body:
       value: |
         ### Thank you for suggesting a feature!
         Please keep in mind that Matroska Batch Flow is a free and open-source project maintained by volunteers in their spare time. Please provide as much detail as possible to help us understand your idea and its potential impact.
-  - type: checkboxes
-    id: before-posting
-    attributes:
-      label: "Before submitting this feature request:"
-      options:
-        - label: This is a **feature request**, not a bug or question.
-          required: true
-        - label: I have searched existing issues to make sure this feature has not already been requested.
-          required: true
-        - label: This request addresses only a single feature or improvement.
-          required: true
   - type: textarea
     id: feature-description
     attributes:
