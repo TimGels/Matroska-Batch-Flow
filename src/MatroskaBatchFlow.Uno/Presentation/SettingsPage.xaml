@@ -10,108 +10,58 @@
     xmlns:ui="using:CommunityToolkit.WinUI"
     mc:Ignorable="d">
 
-    <Grid HorizontalAlignment="Center">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition MaxWidth="800" />
-        </Grid.ColumnDefinitions>
+    <Grid>
+        <StackPanel HorizontalAlignment="Stretch"
+                    Spacing="4">
 
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup>
-                <VisualState x:Name="LeftMedium">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="{StaticResource Breakpoint1008Plus}" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters />
-                </VisualState>
-                <VisualState x:Name="LeftCompact">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="{StaticResource Breakpoint641Plus}" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters />
-                </VisualState>
+            <TextBlock Text="About" />
 
-                <VisualState x:Name="LeftMinimal">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="0" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="Scroller.Padding" Value="16,0,16,0" />
-                        <Setter Target="HeaderText.Margin" Value="16,8,16,32" />
-                    </VisualState.Setters>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
-
-        <TextBlock x:Name="HeaderText"
-                   Margin="36,0,36,10"
-                   Style="{StaticResource TitleTextBlockStyle}"
-                   Text="Settings" />
-
-        <ScrollViewer x:Name="Scroller" Grid.Row="1" Grid.Column="0" Padding="36,0,36,0">
-            <Grid>
-                <StackPanel Spacing="4" HorizontalAlignment="Stretch">
-                    <controls:SettingsCard x:Name="settingsCard"
-                           Description="This is a default card, with the Header, HeaderIcon, Description and Content set."
-                           Header="This is the Header"
-                           IsEnabled="{x:Bind IsCardEnabled, Mode=OneWay}">
-                        <ComboBox SelectedIndex="0">
-                            <ComboBoxItem>Option 1</ComboBoxItem>
-                            <ComboBoxItem>Option 2</ComboBoxItem>
-                            <ComboBoxItem>Option 3</ComboBoxItem>
-                        </ComboBox>
-                    </controls:SettingsCard>
-                    <TextBlock Text="About" />
-                    <controls:SettingsCard Description="You can use a FontIcon, SymbolIcon or BitmapIcon to set the cards HeaderIcon."
-                           Header="Icon options"
-                           IsEnabled="{x:Bind IsCardEnabled, Mode=OneWay}">
-                        <ToggleSwitch />
-                    </controls:SettingsCard>
-
-                    <controls:SettingsCard Header="A card with custom objects as its Description"
-                           IsEnabled="{x:Bind IsCardEnabled, Mode=OneWay}">
-                        <controls:SettingsCard.Description>
-                            <HyperlinkButton Content="Learn more about Phone Link" />
-                        </controls:SettingsCard.Description>
-                        <Button Content="Open Phone Link"
-                Style="{StaticResource AccentButtonStyle}" />
-                    </controls:SettingsCard>
-
-                    <controls:SettingsCard Description="When resizing a SettingsCard, the Content will wrap vertically. You can override this breakpoint by setting the SettingsCardWrapThreshold resource. For edge cases, you can also hide the icon by setting SettingsCardWrapNoIconThreshold."
-                           Header="Adaptive layouts"
-                           IsEnabled="{x:Bind IsCardEnabled, Mode=OneWay}">
-                        <controls:SettingsCard.Resources>
-                            <x:Double x:Key="SettingsCardWrapThreshold">800</x:Double>
-                            <x:Double x:Key="SettingsCardWrapNoIconThreshold">600</x:Double>
-                        </controls:SettingsCard.Resources>
-                        <Button Content="This control will wrap vertically!"
-                Style="{StaticResource AccentButtonStyle}" />
-                    </controls:SettingsCard>
-
-                    <controls:SettingsCard Header="This is a card with a Header only" />
-
-                    <controls:SettingsExpander Description="© 2025. All rights reserved."
-                                       Header="Matroska Batch Flow"
-                                       HeaderIcon="{ui:BitmapIcon Source=ms-appx:///Assets/Icons/AppTitleBar.scale-200.png}">
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                       Text="{x:Bind AppVersion}" />
-                        <controls:SettingsExpander.Items>
-                            <controls:SettingsCard HorizontalContentAlignment="Left"
+            <controls:SettingsExpander Header="Matroska Batch Flow"
+                                       Description="© 2025. All rights reserved."
+                                       IsExpanded="True">
+                <controls:SettingsExpander.HeaderIcon>
+                    <BitmapIcon ShowAsMonochrome="False"
+                                UriSource="ms-appx:///Resources/Assets/PackageLogo.scale-100.png" />
+                </controls:SettingsExpander.HeaderIcon>
+                <TextBlock IsTextSelectionEnabled="True"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Text="{x:Bind AppVersion}" />
+                <controls:SettingsExpander.Items>
+                    <controls:SettingsCard HorizontalContentAlignment="Left"
                                            ContentAlignment="Left">
-                                <StackPanel Margin="-12,0,0,0"
+                        <StackPanel Margin="-12,0,0,0"
                                     Orientation="Vertical">
-                                    <HyperlinkButton Content="Source Code" />
-                                    <HyperlinkButton Content="Donate" />
-                                    <HyperlinkButton Content="Link 3" />
-                                </StackPanel>
-                            </controls:SettingsCard>
-                        </controls:SettingsExpander.Items>
-                    </controls:SettingsExpander>
-                </StackPanel>
-            </Grid>
-        </ScrollViewer>
+                            <HyperlinkButton Content="License"
+                                             NavigateUri="https://github.com/TimGels/Matroska-Batch-Flow/blob/main/LICENSE" />
+                        </StackPanel>
+                    </controls:SettingsCard>
+                    <controls:SettingsCard HorizontalContentAlignment="Left"
+                                           ContentAlignment="Vertical"
+                                           Header="Third party dependencies">
+                        <StackPanel Margin="-12,0,0,0"
+                                    Orientation="Vertical">
+                            <HyperlinkButton Content="Uno Platform"
+                                             NavigateUri="https://github.com/unoplatform/uno" />
+                            <HyperlinkButton Content=".NET Community Toolkit"
+                                             NavigateUri="https://github.com/CommunityToolkit/dotnet" />
+                            <HyperlinkButton Content="Windows App SDK"
+                                             NavigateUri="https://github.com/microsoft/windowsappsdk" />
+                            <HyperlinkButton Content="WinUI 3"
+                                             NavigateUri="https://github.com/microsoft/microsoft-ui-xaml" />
+                            
+                        </StackPanel>
+                    </controls:SettingsCard>
+                    <controls:SettingsCard HorizontalContentAlignment="Left"
+                                                   ContentAlignment="Vertical"
+                                                   Header="Useful links">
+                        <StackPanel Margin="-12,0,0,0"
+                                            Orientation="Vertical">
+                            <HyperlinkButton Content="GitHub repository"
+                                             NavigateUri="https://github.com/TimGels/Matroska-Batch-Flow" />
+                        </StackPanel>
+                    </controls:SettingsCard>
+                </controls:SettingsExpander.Items>
+            </controls:SettingsExpander>
+        </StackPanel>
     </Grid>
 </Page>

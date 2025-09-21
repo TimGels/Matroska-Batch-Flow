@@ -1,18 +1,49 @@
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
+using System.Reflection;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
-/// <summary>
-/// An empty page that can be used on its own or navigated to within a Frame.
-/// </summary>
+
 public sealed partial class SettingsPage : Page
 {
-    // Property to bind to IsEnabled in XAML
     public bool IsCardEnabled { get; set; } = true;
 
-    public string AppVersion => $"Version {Package.Current.Id.Version.Major}.{Package.Current.Id.Version.Minor}.{Package.Current.Id.Version.Build}";
+    public string AppVersion
+    {
+        get
+        {
+            if (IsPackagedApp())
+            {
+                var version = Package.Current.Id.Version;
+                return $"Version {version.Major}.{version.Minor}.{version.Build}";
+            }
+            else
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+                var version = assembly.GetName().Version;
+                return $"Version {version?.Major}.{version?.Minor}.{version?.Build}";
+            }
+        }
+    }
 
     public SettingsPage()
     {
         this.InitializeComponent();
+    }
+
+    /// <summary>
+    /// Determines whether the current application is running as a packaged app.
+    /// </summary>
+    /// <returns><see langword="true"/> if the application is running as a packaged app; otherwise, <see langword="false"/>.</returns>
+    private static bool IsPackagedApp()
+    {
+        try
+        {
+            // This will throw an exception if the app is not packaged.
+            var name = Package.Current.Id.Name;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
