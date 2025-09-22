@@ -38,7 +38,7 @@
                       SelectedItem="{x:Bind ViewModel.SelectedTrack, Mode=TwoWay}"
                       ToolTipService.ToolTip="Select a track to edit its settings."
                       Header="Select track"
-                      IsEnabled="{x:Bind ViewModel.VideoTracks.Count, Converter={StaticResource GreaterThanZeroConverter}}"
+                      IsEnabled="{x:Bind ViewModel.VideoTracks.Count, Converter={StaticResource GreaterThanZeroConverter}, Mode=OneWay}"
                       PlaceholderText="{x:Bind ViewModel.VideoTracks, Converter={StaticResource EmptyStateToTextConverter}, ConverterParameter='No tracks|Select track'}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="BatchConfig:TrackConfiguration">
