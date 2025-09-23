@@ -4,6 +4,7 @@ using System.ComponentModel;
 using MatroskaBatchFlow.Core.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
+
 public partial class VideoViewModel : TrackViewModelBase
 {
     public ObservableCollection<TrackConfiguration> VideoTracks
@@ -29,6 +30,8 @@ public partial class VideoViewModel : TrackViewModelBase
         : base(languageProvider, batchConfiguration)
     {
         VideoTracks = [.. _batchConfiguration.VideoTracks];
+
+        SelectedTrack = VideoTracks.FirstOrDefault();
 
         SetupEventHandlers();
     }
@@ -91,6 +94,7 @@ public partial class VideoViewModel : TrackViewModelBase
         }
 
         VideoTracks = [.. _batchConfiguration.VideoTracks];
+        SelectedTrack = VideoTracks.FirstOrDefault();
     }
 
     /// <inheritdoc />
