@@ -4,6 +4,7 @@ using System.ComponentModel;
 using MatroskaBatchFlow.Core.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
+
 public partial class SubtitleViewModel : TrackViewModelBase
 {
     public ObservableCollection<TrackConfiguration> SubtitleTracks
@@ -29,6 +30,8 @@ public partial class SubtitleViewModel : TrackViewModelBase
         : base(languageProvider, batchConfiguration)
     {
         SubtitleTracks = [.. _batchConfiguration.SubtitleTracks];
+
+        SelectedTrack = SubtitleTracks.FirstOrDefault();
 
         SetupEventHandlers();
     }
@@ -91,6 +94,7 @@ public partial class SubtitleViewModel : TrackViewModelBase
         }
 
         SubtitleTracks = [.. _batchConfiguration.SubtitleTracks];
+        SelectedTrack = SubtitleTracks.FirstOrDefault();
     }
 
     /// <inheritdoc />

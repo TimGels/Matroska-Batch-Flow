@@ -4,6 +4,7 @@ using System.ComponentModel;
 using MatroskaBatchFlow.Core.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
+
 public partial class AudioViewModel : TrackViewModelBase
 {
     public ObservableCollection<TrackConfiguration> AudioTracks
@@ -29,6 +30,8 @@ public partial class AudioViewModel : TrackViewModelBase
         : base(languageProvider, batchConfiguration)
     {
         AudioTracks = [.. _batchConfiguration.AudioTracks];
+
+        SelectedTrack = AudioTracks.FirstOrDefault();
 
         SetupEventHandlers();
     }
@@ -89,6 +92,7 @@ public partial class AudioViewModel : TrackViewModelBase
         }
 
         AudioTracks = [.. _batchConfiguration.AudioTracks];
+        SelectedTrack = AudioTracks.FirstOrDefault();
     }
 
     /// <inheritdoc />
