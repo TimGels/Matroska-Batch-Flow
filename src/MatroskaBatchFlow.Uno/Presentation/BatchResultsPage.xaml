@@ -1,0 +1,42 @@
+﻿<Page
+    x:Class="MatroskaBatchFlow.Uno.Presentation.BatchResultsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MatroskaBatchFlow.Uno.Presentation"
+    xmlns:Controls="using:MatroskaBatchFlow.Uno.Presentation.Controls"
+    xmlns:models="using:MatroskaBatchFlow.Core.Models"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    NavigationCacheMode="Enabled">
+
+    <Grid RowSpacing="28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock Grid.Row="0"
+                   Text="Batch Results"
+                   FontSize="28"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,8"/>
+
+        <!-- Summary tiles -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Controls:SummaryTileControl Title="Files" Value="{x:Bind ViewModel.Total, Mode=OneWay}" Grid.Column="0"/>
+            <Controls:SummaryTileControl Title="Succeeded" Value="{x:Bind ViewModel.SucceededTotal, Mode=OneWay}" Grid.Column="1"/>
+            <Controls:SummaryTileControl Title="Warnings" Value="{x:Bind ViewModel.Warnings, Mode=OneWay}" Grid.Column="2"/>
+            <Controls:SummaryTileControl Title="Failed" Value="{x:Bind ViewModel.Failed, Mode=OneWay}" Grid.Column="3"/>
+        </Grid>
+    </Grid>
+</Page>

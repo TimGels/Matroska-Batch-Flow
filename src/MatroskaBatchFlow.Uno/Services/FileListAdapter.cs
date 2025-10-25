@@ -55,13 +55,13 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
         {
             case NotifyCollectionChangedAction.Add:
                 foreach (ScannedFileInfo file in eventArgs.NewItems!)
-                    if (!ScannedFileViewModels.Any(vm => vm.File == file))
+                    if (!ScannedFileViewModels.Any(vm => vm.FileInfo == file))
                         ScannedFileViewModels.Add(new ScannedFileViewModel(file, _batchConfig));
                 break;
             case NotifyCollectionChangedAction.Remove:
                 foreach (ScannedFileInfo file in eventArgs.OldItems!)
                 {
-                    var vm = ScannedFileViewModels.FirstOrDefault(x => x.File == file);
+                    var vm = ScannedFileViewModels.FirstOrDefault(x => x.FileInfo == file);
                     if (vm is not null)
                         ScannedFileViewModels.Remove(vm);
                 }
@@ -72,12 +72,12 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
             case NotifyCollectionChangedAction.Replace:
                 foreach (ScannedFileInfo file in eventArgs.OldItems!)
                 {
-                    var vm = ScannedFileViewModels.FirstOrDefault(x => x.File == file);
+                    var vm = ScannedFileViewModels.FirstOrDefault(x => x.FileInfo == file);
                     if (vm != null)
                         ScannedFileViewModels.Remove(vm);
                 }
                 foreach (ScannedFileInfo file in eventArgs.NewItems!)
-                    if (!ScannedFileViewModels.Any(vm => vm.File == file))
+                    if (!ScannedFileViewModels.Any(vm => vm.FileInfo == file))
                         ScannedFileViewModels.Add(new ScannedFileViewModel(file, _batchConfig));
                 break;
         }
@@ -95,22 +95,22 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
         {
             case NotifyCollectionChangedAction.Add:
                 foreach (ScannedFileViewModel vm in eventArgs.NewItems!)
-                    if (!_batchConfig.FileList.Contains(vm.File))
-                        _batchConfig.FileList.Add(vm.File);
+                    if (!_batchConfig.FileList.Contains(vm.FileInfo))
+                        _batchConfig.FileList.Add(vm.FileInfo);
                 break;
             case NotifyCollectionChangedAction.Remove:
                 foreach (ScannedFileViewModel vm in eventArgs.OldItems!)
-                    _batchConfig.FileList.Remove(vm.File);
+                    _batchConfig.FileList.Remove(vm.FileInfo);
                 break;
             case NotifyCollectionChangedAction.Reset:
                 _batchConfig.FileList.Clear();
                 break;
             case NotifyCollectionChangedAction.Replace:
                 foreach (ScannedFileViewModel vm in eventArgs.OldItems!)
-                    _batchConfig.FileList.Remove(vm.File);
+                    _batchConfig.FileList.Remove(vm.FileInfo);
                 foreach (ScannedFileViewModel vm in eventArgs.NewItems!)
-                    if (!_batchConfig.FileList.Contains(vm.File))
-                        _batchConfig.FileList.Add(vm.File);
+                    if (!_batchConfig.FileList.Contains(vm.FileInfo))
+                        _batchConfig.FileList.Add(vm.FileInfo);
                 break;
         }
     }
@@ -142,7 +142,7 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
     /// Removes the specified view model and its associated file from the collection.
     /// </summary>
     /// <param name="vm">The view model representing the file to be removed. Cannot be <see langword="null"/>.</param>
-    public void RemoveViewModel(ScannedFileViewModel vm) => RemoveFile(vm.File);
+    public void RemoveViewModel(ScannedFileViewModel vm) => RemoveFile(vm.FileInfo);
 
     /// <summary>
     /// Clears both the core and view-model collections.

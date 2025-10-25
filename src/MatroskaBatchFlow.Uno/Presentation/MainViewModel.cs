@@ -1,273 +1,210 @@
 using CommunityToolkit.Mvvm.Messaging;
-using MatroskaBatchFlow.Core.Builders.MkvPropeditArguments;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Services.Processing;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Messages;
+using Microsoft.UI.Dispatching;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
 public partial class MainViewModel : ObservableObject
 {
     private readonly IBatchConfiguration _batchConfiguration;
-    private readonly IMkvPropeditService _mkvPropeditService;
+    private readonly IBatchReportStore _batchReportStore;
+    private readonly IFileProcessingOrchestrator _orchestrator;
+    private readonly IMkvPropeditArgumentsGenerator _mkvPropeditArgumentsBuilder;
+    private CancellationTokenSource _processingCts = new();
 
-    [ObservableProperty]
+    [ObservableProperty] 
     private bool isBackEnabled;
 
-    [ObservableProperty]
+    [ObservableProperty] 
     private object? selected;
 
-    [ObservableProperty]
+    [ObservableProperty] 
     private bool canProcessBatch;
+
+    [ObservableProperty] 
+    private bool isProcessing;
+
+    [ObservableProperty] 
+    private BatchExecutionReport? batchReport; // expose current batch summary to UI
 
     public INavigationService NavigationService { get; }
     public INavigationViewService NavigationViewService { get; }
     public ICommand GenerateMkvpropeditArgumentsCommand { get; }
-    public ICommand ProcessFileCommand { get; }
+    public ICommand ProcessBatchCommand { get; }
+    public ICommand CancelProcessingCommand { get; }
 
     public MainViewModel(
-        IFileScanner fileScanner,
         IBatchConfiguration batchConfiguration,
         INavigationService navigationService,
         INavigationViewService navigationViewService,
-        IMkvPropeditService mkvPropeditService)
+        IFileProcessingOrchestrator orchestrator,
+        IBatchReportStore batchResultStore,
+        IMkvPropeditArgumentsGenerator argumentsService)
     {
         _batchConfiguration = batchConfiguration;
+        _orchestrator = orchestrator;
+        _batchReportStore = batchResultStore;
+        _mkvPropeditArgumentsBuilder = argumentsService;
+
         NavigationService = navigationService;
         NavigationViewService = navigationViewService;
-        _mkvPropeditService = mkvPropeditService;
+
         GenerateMkvpropeditArgumentsCommand = new RelayCommand(GenerateMkvpropeditArgumentsHandler);
-        ProcessFileCommand = new AsyncRelayCommand(ProcessFileAsync);
+        ProcessBatchCommand = new RelayCommand(ProcessBatch);
+        CancelProcessingCommand = new RelayCommand(CancelProcessing);
+
         NavigationService.Navigated += OnNavigated;
         _batchConfiguration.StateChanged += BatchConfigurationOnStateChangedHandler;
+
+        BatchReport = _batchReportStore.ActiveBatch;
     }
 
     /// <summary>
-    /// Generates the <c>mkvpropedit</c> command-line arguments based on the current batch configuration.
+    /// Cancels the ongoing batch processing operation.
     /// </summary>
-    private void GenerateMkvpropeditArgumentsHandler()
+    private void CancelProcessing()
     {
-        // Generate the mkvpropedit commands arguments for the current batch operation.
-        string[] commands = GenerateMkvpropeditArguments(_batchConfiguration);
-
-        // Any empty or whitespace-only arguments indicates a problem.
-        if (commands.Any(arg => string.IsNullOrWhiteSpace(arg)))
-        {
-            WeakReferenceMessenger.Default.Send(new DialogMessage("Error", "One or more command arguments are invalid."));
+        if (!IsProcessing) 
             return;
-        }
 
-        var argumentsString = string.Join(Environment.NewLine + Environment.NewLine, commands);
-
-        // Show the generated arguments in a dialog.
-        WeakReferenceMessenger.Default.Send(new MkvPropeditArgumentsDialogMessage(argumentsString));
-
-        _batchConfiguration.MkvpropeditArguments = argumentsString;
+        _processingCts.Cancel();
     }
 
     /// <summary>
-    /// Handles navigation events to update the navigation view's selected item and back navigation state.
+    /// Processes the batch of files based on the current batch configuration.
     /// </summary>
-    /// <param name="sender">The source of the navigation event.</param>
-    /// <param name="eventArgs">The event data containing information about the navigation event, including 
-    /// the destination page type.</param>
-    private void OnNavigated(object sender, NavigationEventArgs eventArgs)
-    {
-        IsBackEnabled = NavigationService.CanGoBack;
-
-        if (eventArgs.SourcePageType == typeof(SettingsPage))
-        {
-            Selected = NavigationViewService.SettingsItem;
-            return;
-        }
-
-        var selectedItem = NavigationViewService.GetSelectedItem(eventArgs.SourcePageType);
-        if (selectedItem != null)
-        {
-            Selected = selectedItem;
-        }
-    }
-
-    /// <summary>
-    /// Processes the current file by executing the <c>mkvpropedit</c> command with the arguments 
-    /// generated from the batch configuration.
-    /// </summary>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    private async Task ProcessFileAsync()
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    private void ProcessBatch()
     {
         if (_batchConfiguration.FileList.Count == 0)
         {
             WeakReferenceMessenger.Default.Send(
-                new DialogMessage("Info", "File list is empty. Please add files to process.")
-            );
+                new DialogMessage("Info", "FileInfo list is empty. Please add files to process."));
             return;
         }
 
-        // Generate the mkvpropedit arguments for the current batch.
-        string[] commands = GenerateMkvpropeditArguments(_batchConfiguration);
+        IsProcessing = true;
+        _processingCts = new CancellationTokenSource();
 
-        // Any empty or whitespace-only arguments indicates a problem.
-        var (isValid, errorMessage) = ValidateMkvpropeditArguments(commands);
-
-        if (!isValid)
+        try
         {
-            WeakReferenceMessenger.Default.Send(new DialogMessage("Error", errorMessage));
-            return;
-        }
-
-        var errorResults = new List<string>();
-        await foreach (var result in _mkvPropeditService.ExecuteAsync(commands))
-        {
-            if (result.Status == MkvPropeditStatus.Error)
+            // Build preview commands via central arguments service.
+            var commands = _mkvPropeditArgumentsBuilder.BuildBatchArguments(_batchConfiguration);
+            var (isValid, errorMessage) = ValidateMkvpropeditArguments(commands);
+            if (!isValid)
             {
-                errorResults.Add(result.Output);
+                WeakReferenceMessenger.Default.Send(new DialogMessage("Error", errorMessage));
+                return;
             }
-        }
 
-        if (errorResults.Count > 0)
+            _batchReportStore.Reset();
+
+            var batchExecutionReport = _batchReportStore.CreateBatch();
+            _batchReportStore.SetActiveBatch(batchExecutionReport);
+
+            var dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+
+            dispatcherQueue.TryEnqueue(async () =>
+            {
+                await _orchestrator.ProcessAllAsync(_batchConfiguration.FileList, _processingCts.Token);
+                SummarizeOutcome();
+            });
+        }
+        catch (OperationCanceledException)
         {
-            var summaryMessage = "Some files failed to process:" + Environment.NewLine +
-                                 string.Join(Environment.NewLine, errorResults);
-            WeakReferenceMessenger.Default.Send(new DialogMessage("Batch Completed with Errors", summaryMessage));
+            WeakReferenceMessenger.Default.Send(new DialogMessage("Cancelled", "Batch processing was cancelled."));
+        }
+        catch (Exception ex)
+        {
+            WeakReferenceMessenger.Default.Send(new DialogMessage("Error", $"Unexpected error: {ex.Message}"));
+        }
+        finally
+        {
+            IsProcessing = false;
+        }
+    }
+
+    /// <summary>
+    /// Summarizes the outcome of the batch processing and sends a dialog message with the results.
+    /// </summary>
+    private void SummarizeOutcome()
+    {
+        var report = _batchReportStore.ActiveBatch;
+        if (report.Failed > 0)
+        {
+            var failures = report.FileReports
+                .Where(r => r.Status == ProcessingStatus.Failed)
+                .Select(r => $"{r.Path} => {string.Join("; ", r.Errors)}");
+
+            WeakReferenceMessenger.Default.Send(new DialogMessage(
+                "Batch Completed with Errors",
+                string.Join(Environment.NewLine, failures)));
+        }
+        else if (report.Warnings > 0)
+        {
+            var warns = report.FileReports
+                .Where(r => r.Status == ProcessingStatus.SucceededWithWarnings)
+                .Select(r => $"{r.Path} => {string.Join("; ", r.Warnings)}");
+
+            WeakReferenceMessenger.Default.Send(new DialogMessage(
+                "Batch Completed with Warnings",
+                string.Join(Environment.NewLine, warns)));
         }
         else
         {
-            WeakReferenceMessenger.Default.Send(new DialogMessage("Batch Completed", "All files processed successfully."));
+            WeakReferenceMessenger.Default.Send(new DialogMessage(
+                "Batch Completed",
+                "All files processed successfully."));
         }
     }
 
+    /// <summary>
+    /// Generates MKVPropEdit command arguments and displays them in a dialog.
+    /// </summary>
+    private void GenerateMkvpropeditArgumentsHandler()
+    {
+        var commands = _mkvPropeditArgumentsBuilder.BuildBatchArguments(_batchConfiguration);
+
+        if (commands.Any(arg => string.IsNullOrWhiteSpace(arg)))
+        {
+            WeakReferenceMessenger.Default.Send(
+                new DialogMessage("Error", "One or more command arguments are invalid."));
+            return;
+        }
+
+        var argumentsString = string.Join(Environment.NewLine + Environment.NewLine, commands);
+        WeakReferenceMessenger.Default.Send(new MkvPropeditArgumentsDialogMessage(argumentsString));
+        _batchConfiguration.MkvpropeditArguments = argumentsString;
+    }
+
+    private void OnNavigated(object sender, NavigationEventArgs eventArgs)
+    {
+        IsBackEnabled = NavigationService.CanGoBack;
+        if (eventArgs.SourcePageType == typeof(SettingsPage))
+        {
+            Selected = NavigationViewService.SettingsItem;
+
+            return;
+        }
+
+        Selected = NavigationViewService.GetSelectedItem(eventArgs.SourcePageType);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="IBatchConfiguration.StateChanged"/> event to update the ability to process the batch.
+    /// </summary>
+    /// <param name="sender">The source of the event. This can be <see langword="null"/>.</param>
+    /// <param name="eventArgs">The event data associated with the state change.</param>
     private void BatchConfigurationOnStateChangedHandler(object? sender, EventArgs eventArgs)
     {
-        // Re-evaluate if the batch can be processed based on the current configuration.
-        string[] commands = GenerateMkvpropeditArguments(_batchConfiguration);
+        var commands = _mkvPropeditArgumentsBuilder.BuildBatchArguments(_batchConfiguration);
         (bool isValid, _) = ValidateMkvpropeditArguments(commands);
-        CanProcessBatch = isValid;
-    }
-
-    /// <summary>
-    /// Generates an array of command-line arguments for <c>mkvpropedit</c> based on the provided batch configuration.
-    /// Each string in the returned array corresponds to the arguments for a single file in the batch.
-    /// </summary>
-    /// <param name="batchConfiguration">The batch configuration containing the list of files and associated settings.</param>
-    /// <returns>
-    /// An array of strings, where each string represents the command-line arguments for <c>mkvpropedit</c> for a specific file.
-    /// </returns>
-    private static string[] GenerateMkvpropeditArguments(IBatchConfiguration batchConfiguration)
-    {
-        List<string> results = [];
-
-        foreach (var file in batchConfiguration.FileList)
-        {
-            string[] arguments = GenerateMkvpropeditArgumentsForFile(file, batchConfiguration);
-            results.Add(string.Join(" ", arguments));
-        }
-
-        return [.. results];
-    }
-
-    /// <summary>
-    /// Generates an array of command-line arguments for <c>mkvpropedit</c> for the specified file and batch configuration.
-    /// The generated arguments will only include the title if <see cref="IBatchConfiguration.ShouldModifyTitle"/> is <c>true</c>.
-    /// Track-related arguments are included only for properties whose corresponding <c>ShouldModify*</c> flags are set to <c>true</c>
-    /// in each <see cref="TrackConfiguration"/> (see <see cref="AddTracksToBuilder"/> for details).
-    /// </summary>
-    /// <param name="scannedFile">The file to be processed, containing information such as the file path.</param>
-    /// <param name="batchConfiguration">
-    /// The batch configuration specifying the title and track information to include in the arguments.
-    /// Only properties with their <c>ShouldModify*</c> flags set to <c>true</c> will be included.
-    /// </param>
-    /// <returns>
-    /// An array of strings representing the arguments to be passed to <c>mkvpropedit</c> for the specified file.
-    /// </returns>
-    private static string[] GenerateMkvpropeditArgumentsForFile(ScannedFileInfo scannedFile, IBatchConfiguration batchConfiguration)
-    {
-        var builder = new MkvPropeditArgumentsBuilder();
-
-        if (batchConfiguration.ShouldModifyTitle)
-        {
-            builder.WithTitle(batchConfiguration.Title);
-        }
-
-        if (batchConfiguration.ShouldModifyTrackStatisticsTags)
-        {
-            if (batchConfiguration.AddTrackStatisticsTags)
-            {
-                builder.WithAddTrackStatisticsTags();
-            }
-            if (batchConfiguration.DeleteTrackStatisticsTags)
-            {
-                builder.WithDeleteTrackStatisticsTags();
-            }
-        }
-
-        // Add track configurations to the builder for audio, video, and subtitle tracks.
-        AddTracksToBuilder(builder, batchConfiguration.AudioTracks, TrackType.Audio);
-        AddTracksToBuilder(builder, batchConfiguration.VideoTracks, TrackType.Video);
-        AddTracksToBuilder(builder, batchConfiguration.SubtitleTracks, TrackType.Text);
-
-        // If no modifications are specified, we do not need to generate any arguments.
-        if (builder.IsEmpty())
-        {
-            return [];
-        }
-
-        builder.SetInputFile(scannedFile.Path);
-
-        return builder.Build();
-    }
-
-    /// <summary>
-    /// Adds a collection of track configurations to the specified mkvpropedit arguments builder.
-    /// For each track, only properties with their corresponding <c>ShouldModify*</c> flag set to <c>true</c>
-    /// will be included in the generated arguments
-    /// </summary>
-    /// <param name="builder">The builder to which the track configurations will be added.</param>
-    /// <param name="tracks">A collection of track configurations to add. Each specifies properties such as position, 
-    /// language, name, and flags.</param>
-    /// <param name="type">The type of tracks to add. Only tracks of a type that corresponds to a Matroska track element 
-    /// will be processed.</param>
-    private static void AddTracksToBuilder(IMkvPropeditArgumentsBuilder builder, IEnumerable<TrackConfiguration> tracks, TrackType type)
-    {
-        if (!type.IsMatroskaTrackElement())
-            return;
-
-        foreach (var track in tracks)
-        {
-            // Only add the track if at least one property should be modified.
-            if (!(track.ShouldModifyLanguage ||
-                  track.ShouldModifyName ||
-                  track.ShouldModifyDefaultFlag ||
-                  track.ShouldModifyForcedFlag ||
-                  track.ShouldModifyEnabledFlag))
-            {
-                continue;
-            }
-
-            builder.AddTrack(tb =>
-            {
-                tb.SetTrackId(track.Index + 1) // Convert to 1-based index for mkvpropedit
-                .SetTrackType(type);
-
-                if (track.ShouldModifyLanguage)
-                    tb.WithLanguage(track.Language.Code);
-
-                if (track.ShouldModifyName)
-                    tb.WithName(track.Name);
-
-                if (track.ShouldModifyDefaultFlag)
-                    tb.WithIsDefault(track.Default);
-
-                if (track.ShouldModifyForcedFlag)
-                    tb.WithIsForced(track.Forced);
-
-                if (track.ShouldModifyEnabledFlag)
-                    tb.WithIsEnabled(track.Enabled);
-
-                return tb;
-            });
-        }
+        CanProcessBatch = isValid && _batchConfiguration.FileList.Count > 0;
     }
 
     /// <summary>

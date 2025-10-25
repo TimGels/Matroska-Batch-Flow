@@ -4,6 +4,7 @@ using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Core.Services.FileProcessing.Track;
 using MatroskaBatchFlow.Core.Services.FileProcessing.Track.Name;
 using MatroskaBatchFlow.Core.Services.FileValidation;
+using MatroskaBatchFlow.Core.Services.Processing;
 using MatroskaBatchFlow.Uno.Activation;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Services;
@@ -58,9 +59,13 @@ public partial class App : Application
             services.AddSingleton<IFileScanner, FileScanner>();
             services.AddSingleton<IBatchConfiguration, BatchConfiguration>();
             services.AddSingleton<ILogger, Logger<Logger>>();
-            services.AddSingleton<IMkvPropeditService, MkvPropeditService>();
             services.AddSingleton<IFileListAdapter, FileListAdapter>();
             services.AddSingleton<IFilePickerDialogService, FilePickerDialogService>();
+            services.AddSingleton<IBatchReportStore, InMemoryBatchReportStore>();
+            services.AddSingleton<IFileProcessingOrchestrator, FileProcessingOrchestrator>();
+            services.AddSingleton<IMkvToolExecutor, MkvPropeditExecutor>();
+            services.AddSingleton<IProcessRunner, ProcessRunner>();
+            services.AddSingleton<IMkvPropeditArgumentsGenerator, MkvPropeditArgumentsGenerator>();
 
             // Register file validation rules engine service and it's accomadating rules.
             services.AddSingleton<IFileValidationEngine, FileValidationEngine>();
@@ -88,6 +93,7 @@ public partial class App : Application
             services.AddSingleton<OutputViewModel, OutputViewModel>();
             services.AddSingleton<ShellViewModel, ShellViewModel>();
             services.AddSingleton<MainViewModel, MainViewModel>();
+            services.AddSingleton<BatchResultsViewModel, BatchResultsViewModel>();
 
             // Register pages.
             services.AddSingleton<Shell>();
