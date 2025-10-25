@@ -61,6 +61,7 @@
         <None Remove="Assets\Icons\AppList.scale-400.png" />
         <None Remove="Assets\Icons\AppTitleBar.scale-200.png" />
         <None Remove="Presentation\AudioPage.xaml" />
+        <None Remove="Presentation\BatchResultsPage.xaml" />
         <None Remove="Presentation\Dialogs\ErrorDialog.xaml" />
         <None Remove="Presentation\Dialogs\MkvPropeditArgumentsDialog.xaml" />
         <None Remove="Presentation\GeneralPage.xaml" />
@@ -225,6 +226,16 @@
         <Page Update="Presentation\Dialogs\ErrorDialog.xaml">
             <Generator>MSBuild:Compile</Generator>
         </Page>
+    </ItemGroup>
+    <ItemGroup>
+        <Page Update="Presentation\BatchResultsPage.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+    </ItemGroup>
+    <ItemGroup>
+        <None Update="Presentation\SummaryTileControl.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </None>
     </ItemGroup>
     <ItemGroup>
         <None Update="appsettings.json">

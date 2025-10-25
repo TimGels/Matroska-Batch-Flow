@@ -113,7 +113,7 @@
                         <TextBlock HorizontalAlignment="Left"
                                    Grid.Column="0"
                                    VerticalAlignment="Center"
-                                   Text="{x:Bind File.Path}"
+                                   Text="{x:Bind FileInfo.Path}"
                                    TextWrapping="Wrap" />
                     </Grid>
                 </DataTemplate>

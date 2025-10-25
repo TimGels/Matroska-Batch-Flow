@@ -153,7 +153,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         // Convert SelectedFiles to an array to make a copy to avoid modifying the collection while iterating.
         foreach (ScannedFileViewModel file in SelectedFiles.ToArray())
         {
-            _fileListAdapter.RemoveFile(file.File);
+            _fileListAdapter.RemoveFile(file.FileInfo);
         }  
     }
 
@@ -167,7 +167,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         // Make array copy to prevent recursive clearing.
         foreach (ScannedFileViewModel file in _fileListAdapter.ScannedFileViewModels.ToArray())
         {
-            _fileListAdapter.RemoveFile(file.File);
+            _fileListAdapter.RemoveFile(file.FileInfo);
         }
     }
 

@@ -21,16 +21,16 @@ public sealed partial class MainPage : Page
         ViewModel.NavigationService.Frame = contentFrame;
         ViewModel.NavigationViewService.Initialize(NavigationView);
 
-        WeakReferenceMessenger.Default.Register<DialogMessage>(this, (r, m) =>
+        WeakReferenceMessenger.Default.Register<DialogMessage>(this, async (r, m) =>
         {
             _dialogQueue.Enqueue(m);
-            ShowDialogAsync().ConfigureAwait(true);
+            await ShowDialogAsync().ConfigureAwait(true);
         });
 
-        WeakReferenceMessenger.Default.Register<MkvPropeditArgumentsDialogMessage>(this, (r, m) =>
+        WeakReferenceMessenger.Default.Register<MkvPropeditArgumentsDialogMessage>(this, async (r, m) =>
         {
             _dialogQueue.Enqueue(m);
-            ShowDialogAsync().ConfigureAwait(true);
+            await ShowDialogAsync().ConfigureAwait(true);
         });
 
         // Clip navigation view content to the content host's bounds to prevent navigation transitions from overlapping other UI elements.

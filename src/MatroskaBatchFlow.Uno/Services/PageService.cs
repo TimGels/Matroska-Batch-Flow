@@ -8,6 +8,7 @@ public class PageService : IPageService
 
     public PageService()
     {
+        Configure<BatchResultsViewModel, BatchResultsPage>();
         Configure<MainViewModel, MainPage>();
         Configure<InputViewModel, InputPage>();
         Configure<GeneralViewModel, GeneralPage>();

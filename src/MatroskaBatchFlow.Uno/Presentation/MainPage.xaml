@@ -40,6 +40,8 @@
                                     helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.SubtitleViewModel" />
                 <NavigationViewItem Content="Output" Tag="OutputPage" Visibility="Collapsed"
                                     helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.OutputViewModel" />
+                <NavigationViewItem Content="Results" Tag="BatchResultsPage" Visibility="Visible"
+                                    helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.BatchResultsViewModel" />
             </NavigationView.MenuItems>
             <NavigationView.Content>
                 <Grid x:Name="ContentHost">
@@ -71,7 +73,7 @@
                     <AppBarSeparator />
                     <AppBarButton Label="Process Files"
                                   IsEnabled="{x:Bind ViewModel.CanProcessBatch, Mode=OneWay}"
-                                  Command="{x:Bind ViewModel.ProcessFileCommand}">
+                                  Command="{x:Bind ViewModel.ProcessBatchCommand}">
                         <FontIcon Glyph="&#xE9F5;" />
                     </AppBarButton>
                 </CommandBar.PrimaryCommands>
