@@ -52,7 +52,7 @@
         <PackageCertificateKeyFile>MatroskaBatchFlow.Uno_TemporaryKey.pfx</PackageCertificateKeyFile>
         <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
         <PublishAot>False</PublishAot>
-        <AssemblyVersion>0.1.1.0</AssemblyVersion>
+        <AssemblyVersion>0.2.0.0</AssemblyVersion>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" />
