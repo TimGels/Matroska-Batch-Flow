@@ -17,19 +17,19 @@ public partial class MainViewModel : ObservableObject
     private readonly IMkvPropeditArgumentsGenerator _mkvPropeditArgumentsBuilder;
     private CancellationTokenSource _processingCts = new();
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private bool isBackEnabled;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private object? selected;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private bool canProcessBatch;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private bool isProcessing;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private BatchExecutionReport? batchReport; // expose current batch summary to UI
 
     public INavigationService NavigationService { get; }
@@ -55,7 +55,7 @@ public partial class MainViewModel : ObservableObject
         NavigationViewService = navigationViewService;
 
         GenerateMkvpropeditArgumentsCommand = new RelayCommand(GenerateMkvpropeditArgumentsHandler);
-        ProcessBatchCommand = new RelayCommand(ProcessBatch);
+        ProcessBatchCommand = new AsyncRelayCommand(ProcessBatchAsync);
         CancelProcessingCommand = new RelayCommand(CancelProcessing);
 
         NavigationService.Navigated += OnNavigated;
@@ -69,17 +69,17 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     private void CancelProcessing()
     {
-        if (!IsProcessing) 
+        if (!IsProcessing)
             return;
 
         _processingCts.Cancel();
     }
 
     /// <summary>
-    /// Processes the batch of files based on the current batch configuration.
+    /// Processes the batch of files based on the current batch configuration, asynchronously.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    private void ProcessBatch()
+    private async Task ProcessBatchAsync()
     {
         if (_batchConfiguration.FileList.Count == 0)
         {
@@ -107,13 +107,9 @@ public partial class MainViewModel : ObservableObject
             var batchExecutionReport = _batchReportStore.CreateBatch();
             _batchReportStore.SetActiveBatch(batchExecutionReport);
 
-            var dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+            await _orchestrator.ProcessAllAsync(_batchConfiguration.FileList, _processingCts.Token);
 
-            dispatcherQueue.TryEnqueue(async () =>
-            {
-                await _orchestrator.ProcessAllAsync(_batchConfiguration.FileList, _processingCts.Token);
-                SummarizeOutcome();
-            });
+            SummarizeOutcome();
         }
         catch (OperationCanceledException)
         {
