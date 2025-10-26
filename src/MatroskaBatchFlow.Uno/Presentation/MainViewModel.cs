@@ -5,7 +5,6 @@ using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.Processing;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Messages;
-using Microsoft.UI.Dispatching;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
