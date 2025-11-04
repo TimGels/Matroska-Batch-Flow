@@ -4,11 +4,11 @@ namespace MatroskaBatchFlow.Core.Models;
 
 public sealed class UserSettings
 {
-    [JsonRequired]
-    [JsonPropertyName("Version")]
-    public int SchemaVersion { get; } = 1;
+    public const int CurrentSchemaVersion = 1;
 
-    [JsonRequired]
+    [JsonPropertyName("SchemaVersion")]
+    public int SchemaVersion { get; set; } = CurrentSchemaVersion;
+
     [JsonPropertyName("MkvPropedit")]
     public MkvPropeditSettings MkvPropedit { get; set; } = new MkvPropeditSettings();
 
