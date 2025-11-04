@@ -8,6 +8,7 @@ using MatroskaBatchFlow.Core.Services.Processing;
 using MatroskaBatchFlow.Uno.Activation;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Services;
+using MatroskaBatchFlow.Uno.Services.Configuration;
 using Serilog.Core;
 
 namespace MatroskaBatchFlow.Uno;
@@ -66,6 +67,12 @@ public partial class App : Application
             services.AddSingleton<IMkvToolExecutor, MkvPropeditExecutor>();
             services.AddSingleton<IProcessRunner, ProcessRunner>();
             services.AddSingleton<IMkvPropeditArgumentsGenerator, MkvPropeditArgumentsGenerator>();
+            services.AddSingleton<IWritableSettings<UserSettings>>(sp =>
+            {
+                IOptions<AppConfigOptions> options = sp.GetRequiredService<IOptions<AppConfigOptions>>();
+                string userSettingsFilePath = options.Value.UserSettingsPath;
+                return new WritableJsonSettings<UserSettings>(userSettingsFilePath);
+            });
 
             // Register file validation rules engine service and it's accomadating rules.
             services.AddSingleton<IFileValidationEngine, FileValidationEngine>();
@@ -94,6 +101,7 @@ public partial class App : Application
             services.AddSingleton<ShellViewModel, ShellViewModel>();
             services.AddSingleton<MainViewModel, MainViewModel>();
             services.AddSingleton<BatchResultsViewModel, BatchResultsViewModel>();
+            services.AddSingleton<SettingsViewModel, SettingsViewModel>();
 
             // Register pages.
             services.AddSingleton<Shell>();
