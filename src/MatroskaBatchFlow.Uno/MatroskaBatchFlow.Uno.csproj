@@ -55,6 +55,7 @@
         <AssemblyVersion>0.2.0.0</AssemblyVersion>
     </PropertyGroup>
     <ItemGroup>
+        <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" />
         <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" />
         <PackageReference Include="Microsoft.Extensions.Options" />
         <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />

@@ -1,5 +1,37 @@
+using MatroskaBatchFlow.Core.Models.AppSettings;
+using MatroskaBatchFlow.Core.Utilities;
+using MatroskaBatchFlow.Uno.Services.Configuration;
+
 namespace MatroskaBatchFlow.Uno.Presentation;
+
 public partial class SettingsViewModel : ObservableRecipient
 {
-    public string Setting1 { get; set; } = "Default Value 1";
+    private readonly IOptionsMonitor<AppConfigOptions> _appOptions;
+    private readonly IWritableSettings<UserSettings> _userSettings;
+
+    [ObservableProperty]
+    private string customMkvPropeditPath;
+
+    [ObservableProperty]
+    private bool isCustomMkvPropeditPathEnabled;
+
+    public ICommand SaveSettingsCommand { get; }
+
+    public SettingsViewModel(IOptionsMonitor<AppConfigOptions> appOptions, IWritableSettings<UserSettings> userSettings)
+    {
+        _appOptions = appOptions;
+        _userSettings = userSettings;
+        SaveSettingsCommand = new AsyncRelayCommand(SaveSettings);
+
+        customMkvPropeditPath = ExecutableLocator.FindExecutable(_userSettings.Value.MkvPropedit.CustomPath ?? string.Empty) ?? string.Empty;
+        isCustomMkvPropeditPathEnabled = _userSettings.Value.MkvPropedit.IsCustomPathEnabled;
+    }
+
+    private async Task SaveSettings()
+    {
+        await _userSettings.UpdateAsync(settings =>
+        {
+            settings.MkvPropedit.CustomPath = ExecutableLocator.FindExecutable(CustomMkvPropeditPath);
+        });
+    }
 }

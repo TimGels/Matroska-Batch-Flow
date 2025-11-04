@@ -6,14 +6,83 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:utu="using:Uno.Toolkit.UI"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:Converters="using:MatroskaBatchFlow.Uno.Converters"
     xmlns:ui="using:CommunityToolkit.WinUI"
     mc:Ignorable="d">
+
+    <Page.Resources>
+        <Converters:BoolToIndexConverter x:Key="BoolToIndexConverter"/>
+    </Page.Resources>
 
     <Grid>
         <StackPanel HorizontalAlignment="Stretch"
                     Spacing="4">
 
+            <!--Mkvpropedit section-->
+            <TextBlock Text="Mkvpropedit" />
+
+            <controls:SwitchPresenter TargetType="x:Boolean"
+                          Value="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=OneWay}">
+
+                <controls:Case Value="False">
+                    <controls:SettingsCard Description="Choose between the bundled mkvpropedit executable or specify a path to use your own."
+                               Header="Executable Selection"
+                               HeaderIcon="{ui:FontIcon Glyph=&#xE756;}">
+
+                        <ComboBox SelectedIndex="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=TwoWay, Converter={StaticResource BoolToIndexConverter}}">
+                            <ComboBoxItem Content="Included" />
+                            <ComboBoxItem Content="Custom" />
+                        </ComboBox>
+
+                    </controls:SettingsCard>
+                </controls:Case>
+
+                <controls:Case Value="True">
+                    <controls:SettingsExpander Description="Choose between the bundled mkvpropedit executable or specify a path to use your own."
+                                   Header="Executable Selection"
+                                   HeaderIcon="{ui:FontIcon Glyph=&#xE756;}"
+                                   IsExpanded="True">
+
+                        <ComboBox SelectedIndex="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=TwoWay, Converter={StaticResource BoolToIndexConverter}}">
+                            <ComboBoxItem Content="Included" />
+                            <ComboBoxItem Content="Custom" />
+                        </ComboBox>
+
+                        <controls:SettingsExpander.Items>
+                            <controls:SettingsCard Header="Location"
+                                                   IsEnabled="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=OneWay}">
+                                <controls:SettingsCard.Description>
+                                    <TextBlock Text="{x:Bind ViewModel.CustomMkvPropeditPath, Mode=OneWay}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               FontSize="12"
+                                               TextWrapping="Wrap" />
+                                </controls:SettingsCard.Description>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Grid.Column="1"
+                                            Click="BrowseExecutable_Click"
+                                            VerticalAlignment="Center"
+                                            HorizontalAlignment="Right">
+                                        <Button.Content>
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="Browse..." />
+                                            </StackPanel>
+                                        </Button.Content>
+                                    </Button>
+                                </Grid>
+                            </controls:SettingsCard>
+                        </controls:SettingsExpander.Items>
+                    </controls:SettingsExpander>
+                </controls:Case>
+            </controls:SwitchPresenter>
+
+            <!--About section-->
             <TextBlock Text="About" />
 
             <controls:SettingsExpander Header="Matroska Batch Flow"
@@ -48,7 +117,7 @@
                                              NavigateUri="https://github.com/microsoft/windowsappsdk" />
                             <HyperlinkButton Content="WinUI 3"
                                              NavigateUri="https://github.com/microsoft/microsoft-ui-xaml" />
-                            
+
                         </StackPanel>
                     </controls:SettingsCard>
                     <controls:SettingsCard HorizontalContentAlignment="Left"
@@ -62,6 +131,7 @@
                     </controls:SettingsCard>
                 </controls:SettingsExpander.Items>
             </controls:SettingsExpander>
+            <Button Command="{x:Bind ViewModel.SaveSettingsCommand}">Save</Button>
         </StackPanel>
     </Grid>
 </Page>
