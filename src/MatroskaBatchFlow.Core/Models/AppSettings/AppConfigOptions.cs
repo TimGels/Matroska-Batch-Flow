@@ -7,13 +7,13 @@ public class AppConfigOptions
 {
     [Required]
     [JsonPropertyName("Environment")]
-    public string Environment { get; set; }
+    public string Environment { get; init; }
 
     [Required]
     [JsonPropertyName("MkvPropeditPath")]
-    public string MkvPropeditPath { get; set; }
+    public string MkvPropeditPath { get; init; }
 
     [Required]
     [JsonPropertyName("UserSettingsPath")]
-    public string UserSettingsPath { get; set; }
+    public string UserSettingsPath { get; init; }
 }
