@@ -146,7 +146,6 @@
                         </controls:SettingsCard>
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
-                <Button Command="{x:Bind ViewModel.SaveSettingsCommand}">Save</Button>
             </StackPanel>
         </Grid>
     </ScrollView>
