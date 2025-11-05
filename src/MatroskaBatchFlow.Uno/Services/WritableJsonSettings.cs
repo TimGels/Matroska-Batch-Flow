@@ -1,7 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using MatroskaBatchFlow.Core.Services;
 
-namespace MatroskaBatchFlow.Uno.Services.Configuration;
+namespace MatroskaBatchFlow.Uno.Services;
 
 /// <summary>
 /// Provides read/write access to a JSON-backed settings file for a specified type.

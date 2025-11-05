@@ -14,7 +14,7 @@ namespace MatroskaBatchFlow.Core.Services.Processing;
 /// </summary>
 /// <param name="optionsMonitor">The options monitor for application configuration settings.</param>
 /// <param name="processRunner">The process runner to execute external processes.</param>
-public class MkvPropeditExecutor(IOptions<AppConfigOptions> optionsMonitor, IProcessRunner processRunner) : IMkvToolExecutor
+public class MkvPropeditExecutor(IOptions<AppConfigOptions> optionsMonitor, IWritableSettings<UserSettings> userSettings, IProcessRunner processRunner) : IMkvToolExecutor
 {
     /// <inheritdoc/>
     public async Task<MkvPropeditResult> ExecuteAsync(string commandLineArguments, CancellationToken ct = default)
@@ -63,11 +63,20 @@ public class MkvPropeditExecutor(IOptions<AppConfigOptions> optionsMonitor, IPro
     {
         resolvedPath = null;
         error = null;
+        string executablePath;
 
         // It throws when a validation failed property is accessed.
         try
         {
-            var executablePath = optionsMonitor.Value.MkvPropeditPath;
+            if (userSettings.Value.MkvPropedit.IsCustomPathEnabled)
+            {
+                executablePath = userSettings.Value.MkvPropedit.CustomPath ?? string.Empty;
+            }
+            else
+            {
+                executablePath = optionsMonitor.Value.MkvPropeditPath;
+            }
+
             if (ExecutableLocator.FindExecutable(executablePath) is string foundPath)
             {
                 resolvedPath = foundPath;

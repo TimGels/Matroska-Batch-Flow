@@ -1,6 +1,6 @@
 using MatroskaBatchFlow.Core.Models.AppSettings;
+using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Utilities;
-using MatroskaBatchFlow.Uno.Services.Configuration;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
@@ -32,6 +32,7 @@ public partial class SettingsViewModel : ObservableRecipient
         await _userSettings.UpdateAsync(settings =>
         {
             settings.MkvPropedit.CustomPath = ExecutableLocator.FindExecutable(CustomMkvPropeditPath);
+            settings.MkvPropedit.IsCustomPathEnabled = IsCustomMkvPropeditPathEnabled;
         });
     }
 }
