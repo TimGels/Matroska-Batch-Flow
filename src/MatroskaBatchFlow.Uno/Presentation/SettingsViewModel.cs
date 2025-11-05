@@ -1,6 +1,7 @@
 using MatroskaBatchFlow.Core.Models.AppSettings;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Utilities;
+using MatroskaBatchFlow.Uno.Utilities;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
@@ -24,7 +25,8 @@ public partial class SettingsViewModel : ObservableRecipient
         SaveSettingsCommand = new AsyncRelayCommand(SaveSettings);
 
         customMkvPropeditPath = ExecutableLocator.FindExecutable(_userSettings.Value.MkvPropedit.CustomPath ?? string.Empty) ?? string.Empty;
-        isCustomMkvPropeditPathEnabled = _userSettings.Value.MkvPropedit.IsCustomPathEnabled;
+        // If Skia is being used, we force the custom path to be enabled since the bundled mkvpropedit executable is only for Windows.
+        isCustomMkvPropeditPathEnabled = PlatformInfo.IsSkia || _userSettings.Value.MkvPropedit.IsCustomPathEnabled;
     }
 
     private async Task SaveSettings()
