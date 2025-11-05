@@ -26,126 +26,128 @@
         </Style>
     </Page.Resources>
 
-    <Grid>
-        <StackPanel HorizontalAlignment="Stretch"
-                    Spacing="4">
-            <TextBlock FontSize="28"
-                       Text="Settings" />
+    <ScrollView>
+        <Grid>
+            <StackPanel HorizontalAlignment="Stretch"
+                Spacing="4">
+                <TextBlock FontSize="28"
+                   Text="Settings" />
 
-            <!--Mkvpropedit section-->
-            <TextBlock Text="Mkvpropedit"
-                       Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
+                <!--Mkvpropedit section-->
+                <TextBlock Text="Mkvpropedit"
+                   Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
 
-            <controls:SwitchPresenter TargetType="x:Boolean"
-                                      Value="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=OneWay}">
+                <controls:SwitchPresenter TargetType="x:Boolean"
+                                  Value="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=OneWay}">
 
-                <controls:Case Value="False">
-                    <controls:SettingsCard Description="Choose between the bundled mkvpropedit executable or specify a path to use your own."
+                    <controls:Case Value="False">
+                        <controls:SettingsCard Description="Choose between the bundled mkvpropedit executable or specify a path to use your own."
+                                       Header="Executable Selection"
+                                       HeaderIcon="{ui:FontIcon Glyph=&#xE756;}">
+
+                            <win:ComboBox SelectedIndex="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=TwoWay, Converter={StaticResource BoolToIndexConverter}}">
+                                <ComboBoxItem Content="Included" />
+                                <ComboBoxItem Content="Custom" />
+                            </win:ComboBox>
+
+                        </controls:SettingsCard>
+                    </controls:Case>
+
+                    <controls:Case Value="True">
+                        <controls:SettingsExpander Description="Choose between the bundled mkvpropedit executable or specify a path to use your own."
                                            Header="Executable Selection"
-                                           HeaderIcon="{ui:FontIcon Glyph=&#xE756;}">
+                                           HeaderIcon="{ui:FontIcon Glyph=&#xE756;}"
+                                           IsExpanded="True">
 
-                        <win:ComboBox SelectedIndex="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=TwoWay, Converter={StaticResource BoolToIndexConverter}}">
-                            <ComboBoxItem Content="Included" />
-                            <ComboBoxItem Content="Custom" />
-                        </win:ComboBox>
+                            <win:ComboBox SelectedIndex="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=TwoWay, Converter={StaticResource BoolToIndexConverter}}">
+                                <ComboBoxItem Content="Included" />
+                                <ComboBoxItem Content="Custom" />
+                            </win:ComboBox>
 
-                    </controls:SettingsCard>
-                </controls:Case>
+                            <controls:SettingsExpander.Items>
+                                <controls:SettingsCard Header="Location"
+                                               IsEnabled="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=OneWay}">
+                                    <controls:SettingsCard.Description>
+                                        <TextBlock Text="{x:Bind ViewModel.CustomMkvPropeditPath, Mode=OneWay}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           FontSize="12"
+                                           TextWrapping="Wrap" />
+                                    </controls:SettingsCard.Description>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
 
-                <controls:Case Value="True">
-                    <controls:SettingsExpander Description="Choose between the bundled mkvpropedit executable or specify a path to use your own."
-                                               Header="Executable Selection"
-                                               HeaderIcon="{ui:FontIcon Glyph=&#xE756;}"
-                                               IsExpanded="True">
+                                        <Button Grid.Column="1"
+                                        Click="BrowseExecutable_Click"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Right">
+                                            <Button.Content>
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="Browse..." />
+                                                </StackPanel>
+                                            </Button.Content>
+                                        </Button>
+                                    </Grid>
+                                </controls:SettingsCard>
+                            </controls:SettingsExpander.Items>
+                        </controls:SettingsExpander>
+                    </controls:Case>
+                </controls:SwitchPresenter>
 
-                        <win:ComboBox SelectedIndex="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=TwoWay, Converter={StaticResource BoolToIndexConverter}}">
-                            <ComboBoxItem Content="Included" />
-                            <ComboBoxItem Content="Custom" />
-                        </win:ComboBox>
+                <!--About section-->
+                <TextBlock Text="About"
+                   Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
-                        <controls:SettingsExpander.Items>
-                            <controls:SettingsCard Header="Location"
-                                                   IsEnabled="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=OneWay}">
-                                <controls:SettingsCard.Description>
-                                    <TextBlock Text="{x:Bind ViewModel.CustomMkvPropeditPath, Mode=OneWay}"
-                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                               FontSize="12"
-                                               TextWrapping="Wrap" />
-                                </controls:SettingsCard.Description>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
+                <controls:SettingsExpander Header="Matroska Batch Flow"
+                                   Description="© 2025. All rights reserved."
+                                   IsExpanded="True">
+                    <controls:SettingsExpander.HeaderIcon>
+                        <BitmapIcon ShowAsMonochrome="False"
+                            UriSource="ms-appx:///Resources/Assets/PackageLogo.scale-100.png" />
+                    </controls:SettingsExpander.HeaderIcon>
+                    <TextBlock IsTextSelectionEnabled="True"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       Text="{x:Bind AppVersion}" />
+                    <controls:SettingsExpander.Items>
+                        <controls:SettingsCard HorizontalContentAlignment="Left"
+                                       ContentAlignment="Left">
+                            <StackPanel Margin="-12,0,0,0"
+                                Orientation="Vertical">
+                                <HyperlinkButton Content="License"
+                                         NavigateUri="https://github.com/TimGels/Matroska-Batch-Flow/blob/main/LICENSE" />
+                            </StackPanel>
+                        </controls:SettingsCard>
+                        <controls:SettingsCard HorizontalContentAlignment="Left"
+                                       ContentAlignment="Vertical"
+                                       Header="Third party dependencies">
+                            <StackPanel Margin="-12,0,0,0"
+                                Orientation="Vertical">
+                                <HyperlinkButton Content="Uno Platform"
+                                         NavigateUri="https://github.com/unoplatform/uno" />
+                                <HyperlinkButton Content=".NET Community Toolkit"
+                                         NavigateUri="https://github.com/CommunityToolkit/dotnet" />
+                                <HyperlinkButton Content="Windows App SDK"
+                                         NavigateUri="https://github.com/microsoft/windowsappsdk" />
+                                <HyperlinkButton Content="WinUI 3"
+                                         NavigateUri="https://github.com/microsoft/microsoft-ui-xaml" />
 
-                                    <Button Grid.Column="1"
-                                            Click="BrowseExecutable_Click"
-                                            VerticalAlignment="Center"
-                                            HorizontalAlignment="Right">
-                                        <Button.Content>
-                                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <TextBlock Text="Browse..." />
-                                            </StackPanel>
-                                        </Button.Content>
-                                    </Button>
-                                </Grid>
-                            </controls:SettingsCard>
-                        </controls:SettingsExpander.Items>
-                    </controls:SettingsExpander>
-                </controls:Case>
-            </controls:SwitchPresenter>
-
-            <!--About section-->
-            <TextBlock Text="About"
-                       Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
-
-            <controls:SettingsExpander Header="Matroska Batch Flow"
-                                       Description="© 2025. All rights reserved."
-                                       IsExpanded="True">
-                <controls:SettingsExpander.HeaderIcon>
-                    <BitmapIcon ShowAsMonochrome="False"
-                                UriSource="ms-appx:///Resources/Assets/PackageLogo.scale-100.png" />
-                </controls:SettingsExpander.HeaderIcon>
-                <TextBlock IsTextSelectionEnabled="True"
-                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                           Text="{x:Bind AppVersion}" />
-                <controls:SettingsExpander.Items>
-                    <controls:SettingsCard HorizontalContentAlignment="Left"
-                                           ContentAlignment="Left">
-                        <StackPanel Margin="-12,0,0,0"
-                                    Orientation="Vertical">
-                            <HyperlinkButton Content="License"
-                                             NavigateUri="https://github.com/TimGels/Matroska-Batch-Flow/blob/main/LICENSE" />
-                        </StackPanel>
-                    </controls:SettingsCard>
-                    <controls:SettingsCard HorizontalContentAlignment="Left"
-                                           ContentAlignment="Vertical"
-                                           Header="Third party dependencies">
-                        <StackPanel Margin="-12,0,0,0"
-                                    Orientation="Vertical">
-                            <HyperlinkButton Content="Uno Platform"
-                                             NavigateUri="https://github.com/unoplatform/uno" />
-                            <HyperlinkButton Content=".NET Community Toolkit"
-                                             NavigateUri="https://github.com/CommunityToolkit/dotnet" />
-                            <HyperlinkButton Content="Windows App SDK"
-                                             NavigateUri="https://github.com/microsoft/windowsappsdk" />
-                            <HyperlinkButton Content="WinUI 3"
-                                             NavigateUri="https://github.com/microsoft/microsoft-ui-xaml" />
-
-                        </StackPanel>
-                    </controls:SettingsCard>
-                    <controls:SettingsCard HorizontalContentAlignment="Left"
-                                                   ContentAlignment="Vertical"
-                                                   Header="Useful links">
-                        <StackPanel Margin="-12,0,0,0"
-                                    Orientation="Vertical">
-                            <HyperlinkButton Content="GitHub repository"
-                                             NavigateUri="https://github.com/TimGels/Matroska-Batch-Flow" />
-                        </StackPanel>
-                    </controls:SettingsCard>
-                </controls:SettingsExpander.Items>
-            </controls:SettingsExpander>
-            <Button Command="{x:Bind ViewModel.SaveSettingsCommand}">Save</Button>
-        </StackPanel>
-    </Grid>
+                            </StackPanel>
+                        </controls:SettingsCard>
+                        <controls:SettingsCard HorizontalContentAlignment="Left"
+                                               ContentAlignment="Vertical"
+                                               Header="Useful links">
+                            <StackPanel Margin="-12,0,0,0"
+                                Orientation="Vertical">
+                                <HyperlinkButton Content="GitHub repository"
+                                         NavigateUri="https://github.com/TimGels/Matroska-Batch-Flow" />
+                            </StackPanel>
+                        </controls:SettingsCard>
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
+                <Button Command="{x:Bind ViewModel.SaveSettingsCommand}">Save</Button>
+            </StackPanel>
+        </Grid>
+    </ScrollView>
 </Page>
