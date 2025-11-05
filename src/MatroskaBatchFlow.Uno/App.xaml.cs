@@ -8,7 +8,6 @@ using MatroskaBatchFlow.Core.Services.Processing;
 using MatroskaBatchFlow.Uno.Activation;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Services;
-using MatroskaBatchFlow.Uno.Services.Configuration;
 using Serilog.Core;
 
 namespace MatroskaBatchFlow.Uno;

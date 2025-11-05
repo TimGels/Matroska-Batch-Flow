@@ -1,4 +1,6 @@
-namespace MatroskaBatchFlow.Uno.Services.Configuration;
+using Microsoft.Extensions.Options;
+
+namespace MatroskaBatchFlow.Core.Services;
 
 public interface IWritableSettings<T> : IOptions<T> where T : class, new()
 {
