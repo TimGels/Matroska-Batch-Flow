@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using CommunityToolkit.Mvvm.Messaging;
+using MatroskaBatchFlow.Uno.Messages;
 using Windows.Storage.Pickers;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
@@ -50,13 +52,18 @@ public sealed partial class SettingsPage : Page
         {
             picker.FileTypeFilter.Add("*"); // Fallback for other platforms
         }
-        
+
         picker.SuggestedStartLocation = PickerLocationId.Desktop;
 
-        // Initialize with window handle for WinUI 3
+        // Initialize the picker with the main window handle
         if (App.MainWindow != null)
         {
             WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow));
+        }
+        else
+        {
+            WeakReferenceMessenger.Default.Send(new DialogMessage("Error", "File picker is not available at this time. Please try again."));
+            return;
         }
 
         StorageFile file = await picker.PickSingleFileAsync();
