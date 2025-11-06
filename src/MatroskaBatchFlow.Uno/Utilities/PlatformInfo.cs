@@ -8,9 +8,9 @@ public static class PlatformInfo
     public static bool IsSkia
     {
 #if __UNO_SKIA__
-        get { return true; }
+        get => true;
 #else
-        get { return false; }
+        get => false;
 #endif
     }
 
@@ -20,9 +20,9 @@ public static class PlatformInfo
     public static bool IsWinAppSDK
     {
 #if WINDOWS10_0_18362_0_OR_GREATER
-        get { return true; }
+        get => true;
 #else
-        get { return false; }
+        get => false;
 #endif
     }
 }
