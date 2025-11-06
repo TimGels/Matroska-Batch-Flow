@@ -73,13 +73,13 @@ public partial class App : Application
                 return new WritableJsonSettings<UserSettings>(userSettingsFilePath);
             });
 
-            // Register file validation rules engine service and it's accomadating rules.
+            // Register file validation rules engine service and it's accommodating rules.
             services.AddSingleton<IFileValidationEngine, FileValidationEngine>();
             services.AddSingleton<IFileValidationRule, LanguageConsistencyRule>();
             services.AddSingleton<IFileValidationRule, TrackCountConsistencyRule>();
             services.AddSingleton<IFileValidationRule, FileFormatValidationRule>();
 
-            // Register file processing rule engine service and it's accomadating rules.
+            // Register file processing rule engine service and it's accommodating rules.
             services.AddSingleton<IFileProcessingEngine, FileProcessingEngine>();
             services.AddSingleton<IFileProcessingRule, TrackPositionRule>();
             services.AddSingleton<IFileProcessingRule, SubtitleTrackNamingRule>();

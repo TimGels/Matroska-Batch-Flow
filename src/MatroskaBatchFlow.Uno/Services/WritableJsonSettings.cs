@@ -104,6 +104,7 @@ public class WritableJsonSettings<T> : IWritableSettings<T> where T : class, new
         }
         catch (Exception)
         {
+            // TODO: Add logging and let the user know about the error.
             return new T();
         }
     }
