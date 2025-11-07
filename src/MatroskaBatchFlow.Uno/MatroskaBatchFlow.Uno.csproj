@@ -4,18 +4,19 @@
 
         <OutputType>Exe</OutputType>
         <UnoSingleProject>true</UnoSingleProject>
+        <AssemblyName>MatroskaBatchFlow</AssemblyName>
 
         <!-- Display name -->
-        <ApplicationTitle>MatroskaBatchFlow.Uno</ApplicationTitle>
+        <ApplicationTitle>Matroska Batch Flow</ApplicationTitle>
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.MatroskaBatchFlow.Uno</ApplicationId>
+        <ApplicationId>com.companyname.MatroskaBatchFlow</ApplicationId>
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
         <ApplicationVersion>1</ApplicationVersion>
         <!-- Package Publisher -->
         <ApplicationPublisher>Tim</ApplicationPublisher>
         <!-- Package Description -->
-        <Description>MatroskaBatchFlow.Uno powered by Uno Platform.</Description>
+        <Description>Matroska Batch Flow is a tool for batch processing Matroska files with ease. Quickly modify container properties across multiple files and streamline your workflow.</Description>
         <!--
       If you encounter this error message:
 
