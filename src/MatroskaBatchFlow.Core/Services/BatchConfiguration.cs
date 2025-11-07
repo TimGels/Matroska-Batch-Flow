@@ -310,6 +310,10 @@ public class BatchConfiguration : IBatchConfiguration
         Title = string.Empty;
         DirectoryPath = string.Empty;
         MkvpropeditArguments = string.Empty;
+        AddTrackStatisticsTags = true;
+        DeleteTrackStatisticsTags = false;
+        ShouldModifyTrackStatisticsTags = false;
+        ShouldModifyTitle = false;
         ClearTracks();
     }
 
