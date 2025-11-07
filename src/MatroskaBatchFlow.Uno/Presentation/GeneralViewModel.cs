@@ -118,7 +118,23 @@ public partial class GeneralViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(eventArgs.PropertyName))
             return;
 
-        if (eventArgs.PropertyName == nameof(IBatchConfiguration.Title))
-            OnPropertyChanged(nameof(Title));
+        switch (eventArgs.PropertyName)
+        {
+            case nameof(IBatchConfiguration.Title):
+                OnPropertyChanged(nameof(Title));
+                break;
+            case nameof(IBatchConfiguration.ShouldModifyTitle):
+                OnPropertyChanged(nameof(ShouldModifyTitle));
+                break;
+            case nameof(IBatchConfiguration.AddTrackStatisticsTags):
+                OnPropertyChanged(nameof(AddTrackStatisticsTags));
+                break;
+            case nameof(IBatchConfiguration.DeleteTrackStatisticsTags):
+                OnPropertyChanged(nameof(DeleteTrackStatisticsTags));
+                break;
+            case nameof(IBatchConfiguration.ShouldModifyTrackStatisticsTags):
+                OnPropertyChanged(nameof(ShouldModifyTrackStatisticsTags));
+                break;
+        }
     }
 }
