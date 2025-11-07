@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Uno.Utilities;
 
 namespace MatroskaBatchFlow.Uno.Services;
 
@@ -28,7 +29,7 @@ public class WritableJsonSettings<T> : IWritableSettings<T> where T : class, new
     {
         if (string.IsNullOrWhiteSpace(filePath) || !Path.IsPathRooted(filePath))
         {
-            _filePath = Path.Combine(ApplicationData.Current.LocalFolder.Path, $"{typeof(T).Name}.json");
+            _filePath = Path.Combine(AppPathHelper.GetLocalAppDataFolder(), $"{typeof(T).Name}.json");
         }
         else
         {

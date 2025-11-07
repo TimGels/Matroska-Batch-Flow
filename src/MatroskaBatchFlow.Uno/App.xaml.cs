@@ -13,7 +13,15 @@ using Serilog.Core;
 namespace MatroskaBatchFlow.Uno;
 public partial class App : Application
 {
-    private const string AppName = "Matroska Batch Flow";
+    /// <summary>
+    /// The display name of the application for use in user-facing contexts.
+    /// </summary>
+    private const string AppDisplayName = "Matroska Batch Flow";
+
+    /// <summary>
+    /// A PascalCase representation of the application name, which can be used for folder names and other identifiers.
+    /// </summary>
+    public static string AppName => "MatroskaBatchFlow";
 
     public static T GetService<T>()
     where T : class
@@ -124,7 +132,7 @@ public partial class App : Application
 
         MainWindow = new MainWindow
         {
-            Title = AppName,
+            Title = AppDisplayName,
             Content = Host.Services.GetRequiredService<Shell>(),
             ExtendsContentIntoTitleBar = false,
         };

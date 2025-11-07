@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Uno.Messages;
+using MatroskaBatchFlow.Uno.Utilities;
 using Windows.Storage.Pickers;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
@@ -18,7 +19,7 @@ public sealed partial class SettingsPage : Page
     {
         get
         {
-            if (IsPackagedApp())
+            if (AppEnvironmentHelper.IsPackagedApp())
             {
                 var version = Package.Current.Id.Version;
                 return $"Version {version.Major}.{version.Minor}.{version.Build}";
@@ -70,24 +71,6 @@ public sealed partial class SettingsPage : Page
         if (file != null)
         {
             ViewModel.CustomMkvPropeditPath = file.Path;
-        }
-    }
-
-    /// <summary>
-    /// Determines whether the current application is running as a packaged app.
-    /// </summary>
-    /// <returns><see langword="true"/> if the application is running as a packaged app; otherwise, <see langword="false"/>.</returns>
-    private static bool IsPackagedApp()
-    {
-        try
-        {
-            // This will throw an exception if the app is not packaged.
-            var name = Package.Current.Id.Name;
-            return true;
-        }
-        catch
-        {
-            return false;
         }
     }
 }
