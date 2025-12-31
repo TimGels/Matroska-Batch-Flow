@@ -6,5 +6,6 @@
   },
   "files.associations": {
     "global.json": "jsonc"
-  }
+  },
+  "unoplatform.ignoreCheck": true
 }

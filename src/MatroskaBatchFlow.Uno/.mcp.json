@@ -1,0 +1,14 @@
+{
+  "inputs": [],
+  "servers": {
+    "uno": {
+      "type": "sse",
+      "url": "https://mcp.platform.uno/v1",
+      "headers": {}
+    },
+    "uno-app": {
+      "command": "dnx",
+      "args": [ "-y", "uno.devserver", "--mcp" ]
+    }
+  }
+}
