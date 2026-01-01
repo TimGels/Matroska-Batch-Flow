@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using MatroskaBatchFlow.Core.Enums;
+using MatroskaBatchFlow.Core.Models;
 
 namespace MatroskaBatchFlow.Core.Tests.Builders;
 
@@ -216,9 +217,9 @@ public class TrackInfoBuilder
     private string _languageString4 = string.Empty;
     private string _serviceKind = string.Empty;
     private string _serviceKindString = string.Empty;
-    private string _default = string.Empty;
+    private bool _default = false;
     private string _defaultString = string.Empty;
-    private string _forced = string.Empty;
+    private bool _forced = false;
     private string _forcedString = string.Empty;
     private MediaInfoResult.MediaInfo.TrackInfo.ExtraInfo _extra =
         new(string.Empty, string.Empty, string.Empty, string.Empty,
@@ -930,11 +931,11 @@ public class TrackInfoBuilder
     }
 
     /// <summary>
-    /// Sets the default.
+    /// Sets the Default flag.
     /// </summary>
-    /// <param name="default">The default.</param>
-    /// <returns>The current builder instance for method chaining.</returns>
-    public TrackInfoBuilder WithDefault(string @default)
+    /// <param name="default">The default flag value.</param>
+    /// <returns>The current TrackInfoBuilder instance.</returns>
+    public TrackInfoBuilder WithDefault(bool @default)
     {
         _default = @default;
         return this;
@@ -956,7 +957,7 @@ public class TrackInfoBuilder
     /// </summary>
     /// <param name="forced">The forced.</param>
     /// <returns>The current builder instance for method chaining.</returns>
-    public TrackInfoBuilder WithForced(string forced)
+    public TrackInfoBuilder WithForced(bool forced)
     {
         _forced = forced;
         return this;

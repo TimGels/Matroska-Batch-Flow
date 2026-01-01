@@ -1,21 +1,47 @@
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Tests.Builders;
 
 namespace MatroskaBatchFlow.Core.Tests.Services;
 
+/// <summary>
+/// Contains unit tests for the BatchConfiguration class, verifying its property reset behavior and track collection
+/// management.
+/// </summary>
+/// <remarks>These tests ensure that BatchConfiguration correctly resets its properties and track collections when
+/// Clear is called, and that it returns the appropriate track lists for known and unknown track types. The tests are
+/// intended to validate the public API and expected usage scenarios of BatchConfiguration.</remarks>
 public class BatchConfigurationTests
 {
     [Fact]
     public void Clear_WhenCalled_ResetsAllPropertiesAndTrackCollections()
     {
         // Arrange
+        var audioTrackInfo = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .AddTrackOfType(TrackType.Audio)
+            .Build()
+            .Media.Track.First(t => t.Type == TrackType.Audio);
+            
+        var videoTrackInfo = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .AddTrackOfType(TrackType.Video)
+            .Build()
+            .Media.Track.First(t => t.Type == TrackType.Video);
+            
+        var subtitleTrackInfo = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .AddTrackOfType(TrackType.Text)
+            .Build()
+            .Media.Track.First(t => t.Type == TrackType.Text);
+        
         var config = new BatchConfiguration
         {
             DirectoryPath = "C:\\media",
             Title = "TestTitle",
-            AudioTracks = [new() { Name = "A" }],
-            VideoTracks = [new() { Name = "V" }],
-            SubtitleTracks = [new() { Name = "S" }]
+            AudioTracks = [new(audioTrackInfo) { Name = "A" }],
+            VideoTracks = [new(videoTrackInfo) { Name = "V" }],
+            SubtitleTracks = [new(subtitleTrackInfo) { Name = "S" }]
         };
 
         // Act
