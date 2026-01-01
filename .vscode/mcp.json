@@ -1,0 +1,52 @@
+{
+  "inputs": [
+    {
+      "id": "GITHUB_PERSONAL_ACCESS_TOKEN",
+      "type": "promptString",
+      "description": "GitHub Personal Access Token with 'repo' scope"
+    },
+    {
+      "id": "CONTEXT7_API_KEY",
+      "type": "promptString",
+      "description": "Context7 API Key"
+    }
+  ],
+  "servers": {
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {
+        "CONTEXT7_API_KEY": "${input:CONTEXT7_API_KEY}"
+      }
+    },
+    "oraios/serena": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "ide",
+        "--project",
+        "${workspaceFolder}"
+      ]
+    },
+    "github": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${input:GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    }
+  }
+}
