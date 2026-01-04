@@ -241,7 +241,11 @@ public abstract partial class TrackViewModelBase : ObservableObject
     /// <param name="eventArgs">The event data containing the name of the property that changed.</param>
     protected virtual void OnTrackPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
-        if (sender != SelectedTrack || SelectedTrack is null)
+        if (SelectedTrack is null)
+            return;
+
+        // Only respond to property changes from the currently selected track
+        if (!ReferenceEquals(sender, SelectedTrack))
             return;
 
         // Suppress batch configuration updates while synchronizing properties to avoid (potential) recursion. 
