@@ -1,8 +1,11 @@
+using MatroskaBatchFlow.Core.Enums;
+
 namespace MatroskaBatchFlow.Core.Services.FileValidation;
 
 /// <summary>
 /// Represents the severity level of a file validation result.
 /// </summary>
+[Obsolete("Use MatroskaBatchFlow.Core.Enums.ValidationSeverity instead. This enum is maintained for backward compatibility.")]
 public enum FileValidationSeverity
 {
     /// <summary>
@@ -33,4 +36,28 @@ public enum FileValidationSeverity
 /// <param name="Severity">The severity of the validation result.</param>
 /// <param name="ValidatedFilePath"> The file path of the file that was validated during validation.</param>
 /// <param name="Message">A message providing details about the validation result.</param>
-public record FileValidationResult(FileValidationSeverity Severity, string ValidatedFilePath, string Message);
+public sealed record FileValidationResult(
+    ValidationSeverity Severity,
+    string ValidatedFilePath,
+    string Message)
+{
+    /// <summary>
+    /// Gets whether this result is an error (blocks file addition).
+    /// </summary>
+    public bool IsError => Severity == ValidationSeverity.Error;
+
+    /// <summary>
+    /// Gets whether this result is a warning (non-blocking).
+    /// </summary>
+    public bool IsWarning => Severity == ValidationSeverity.Warning;
+
+    /// <summary>
+    /// Gets whether this result is informational (non-blocking).
+    /// </summary>
+    public bool IsInfo => Severity == ValidationSeverity.Info;
+
+    /// <summary>
+    /// Gets whether this result blocks file addition.
+    /// </summary>
+    public bool IsBlocking => Severity == ValidationSeverity.Error;
+}

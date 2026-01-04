@@ -19,12 +19,17 @@ public class TrackLanguageRule(ILanguageProvider languageProvider) : IFileProces
                .Where(t => t.Type == trackType)
                .ToList();
 
-            var batchTracks = batchConfig.GetTrackListForType(trackType);
+            // Use the per-file track list for this scanned file
+            var fileConfig = batchConfig.FileConfigurations[scannedFile.Path];
+            var batchTracksForFile = fileConfig.GetTrackListForType(trackType);
 
-            for (int i = 0; i < batchTracks.Count; i++)
+            for (int i = 0; i < batchTracksForFile.Count; i++)
             {
-                var scannedLanguage = scannedTracks[i].Language;
-                batchTracks[i].Language = MatchLanguageOption(languages, scannedLanguage);
+                var scannedLanguage = scannedTracks.ElementAtOrDefault(i)?.Language;
+                if (scannedLanguage is null)
+                    continue;
+
+                batchTracksForFile[i].Language = MatchLanguageOption(languages, scannedLanguage);
             }
         }
     }

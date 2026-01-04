@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 
-namespace MatroskaBatchFlow.Core.Tests.Builders;
+namespace MatroskaBatchFlow.Core.UnitTests.Builders;
 
 /// <summary>
 /// A builder class for constructing MediaInfoResult objects with a fluent API.

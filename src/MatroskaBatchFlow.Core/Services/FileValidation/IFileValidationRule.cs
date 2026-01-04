@@ -1,4 +1,5 @@
 using MatroskaBatchFlow.Core.Models;
+using MatroskaBatchFlow.Core.Models.AppSettings;
 
 namespace MatroskaBatchFlow.Core.Services.FileValidation;
 
@@ -17,7 +18,8 @@ public interface IFileValidationRule
     /// over the returned results to determine the validation status of each file.</remarks>
     /// <param name="files">A collection of <see cref="ScannedFileInfo"/> objects representing the files to validate.  Cannot be null,
     /// and each file must contain valid metadata.</param>
+    /// <param name="settings">Validation settings controlling severity levels per track type and property.</param>
     /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="FileValidationResult"/> objects, where each result  represents
     /// the outcome of validating a corresponding file in the input collection.</returns>
-    IEnumerable<FileValidationResult> Validate(IEnumerable<ScannedFileInfo> files);
+    IEnumerable<FileValidationResult> Validate(IEnumerable<ScannedFileInfo> files, BatchValidationSettings settings);
 }

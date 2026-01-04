@@ -287,8 +287,16 @@ public abstract partial class TrackViewModelBase : ObservableObject
     /// <summary>
     /// Updates the properties of the currently selected track in the batch configuration using the provided update action.
     /// </summary>
-    /// <remarks>This method applies the provided update action to the track at the position of the currently
-    /// selected track. If updates are suppressed or no track is selected, the method performs no operation.</remarks>
+    /// <remarks>
+    /// This method applies the provided update action to both:
+    /// <list type="bullet">
+    /// <item>The global track collection (used for UI display) - triggers PropertyChanged which fires StateChanged</item>
+    /// <item>All per-file track configurations (used for command generation) - updated silently</item>
+    /// </list>
+    /// The global track update will trigger the StateChanged event through its PropertyChanged handler,
+    /// ensuring the UI and command generation stay synchronized.
+    /// If updates are suppressed or no track is selected, the method performs no operation.
+    /// </remarks>
     /// <param name="updateAction">An <see cref="Action{TrackConfiguration}"/> delegate that defines the update to apply to the selected track's
     /// configuration.</param>
     protected virtual void UpdateBatchConfigTrackProperty(Action<TrackConfiguration> updateAction)
@@ -301,11 +309,28 @@ public abstract partial class TrackViewModelBase : ObservableObject
 
         int index = SelectedTrack.Index;
         var tracks = GetTracks();
-        if (index >= 0 && index < tracks.Count)
+        if (index < 0 || index >= tracks.Count)
+            return;
+
+        // First, update all per-file configurations silently (without triggering events)
+        // This ensures command generation uses the updated values
+        var trackType = SelectedTrack.Type;
+        foreach (var kvp in _batchConfiguration.FileConfigurations)
         {
-            // Apply the update action to the selected track.
-            updateAction(tracks[index]);
+            var fileConfig = kvp.Value;
+            var fileTracks = fileConfig.GetTrackListForType(trackType);
+            
+            // Only update if this file actually has this track
+            if (index >= 0 && index < fileTracks.Count)
+            {
+                updateAction(fileTracks[index]);
+            }
         }
+
+        // Finally, apply the update action to the global track configuration
+        // This will trigger PropertyChanged -> TrackConfiguration_PropertyChanged -> StateChanged
+        // which updates CanProcessBatch and regenerates commands
+        updateAction(tracks[index]);
     }
 
     /// <summary>

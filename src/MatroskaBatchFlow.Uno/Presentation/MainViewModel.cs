@@ -165,10 +165,10 @@ public partial class MainViewModel : ObservableObject
     {
         var commands = _mkvPropeditArgumentsBuilder.BuildBatchArguments(_batchConfiguration);
 
-        if (commands.Any(arg => string.IsNullOrWhiteSpace(arg)))
+        if (commands.All(arg => string.IsNullOrWhiteSpace(arg)))
         {
             WeakReferenceMessenger.Default.Send(
-                new DialogMessage("Error", "One or more command arguments are invalid."));
+                new DialogMessage("Error", "No valid mkvpropedit commands could be generated."));
             return;
         }
 
@@ -218,14 +218,11 @@ public partial class MainViewModel : ObservableObject
 
         if (commands.All(arg => string.IsNullOrWhiteSpace(arg)))
         {
-            return (false, "All command arguments are empty or whitespace.");
+            return (false, "No valid mkvpropedit commands could be generated.");
         }
 
-        if (commands.Any(arg => string.IsNullOrWhiteSpace(arg)))
-        {
-            return (false, "One or more command arguments are invalid.");
-        }
-
+        // Valid if at least one file has modifications (non-empty command)
+        // Empty strings represent files with no modifications, which is expected behavior
         return (true, string.Empty);
     }
 }

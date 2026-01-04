@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using MatroskaBatchFlow.Core.Models.AppSettings;
 
 namespace MatroskaBatchFlow.Core.Models;
 
@@ -11,6 +12,9 @@ public sealed class UserSettings
 
     [JsonPropertyName("MkvPropedit")]
     public MkvPropeditSettings MkvPropedit { get; set; } = new MkvPropeditSettings();
+
+    [JsonPropertyName("BatchValidation")]
+    public BatchValidationSettings BatchValidation { get; set; } = new BatchValidationSettings();
 
     public sealed class MkvPropeditSettings
     {

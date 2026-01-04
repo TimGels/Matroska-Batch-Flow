@@ -6,16 +6,16 @@
     See https://aka.platform.uno/using-uno-sdk#implicit-packages for more information regarding the Implicit Packages.
   -->
   <ItemGroup>
-    <PackageVersion Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.2.250402" />
+    <PackageVersion Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.2.251219" />
     <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.1" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageVersion Include="xunit.v3" Version="2.0.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.1" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageVersion Include="xunit.v3" Version="3.2.1" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="NSubstitute" Version="5.3.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="9.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.1" />
-    <PackageVersion Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.250402" />
+    <PackageVersion Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
   </ItemGroup>
 </Project>

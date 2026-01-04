@@ -1,20 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <IsPackable>false</IsPackable>
         <OutputType>Exe</OutputType>
+        <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" />
-        <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" />
+        <PackageReference Include="coverlet.collector">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.Configuration" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
-        <PackageReference Include="NSubstitute" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="NSubstitute" />
         <PackageReference Include="xunit.runner.visualstudio">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -23,8 +25,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\MatroskaBatchFlow.Uno\MatroskaBatchFlow.Uno.csproj" />
-        <ProjectReference Include="..\MatroskaBatchFlow.Core\MatroskaBatchFlow.Core.Tests.csproj" />
+        <ProjectReference Include="..\..\src\MatroskaBatchFlow.Core\MatroskaBatchFlow.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>

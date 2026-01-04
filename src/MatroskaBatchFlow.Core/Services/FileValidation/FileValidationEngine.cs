@@ -1,4 +1,5 @@
 using MatroskaBatchFlow.Core.Models;
+using MatroskaBatchFlow.Core.Models.AppSettings;
 
 namespace MatroskaBatchFlow.Core.Services.FileValidation;
 
@@ -13,13 +14,14 @@ public class FileValidationEngine(IEnumerable<IFileValidationRule> rules) : IFil
     /// files. Each rule may produce one or more validation results. The results are returned as a lazily
     /// evaluated sequence.</remarks>
     /// <param name="files">A collection of <see cref="ScannedFileInfo"/> objects representing the files to validate. Cannot be null.</param>
+    /// <param name="settings">Validation settings controlling severity levels per track type and property.</param>
     /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="FileValidationResult"/> objects, where each result represents
     /// the outcome of applying the validation rules to the files.</returns>
-    public IEnumerable<FileValidationResult> Validate(IEnumerable<ScannedFileInfo> files)
+    public IEnumerable<FileValidationResult> Validate(IEnumerable<ScannedFileInfo> files, BatchValidationSettings settings)
     {
         foreach (var rule in _rules)
         {
-            foreach (var result in rule.Validate(files))
+            foreach (var result in rule.Validate(files, settings))
             {
                 yield return result;
             }
