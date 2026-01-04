@@ -1,5 +1,6 @@
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
+using MatroskaBatchFlow.Core.Models.AppSettings;
 
 namespace MatroskaBatchFlow.Core.Services.FileValidation;
 
@@ -17,12 +18,17 @@ public class TrackCountConsistencyRule : IFileValidationRule
     /// results include detailed information about the mismatched track counts.
     /// </remarks>
     /// <param name="files">A collection of <see cref="ScannedFileInfo"/> objects representing the scanned files to validate.</param>
+    /// <param name="settings">Validation settings controlling severity levels per track type and property.</param>
     /// <returns>
     /// An enumerable of <see cref="FileValidationResult"/> objects containing validation errors. If no validation
     /// issues are found, the enumerable will be empty.
     /// </returns>
-    public IEnumerable<FileValidationResult> Validate(IEnumerable<ScannedFileInfo> files)
+    public IEnumerable<FileValidationResult> Validate(IEnumerable<ScannedFileInfo> files, BatchValidationSettings settings)
     {
+        // Check if track count parity validation is disabled
+        if (settings.CustomSettings.TrackCountParity == ValidationSeverity.Off)
+            yield break;
+
         var scannedFiles = files.ToList();
         if (scannedFiles.Count < 2)
             yield break;
@@ -56,7 +62,7 @@ public class TrackCountConsistencyRule : IFileValidationRule
             );
 
             yield return new FileValidationResult(
-                FileValidationSeverity.Error,
+                settings.CustomSettings.TrackCountParity,
                 file.Path,
                 $"Track count mismatch for ('{file.Path}'): {details}"
             );

@@ -17,21 +17,20 @@ public class SubtitleTrackNamingRule : IFileProcessingRule
 
     public void Apply(ScannedFileInfo scannedFile, IBatchConfiguration batchConfig)
     {
-        if (scannedFile?.Result?.Media?.Track == null || batchConfig?.SubtitleTracks == null)
+        if (scannedFile?.Result?.Media?.Track == null || batchConfig == null)
+            return;
+
+        var fileTracks = batchConfig.GetTrackListForFile(scannedFile.Path, TrackType.Text);
+        if (fileTracks == null || fileTracks.Count == 0)
             return;
 
         foreach (var track in scannedFile.Result.Media.Track.Where(t => t.Type == TrackType.Text))
         {
-            var config = batchConfig.SubtitleTracks.First(t => t.Index == track.StreamKindID);
-            config.Name = track.Title ?? string.Empty;
-            //if (!_supportedFormatMappings.TryGetValue(track.Format ?? string.Empty, out var name))
-            //    continue;
+            var config = fileTracks.FirstOrDefault(t => t.Index == track.StreamKindID);
+            if (config == null)
+                continue;
 
-            //var config = batchConfig.SubtitleTracks.FirstOrDefault(t => t.Index == track.StreamKindID);
-            //if (config != null)
-            //{
-            //    config.Name = name;
-            //}
+            config.Name = track.Title ?? string.Empty;
         }
     }
 }

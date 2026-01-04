@@ -2,8 +2,15 @@ using MatroskaBatchFlow.Uno.Extensions;
 using NSubstitute;
 using Windows.Storage;
 
-namespace MatroskaBatchFlow.Uno.Tests.Extensions;
+namespace MatroskaBatchFlow.Uno.UnitTests.Extensions;
 
+/// <summary>
+/// Contains unit tests for extension methods that convert IStorageItem instances to FileInfo objects.
+/// </summary>
+/// <remarks>These tests verify the correct behavior of the ToFileInfo extension methods, including handling of
+/// valid and invalid input, null arguments, and collections of storage items. The tests ensure that exceptions are
+/// thrown as expected for invalid scenarios and that the returned FileInfo objects accurately reflect the underlying
+/// storage item paths.</remarks>
 public class StorageItemExtensionsTests
 {
     [Fact]

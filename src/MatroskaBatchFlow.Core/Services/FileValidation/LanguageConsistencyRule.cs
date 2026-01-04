@@ -1,5 +1,6 @@
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
+using MatroskaBatchFlow.Core.Models.AppSettings;
 
 namespace MatroskaBatchFlow.Core.Services.FileValidation;
 
@@ -16,9 +17,10 @@ public class LanguageConsistencyRule : IFileValidationRule
     /// the languages of tracks in the first file against the corresponding tracks in subsequent files. If a mismatch is
     /// detected, a warning is returned indicating the type of track and the files involved.</remarks>
     /// <param name="files">A collection of <see cref="ScannedFileInfo"/> objects representing the files to validate.</param>
+    /// <param name="settings">Validation settings controlling severity levels per track type and property.</param>
     /// <returns>An enumerable of <see cref="FileValidationResult"/> objects containing validation warnings for any detected
     /// inconsistencies. If no inconsistencies are found, the enumerable will be empty.</returns>
-    public IEnumerable<FileValidationResult> Validate(IEnumerable<ScannedFileInfo> files)
+    public IEnumerable<FileValidationResult> Validate(IEnumerable<ScannedFileInfo> files, BatchValidationSettings settings)
     {
         var scannedFiles = files.ToList();
 
@@ -32,7 +34,7 @@ public class LanguageConsistencyRule : IFileValidationRule
             // Build a matrix of languages for the specified track type across all scanned files.
             var languageMatrix = BuildLanguageMatrix(scannedFiles, type);
 
-            foreach (var result in CompareLanguages(languageMatrix, scannedFiles, type))
+            foreach (var result in CompareLanguages(languageMatrix, scannedFiles, type, settings))
                 yield return result;
         }
     }
@@ -47,10 +49,28 @@ public class LanguageConsistencyRule : IFileValidationRule
     /// <param name="scannedFiles">A list of <see cref="ScannedFileInfo"/> objects representing the files being validated. The order of files in
     /// this list must correspond to the order of the <paramref name="languageMatrix"/>.</param>
     /// <param name="type">The type of track being compared.</param>
+    /// <param name="settings">Validation settings controlling severity levels per track type and property.</param>
     /// <returns>An enumerable collection of <see cref="FileValidationResult"/> objects. If no mismatches are found, 
     /// the enumerable will be empty.</returns>
-    private static IEnumerable<FileValidationResult> CompareLanguages(List<List<string>> languageMatrix, List<ScannedFileInfo> scannedFiles, TrackType type)
+    private static IEnumerable<FileValidationResult> CompareLanguages(
+        List<List<string>> languageMatrix,
+        List<ScannedFileInfo> scannedFiles,
+        TrackType type,
+        BatchValidationSettings settings)
     {
+        // Get the appropriate validation settings for this track type
+        var trackSettings = type switch
+        {
+            TrackType.Audio => settings.CustomSettings.AudioTrackValidation,
+            TrackType.Video => settings.CustomSettings.VideoTrackValidation,
+            TrackType.Text => settings.CustomSettings.SubtitleTrackValidation,
+            _ => null
+        };
+
+        // Skip validation if settings are null or language validation is disabled
+        if (trackSettings == null || trackSettings.Language == ValidationSeverity.Off)
+            yield break;
+
         var referenceFileLanguages = languageMatrix[0];
         // Check if the first file's (reference) languages are consistent across the rest of the files.
         for (int i = 1; i < languageMatrix.Count; i++)
@@ -71,7 +91,7 @@ public class LanguageConsistencyRule : IFileValidationRule
                     continue;
 
                 yield return new FileValidationResult(
-                    FileValidationSeverity.Warning,
+                    trackSettings.Language,
                     scannedFiles[i].Path,
                     $"Language mismatch in {type} tracks at position {trackIndex + 1}: " +
                     $"'{referenceFileLanguages[trackIndex]}' (in '{scannedFiles[0].Path}') " +

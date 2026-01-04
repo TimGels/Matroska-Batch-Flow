@@ -1,5 +1,6 @@
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
+using MatroskaBatchFlow.Core.Models.AppSettings;
 
 namespace MatroskaBatchFlow.Core.Services.FileValidation;
 
@@ -16,8 +17,9 @@ public class FileFormatValidationRule : IFileValidationRule
     /// </summary>
     /// <remarks>Prevents Roy from trying to process files that are not in the Matroska format.</remarks>
     /// <param name="files">The collection of files to validate.</param>
+    /// <param name="settings">Validation settings controlling severity levels per track type and property.</param>
     /// <returns>An enumerable collection of <see cref="FileValidationResult"/> indicating the validation results.</returns>
-    public IEnumerable<FileValidationResult> Validate(IEnumerable<ScannedFileInfo> files)
+    public IEnumerable<FileValidationResult> Validate(IEnumerable<ScannedFileInfo> files, BatchValidationSettings settings)
     {
         foreach (var file in files)
         {
@@ -33,7 +35,7 @@ public class FileFormatValidationRule : IFileValidationRule
             if (!isAllowedExtension || !isMatroskaFormat)
             {
                 yield return new FileValidationResult(
-                    FileValidationSeverity.Error,
+                    ValidationSeverity.Error,
                     file.Path,
                     "File is not a supported or valid Matroska file."
                 );

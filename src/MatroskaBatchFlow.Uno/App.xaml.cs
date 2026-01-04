@@ -63,10 +63,17 @@ public partial class App : Application
             services.AddSingleton<IPageService, PageService>();
             services.AddSingleton<INavigationService, NavigationService>();
             services.AddSingleton<INavigationViewService, NavigationViewService>();
+            services.AddSingleton<IValidationSettingsService, ValidationSettingsService>();
             services.AddSingleton<ILanguageProvider, LanguageProvider>();
             services.AddSingleton<IFileScanner, FileScanner>();
             services.AddSingleton<IBatchConfiguration, BatchConfiguration>();
             services.AddSingleton<ILogger, Logger<Logger>>();
+            services.AddSingleton<IWritableSettings<UserSettings>>(sp =>
+            {
+                IOptions<AppConfigOptions> options = sp.GetRequiredService<IOptions<AppConfigOptions>>();
+                string userSettingsFilePath = options.Value.UserSettingsPath;
+                return new WritableJsonSettings<UserSettings>(userSettingsFilePath);
+            });
             services.AddSingleton<IFileListAdapter, FileListAdapter>();
             services.AddSingleton<IFilePickerDialogService, FilePickerDialogService>();
             services.AddSingleton<IBatchReportStore, InMemoryBatchReportStore>();
@@ -74,12 +81,6 @@ public partial class App : Application
             services.AddSingleton<IMkvToolExecutor, MkvPropeditExecutor>();
             services.AddSingleton<IProcessRunner, ProcessRunner>();
             services.AddSingleton<IMkvPropeditArgumentsGenerator, MkvPropeditArgumentsGenerator>();
-            services.AddSingleton<IWritableSettings<UserSettings>>(sp =>
-            {
-                IOptions<AppConfigOptions> options = sp.GetRequiredService<IOptions<AppConfigOptions>>();
-                string userSettingsFilePath = options.Value.UserSettingsPath;
-                return new WritableJsonSettings<UserSettings>(userSettingsFilePath);
-            });
 
             // Register file validation rules engine service and it's accommodating rules.
             services.AddSingleton<IFileValidationEngine, FileValidationEngine>();

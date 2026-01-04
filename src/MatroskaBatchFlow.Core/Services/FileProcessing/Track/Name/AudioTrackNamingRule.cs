@@ -14,12 +14,19 @@ public class AudioTrackNamingRule : IFileProcessingRule
 
     public void Apply(ScannedFileInfo scannedFile, IBatchConfiguration batchConfig)
     {
-        if (scannedFile?.Result?.Media?.Track == null || batchConfig?.AudioTracks == null)
+        if (scannedFile?.Result?.Media?.Track == null || batchConfig == null)
+            return;
+
+        var fileTracks = batchConfig.GetTrackListForFile(scannedFile.Path, TrackType.Audio);
+        if (fileTracks == null || fileTracks.Count == 0)
             return;
 
         foreach (var track in scannedFile.Result.Media.Track.Where(t => t.Type == TrackType.Audio))
         {
-            var config = batchConfig.AudioTracks.First(t => t.Index == track.StreamKindID);
+            var config = fileTracks.FirstOrDefault(t => t.Index == track.StreamKindID);
+            if (config == null)
+                continue;
+
             config.Name = track.Title ?? string.Empty;
             //var format = track.Format ?? string.Empty;
             //var layout = track.ChannelLayout ?? string.Empty;

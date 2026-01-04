@@ -1,8 +1,8 @@
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Services;
-using MatroskaBatchFlow.Core.Tests.Builders;
+using MatroskaBatchFlow.Core.UnitTests.Builders;
 
-namespace MatroskaBatchFlow.Core.Tests.Services;
+namespace MatroskaBatchFlow.Core.UnitTests.Services;
 
 /// <summary>
 /// Contains unit tests for the BatchConfiguration class, verifying its property reset behavior and track collection

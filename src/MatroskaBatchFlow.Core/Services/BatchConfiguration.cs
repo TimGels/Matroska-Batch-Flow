@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
+using MatroskaBatchFlow.Core.Models.AppSettings;
 using static MatroskaBatchFlow.Core.Models.MediaInfoResult.MediaInfo;
 
 namespace MatroskaBatchFlow.Core.Services;
@@ -25,6 +26,8 @@ public class BatchConfiguration : IBatchConfiguration
     private ObservableCollection<TrackConfiguration> _subtitleTracks = [];
     private static readonly ImmutableList<TrackConfiguration> _emptyTrackList = [];
     private string _mkvpropeditArguments = string.Empty;
+    private Dictionary<string, FileTrackConfiguration> _fileConfigurations = new();
+    private Dictionary<string, FileTrackAvailability> _fileTrackMap = new();
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler? StateChanged;
@@ -255,6 +258,32 @@ public class BatchConfiguration : IBatchConfiguration
         }
     }
 
+    public Dictionary<string, FileTrackConfiguration> FileConfigurations
+    {
+        get => _fileConfigurations;
+        set
+        {
+            if (!ReferenceEquals(_fileConfigurations, value))
+            {
+                _fileConfigurations = value;
+                OnPropertyChanged(nameof(FileConfigurations));
+            }
+        }
+    }
+
+    public Dictionary<string, FileTrackAvailability> FileTrackMap
+    {
+        get => _fileTrackMap;
+        set
+        {
+            if (!ReferenceEquals(_fileTrackMap, value))
+            {
+                _fileTrackMap = value;
+                OnPropertyChanged(nameof(FileTrackMap));
+            }
+        }
+    }
+
     protected virtual void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -270,6 +299,8 @@ public class BatchConfiguration : IBatchConfiguration
         AudioTracks.Clear();
         VideoTracks.Clear();
         SubtitleTracks.Clear();
+        FileConfigurations.Clear();
+        FileTrackMap.Clear();
         MkvpropeditArguments = string.Empty;
     }
 
@@ -283,6 +314,19 @@ public class BatchConfiguration : IBatchConfiguration
             TrackType.Text => SubtitleTracks,
             _ => _emptyTrackList
         };
+    }
+
+    /// <inheritdoc />
+    public IList<TrackConfiguration> GetTrackListForFile(string filePath, TrackType trackType)
+    {
+        // Always use per-file configuration - validation enforces strictness
+        if (FileConfigurations.TryGetValue(filePath, out var fileConfig))
+        {
+            return fileConfig.GetTrackListForType(trackType);
+        }
+
+        // Fallback to global collections (typically from first file)
+        return GetTrackListForType(trackType);
     }
 
     /// <summary>

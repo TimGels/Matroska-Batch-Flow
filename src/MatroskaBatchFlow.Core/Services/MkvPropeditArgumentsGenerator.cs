@@ -17,11 +17,10 @@ public sealed class MkvPropeditArgumentsGenerator : IMkvPropeditArgumentsGenerat
         foreach (var file in batchConfiguration.FileList)
         {
             var tokens = BuildFileArgumentTokens(file, batchConfiguration);
-            if (tokens.Length == 0)
+            if (tokens.Length != 0)
             {
-                results.Add(string.Empty);
+                results.Add(string.Join(" ", tokens));
             }
-            results.Add(string.Join(" ", tokens));
         }
 
         return [.. results];
@@ -40,7 +39,7 @@ public sealed class MkvPropeditArgumentsGenerator : IMkvPropeditArgumentsGenerat
     /// modification indicators.
     /// </summary>
     /// <param name="file">The scanned file whose path will be set as the mkvpropedit input.</param>
-    /// <param name="batchConfiguration">Contains global title settings and track configurations.</param>
+    /// <param name="batchConfiguration">Contains global title settings and per-file track configurations.</param>
     /// <returns> Token array suitable for joining. Returns an empty array if no modifications are requested 
     /// (to signal "no-op").</returns>
     private static string[] BuildFileArgumentTokens(ScannedFileInfo file, IBatchConfiguration batchConfiguration)
@@ -64,10 +63,10 @@ public sealed class MkvPropeditArgumentsGenerator : IMkvPropeditArgumentsGenerat
             }
         }
 
-        // Per-track modifications.
-        AddTracks(builder, batchConfiguration.AudioTracks, TrackType.Audio);
-        AddTracks(builder, batchConfiguration.VideoTracks, TrackType.Video);
-        AddTracks(builder, batchConfiguration.SubtitleTracks, TrackType.Text);
+        // Per-track modifications using file-specific configurations
+        AddTracksForFile(builder, file, TrackType.Audio, batchConfiguration);
+        AddTracksForFile(builder, file, TrackType.Video, batchConfiguration);
+        AddTracksForFile(builder, file, TrackType.Text, batchConfiguration);
 
         // No tokens => no modifications requested.
         if (builder.IsEmpty())
@@ -82,17 +81,26 @@ public sealed class MkvPropeditArgumentsGenerator : IMkvPropeditArgumentsGenerat
     }
 
     /// <summary>
-    /// Adds track-specific modifications to the builder, filtering out tracks that have no requested changes.
+    /// Adds track-specific modifications to the builder for a specific file, filtering out tracks that have
+    /// no requested changes or don't exist in the file.
     /// </summary>
     /// <param name="builder">The accumulating mkvpropedit argument builder.</param>
-    /// <param name="tracks">Track configurations of a single logical type.</param>
+    /// <param name="file">The file being processed.</param>
     /// <param name="type">The track type (must map to a Matroska track element).</param>
-    private static void AddTracks(MkvPropeditArgumentsBuilder builder, IEnumerable<TrackConfiguration> tracks, TrackType type)
+    /// <param name="batchConfig">The batch configuration containing track availability data.</param>
+    private static void AddTracksForFile(
+        MkvPropeditArgumentsBuilder builder,
+        ScannedFileInfo file,
+        TrackType type,
+        IBatchConfiguration batchConfig)
     {
         if (!type.IsMatroskaTrackElement())
         {
             return;
         }
+
+        // Always get file-specific track configuration
+        var tracks = batchConfig.GetTrackListForFile(file.Path, type);
 
         foreach (var track in tracks)
         {
@@ -104,6 +112,16 @@ public sealed class MkvPropeditArgumentsGenerator : IMkvPropeditArgumentsGenerat
                   track.ShouldModifyEnabledFlag))
             {
                 continue;
+            }
+
+            // Check if this track actually exists in the file
+            if (batchConfig.FileTrackMap.TryGetValue(file.Path, out var availability))
+            {
+                if (!availability.HasTrack(type, track.Index))
+                {
+                    // Track doesn't exist in this file, skip gracefully
+                    continue;
+                }
             }
 
             builder.AddTrack(tb =>

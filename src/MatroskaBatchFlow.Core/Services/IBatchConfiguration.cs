@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
+using MatroskaBatchFlow.Core.Models.AppSettings;
 
 namespace MatroskaBatchFlow.Core.Services;
 
@@ -26,6 +27,16 @@ public interface IBatchConfiguration : INotifyPropertyChanged
     ObservableCollection<TrackConfiguration> VideoTracks { get; set; }
     ObservableCollection<TrackConfiguration> SubtitleTracks { get; set; }
 
+    /// <summary>
+    /// Per-file track configurations for flexible batch processing.
+    /// </summary>
+    Dictionary<string, FileTrackConfiguration> FileConfigurations { get; set; }
+
+    /// <summary>
+    /// Track availability tracking for all files.
+    /// </summary>
+    Dictionary<string, FileTrackAvailability> FileTrackMap { get; set; }
+
     event EventHandler? StateChanged;
 
     /// <summary>
@@ -42,4 +53,13 @@ public interface IBatchConfiguration : INotifyPropertyChanged
     /// If the track type is not <see cref="TrackType.Audio"/>, <see cref="TrackType.Video"/>, or <see cref="TrackType.Text"/>, it returns an empty list.
     /// </returns>
     public IList<TrackConfiguration> GetTrackListForType(TrackType trackType);
+
+    /// <summary>
+    /// Gets track configuration for a specific file and track type.
+    /// Always uses per-file configurations. Falls back to global if file config not found.
+    /// </summary>
+    /// <param name="filePath">Path to the file.</param>
+    /// <param name="trackType">Type of track to retrieve.</param>
+    /// <returns>List of track configurations for the specified file and track type.</returns>
+    public IList<TrackConfiguration> GetTrackListForFile(string filePath, TrackType trackType);
 }

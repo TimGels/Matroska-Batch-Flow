@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Core.Enums;
-using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Core.Services.FileValidation;
@@ -26,6 +25,8 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     private readonly IBatchConfiguration _batchConfig;
     private readonly IBatchTrackCountSynchronizer _BatchTrackCountSynchronizer;
     private readonly IFilePickerDialogService _filePickerDialogService;
+    private readonly IWritableSettings<UserSettings> _userSettings;
+    private readonly IValidationSettingsService _validationSettingsService;
 
     public bool CanSelectAll => _batchConfig.FileList.Count > SelectedFiles.Count;
     public ObservableCollection<ScannedFileViewModel> FileList => _fileListAdapter.ScannedFileViewModels;
@@ -43,7 +44,9 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         IFileProcessingEngine fileProcessingRuleEngine,
         IBatchConfiguration batchConfig,
         IBatchTrackCountSynchronizer batchConfigurationTrackInitializer,
-        IFilePickerDialogService filePickerDialogService
+        IFilePickerDialogService filePickerDialogService,
+        IWritableSettings<UserSettings> userSettings,
+        IValidationSettingsService validationSettingsService
         )
     {
         _fileListAdapter = fileListAdapter;
@@ -53,6 +56,8 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         _batchConfig = batchConfig;
         _BatchTrackCountSynchronizer = batchConfigurationTrackInitializer;
         _filePickerDialogService = filePickerDialogService;
+        _userSettings = userSettings;
+        _validationSettingsService = validationSettingsService;
         RemoveSelected = new RelayCommand(RemoveSelectedFiles);
         RemoveAll = new RelayCommand(RemoveAllFiles);
         ClearSelection = new RelayCommand(ClearFileSelection);
@@ -120,18 +125,22 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         if (combinedFiles.Count == 0)
             return;
 
-        // Validate the combined list of files.
-        List<FileValidationResult> validationResults = [.. _fileValidator.Validate(combinedFiles)];
+        // Validate the combined list of files using current validation settings from user preferences.
+        var currentValidationSettings = _validationSettingsService.GetEffectiveSettings(_userSettings.Value);
+        List<FileValidationResult> validationResults = [.. _fileValidator.Validate(combinedFiles, currentValidationSettings)];
         if (HandleValidationErrors(validationResults))
             return;
 
-        // Synchronize track counts for the first file in the new files.
-        _BatchTrackCountSynchronizer.SynchronizeTrackCount(
-            newFiles.First(),
-            TrackType.Audio,
-            TrackType.Video,
-            TrackType.Text
-        );
+        // Initialize per-file track configurations for all new files
+        foreach (var file in newFiles)
+        {
+            _BatchTrackCountSynchronizer.SynchronizeTrackCount(
+                file,
+                TrackType.Audio,
+                TrackType.Video,
+                TrackType.Text
+            );
+        }
 
         // Apply processing rules to the new files.
         foreach (var file in newFiles)
@@ -218,7 +227,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     /// langword="false"/>.</returns>
     private static bool HandleValidationErrors(IEnumerable<FileValidationResult> results)
     {
-        var errors = results.Where(r => r.Severity == FileValidationSeverity.Error).ToList();
+        var errors = results.Where(r => r.Severity == ValidationSeverity.Error).ToList();
         if (errors.Count == 0)
             return false;
 
