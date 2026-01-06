@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
@@ -17,6 +18,13 @@ namespace MatroskaBatchFlow.Core.UnitTests.Services;
 /// </remarks>
 public class BatchTrackCountSynchronizerTests
 {
+    private static ILanguageProvider CreateMockLanguageProvider()
+    {
+        var mockLanguageProvider = Substitute.For<ILanguageProvider>();
+        mockLanguageProvider.Languages.Returns(ImmutableList<MatroskaLanguageOption>.Empty);
+        return mockLanguageProvider;
+    }
+
     private static (IBatchConfiguration mockConfig, 
                     Dictionary<string, FileTrackConfiguration> fileConfigs, 
                     Dictionary<string, FileTrackAvailability> fileTrackMap,
@@ -49,7 +57,8 @@ public class BatchTrackCountSynchronizerTests
     {
         // Arrange
         var (mockConfig, fileConfigs, fileTrackMap, audioTracks, _, _) = CreateMockConfig();
-        var synchronizer = new BatchTrackCountSynchronizer(mockConfig);
+        var mockLanguageProvider = CreateMockLanguageProvider();
+        var synchronizer = new BatchTrackCountSynchronizer(mockConfig, mockLanguageProvider);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
             .WithCreatingLibrary()
@@ -79,7 +88,8 @@ public class BatchTrackCountSynchronizerTests
     {
         // Arrange
         var (mockConfig, fileConfigs, fileTrackMap, audioTracks, videoTracks, subtitleTracks) = CreateMockConfig();
-        var synchronizer = new BatchTrackCountSynchronizer(mockConfig);
+        var mockLanguageProvider = CreateMockLanguageProvider();
+        var synchronizer = new BatchTrackCountSynchronizer(mockConfig, mockLanguageProvider);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
             .WithCreatingLibrary()
@@ -116,7 +126,8 @@ public class BatchTrackCountSynchronizerTests
     {
         // Arrange
         var (mockConfig, fileConfigs, fileTrackMap, audioTracks, _, _) = CreateMockConfig();
-        var synchronizer = new BatchTrackCountSynchronizer(mockConfig);
+        var mockLanguageProvider = CreateMockLanguageProvider();
+        var synchronizer = new BatchTrackCountSynchronizer(mockConfig, mockLanguageProvider);
 
         // First file - 2 audio tracks
         var firstFile = new ScannedFileInfo
@@ -156,7 +167,8 @@ public class BatchTrackCountSynchronizerTests
     {
         // Arrange
         var (mockConfig, fileConfigs, fileTrackMap, _, _, _) = CreateMockConfig();
-        var synchronizer = new BatchTrackCountSynchronizer(mockConfig);
+        var mockLanguageProvider = CreateMockLanguageProvider();
+        var synchronizer = new BatchTrackCountSynchronizer(mockConfig, mockLanguageProvider);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
             .WithCreatingLibrary()
@@ -177,7 +189,8 @@ public class BatchTrackCountSynchronizerTests
     {
         // Arrange
         var (mockConfig, fileConfigs, fileTrackMap, _, _, _) = CreateMockConfig();
-        var synchronizer = new BatchTrackCountSynchronizer(mockConfig);
+        var mockLanguageProvider = CreateMockLanguageProvider();
+        var synchronizer = new BatchTrackCountSynchronizer(mockConfig, mockLanguageProvider);
 
         // Act
         synchronizer.SynchronizeTrackCount(null!, TrackType.Audio);
@@ -192,7 +205,8 @@ public class BatchTrackCountSynchronizerTests
     {
         // Arrange
         var (mockConfig, fileConfigs, fileTrackMap, _, _, _) = CreateMockConfig();
-        var synchronizer = new BatchTrackCountSynchronizer(mockConfig);
+        var mockLanguageProvider = CreateMockLanguageProvider();
+        var synchronizer = new BatchTrackCountSynchronizer(mockConfig, mockLanguageProvider);
 
         var referenceFile = new ScannedFileInfo { Path = "file.mkv", Result = null! };
 
@@ -209,7 +223,8 @@ public class BatchTrackCountSynchronizerTests
     {
         // Arrange
         var (mockConfig, fileConfigs, fileTrackMap, _, _, _) = CreateMockConfig();
-        var synchronizer = new BatchTrackCountSynchronizer(mockConfig);
+        var mockLanguageProvider = CreateMockLanguageProvider();
+        var synchronizer = new BatchTrackCountSynchronizer(mockConfig, mockLanguageProvider);
 
         // Create a MediaInfoResult with creating library but no tracks
         var emptyResult = new MediaInfoResultBuilder().WithCreatingLibrary().Build();

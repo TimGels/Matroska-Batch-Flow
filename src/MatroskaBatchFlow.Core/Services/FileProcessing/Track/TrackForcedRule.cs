@@ -4,31 +4,41 @@ using MatroskaBatchFlow.Core.Models;
 namespace MatroskaBatchFlow.Core.Services.FileProcessing.Track;
 
 /// <summary>
-/// A rule that applies track forced settings from a scanned file to the batch configuration.
+/// Analyzes per-file track forced flags and populates global UI properties.
+/// Per-file configurations are already populated by <see cref="BatchTrackCountSynchronizer"/>.
+/// This rule determines what forced flag to display in the UI based on all files.
 /// </summary>
 public class TrackForcedRule : IFileProcessingRule
 {
     /// <summary>
-    /// Applies the track forced settings from the scanned file to the batch configuration.
+    /// Analyzes per-file forced flags and populates global UI with most common value.
     /// </summary>
-    /// <param name="scannedFile">The scanned file information containing track data.</param>
-    /// <param name="batchConfig">The batch configuration to update with track forced settings.</param>
+    /// <param name="scannedFile">The scanned file information (used for context).</param>
+    /// <param name="batchConfig">The batch configuration to update with global UI forced flags.</param>
     public void Apply(ScannedFileInfo scannedFile, IBatchConfiguration batchConfig)
     {
         ArgumentNullException.ThrowIfNull(scannedFile);
         ArgumentNullException.ThrowIfNull(batchConfig);
 
+        // Per-file configs already populated by synchronizer - we just populate global UI
         foreach (var trackType in Enum.GetValues<TrackType>().Where(t => t.IsMatroskaTrackElement()))
         {
-            var scannedTracks = scannedFile.Result.Media.Track
-                .Where(t => t.Type == trackType)
-                .ToArray();
+            var globalTracks = batchConfig.GetTrackListForType(trackType);
 
-            var batchTracks = batchConfig.GetTrackListForType(trackType);
-
-            for (int i = 0; i < batchTracks.Count && i < scannedTracks.Length; i++)
+            for (int i = 0; i < globalTracks.Count; i++)
             {
-                batchTracks[i].Forced = scannedTracks[i].Forced;
+                // Collect forced flags from all files that have this track
+                var forcedFlags = batchConfig.FileConfigurations.Values
+                    .Select(fc => fc.GetTrackListForType(trackType))
+                    .Where(tracks => i < tracks.Count)
+                    .Select(tracks => tracks[i].Forced)
+                    .ToList();
+
+                if (forcedFlags.Count == 0)
+                    continue;
+
+                // Business logic: Use most common value (true if majority are true)
+                globalTracks[i].Forced = forcedFlags.Count(f => f) > forcedFlags.Count / 2;
             }
         }
     }
