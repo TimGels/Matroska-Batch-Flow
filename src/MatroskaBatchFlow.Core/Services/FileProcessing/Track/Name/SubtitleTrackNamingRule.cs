@@ -3,6 +3,11 @@ using MatroskaBatchFlow.Core.Models;
 
 namespace MatroskaBatchFlow.Core.Services.FileProcessing.Track.Name;
 
+/// <summary>
+/// Analyzes per-file subtitle track names and populates global UI properties with smart defaults.
+/// Per-file configurations are already populated by <see cref="BatchTrackCountSynchronizer"/>.
+/// This rule can implement advanced naming logic based on subtitle format.
+/// </summary>
 public class SubtitleTrackNamingRule : IFileProcessingRule
 {
     private readonly Dictionary<string, string> _supportedFormatMappings = new(StringComparer.OrdinalIgnoreCase)
@@ -20,17 +25,37 @@ public class SubtitleTrackNamingRule : IFileProcessingRule
         if (scannedFile?.Result?.Media?.Track == null || batchConfig == null)
             return;
 
-        var fileTracks = batchConfig.GetTrackListForFile(scannedFile.Path, TrackType.Text);
-        if (fileTracks == null || fileTracks.Count == 0)
-            return;
+        // Per-file configs already populated by synchronizer - we just populate global UI
+        var globalTracks = batchConfig.GetTrackListForType(TrackType.Text);
 
-        foreach (var track in scannedFile.Result.Media.Track.Where(t => t.Type == TrackType.Text))
+        for (int i = 0; i < globalTracks.Count; i++)
         {
-            var config = fileTracks.FirstOrDefault(t => t.Index == track.StreamKindID);
-            if (config == null)
-                continue;
+            // Collect names from all files that have this track
+            var names = batchConfig.FileConfigurations.Values
+                .Select(fc => fc.GetTrackListForType(TrackType.Text))
+                .Where(tracks => i < tracks.Count)
+                .Select(tracks => tracks[i].Name)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Distinct()
+                .ToList();
 
-            config.Name = track.Title ?? string.Empty;
+            // Business logic: Use common name if all files agree, otherwise use most common or empty
+            if (names.Count == 1)
+            {
+                globalTracks[i].Name = names[0];
+            }
+            else if (names.Count > 0)
+            {
+                // Multiple different names - use most common
+                var mostCommonName = names
+                    .GroupBy(n => n)
+                    .OrderByDescending(g => g.Count())
+                    .First()
+                    .Key;
+                globalTracks[i].Name = mostCommonName;
+            }
+
+            // TODO: Future enhancement - generate smart names based on subtitle format if no title exists
         }
     }
 }

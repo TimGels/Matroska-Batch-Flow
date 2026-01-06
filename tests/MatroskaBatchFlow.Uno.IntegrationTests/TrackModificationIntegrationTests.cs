@@ -52,7 +52,7 @@ public class TrackModificationIntegrationTests
         batchConfig.FileList.Add(file2);
 
         // Initialize per-file configurations
-        var synchronizer = new BatchTrackCountSynchronizer(batchConfig);
+        var synchronizer = new BatchTrackCountSynchronizer(batchConfig, mockLanguageProvider);
         synchronizer.SynchronizeTrackCount(file1, TrackType.Text);
         synchronizer.SynchronizeTrackCount(file2, TrackType.Text);
 
@@ -101,12 +101,11 @@ public class TrackModificationIntegrationTests
         var argumentsGenerator = new MkvPropeditArgumentsGenerator();
         var commands = argumentsGenerator.BuildBatchArguments(batchConfig);
 
-        Assert.Equal(2, commands.Length);
-        Assert.Empty(commands[0]);
-        Assert.NotEmpty(commands[1]);
-        Assert.Contains("--edit track:s17", commands[1]);
-        Assert.Contains("--set name=", commands[1]);
-        Assert.Contains("Track17Modified", commands[1]);
+        Assert.Single(commands);
+        Assert.NotEmpty(commands[0]);
+        Assert.Contains("--edit track:s17", commands[0]);
+        Assert.Contains("--set name=", commands[0]);
+        Assert.Contains("Track17Modified", commands[0]);
 
         Assert.False(commands.All(c => string.IsNullOrWhiteSpace(c)));
     }

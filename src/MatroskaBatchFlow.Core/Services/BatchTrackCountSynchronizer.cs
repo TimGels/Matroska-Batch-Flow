@@ -13,7 +13,8 @@ namespace MatroskaBatchFlow.Core.Services;
 /// in any file.
 /// </remarks>
 /// <param name="_batchConfig">The batch configuration to be modified.</param>
-public class BatchTrackCountSynchronizer(IBatchConfiguration _batchConfig) : IBatchTrackCountSynchronizer
+/// <param name="_languageProvider">The language provider for resolving track language codes.</param>
+public class BatchTrackCountSynchronizer(IBatchConfiguration _batchConfig, ILanguageProvider _languageProvider) : IBatchTrackCountSynchronizer
 {
     /// <inheritdoc/>
     /// <remarks>
@@ -63,11 +64,7 @@ public class BatchTrackCountSynchronizer(IBatchConfiguration _batchConfig) : IBa
             while (fileTracks.Count < scannedTracks.Count)
             {
                 var scannedTrackInfo = scannedTracks[fileTracks.Count];
-                fileTracks.Add(new TrackConfiguration(scannedTrackInfo)
-                {
-                    Type = trackType,
-                    Index = fileTracks.Count
-                });
+                fileTracks.Add(CreateTrackConfigurationFromScanned(scannedTrackInfo, trackType, fileTracks.Count));
             }
         }
 
@@ -122,14 +119,58 @@ public class BatchTrackCountSynchronizer(IBatchConfiguration _batchConfig) : IBa
                     {
                         // Clone the track configuration for the global collection
                         var sourceTrack = fileTracks[batchTracks.Count];
-                        batchTracks.Add(new TrackConfiguration(sourceTrack.ScannedTrackInfo)
-                        {
-                            Type = trackType,
-                            Index = batchTracks.Count
-                        });
+                        batchTracks.Add(CreateTrackConfigurationFromScanned(sourceTrack.ScannedTrackInfo, trackType, batchTracks.Count));
                     }
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="TrackConfiguration"/> with properties populated from scanned track information.
+    /// </summary>
+    /// <param name="scannedTrackInfo">The scanned track information from MediaInfo.</param>
+    /// <param name="trackType">The type of track (Audio, Video, Text).</param>
+    /// <param name="index">The zero-based index of the track.</param>
+    /// <returns>A <see cref="TrackConfiguration"/> with properties initialized from the scanned track.</returns>
+    private TrackConfiguration CreateTrackConfigurationFromScanned(
+        MediaInfoResult.MediaInfo.TrackInfo scannedTrackInfo,
+        TrackType trackType,
+        int index)
+    {
+        return new TrackConfiguration(scannedTrackInfo)
+        {
+            Type = trackType,
+            Index = index,
+            Name = scannedTrackInfo.Title ?? string.Empty,
+            Language = ParseLanguageFromCode(scannedTrackInfo.Language),
+            Default = scannedTrackInfo.Default,
+            Forced = scannedTrackInfo.Forced
+        };
+    }
+
+    /// <summary>
+    /// Parses a language code from scanned track info and returns the matching <see cref="MatroskaLanguageOption"/>.
+    /// </summary>
+    /// <remarks>
+    /// Performs case-insensitive comparison against ISO 639-1, ISO 639-2 (both bibliographic and terminologic),
+    /// ISO 639-3 codes, the language name, and a custom code field.
+    /// </remarks>
+    /// <param name="languageCode">The language code from MediaInfo (e.g., "en", "eng", "jpn", or "English").</param>
+    /// <returns>The matching language option, or <see cref="MatroskaLanguageOption.Undetermined"/> if no match found.</returns>
+    private MatroskaLanguageOption ParseLanguageFromCode(string? languageCode)
+    {
+        if (string.IsNullOrWhiteSpace(languageCode))
+            return MatroskaLanguageOption.Undetermined;
+
+        var matchedLanguage = _languageProvider.Languages.FirstOrDefault(lang =>
+            string.Equals(lang.Iso639_2_b, languageCode, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(lang.Iso639_2_t, languageCode, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(lang.Iso639_1, languageCode, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(lang.Iso639_3, languageCode, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(lang.Name, languageCode, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(lang.Code, languageCode, StringComparison.OrdinalIgnoreCase));
+
+        return matchedLanguage ?? MatroskaLanguageOption.Undetermined;
     }
 }
