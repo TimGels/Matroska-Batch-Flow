@@ -10,6 +10,7 @@ using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Contracts.ViewModels;
 using MatroskaBatchFlow.Uno.Extensions;
 using MatroskaBatchFlow.Uno.Messages;
+using MatroskaBatchFlow.Uno.Models;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
@@ -17,6 +18,32 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
 {
     [ObservableProperty]
     private ObservableCollection<ScannedFileViewModel> selectedFiles = [];
+
+    [ObservableProperty]
+    private ValidationNotificationState validationNotifications = new();
+
+    private bool _isValidationInfoBarOpen;
+
+    /// <summary>
+    /// Gets or sets whether the validation InfoBar is open.
+    /// When set to false, clears all validation notifications.
+    /// </summary>
+    public bool IsValidationInfoBarOpen
+    {
+        get => _isValidationInfoBarOpen;
+        set
+        {
+            if (SetProperty(ref _isValidationInfoBarOpen, value))
+            {
+                // When user closes the InfoBar, clear notifications
+                if (!value && ValidationNotifications.HasNotifications)
+                {
+                    ValidationNotifications.Clear();
+                    NotifyValidationPropertiesChanged();
+                }
+            }
+        }
+    }
 
     private readonly IFileListAdapter _fileListAdapter;
     private readonly IFileScanner _fileScanner;
@@ -31,11 +58,34 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     public bool CanSelectAll => _batchConfig.FileList.Count > SelectedFiles.Count;
     public ObservableCollection<ScannedFileViewModel> FileList => _fileListAdapter.ScannedFileViewModels;
 
+    // Validation UI properties
+    public bool HasValidationNotifications => ValidationNotifications.HasNotifications;
+    public InfoBarSeverity ValidationInfoBarSeverity => ValidationNotifications.HighestSeverity;
+    public string ValidationSummaryTitle => ValidationNotifications.SummaryTitle;
+    public string ValidationSummaryMessage => ValidationNotifications.SummaryMessage;
+    public bool HasErrors => ValidationNotifications.HasErrors;
+    public bool HasWarnings => ValidationNotifications.HasWarnings;
+    public bool HasInfoMessages => ValidationNotifications.HasInfoMessages;
+    public IEnumerable<ValidationNotificationItem> ValidationErrors => ValidationNotifications.Errors;
+    public IEnumerable<ValidationNotificationItem> ValidationWarnings => ValidationNotifications.Warnings;
+    public IEnumerable<ValidationNotificationItem> ValidationInfoMessages => ValidationNotifications.InfoMessages;
+    
+    /// <summary>
+    /// Gets the visibility of the validation InfoBar.
+    /// Returns Visible when there are notifications, Collapsed otherwise.
+    /// </summary>
+    public Visibility ValidationInfoBarVisibility => 
+        HasValidationNotifications ? Visibility.Visible : Visibility.Collapsed;
+
     public ICommand RemoveSelected { get; }
     public ICommand RemoveAll { get; }
     public ICommand ClearSelection { get; }
     public ICommand SelectAll { get; }
     public ICommand AddFilesCommand { get; }
+    public ICommand ShowValidationDetailsCommand { get; }
+
+
+    private readonly NotifyCollectionChangedEventHandler _validationNotificationsChangedHandler;
 
     public InputViewModel(
         IFileListAdapter fileListAdapter,
@@ -58,14 +108,20 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         _filePickerDialogService = filePickerDialogService;
         _userSettings = userSettings;
         _validationSettingsService = validationSettingsService;
+        
         RemoveSelected = new RelayCommand(RemoveSelectedFiles);
         RemoveAll = new RelayCommand(RemoveAllFiles);
         ClearSelection = new RelayCommand(ClearFileSelection);
         SelectAll = new RelayCommand(SelectAllFiles);
         AddFilesCommand = new AsyncRelayCommand(AddFilesAsync);
+        ShowValidationDetailsCommand = new RelayCommand(ShowValidationDetails);
 
         _batchConfig.FileList.CollectionChanged += BatchConfigFileList_CollectionChanged;
         SelectedFiles.CollectionChanged += SelectedFiles_CollectionChanged;
+
+        // Store the handler for later unsubscription.
+        _validationNotificationsChangedHandler = (s, e) => NotifyValidationPropertiesChanged();
+        ValidationNotifications.AllNotifications.CollectionChanged += _validationNotificationsChangedHandler;
     }
 
     /// <summary>
@@ -128,7 +184,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         // Validate the combined list of files using current validation settings from user preferences.
         var currentValidationSettings = _validationSettingsService.GetEffectiveSettings(_userSettings.Value);
         List<FileValidationResult> validationResults = [.. _fileValidator.Validate(combinedFiles, currentValidationSettings)];
-        if (HandleValidationErrors(validationResults))
+        if (HandleValidationResults(validationResults))
             return;
 
         // Initialize per-file track configurations for all new files
@@ -217,30 +273,61 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     }
 
     /// <summary>
-    /// Processes validation results and handles any errors by displaying a dialog message.
+    /// Processes validation results and handles display of notifications.
     /// </summary>
-    /// <remarks>This method filters the provided validation results for errors and, if any are found, sends a
-    /// dialog message containing the error details using the <see cref="WeakReferenceMessenger"/>. If no errors are
-    /// present, the method returns <see langword="false"/> without sending a message.</remarks>
+    /// <remarks>
+    /// This method processes all validation results (errors, warnings, info) and updates the validation notification state.
+    /// Only errors (ValidationSeverity.Error) will block file addition.
+    /// </remarks>
     /// <param name="results">A collection of <see cref="FileValidationResult"/> objects representing the validation results to process.</param>
-    /// <returns><see langword="true"/> if one or more errors were found in the validation results; otherwise, <see
-    /// langword="false"/>.</returns>
-    private static bool HandleValidationErrors(IEnumerable<FileValidationResult> results)
+    /// <returns><see langword="true"/> if one or more blocking errors were found; otherwise, <see langword="false"/>.</returns>
+    private bool HandleValidationResults(IEnumerable<FileValidationResult> results)
     {
-        var errors = results.Where(r => r.Severity == ValidationSeverity.Error).ToList();
-        if (errors.Count == 0)
-            return false;
+        // Clear previous notifications
+        ValidationNotifications.Clear();
 
-        // If there are errors, send a dialog message with the error details.
-        var errorMessages = errors.Select(e => e.Message);
-        WeakReferenceMessenger.Default.Send(
-            new DialogMessage(
-                "Validation Errors",
-                string.Join(Environment.NewLine, errorMessages)
-            )
-        );
+        // Convert all results to notification items
+        var notifications = results.Select(r => new ValidationNotificationItem
+        {
+            Severity = r.Severity,
+            FilePath = r.ValidatedFilePath,
+            Message = r.Message
+        });
 
-        return true;
+        // Add all notifications to state
+        ValidationNotifications.AddNotifications(notifications);
+
+        // Open InfoBar if there are notifications
+        IsValidationInfoBarOpen = ValidationNotifications.HasNotifications;
+
+        // Only errors block file addition
+        return ValidationNotifications.HasErrors;
+    }
+
+    /// <summary>
+    /// Shows a modal dialog with detailed validation results.
+    /// </summary>
+    private void ShowValidationDetails()
+    {
+        WeakReferenceMessenger.Default.Send(new ShowValidationDetailsMessage());
+    }
+
+    /// <summary>
+    /// Notifies all validation-related property changes for UI binding updates.
+    /// </summary>
+    private void NotifyValidationPropertiesChanged()
+    {
+        OnPropertyChanged(nameof(HasValidationNotifications));
+        OnPropertyChanged(nameof(ValidationInfoBarSeverity));
+        OnPropertyChanged(nameof(ValidationSummaryTitle));
+        OnPropertyChanged(nameof(ValidationSummaryMessage));
+        OnPropertyChanged(nameof(HasErrors));
+        OnPropertyChanged(nameof(HasWarnings));
+        OnPropertyChanged(nameof(HasInfoMessages));
+        OnPropertyChanged(nameof(ValidationErrors));
+        OnPropertyChanged(nameof(ValidationWarnings));
+        OnPropertyChanged(nameof(ValidationInfoMessages));
+        OnPropertyChanged(nameof(ValidationInfoBarVisibility));
     }
 
     /// <summary>
@@ -278,6 +365,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     {
         _batchConfig.FileList.CollectionChanged -= BatchConfigFileList_CollectionChanged;
         SelectedFiles.CollectionChanged -= SelectedFiles_CollectionChanged;
+        ValidationNotifications.AllNotifications.CollectionChanged -= _validationNotificationsChangedHandler;
 
         GC.SuppressFinalize(this);
     }

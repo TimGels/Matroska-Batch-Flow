@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Uno.Messages;
+using MatroskaBatchFlow.Uno.Presentation.Dialogs;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
@@ -20,5 +21,24 @@ public sealed partial class InputPage : Page
             // If the dialog is open, disable file drop on the ListView.
             this.FileDropListView.AllowDrop = !dialogMessage.IsOpen;
         });
+
+        // Register to handle showing validation details dialog
+        WeakReferenceMessenger.Default.Register<ShowValidationDetailsMessage>(this, async (r, message) =>
+        {
+            await ShowValidationDetailsDialogAsync();
+        });
+    }
+
+    /// <summary>
+    /// Shows the validation details dialog with all validation results.
+    /// </summary>
+    private async Task ShowValidationDetailsDialogAsync()
+    {
+        var dialog = new ValidationDetailsDialog(ViewModel)
+        {
+            XamlRoot = this.XamlRoot
+        };
+
+        await dialog.ShowAsync();
     }
 }

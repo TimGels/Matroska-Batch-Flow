@@ -21,6 +21,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -30,8 +31,26 @@
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
+        <!-- Validation InfoBar -->
+        <InfoBar x:Name="ValidationInfoBar"
+                 Grid.Column="1"
+                 Grid.Row="0"
+                 Visibility="{x:Bind ViewModel.ValidationInfoBarVisibility, Mode=OneWay}"
+                 IsOpen="{x:Bind ViewModel.IsValidationInfoBarOpen, Mode=TwoWay}"
+                 Severity="{x:Bind ViewModel.ValidationInfoBarSeverity, Mode=OneWay}"
+                 Title="{x:Bind ViewModel.ValidationSummaryTitle, Mode=OneWay}"
+                 Message="{x:Bind ViewModel.ValidationSummaryMessage, Mode=OneWay}"
+                 IsClosable="True"
+                 Margin="0,-16,0,28">
+            <InfoBar.ActionButton>
+                <Button Content="View Details"
+                        Command="{x:Bind ViewModel.ShowValidationDetailsCommand}" />
+            </InfoBar.ActionButton>
+        </InfoBar>
+
         <!-- CommandBar with actions for file list view-->
         <StackPanel Grid.Column="1"
+                    Grid.Row="1"
                     HorizontalAlignment="Stretch"
                     skia:Background="{ThemeResource ControlStrokeColorDefaultBrush}"
                     win:Background="{ThemeResource LayerOnMicaBaseAltFillColorSecondary}"
@@ -87,7 +106,7 @@
 
         <ListView x:Name="FileDropListView"
                   Grid.Column="1"
-                  Grid.Row="1"
+                  Grid.Row="2"
                   skia:Background="{ThemeResource ControlStrokeColorDefaultBrush}"
                   win:Background="{ThemeResource LayerOnMicaBaseAltFillColorSecondary}"
                   CornerRadius="{ThemeResource ControlCornerRadius}"
@@ -121,7 +140,7 @@
         </ListView>
 
         <!--Drag and Drop text-->
-        <StackPanel Grid.Row="1"
+        <StackPanel Grid.Row="2"
                     IsHitTestVisible="False"
                     Grid.Column="1"
                     HorizontalAlignment="Center"
