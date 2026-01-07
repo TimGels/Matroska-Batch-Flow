@@ -317,16 +317,16 @@ public class BatchConfiguration : IBatchConfiguration
     }
 
     /// <inheritdoc />
+    /// <exception cref="InvalidOperationException">Thrown if no per-file track configuration exists for the specified file path.</exception>
     public IList<TrackConfiguration> GetTrackListForFile(string filePath, TrackType trackType)
     {
-        // Always use per-file configuration - validation enforces strictness
+        // Prefer per-file configuration. If none exists, fail fast by throwing an exception.
         if (FileConfigurations.TryGetValue(filePath, out var fileConfig))
         {
             return fileConfig.GetTrackListForType(trackType);
         }
 
-        // Fallback to global collections (typically from first file)
-        return GetTrackListForType(trackType);
+        throw new InvalidOperationException($"No per-file track configuration found for file '{filePath}'.");
     }
 
     /// <summary>
