@@ -8,9 +8,11 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:Controls="using:MatroskaBatchFlow.Uno.Presentation.Controls"
     xmlns:BatchConfig="using:MatroskaBatchFlow.Core.Services"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     mc:Ignorable="d"
     NavigationCacheMode="Required"
-    IsEnabled="{x:Bind ViewModel.IsFileListPopulated, Mode=OneWay}">
+    IsEnabled="{x:Bind ViewModel.IsFileListPopulated, Mode=OneWay}"
+    x:Name="PageRoot">
 
     <UserControl.Resources>
         <Converters:ZeroBasedToOneBasedConverter x:Key="ZeroBasedToOneBasedConverter" />
@@ -42,13 +44,43 @@
                       PlaceholderText="{x:Bind ViewModel.AudioTracks, Converter={StaticResource EmptyStateToTextConverter}, ConverterParameter='No tracks|Select track'}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="BatchConfig:TrackConfiguration">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Track"
-                                       Margin="5,0,0,0"/>
-                            <TextBlock Text="{x:Bind Index, Converter={StaticResource ZeroBasedToOneBasedConverter}}"
-                                       Margin="10,0,0,0"
-                                       Opacity="0.7"/>
-                        </StackPanel>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        Spacing="8">
+                                <Ellipse Width="10"
+                                         Height="10"
+                                         VerticalAlignment="Center"
+                                         DataContextChanged="TrackAvailabilityDot_DataContextChanged"/>
+                                <TextBlock Text="Track"/>
+                                <TextBlock Text="{x:Bind Index, Converter={StaticResource ZeroBasedToOneBasedConverter}}"
+                                           Opacity="0.7"/>
+                            </StackPanel>
+                            
+                            <StackPanel Grid.Column="1"
+                                        Orientation="Horizontal"
+                                        Spacing="6"
+                                        VerticalAlignment="Center">
+                                <controls:SwitchPresenter TargetType="x:Boolean"
+                                                          Value="{Binding ViewModel.ShowTrackAvailabilityText, ElementName=PageRoot}">
+                                    <controls:Case Value="True">
+                                        <Border CornerRadius="8" Padding="8,2">
+                                            <TextBlock FontSize="12"
+                                                       Tag="{x:Bind Index}"
+                                                       Loaded="TrackAvailabilityText_Loaded"/>
+                                        </Border>
+                                    </controls:Case>
+                                    <controls:Case Value="False">
+                                        <!-- Empty when setting is off -->
+                                    </controls:Case>
+                                </controls:SwitchPresenter>
+                            </StackPanel>
+                        </Grid>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>

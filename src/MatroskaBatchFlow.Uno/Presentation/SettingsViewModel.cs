@@ -11,6 +11,7 @@ public partial class SettingsViewModel : ObservableObject
 {
     private readonly IWritableSettings<UserSettings> _userSettings;
     private readonly IValidationSettingsService _validationSettingsService;
+    private readonly IUIPreferencesService _uiPreferences;
 
     [ObservableProperty]
     private string customMkvPropeditPath;
@@ -46,13 +47,20 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private int subtitleForcedFlagSeverityIndex;
 
+    public bool ShowTrackAvailabilityText
+    {
+        get => _uiPreferences.ShowTrackAvailabilityText;
+        set => _uiPreferences.ShowTrackAvailabilityText = value;
+    }
+
     public bool IsCustomMode => SelectedStrictnessModeIndex == (int)StrictnessMode.Custom;
     public bool IsCustomStrictnessEnabled => IsCustomMode;
 
-    public SettingsViewModel(IWritableSettings<UserSettings> userSettings, IValidationSettingsService validationSettingsService)
+    public SettingsViewModel(IWritableSettings<UserSettings> userSettings, IValidationSettingsService validationSettingsService, IUIPreferencesService uiPreferences)
     {
         _userSettings = userSettings;
         _validationSettingsService = validationSettingsService;
+        _uiPreferences = uiPreferences;
 
         customMkvPropeditPath = ExecutableLocator.FindExecutable(_userSettings.Value.MkvPropedit.CustomPath ?? string.Empty) ?? string.Empty;
         // If Skia is being used, we force the custom path to be enabled since the bundled mkvpropedit executable is only for Windows.

@@ -3,6 +3,7 @@ using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
+using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Presentation;
 using NSubstitute;
 
@@ -26,6 +27,7 @@ public class TrackModificationIntegrationTests
         var batchConfig = new BatchConfiguration();
         var mockLanguageProvider = Substitute.For<ILanguageProvider>();
         mockLanguageProvider.Languages.Returns(ImmutableList<MatroskaLanguageOption>.Empty);
+        var mockUIPreferences = Substitute.For<IUIPreferencesService>();
 
         var file1Path = "file1.mkv";
         var file2Path = "file2.mkv";
@@ -61,7 +63,7 @@ public class TrackModificationIntegrationTests
         batchConfig.StateChanged += (_, __) => tcs.TrySetResult(true);
 
         // Create SubtitleViewModel using real BatchConfiguration
-        var subtitleViewModel = new SubtitleViewModel(mockLanguageProvider, batchConfig);
+        var subtitleViewModel = new SubtitleViewModel(mockLanguageProvider, batchConfig, mockUIPreferences);
 
         // Select track 17 (index 16) - only exists in file2
         Assert.Equal(17, batchConfig.SubtitleTracks.Count);

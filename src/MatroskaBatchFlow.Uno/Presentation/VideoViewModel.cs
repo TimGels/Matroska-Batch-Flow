@@ -1,7 +1,10 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using MatroskaBatchFlow.Core.Enums;
+using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Uno.Contracts.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
@@ -26,8 +29,8 @@ public partial class VideoViewModel : TrackViewModelBase
     /// </summary>
     public bool IsFileListPopulated => _batchConfiguration.FileList.Count > 0;
 
-    public VideoViewModel(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration)
-        : base(languageProvider, batchConfiguration)
+    public VideoViewModel(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences)
+        : base(languageProvider, batchConfiguration, uiPreferences)
     {
         VideoTracks = [.. _batchConfiguration.VideoTracks];
 
@@ -38,6 +41,9 @@ public partial class VideoViewModel : TrackViewModelBase
 
     /// <inheritdoc />
     protected override IList<TrackConfiguration> GetTracks() => VideoTracks;
+
+    /// <inheritdoc />
+    protected override TrackType GetTrackType() => TrackType.Video;
 
     /// <inheritdoc />
     /// <remarks>This method subscribes to the <see cref="INotifyPropertyChanged.PropertyChanged"/> event of the 

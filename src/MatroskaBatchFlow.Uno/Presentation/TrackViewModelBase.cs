@@ -1,7 +1,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using MatroskaBatchFlow.Core.Models;
+using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Uno.Contracts.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
@@ -204,11 +205,79 @@ public abstract partial class TrackViewModelBase : ObservableObject
     public bool IsTrackSelected => SelectedTrack is not null && GetTracks().Count > 0;
 
     protected readonly IBatchConfiguration _batchConfiguration;
+    private readonly IUIPreferencesService _uiPreferences;
 
-    protected TrackViewModelBase(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration)
+    public bool ShowTrackAvailabilityText => _uiPreferences.ShowTrackAvailabilityText;
+
+    protected TrackViewModelBase(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences)
     {
         _batchConfiguration = batchConfiguration;
+        _uiPreferences = uiPreferences;
         _languages = languageProvider.Languages;
+        
+        // Subscribe to property changes on the service
+        _uiPreferences.PropertyChanged += OnUIPreferencesChanged;
+    }
+
+    private void OnUIPreferencesChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(IUIPreferencesService.ShowTrackAvailabilityText))
+        {
+            OnPropertyChanged(nameof(ShowTrackAvailabilityText));
+        }
+    }
+
+    /// <summary>
+    /// Gets the track type for this ViewModel (Audio, Video, or Subtitle).
+    /// </summary>
+    protected abstract TrackType GetTrackType();
+
+    /// <summary>
+    /// Calculates how many files in the batch have this specific track index.
+    /// </summary>
+    /// <param name="trackIndex">Zero-based track index.</param>
+    /// <returns>Number of files that have this track.</returns>
+    public int GetTrackAvailabilityCount(int trackIndex)
+    {
+        if (_batchConfiguration.FileList.Count == 0)
+            return 0;
+
+        var trackType = GetTrackType();
+        int count = 0;
+
+        foreach (var file in _batchConfiguration.FileList)
+        {
+            if (_batchConfiguration.FileTrackMap.TryGetValue(file.Path, out var availability))
+            {
+                if (availability.HasTrack(trackType, trackIndex))
+                {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>
+    /// Gets the total number of files in the batch.
+    /// </summary>
+    public int TotalFileCount => _batchConfiguration.FileList.Count;
+
+    /// <summary>
+    /// Gets a formatted string showing track availability (e.g., "3/5 files").
+    /// </summary>
+    /// <param name="trackIndex">Zero-based track index.</param>
+    /// <returns>Formatted availability string.</returns>
+    public string GetTrackAvailabilityText(int trackIndex)
+    {
+        int available = GetTrackAvailabilityCount(trackIndex);
+        int total = TotalFileCount;
+        
+        if (total == 0)
+            return "0/0";
+        
+        return $"{available}/{total}";
     }
 
     /// <summary>

@@ -1,8 +1,8 @@
-using System.Collections.Immutable;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
+using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Presentation;
 using NSubstitute;
 
@@ -24,14 +24,16 @@ public class TrackViewModelBaseTests
     {
         private readonly IList<TrackConfiguration> _testTracks;
 
-        public TestTrackViewModel(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IList<TrackConfiguration> tracks)
-            : base(languageProvider, batchConfiguration)
+        public TestTrackViewModel(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences, IList<TrackConfiguration> tracks)
+            : base(languageProvider, batchConfiguration, uiPreferences)
         {
             _testTracks = tracks;
             SetupEventHandlers();
         }
 
         protected override IList<TrackConfiguration> GetTracks() => _testTracks;
+
+        protected override TrackType GetTrackType() => TrackType.Text;
 
         protected override void SetupEventHandlers()
         {
@@ -50,6 +52,7 @@ public class TrackViewModelBaseTests
         // Arrange
         var mockLanguageProvider = Substitute.For<ILanguageProvider>();
         var mockBatchConfig = Substitute.For<IBatchConfiguration>();
+        var mockUIPreferences = Substitute.For<IUIPreferencesService>();
 
         // Create test track info using builder
         var mediaInfoResult = new MediaInfoResultBuilder()
@@ -83,7 +86,7 @@ public class TrackViewModelBaseTests
         mockBatchConfig.FileConfigurations.Returns(fileConfigurations);
 
         // Create view model
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, globalTracks);
+        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
 
         // Set the selected track
         viewModel.SelectedTrack = globalTracks[0];
@@ -110,6 +113,7 @@ public class TrackViewModelBaseTests
         // Arrange
         var mockLanguageProvider = Substitute.For<ILanguageProvider>();
         var mockBatchConfig = Substitute.For<IBatchConfiguration>();
+        var mockUIPreferences = Substitute.For<IUIPreferencesService>();
 
         var mediaInfoResult = new MediaInfoResultBuilder()
             .WithCreatingLibrary()
@@ -141,7 +145,7 @@ public class TrackViewModelBaseTests
 
         mockBatchConfig.FileConfigurations.Returns(fileConfigurations);
 
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, globalTracks);
+        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
         viewModel.SelectedTrack = globalTracks[0];
 
         // Act - enable modification and update track name

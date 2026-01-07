@@ -1,4 +1,4 @@
-<Page
+﻿<Page
     x:Class="MatroskaBatchFlow.Uno.Presentation.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -294,7 +294,15 @@
                         </controls:SettingsExpander>
                     </controls:Case>
                 </controls:SwitchPresenter>
+                <!--User Interface section-->
+                <TextBlock Text="User Interface"
+                           Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
 
+                <controls:SettingsCard Header="Track Availability Display"
+                                       Description="Show detailed file count together with colored indicators in track selection dropdowns."
+                                       HeaderIcon="{ui:FontIcon Glyph=&#xE7EE;}">
+                    <ToggleSwitch IsOn="{x:Bind ViewModel.ShowTrackAvailabilityText, Mode=TwoWay}" />
+                </controls:SettingsCard>
                 <!--About section-->
                 <TextBlock Text="About"
                            Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
