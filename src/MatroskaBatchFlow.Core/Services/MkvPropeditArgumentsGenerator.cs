@@ -99,7 +99,7 @@ public sealed class MkvPropeditArgumentsGenerator : IMkvPropeditArgumentsGenerat
             return;
         }
 
-        // Always get file-specific track configuration
+        // Get file-specific track configuration.
         var tracks = batchConfig.GetTrackListForFile(file.Path, type);
 
         foreach (var track in tracks)

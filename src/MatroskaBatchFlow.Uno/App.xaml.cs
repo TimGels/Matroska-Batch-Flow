@@ -64,6 +64,7 @@ public partial class App : Application
             services.AddSingleton<INavigationService, NavigationService>();
             services.AddSingleton<INavigationViewService, NavigationViewService>();
             services.AddSingleton<IValidationSettingsService, ValidationSettingsService>();
+            services.AddSingleton<IUIPreferencesService, UIPreferencesService>();
             services.AddSingleton<ILanguageProvider, LanguageProvider>();
             services.AddSingleton<IFileScanner, FileScanner>();
             services.AddSingleton<IBatchConfiguration, BatchConfiguration>();

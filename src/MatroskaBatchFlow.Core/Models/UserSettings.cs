@@ -16,6 +16,9 @@ public sealed class UserSettings
     [JsonPropertyName("BatchValidation")]
     public BatchValidationSettings BatchValidation { get; set; } = new BatchValidationSettings();
 
+    [JsonPropertyName("UI")]
+    public UISettings UI { get; set; } = new UISettings();
+
     public sealed class MkvPropeditSettings
     {
         [JsonPropertyName("CustomPath")]
@@ -23,5 +26,15 @@ public sealed class UserSettings
 
         [JsonPropertyName("IsCustomPathEnabled")]
         public bool IsCustomPathEnabled { get; set; }
+    }
+
+    public sealed class UISettings
+    {
+        /// <summary>
+        /// Gets or sets whether to show detailed file count text ("X/Y files") alongside track availability indicators.
+        /// When false, only colored dots are shown. When true, dots are shown with text.
+        /// </summary>
+        [JsonPropertyName("ShowTrackAvailabilityText")]
+        public bool ShowTrackAvailabilityText { get; set; } = true;
     }
 }
