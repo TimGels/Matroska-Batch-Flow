@@ -139,9 +139,9 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
     /// <param name="file">The file to be removed. Cannot be <see langword="null"/>.</param>
     public void RemoveFile(ScannedFileInfo file)
     {
+        _batchConfig.FileList.Remove(file);
         _batchConfig.FileConfigurations.Remove(file.Path);
         _batchConfig.FileTrackMap.Remove(file.Path);
-        _batchConfig.FileList.Remove(file);
     }
 
     /// <summary>
