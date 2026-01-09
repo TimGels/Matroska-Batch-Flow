@@ -109,7 +109,9 @@
                                                HeaderIcon="{ui:FontIcon Glyph=&#xE8FD;}">
 
                             <ComboBox SelectedIndex="{x:Bind ViewModel.SelectedStrictnessModeIndex, Mode=TwoWay}"
-                                      MinWidth="120">
+                                      MinWidth="120"
+                                      AutomationProperties.Name="Batch validation strictness mode"
+                                      AutomationProperties.HelpText="Select how strict batch validation should be">
                                 <ComboBoxItem Content="Strict" />
                                 <ComboBoxItem Content="Lenient" />
                                 <ComboBoxItem Content="Custom" />
@@ -124,7 +126,9 @@
                                                    IsExpanded="True">
 
                             <ComboBox SelectedIndex="{x:Bind ViewModel.SelectedStrictnessModeIndex, Mode=TwoWay}"
-                                      MinWidth="120">
+                                      MinWidth="120"
+                                      AutomationProperties.Name="Batch validation strictness mode"
+                                      AutomationProperties.HelpText="Select how strict batch validation should be">
                                 <ComboBoxItem Content="Strict" />
                                 <ComboBoxItem Content="Lenient" />
                                 <ComboBoxItem Content="Custom" />
@@ -144,7 +148,9 @@
                                 <ComboBox Grid.Column="1"
                                               SelectedIndex="{x:Bind ViewModel.TrackCountParitySeverityIndex, Mode=TwoWay}"
                                               MinWidth="120"
-                                              HorizontalAlignment="Right">
+                                              HorizontalAlignment="Right"
+                                              AutomationProperties.Name="Track count parity validation severity"
+                                              AutomationProperties.HelpText="Set validation severity for track count consistency">
                                     <ComboBoxItem Content="Off" />
                                     <ComboBoxItem Content="Info" />
                                     <ComboBoxItem Content="Warning" />
@@ -166,7 +172,9 @@
                                     <ComboBox Grid.Column="1"
                                                   SelectedIndex="{x:Bind ViewModel.AudioLanguageSeverityIndex, Mode=TwoWay}"
                                                   MinWidth="120"
-                                                  HorizontalAlignment="Right">
+                                                  HorizontalAlignment="Right"
+                                                  AutomationProperties.Name="Audio language consistency validation severity"
+                                                  AutomationProperties.HelpText="Set validation severity for audio language consistency">
                                         <ComboBoxItem Content="Off" />
                                         <ComboBoxItem Content="Info" />
                                         <ComboBoxItem Content="Warning" />
@@ -183,7 +191,9 @@
                                     <ComboBox Grid.Column="1"
                                                   SelectedIndex="{x:Bind ViewModel.AudioDefaultFlagSeverityIndex, Mode=TwoWay}"
                                                   MinWidth="120"
-                                                  HorizontalAlignment="Right">
+                                                  HorizontalAlignment="Right"
+                                                  AutomationProperties.Name="Audio default flag validation severity"
+                                                  AutomationProperties.HelpText="Set validation severity for audio default flag">
                                         <ComboBoxItem Content="Off" />
                                         <ComboBoxItem Content="Info" />
                                         <ComboBoxItem Content="Warning" />
@@ -200,7 +210,9 @@
                                     <ComboBox Grid.Column="1"
                                                   SelectedIndex="{x:Bind ViewModel.AudioForcedFlagSeverityIndex, Mode=TwoWay}"
                                                   MinWidth="120"
-                                                  HorizontalAlignment="Right">
+                                                  HorizontalAlignment="Right"
+                                                  AutomationProperties.Name="Audio forced flag validation severity"
+                                                  AutomationProperties.HelpText="Set validation severity for audio forced flag">
                                         <ComboBoxItem Content="Off" />
                                         <ComboBoxItem Content="Info" />
                                         <ComboBoxItem Content="Warning" />
@@ -223,7 +235,9 @@
                                     <ComboBox Grid.Column="1"
                                                   SelectedIndex="{x:Bind ViewModel.VideoLanguageSeverityIndex, Mode=TwoWay}"
                                                   MinWidth="120"
-                                                  HorizontalAlignment="Right">
+                                                  HorizontalAlignment="Right"
+                                                  AutomationProperties.Name="Video language consistency validation severity"
+                                                  AutomationProperties.HelpText="Set validation severity for video language consistency">
                                         <ComboBoxItem Content="Off" />
                                         <ComboBoxItem Content="Info" />
                                         <ComboBoxItem Content="Warning" />
@@ -240,7 +254,9 @@
                                     <ComboBox Grid.Column="1"
                                                   SelectedIndex="{x:Bind ViewModel.VideoDefaultFlagSeverityIndex, Mode=TwoWay}"
                                                   MinWidth="120"
-                                                  HorizontalAlignment="Right">
+                                                  HorizontalAlignment="Right"
+                                                  AutomationProperties.Name="Video default flag validation severity"
+                                                  AutomationProperties.HelpText="Set validation severity for video default flag">
                                         <ComboBoxItem Content="Off" />
                                         <ComboBoxItem Content="Info" />
                                         <ComboBoxItem Content="Warning" />
@@ -263,7 +279,9 @@
                                     <ComboBox Grid.Column="1"
                                                   SelectedIndex="{x:Bind ViewModel.SubtitleLanguageSeverityIndex, Mode=TwoWay}"
                                                   MinWidth="120"
-                                                  HorizontalAlignment="Right">
+                                                  HorizontalAlignment="Right"
+                                                  AutomationProperties.Name="Subtitle language consistency validation severity"
+                                                  AutomationProperties.HelpText="Set validation severity for subtitle language consistency">
                                         <ComboBoxItem Content="Off" />
                                         <ComboBoxItem Content="Info" />
                                         <ComboBoxItem Content="Warning" />
@@ -280,7 +298,9 @@
                                     <ComboBox Grid.Column="1"
                                                   SelectedIndex="{x:Bind ViewModel.SubtitleForcedFlagSeverityIndex, Mode=TwoWay}"
                                                   MinWidth="120"
-                                                  HorizontalAlignment="Right">
+                                                  HorizontalAlignment="Right"
+                                                  AutomationProperties.Name="Subtitle forced flag validation severity"
+                                                  AutomationProperties.HelpText="Set validation severity for subtitle forced flag">
                                         <ComboBoxItem Content="Off" />
                                         <ComboBoxItem Content="Info" />
                                         <ComboBoxItem Content="Warning" />

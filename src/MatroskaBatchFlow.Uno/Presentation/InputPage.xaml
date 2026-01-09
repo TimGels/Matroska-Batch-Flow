@@ -41,10 +41,13 @@
                  Title="{x:Bind ViewModel.ValidationSummaryTitle, Mode=OneWay}"
                  Message="{x:Bind ViewModel.ValidationSummaryMessage, Mode=OneWay}"
                  IsClosable="True"
-                 Margin="0,-16,0,28">
+                 Margin="0,-16,0,28"
+                 AutomationProperties.Name="Validation notifications"
+                 AutomationProperties.LiveSetting="Polite">
             <InfoBar.ActionButton>
                 <Button Content="View Details"
-                        Command="{x:Bind ViewModel.ShowValidationDetailsCommand}" />
+                        Command="{x:Bind ViewModel.ShowValidationDetailsCommand}"
+                        AutomationProperties.Name="View validation details" />
             </InfoBar.ActionButton>
         </InfoBar>
 

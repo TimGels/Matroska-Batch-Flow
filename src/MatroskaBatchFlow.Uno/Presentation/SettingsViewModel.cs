@@ -190,7 +190,7 @@ public partial class SettingsViewModel : ObservableObject
     private void LoadValidationSettings()
     {
         var settings = _userSettings.Value.BatchValidation;
-        selectedStrictnessModeIndex = (int)settings.Mode;
+        SelectedStrictnessModeIndex = (int)settings.Mode;
         
         // If mode is Strict or Lenient, display preset values (not saved custom values)
         if (settings.Mode != StrictnessMode.Custom)
@@ -211,14 +211,14 @@ public partial class SettingsViewModel : ObservableObject
     /// </summary>
     private void UpdateViewModelPropertiesFromSettings(ValidationSeveritySettings settings)
     {
-        trackCountParitySeverityIndex = (int)settings.TrackCountParity;
-        audioLanguageSeverityIndex = (int)settings.AudioTrackValidation.Language;
-        audioDefaultFlagSeverityIndex = (int)settings.AudioTrackValidation.DefaultFlag;
-        audioForcedFlagSeverityIndex = (int)settings.AudioTrackValidation.ForcedFlag;
-        videoLanguageSeverityIndex = (int)settings.VideoTrackValidation.Language;
-        videoDefaultFlagSeverityIndex = (int)settings.VideoTrackValidation.DefaultFlag;
-        subtitleLanguageSeverityIndex = (int)settings.SubtitleTrackValidation.Language;
-        subtitleForcedFlagSeverityIndex = (int)settings.SubtitleTrackValidation.ForcedFlag;
+        TrackCountParitySeverityIndex = (int)settings.TrackCountParity;
+        AudioLanguageSeverityIndex = (int)settings.AudioTrackValidation.Language;
+        AudioDefaultFlagSeverityIndex = (int)settings.AudioTrackValidation.DefaultFlag;
+        AudioForcedFlagSeverityIndex = (int)settings.AudioTrackValidation.ForcedFlag;
+        VideoLanguageSeverityIndex = (int)settings.VideoTrackValidation.Language;
+        VideoDefaultFlagSeverityIndex = (int)settings.VideoTrackValidation.DefaultFlag;
+        SubtitleLanguageSeverityIndex = (int)settings.SubtitleTrackValidation.Language;
+        SubtitleForcedFlagSeverityIndex = (int)settings.SubtitleTrackValidation.ForcedFlag;
     }
     
     /// <summary>
