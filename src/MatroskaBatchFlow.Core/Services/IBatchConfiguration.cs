@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
-using MatroskaBatchFlow.Core.Models.AppSettings;
 
 namespace MatroskaBatchFlow.Core.Services;
 

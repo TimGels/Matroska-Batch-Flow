@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services.Processing;
 
 namespace MatroskaBatchFlow.Uno.Presentation;

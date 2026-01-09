@@ -4,7 +4,6 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
-using MatroskaBatchFlow.Core.Models.AppSettings;
 using static MatroskaBatchFlow.Core.Models.MediaInfoResult.MediaInfo;
 
 namespace MatroskaBatchFlow.Core.Services;
