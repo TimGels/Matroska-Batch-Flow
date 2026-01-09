@@ -63,9 +63,6 @@ These prerequisites are required to build the project:
 | **[Visual Studio 2022 or later](https://visualstudio.microsoft.com/)** | Recommended IDE for development |
 | **[Uno Platform Extension for Visual Studio](https://platform.uno/docs/articles/getting-started/installation.html)** | Helps with Uno Platform development |
 
-> [!IMPORTANT]
-> Cross-platform support via Uno Platform's Skia Desktop target is experimental. See [Skia Desktop (Experimental)](#skia-desktop-experimental) for details.
-
 ### Installation
 
 1. Clone the repository:
