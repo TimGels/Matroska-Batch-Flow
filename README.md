@@ -7,32 +7,164 @@ Whether you're an archivist, home theater enthusiast, or anyone who works with M
 > [!WARNING]
 > This project is under active development. Features and behavior may change, and it may not be suitable for production use.
 
+> [!NOTE]
+> Consider [supporting the project](#support-the-project) to help with its continued development.
+
 ## Features
 
-- **Batch Editing:** Modify container properties (such as track names, languages, and flags) for multiple files at once.
-- **Modern Graphical User Interface:** A modern GUI built with WinUI 3 and Uno Platform for an intuitive user experience.
-- **Drag-and-Drop Support:** Easily add files or folders to the batch by dragging them into the application.
-- **Validation:** Ensures only supported Matroska files are processed, and checks compatibility (e.g., matching tracks) to prevent accidental modification of files with differing structures or properties.
+| Feature | Description |
+| --------- | ------------- |
+| **Batch Editing** | Modify container properties (track names, languages, and more) for multiple files at once |
+| **Modern GUI** | Intuitive interface built with WinUI 3 and Uno Platform |
+| **Drag-and-Drop** | Add files or folders by dragging them into the application |
+| **Flexible Validation** | Three configurable strictness levels for file validation (see [Validation Modes](#validation-modes)) |
+| **Track Availability Indicators** | Visual indicators showing track coverage across files in your batch |
+
+### Validation Modes
+
+- **Strict Mode** — Enforces consistent track counts and properties across all files *(default)*
+- **Lenient Mode** — Allows files with different track counts, with non-blocking notifications
+- **Custom Mode** — Configure validation severity per track type and property for maximum control
 
 ## Preview
 
-![Screenshot: Example input view in Matroska Batch Flow](Assets/Input.png)
+<p align="center">
+  <img src="Assets/Input.png" alt="Screenshot: Example input view in Matroska Batch Flow" width="800">
+</p>
 
-## Project Structure
+## Support the Project
 
-- **MatroskaBatchFlow.Core**  
-   Core logic for file scanning, filtering, MediaInfo integration, and batch processing. Contains shared business logic and services.
-- **MatroskaBatchFlow.Console**  
-   Command-line utility, currently primarily intended and used for development and interacting with the Core project.
-- **MatroskaBatchFlow.Uno**  
-   Graphical user interface built with Uno Platform and WinUI 3. This is the primary way to use Matroska Batch Flow for most users.
-- **tests/**  
-   Unit tests for the projects.
+Matroska Batch Flow is free, open-source software built and maintained in my spare time. I built it to help me reduce the tedious task of spending hours manually fixing track names across hundreds of files. If this tool has been helpful to you, consider supporting its continued development.
 
-## Development requirements
+Donations can be made as a one-time donation or a recurring sponsorship. Your support helps cover development time and motivates continued development.
 
-These requirements are for building the project:
+<p align="center">
+  <a href="https://github.com/sponsors/TimGels"><img src="https://img.shields.io/badge/Sponsor_on_GitHub-ea4aaa?style=for-the-badge&logo=github" alt="GitHub Sponsors"></a>
+  &nbsp;
+  <a href="https://buymeacoffee.com/timgels"><img src="https://img.shields.io/badge/Buy_Me_a_Coffee-ffdd00?style=for-the-badge&logo=buymeacoffee&logoColor=black" alt="Buy Me a Coffee"></a>
+</p>
 
-- Windows 10/11 for GUI (support for other platforms is planned, utilizing Uno Platform's Skia Desktop)
-- [MKVToolNix's](https://mkvtoolnix.download/) mkvpropedit (already bundled for WinAppSDK target)
-- [.NET 9.x SDK](https://dotnet.microsoft.com/download)
+## Getting Started
+
+Follow these instructions to set up the project locally for development and testing.
+
+### Prerequisites
+
+These prerequisites are required to build the project:
+
+| Requirement | Notes |
+| ------------- | ------- |
+| **Windows 11** | Required for WinAppSDK target |
+| **[.NET 10 SDK](https://dotnet.microsoft.com/download)** | Required for building and running the application |
+| **[mkvpropedit](https://mkvtoolnix.download/)** | Already included in WinAppSDK builds |
+
+| Recommended | Notes |
+| ------------- | ------- |
+| **[Visual Studio 2022 or later](https://visualstudio.microsoft.com/)** | Recommended IDE for development |
+| **[Uno Platform Extension for Visual Studio](https://platform.uno/docs/articles/getting-started/installation.html)** | Helps with Uno Platform development |
+
+> [!IMPORTANT]
+> Cross-platform support via Uno Platform's Skia Desktop target is experimental. See [Skia Desktop (Experimental)](#skia-desktop-experimental) for details.
+
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/yourusername/Matroska-Batch-Flow.git
+   cd Matroska-Batch-Flow
+   ```
+
+2. Restore dependencies:
+
+   ```bash
+   dotnet restore
+   ```
+
+3. Build and run (see [Development](#development) for detailed instructions)
+
+## Development
+
+To get started with development, follow the instructions below.
+
+> [!WARNING]
+> The cross-platform Skia target (`net10.0-desktop`) is currently experimental and unsupported. Expect bugs, missing features, and platform-specific issues.
+
+### Project Structure
+
+The project is organized as follows:
+
+```bash
+Matroska-Batch-Flow/
+├── src/
+│   ├── MatroskaBatchFlow.Core/                 # Core business logic library
+│   ├── MatroskaBatchFlow.Console/              # CLI utility (reserved for future use)
+│   └── MatroskaBatchFlow.Uno/                  # WinUI 3 / Skia GUI application
+└── tests/
+    ├── MatroskaBatchFlow.Core.UnitTests/       # Unit tests for core library
+    ├── MatroskaBatchFlow.Uno.UnitTests/        # Unit tests for GUI application
+    └── MatroskaBatchFlow.Uno.IntegrationTests/ # Integration tests for GUI application
+```
+
+| Project | Purpose |
+| --------- | --------- |
+| **MatroskaBatchFlow.Core** | Cross-platform core library containing the main business logic of the application |
+| **MatroskaBatchFlow.Console** | Command-line interface (reserved for future use) |
+| **MatroskaBatchFlow.Uno** | The GUI application powered by Uno Platform. Available targets: WinAppSDK (Windows), Skia Desktop (experimental cross-platform) |
+
+### Building
+
+To build the application, choose one of the following methods:
+
+#### Visual Studio (Recommended)
+
+1. Open `MatroskaBatchFlow.sln` in Visual Studio
+2. Set `MatroskaBatchFlow.Uno` as the startup project
+3. Select the `net10.0-windows10.0.19041` target framework
+4. Press <kbd>F5</kbd> to build and run with debugging
+
+#### Command Line
+
+```powershell
+# WinAppSDK (Recommended)
+dotnet build src/MatroskaBatchFlow.Uno/MatroskaBatchFlow.Uno.csproj -f net10.0-windows10.0.19041
+
+# Skia Desktop (Experimental)
+dotnet build src/MatroskaBatchFlow.Uno/MatroskaBatchFlow.Uno.csproj -f net10.0-desktop
+```
+
+### Running
+
+```powershell
+dotnet run --project src/MatroskaBatchFlow.Uno/MatroskaBatchFlow.Uno.csproj -f net10.0-windows10.0.19041
+```
+
+> [!TIP]
+> `dotnet run` automatically builds the project if needed.
+
+### Testing
+
+```powershell
+# Run all tests
+dotnet test
+
+# Run a specific test project. In this example, the core project unit tests.
+dotnet test tests/MatroskaBatchFlow.Core.UnitTests
+```
+
+## Contributing
+
+This is a personal project. If you encounter a bug or have a feature suggestion, you're welcome to [open an issue](../../issues), but please ensure it's detailed and actionable. Low-effort submissions (low quality pull requests, vague reports, duplicate issues, feature requests without context) may be closed without action.
+
+## Acknowledgements
+
+This project relies on the following excellent tools:
+
+- **[MediaInfo](https://mediaarea.net/en/MediaInfo)** — Media file analysis library
+- **[MKVToolNix](https://mkvtoolnix.download/)** — Matroska tools including `mkvpropedit`
+- **[Uno Platform](https://platform.uno/)** — Open-source .NET platform for building cross-platform applications
+- **[Windows App SDK](https://learn.microsoft.com/windows/apps/windows-app-sdk/)** — Modern Windows development platform
+
+## License
+
+This project is licensed under the **GNU General Public License v3.0** — see the [LICENSE](LICENSE) file for details.
