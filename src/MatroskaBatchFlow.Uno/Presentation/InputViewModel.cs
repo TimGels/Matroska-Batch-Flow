@@ -50,7 +50,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     private readonly IFileValidationEngine _fileValidator;
     private readonly IFileProcessingEngine _fileProcessingRuleEngine;
     private readonly IBatchConfiguration _batchConfig;
-    private readonly IBatchTrackCountSynchronizer _BatchTrackCountSynchronizer;
+    private readonly IBatchTrackConfigurationInitializer _trackConfigInitializer;
     private readonly IFilePickerDialogService _filePickerDialogService;
     private readonly IWritableSettings<UserSettings> _userSettings;
     private readonly IValidationSettingsService _validationSettingsService;
@@ -93,7 +93,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         IFileValidationEngine fileValidator,
         IFileProcessingEngine fileProcessingRuleEngine,
         IBatchConfiguration batchConfig,
-        IBatchTrackCountSynchronizer batchConfigurationTrackInitializer,
+        IBatchTrackConfigurationInitializer trackConfigInitializer,
         IFilePickerDialogService filePickerDialogService,
         IWritableSettings<UserSettings> userSettings,
         IValidationSettingsService validationSettingsService
@@ -104,7 +104,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         _fileValidator = fileValidator;
         _fileProcessingRuleEngine = fileProcessingRuleEngine;
         _batchConfig = batchConfig;
-        _BatchTrackCountSynchronizer = batchConfigurationTrackInitializer;
+        _trackConfigInitializer = trackConfigInitializer;
         _filePickerDialogService = filePickerDialogService;
         _userSettings = userSettings;
         _validationSettingsService = validationSettingsService;
@@ -190,7 +190,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         // Initialize per-file track configurations for all new files
         foreach (var file in newFiles)
         {
-            _BatchTrackCountSynchronizer.SynchronizeTrackCount(
+            _trackConfigInitializer.Initialize(
                 file,
                 TrackType.Audio,
                 TrackType.Video,

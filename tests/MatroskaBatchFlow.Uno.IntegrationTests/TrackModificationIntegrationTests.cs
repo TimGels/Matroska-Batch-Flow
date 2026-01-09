@@ -54,9 +54,11 @@ public class TrackModificationIntegrationTests
         batchConfig.FileList.Add(file2);
 
         // Initialize per-file configurations
-        var synchronizer = new BatchTrackCountSynchronizer(batchConfig, mockLanguageProvider);
-        synchronizer.SynchronizeTrackCount(file1, TrackType.Text);
-        synchronizer.SynchronizeTrackCount(file2, TrackType.Text);
+        var availabilityRecorder = new FileTrackAvailabilityRecorder(batchConfig);
+        var trackConfigFactory = new TrackConfigurationFactory(mockLanguageProvider);
+        var initializer = new BatchTrackConfigurationInitializer(batchConfig, availabilityRecorder, trackConfigFactory);
+        initializer.Initialize(file1, TrackType.Text);
+        initializer.Initialize(file2, TrackType.Text);
 
         // Track StateChanged event robustly
         var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
