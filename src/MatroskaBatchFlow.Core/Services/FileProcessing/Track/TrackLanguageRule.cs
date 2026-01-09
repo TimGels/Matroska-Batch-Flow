@@ -6,7 +6,7 @@ namespace MatroskaBatchFlow.Core.Services.FileProcessing.Track;
 
 /// <summary>
 /// Analyzes per-file track languages and populates global UI properties with smart defaults.
-/// Per-file configurations are already populated by <see cref="BatchTrackCountSynchronizer"/>.
+/// Per-file configurations are already populated by <see cref="BatchTrackConfigurationInitializer"/>.
 /// This rule determines what language to display in the UI based on all files.
 /// </summary>
 public class TrackLanguageRule : IFileProcessingRule

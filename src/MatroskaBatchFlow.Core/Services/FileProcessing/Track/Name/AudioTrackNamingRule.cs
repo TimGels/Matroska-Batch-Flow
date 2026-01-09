@@ -5,7 +5,7 @@ namespace MatroskaBatchFlow.Core.Services.FileProcessing.Track.Name;
 
 /// <summary>
 /// Analyzes per-file audio track names and populates global UI properties with smart defaults.
-/// Per-file configurations are already populated by <see cref="BatchTrackCountSynchronizer"/>.
+/// Per-file configurations are already populated by <see cref="BatchTrackConfigurationInitializer"/>.
 /// This rule can implement advanced naming logic based on codec, channel layout, etc.
 /// </summary>
 public class AudioTrackNamingRule : IFileProcessingRule

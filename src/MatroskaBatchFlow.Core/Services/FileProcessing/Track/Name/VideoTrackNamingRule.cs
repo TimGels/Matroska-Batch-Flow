@@ -5,7 +5,7 @@ namespace MatroskaBatchFlow.Core.Services.FileProcessing.Track.Name;
 
 /// <summary>
 /// Analyzes per-file video track names and populates global UI properties with smart defaults.
-/// Per-file configurations are already populated by <see cref="BatchTrackCountSynchronizer"/>.
+/// Per-file configurations are already populated by <see cref="BatchTrackConfigurationInitializer"/>.
 /// </summary>
 public class VideoTrackNamingRule : IFileProcessingRule
 {
