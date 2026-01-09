@@ -224,6 +224,6 @@ public sealed class ValidationNotificationState : INotifyPropertyChanged, IDispo
     /// <summary>
     /// Raises the <see cref="PropertyChanged"/> event to notify listeners that a property value has changed.
     /// </summary>
-    /// <param name="name">The name of the property that changed..</param>
+    /// <param name="name">The name of the property that changed.</param>
     private void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
