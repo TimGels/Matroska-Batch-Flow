@@ -34,23 +34,35 @@ public static class MediaInfoNativeLoader
     /// cref="IntPtr.Zero"/>.</returns>
     private static IntPtr ResolveMediaInfoLibrary(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
     {
-        string? path = null;
+        string? fileName = null;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            path = "Binaries/MediaInfo.dll";
+            fileName = "MediaInfo.dll";
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            path = "Binaries/libmediainfo.so";
+            fileName = "libmediainfo.so";
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            path = "Binaries/libmediainfo.so";
+            fileName = "libmediainfo.so";
         }
 
-        if (path is not null && NativeLibrary.TryLoad(path, out var handle))
+        if (fileName is not null)
         {
-            return handle;
+            // Try loading from Binaries subdirectory (standard location)
+            string path = Path.Combine(AppContext.BaseDirectory, "Binaries", fileName);
+            if (NativeLibrary.TryLoad(path, out var handle))
+            {
+                return handle;
+            }
+
+            // Fallback: try same directory as the application
+            path = Path.Combine(AppContext.BaseDirectory, fileName);
+            if (NativeLibrary.TryLoad(path, out var fallbackHandle))
+            {
+                return fallbackHandle;
+            }
         }
 
         return IntPtr.Zero; // fallback to default
