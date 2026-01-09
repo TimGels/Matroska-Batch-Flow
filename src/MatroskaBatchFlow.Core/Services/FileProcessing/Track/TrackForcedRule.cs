@@ -5,7 +5,7 @@ namespace MatroskaBatchFlow.Core.Services.FileProcessing.Track;
 
 /// <summary>
 /// Analyzes per-file track forced flags and populates global UI properties.
-/// Per-file configurations are already populated by <see cref="BatchTrackCountSynchronizer"/>.
+/// Per-file configurations are already populated by <see cref="BatchTrackConfigurationInitializer"/>.
 /// This rule determines what forced flag to display in the UI based on all files.
 /// </summary>
 public class TrackForcedRule : IFileProcessingRule
