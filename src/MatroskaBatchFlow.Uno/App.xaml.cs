@@ -8,9 +8,11 @@ using MatroskaBatchFlow.Core.Services.Processing;
 using MatroskaBatchFlow.Uno.Activation;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Services;
+using Microsoft.Extensions.Configuration;
 using Serilog.Core;
 
 namespace MatroskaBatchFlow.Uno;
+
 public partial class App : Application
 {
     /// <summary>
@@ -54,6 +56,11 @@ public partial class App : Application
     {
         Host = Microsoft.Extensions.Hosting.Host.
         CreateDefaultBuilder().
+        ConfigureHostConfiguration(config =>
+        {
+            config.SetBasePath(AppContext.BaseDirectory);
+            config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+        }).
         ConfigureServices((context, services) =>
         {
             // Register services.
