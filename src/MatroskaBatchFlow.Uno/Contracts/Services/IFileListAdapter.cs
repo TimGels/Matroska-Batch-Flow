@@ -1,11 +1,12 @@
 using System.Collections.ObjectModel;
+using MatroskaBatchFlow.Core.Utilities;
 
 namespace MatroskaBatchFlow.Uno.Contracts.Services;
 
 public interface IFileListAdapter
 {
     ObservableCollection<ScannedFileViewModel> ScannedFileViewModels { get; }
-    ObservableCollection<ScannedFileInfo> CoreList { get; }
+    UniqueObservableCollection<ScannedFileInfo> CoreList { get; }
 
     void AddFile(ScannedFileInfo file);
     void AddFiles(IEnumerable<ScannedFileInfo> files);

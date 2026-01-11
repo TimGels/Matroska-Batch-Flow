@@ -54,6 +54,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     private readonly IFilePickerDialogService _filePickerDialogService;
     private readonly IWritableSettings<UserSettings> _userSettings;
     private readonly IValidationSettingsService _validationSettingsService;
+    private readonly IPlatformService _platformService;
 
     public bool CanSelectAll => _batchConfig.FileList.Count > SelectedFiles.Count;
     public ObservableCollection<ScannedFileViewModel> FileList => _fileListAdapter.ScannedFileViewModels;
@@ -96,7 +97,8 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         IBatchTrackConfigurationInitializer trackConfigInitializer,
         IFilePickerDialogService filePickerDialogService,
         IWritableSettings<UserSettings> userSettings,
-        IValidationSettingsService validationSettingsService
+        IValidationSettingsService validationSettingsService,
+        IPlatformService platformService
         )
     {
         _fileListAdapter = fileListAdapter;
@@ -108,7 +110,8 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         _filePickerDialogService = filePickerDialogService;
         _userSettings = userSettings;
         _validationSettingsService = validationSettingsService;
-        
+        _platformService = platformService;
+
         RemoveSelected = new RelayCommand(RemoveSelectedFiles);
         RemoveAll = new RelayCommand(RemoveAllFiles);
         ClearSelection = new RelayCommand(ClearFileSelection);
@@ -170,9 +173,15 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     {
         if (files is null or not { Count: > 0 })
             return;
+            
+        // Check for duplicates and filter to unique files only
+        var uniqueFiles = FilterDuplicateFiles(files);
+
+        if (uniqueFiles.Count == 0)
+            return;
 
         // Scan the files to get their information.
-        IEnumerable<ScannedFileInfo> newFiles = await _fileScanner.ScanAsync(files.ToFileInfo());
+        IEnumerable<ScannedFileInfo> newFiles = await _fileScanner.ScanAsync(uniqueFiles.ToFileInfo());
         if (!newFiles.Any())
             return;
 
@@ -206,6 +215,55 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
 
         // Add files via the adapter to keep everything in sync.
         _fileListAdapter.AddFiles(newFiles);
+    }
+
+    
+    /// <summary>
+    /// Filters out duplicate files from the provided list and notifies the user if any duplicates are found.
+    /// </summary>
+    /// <param name="files">The list of files to check for duplicates.</param>
+    /// <returns>A list containing only unique files that are not already in the batch configuration.</returns>
+    private List<StorageFile> FilterDuplicateFiles(IReadOnlyList<StorageFile> files)
+    {
+        // Build lookup of existing paths once
+        var existingPaths = new HashSet<string>(
+            _batchConfig.FileList.Select(f => f.Path));
+
+        // Separate files into duplicates and unique, normalizing path only once per file
+        var duplicates = new List<string>();
+        var uniqueFiles = new List<StorageFile>();
+
+        // Platform-aware comparison. Not perfect, but should be good enough for our purposes.
+        var pathComparison = _platformService.IsWindows() 
+            ? StringComparison.OrdinalIgnoreCase 
+            : StringComparison.Ordinal;
+
+        foreach (var file in files)
+        {
+            var normalizedPath = Path.GetFullPath(file.Path);
+            if (existingPaths.Any(p => string.Equals(p, normalizedPath, pathComparison)) ||
+                uniqueFiles.Any(f => string.Equals(Path.GetFullPath(f.Path), normalizedPath, pathComparison)))
+            {
+                duplicates.Add(normalizedPath);
+            }
+            else
+            {
+                uniqueFiles.Add(file);
+            }
+        }
+
+        // Show duplicate message if any were found
+        if (duplicates.Count > 0)
+        {
+            var duplicateFileNames = string.Join(Environment.NewLine, duplicates.Select(p => Path.GetFileName(p) ?? p));
+            var message = duplicates.Count == 1
+                ? $"This file is already in the list:{Environment.NewLine}{duplicateFileNames}"
+                : $"These {duplicates.Count} files are already in the list:{Environment.NewLine}{duplicateFileNames}";
+
+            WeakReferenceMessenger.Default.Send(new DialogMessage("Duplicate Files", message));
+        }
+
+        return uniqueFiles;
     }
 
     /// <summary>

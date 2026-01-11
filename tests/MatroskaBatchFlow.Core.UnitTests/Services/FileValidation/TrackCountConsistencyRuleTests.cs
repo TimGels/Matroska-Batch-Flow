@@ -115,7 +115,7 @@ public class TrackCountConsistencyRuleTests
         // Assert
         Assert.Single(results);
         Assert.Equal(severity, results[0].Severity);
-        Assert.Equal("file2.mkv", results[0].ValidatedFilePath);
+        Assert.Equal("file2.mkv", System.IO.Path.GetFileName(results[0].ValidatedFilePath));
         Assert.Contains("Track count mismatch", results[0].Message);
         Assert.Contains("Audio: 1 (expected 2)", results[0].Message);
         Assert.Contains("Text: 2 (expected 3)", results[0].Message);
@@ -146,8 +146,8 @@ public class TrackCountConsistencyRuleTests
 
         // Assert
         Assert.Equal(2, results.Count);
-        Assert.Contains(results, r => r.ValidatedFilePath == "file2.mkv" && r.Message.Contains("Audio: 1 (expected 2)"));
-        Assert.Contains(results, r => r.ValidatedFilePath == "file3.mkv" && r.Message.Contains("Video: 2 (expected 1)"));
+        Assert.Contains(results, r => System.IO.Path.GetFileName(r.ValidatedFilePath) == "file2.mkv" && r.Message.Contains("Audio: 1 (expected 2)"));
+        Assert.Contains(results, r => System.IO.Path.GetFileName(r.ValidatedFilePath) == "file3.mkv" && r.Message.Contains("Video: 2 (expected 1)"));
     }
 
     private static ScannedFileInfo CreateFileWithTracks(string path, int audioCount, int videoCount, int textCount)
@@ -172,10 +172,6 @@ public class TrackCountConsistencyRuleTests
             builder.AddTrackOfType(TrackType.Text);
         }
 
-        return new ScannedFileInfo
-        {
-            Path = path,
-            Result = builder.Build()
-        };
+        return new ScannedFileInfo(builder.Build(), path);
     }
 }

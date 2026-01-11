@@ -24,7 +24,7 @@ public class FileTrackAvailabilityRecorder(IBatchConfiguration _batchConfig) : I
             SubtitleTrackCount = tracks.Count(t => t.Type == TrackType.Text)
         };
 
-        _batchConfig.FileTrackMap[scannedFile.Path] = availability;
+        _batchConfig.FileTrackMap[scannedFile.Id] = availability;
 
         return availability;
     }

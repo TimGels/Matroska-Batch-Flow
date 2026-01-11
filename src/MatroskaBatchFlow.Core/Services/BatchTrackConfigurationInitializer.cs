@@ -33,13 +33,13 @@ public class BatchTrackConfigurationInitializer(
         availabilityRecorder.RecordAvailability(scannedFile);
 
         // Ensure per-file configuration exists
-        if (!batchConfig.FileConfigurations.TryGetValue(scannedFile.Path, out FileTrackConfiguration? fileConfig))
+        if (!batchConfig.FileConfigurations.TryGetValue(scannedFile.Id, out FileTrackConfiguration? fileConfig))
         {
             fileConfig = new FileTrackConfiguration
             {
                 FilePath = scannedFile.Path
             };
-            batchConfig.FileConfigurations[scannedFile.Path] = fileConfig;
+            batchConfig.FileConfigurations[scannedFile.Id] = fileConfig;
         }
 
         // Populate file-specific track configurations based on what this file has
@@ -75,7 +75,7 @@ public class BatchTrackConfigurationInitializer(
         {
             // Find the maximum track count for this track type across all files
             int maxTrackCount = 0;
-            string? filePathWithMaxTracks = null;
+            Guid fileIdWithMaxTracks = Guid.Empty;
 
             foreach (var kvp in batchConfig.FileTrackMap)
             {
@@ -90,17 +90,17 @@ public class BatchTrackConfigurationInitializer(
                 if (trackCount > maxTrackCount)
                 {
                     maxTrackCount = trackCount;
-                    filePathWithMaxTracks = kvp.Key;
+                    fileIdWithMaxTracks = kvp.Key;
                 }
             }
 
             // If we found a file with tracks, use it to populate the global collection
-            if (!string.IsNullOrEmpty(filePathWithMaxTracks) && maxTrackCount > 0)
+            if (fileIdWithMaxTracks != Guid.Empty && maxTrackCount > 0)
             {
                 var batchTracks = batchConfig.GetTrackListForType(trackType);
 
                 // Get the file's track configuration to use as a template
-                if (batchConfig.FileConfigurations.TryGetValue(filePathWithMaxTracks, out var fileConfig))
+                if (batchConfig.FileConfigurations.TryGetValue(fileIdWithMaxTracks, out var fileConfig))
                 {
                     var fileTracks = fileConfig.GetTrackListForType(trackType);
 

@@ -100,7 +100,7 @@ public sealed class MkvPropeditArgumentsGenerator : IMkvPropeditArgumentsGenerat
         }
 
         // Get file-specific track configuration.
-        var tracks = batchConfig.GetTrackListForFile(file.Path, type);
+        var tracks = batchConfig.GetTrackListForFile(file.Id, type);
 
         foreach (var track in tracks)
         {
@@ -115,7 +115,7 @@ public sealed class MkvPropeditArgumentsGenerator : IMkvPropeditArgumentsGenerat
             }
 
             // Check if this track actually exists in the file
-            if (batchConfig.FileTrackMap.TryGetValue(file.Path, out var availability))
+            if (batchConfig.FileTrackMap.TryGetValue(file.Id, out var availability))
             {
                 if (!availability.HasTrack(type, track.Index))
                 {

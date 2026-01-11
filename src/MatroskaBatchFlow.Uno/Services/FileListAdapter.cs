@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 
 namespace MatroskaBatchFlow.Uno.Services;
@@ -19,7 +20,7 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
     /// <summary>
     /// The core collection of scanned files.
     /// </summary>
-    public ObservableCollection<ScannedFileInfo> CoreList => _batchConfig.FileList;
+    public UniqueObservableCollection<ScannedFileInfo> CoreList => _batchConfig.FileList;
 
     /// <summary>
     /// The batch configuration that contains the core file list and manages the scanned files.
@@ -138,9 +139,9 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
     /// <param name="file">The file to be removed. Cannot be <see langword="null"/>.</param>
     public void RemoveFile(ScannedFileInfo file)
     {
+        _batchConfig.FileConfigurations.Remove(file.Id);
+        _batchConfig.FileTrackMap.Remove(file.Id);
         _batchConfig.FileList.Remove(file);
-        _batchConfig.FileConfigurations.Remove(file.Path);
-        _batchConfig.FileTrackMap.Remove(file.Path);
     }
 
     /// <summary>

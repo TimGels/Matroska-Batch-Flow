@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
+using MatroskaBatchFlow.Core.Utilities;
 using static MatroskaBatchFlow.Core.Models.MediaInfoResult.MediaInfo;
 
 namespace MatroskaBatchFlow.Core.Services;
@@ -19,20 +20,32 @@ public class BatchConfiguration : IBatchConfiguration
     private bool _addTrackStatisticsTags = true;
     private bool _deleteTrackStatisticsTags = false;
     private bool _shouldModifyTrackStatisticsTags = false;
-    private readonly ObservableCollection<ScannedFileInfo> _fileList = [];
+    /// <summary>
+    /// Maintains a collection of scanned files, ensuring each file is unique by its path within the current batch
+    /// configuration.
+    /// </summary>
+    /// <remarks>This collection uses the <see cref="IScannedFileInfoPathComparer"/> to prevent duplicate entries for the
+    /// same physical file, avoiding redundant processing during batch operations.</remarks>
+    private readonly UniqueObservableCollection<ScannedFileInfo> _fileList;
     private ObservableCollection<TrackConfiguration> _audioTracks = [];
     private ObservableCollection<TrackConfiguration> _videoTracks = [];
     private ObservableCollection<TrackConfiguration> _subtitleTracks = [];
     private static readonly ImmutableList<TrackConfiguration> _emptyTrackList = [];
     private string _mkvpropeditArguments = string.Empty;
-    private Dictionary<string, FileTrackConfiguration> _fileConfigurations = new();
-    private Dictionary<string, FileTrackAvailability> _fileTrackMap = new();
+    private Dictionary<Guid, FileTrackConfiguration> _fileConfigurations = [];
+    private Dictionary<Guid, FileTrackAvailability> _fileTrackMap = [];
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler? StateChanged;
 
-    public BatchConfiguration()
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BatchConfiguration"/> class.
+    /// </summary>
+    /// <param name="fileComparer">The comparer to use for identifying unique files in the collection.</param>
+    public BatchConfiguration(IScannedFileInfoPathComparer fileComparer)
     {
+        _fileList = new(fileComparer);
+        
         FileList.CollectionChanged += (sender, e) =>
         {
             // We only care about removals, resets, and replacements for the purpose of clearing state.
@@ -203,7 +216,7 @@ public class BatchConfiguration : IBatchConfiguration
     }
 
 
-    public ObservableCollection<ScannedFileInfo> FileList => _fileList;
+    public UniqueObservableCollection<ScannedFileInfo> FileList => _fileList;
 
     public ObservableCollection<TrackConfiguration> AudioTracks
     {
@@ -257,7 +270,7 @@ public class BatchConfiguration : IBatchConfiguration
         }
     }
 
-    public Dictionary<string, FileTrackConfiguration> FileConfigurations
+    public Dictionary<Guid, FileTrackConfiguration> FileConfigurations
     {
         get => _fileConfigurations;
         set
@@ -270,7 +283,7 @@ public class BatchConfiguration : IBatchConfiguration
         }
     }
 
-    public Dictionary<string, FileTrackAvailability> FileTrackMap
+    public Dictionary<Guid, FileTrackAvailability> FileTrackMap
     {
         get => _fileTrackMap;
         set
@@ -316,16 +329,16 @@ public class BatchConfiguration : IBatchConfiguration
     }
 
     /// <inheritdoc />
-    /// <exception cref="InvalidOperationException">Thrown if no per-file track configuration exists for the specified file path.</exception>
-    public IList<TrackConfiguration> GetTrackListForFile(string filePath, TrackType trackType)
+    /// <exception cref="InvalidOperationException">Thrown if no per-file track configuration exists for the specified file ID.</exception>
+    public IList<TrackConfiguration> GetTrackListForFile(Guid fileId, TrackType trackType)
     {
         // Prefer per-file configuration. If none exists, fail fast by throwing an exception.
-        if (FileConfigurations.TryGetValue(filePath, out var fileConfig))
+        if (FileConfigurations.TryGetValue(fileId, out var fileConfig))
         {
             return fileConfig.GetTrackListForType(trackType);
         }
 
-        throw new InvalidOperationException($"No per-file track configuration found for file '{filePath}'.");
+        throw new InvalidOperationException($"No per-file track configuration found for file ID '{fileId}'.");
     }
 
     /// <summary>

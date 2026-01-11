@@ -23,8 +23,12 @@ public class TrackModificationIntegrationTests
     [Fact]
     public async Task IntegrationTest_EditingTrackOnlyInSecondFile_TriggersStateChangedAndGeneratesCommands()
     {
-        // Arrange - create real BatchConfiguration (not mocked)
-        var batchConfig = new BatchConfiguration();
+        // Arrange - create real components for integration testing
+        var platformService = new PlatformService();
+        var fileComparer = new ScannedFileInfoPathComparer(platformService);
+        var batchConfig = new BatchConfiguration(fileComparer);
+        
+        // Mock only external dependencies (language data, UI preferences)
         var mockLanguageProvider = Substitute.For<ILanguageProvider>();
         mockLanguageProvider.Languages.Returns(ImmutableList<MatroskaLanguageOption>.Empty);
         var mockUIPreferences = Substitute.For<IUIPreferencesService>();
@@ -46,8 +50,8 @@ public class TrackModificationIntegrationTests
         var file2MediaInfo = file2Builder.Build();
 
         // Create ScannedFileInfo objects
-        var file1 = new ScannedFileInfo { Path = file1Path, Result = file1MediaInfo };
-        var file2 = new ScannedFileInfo { Path = file2Path, Result = file2MediaInfo };
+        var file1 = new ScannedFileInfo(file1MediaInfo, file1Path);
+        var file2 = new ScannedFileInfo(file2MediaInfo, file2Path);
 
         // Add files to batch configuration
         batchConfig.FileList.Add(file1);
@@ -92,11 +96,11 @@ public class TrackModificationIntegrationTests
         Assert.True(batchConfig.SubtitleTracks[16].ShouldModifyName);
 
         // Verify per-file configurations
-        var file1Config = batchConfig.FileConfigurations[file1Path];
+        var file1Config = batchConfig.FileConfigurations[file1.Id];
         Assert.Single(file1Config.SubtitleTracks);
         Assert.NotEqual("Track17Modified", file1Config.SubtitleTracks[0].Name);
 
-        var file2Config = batchConfig.FileConfigurations[file2Path];
+        var file2Config = batchConfig.FileConfigurations[file2.Id];
         Assert.Equal(17, file2Config.SubtitleTracks.Count);
         Assert.Equal("Track17Modified", file2Config.SubtitleTracks[16].Name);
         Assert.True(file2Config.SubtitleTracks[16].ShouldModifyName);

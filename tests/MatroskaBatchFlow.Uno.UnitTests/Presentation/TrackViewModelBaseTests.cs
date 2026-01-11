@@ -68,19 +68,19 @@ public class TrackViewModelBaseTests
         };
 
         // Set up per-file configurations
-        var file1Path = "file1.mkv";
-        var file2Path = "file2.mkv";
+        var file1 = new ScannedFileInfo(mediaInfoResult, "file1.mkv");
+        var file2 = new ScannedFileInfo(mediaInfoResult, "file2.mkv");
 
-        var file1Config = new FileTrackConfiguration { FilePath = file1Path };
+        var file1Config = new FileTrackConfiguration { FilePath = file1.Path };
         file1Config.SubtitleTracks.Add(new TrackConfiguration(trackInfo) { Type = TrackType.Text, Index = 0, Name = "Original" });
 
-        var file2Config = new FileTrackConfiguration { FilePath = file2Path };
+        var file2Config = new FileTrackConfiguration { FilePath = file2.Path };
         file2Config.SubtitleTracks.Add(new TrackConfiguration(trackInfo) { Type = TrackType.Text, Index = 0, Name = "Original" });
 
-        var fileConfigurations = new Dictionary<string, FileTrackConfiguration>
+        var fileConfigurations = new Dictionary<Guid, FileTrackConfiguration>
         {
-            { file1Path, file1Config },
-            { file2Path, file2Config }
+            { file1.Id, file1Config },
+            { file2.Id, file2Config }
         };
 
         mockBatchConfig.FileConfigurations.Returns(fileConfigurations);
@@ -128,19 +128,19 @@ public class TrackViewModelBaseTests
         };
 
         // File1 has track 0
-        var file1Path = "file1.mkv";
-        var file1Config = new FileTrackConfiguration { FilePath = file1Path };
+        var file1 = new ScannedFileInfo(mediaInfoResult, "file1.mkv");
+        var file1Config = new FileTrackConfiguration { FilePath = file1.Path };
         file1Config.SubtitleTracks.Add(new TrackConfiguration(trackInfo) { Type = TrackType.Text, Index = 0, Name = "Original" });
 
         // File2 has NO tracks (different track count)
-        var file2Path = "file2.mkv";
-        var file2Config = new FileTrackConfiguration { FilePath = file2Path };
+        var file2 = new ScannedFileInfo(mediaInfoResult, "file2.mkv");
+        var file2Config = new FileTrackConfiguration { FilePath = file2.Path };
         // Intentionally empty subtitle tracks list
 
-        var fileConfigurations = new Dictionary<string, FileTrackConfiguration>
+        var fileConfigurations = new Dictionary<Guid, FileTrackConfiguration>
         {
-            { file1Path, file1Config },
-            { file2Path, file2Config }
+            { file1.Id, file1Config },
+            { file2.Id, file2Config }
         };
 
         mockBatchConfig.FileConfigurations.Returns(fileConfigurations);
