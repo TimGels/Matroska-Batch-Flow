@@ -33,12 +33,6 @@ public interface IBatchConfiguration : INotifyPropertyChanged
     /// </summary>
     Dictionary<Guid, FileTrackConfiguration> FileConfigurations { get; set; }
 
-    /// <summary>
-    /// Track availability tracking for all files.
-    /// Key is the ScannedFileInfo.Id (Guid), not the file path.
-    /// </summary>
-    Dictionary<Guid, FileTrackAvailability> FileTrackMap { get; set; }
-
     event EventHandler? StateChanged;
 
     /// <summary>

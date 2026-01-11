@@ -33,7 +33,6 @@ public class BatchConfiguration : IBatchConfiguration
     private static readonly ImmutableList<TrackConfiguration> _emptyTrackList = [];
     private string _mkvpropeditArguments = string.Empty;
     private Dictionary<Guid, FileTrackConfiguration> _fileConfigurations = [];
-    private Dictionary<Guid, FileTrackAvailability> _fileTrackMap = [];
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler? StateChanged;
@@ -283,19 +282,6 @@ public class BatchConfiguration : IBatchConfiguration
         }
     }
 
-    public Dictionary<Guid, FileTrackAvailability> FileTrackMap
-    {
-        get => _fileTrackMap;
-        set
-        {
-            if (!ReferenceEquals(_fileTrackMap, value))
-            {
-                _fileTrackMap = value;
-                OnPropertyChanged(nameof(FileTrackMap));
-            }
-        }
-    }
-
     protected virtual void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -312,7 +298,6 @@ public class BatchConfiguration : IBatchConfiguration
         VideoTracks.Clear();
         SubtitleTracks.Clear();
         FileConfigurations.Clear();
-        FileTrackMap.Clear();
         MkvpropeditArguments = string.Empty;
     }
 

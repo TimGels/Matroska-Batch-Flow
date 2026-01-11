@@ -9,18 +9,15 @@ namespace MatroskaBatchFlow.Core.Services;
 /// <remarks>
 /// This class orchestrates the creation of individual track configurations for each file:
 /// <list type="bullet">
-/// <item>Delegates track availability recording to <see cref="IFileTrackAvailabilityRecorder"/></item>
 /// <item>Delegates track configuration creation to <see cref="ITrackConfigurationFactory"/></item>
 /// <item>Populates file-specific track lists in <see cref="IBatchConfiguration.FileConfigurations"/></item>
 /// <item>Updates global track collections to reflect maximum track counts for UI display</item>
 /// </list>
 /// </remarks>
 /// <param name="batchConfig">The batch configuration to be modified.</param>
-/// <param name="availabilityRecorder">The recorder for file track availability.</param>
 /// <param name="trackConfigFactory">The factory for creating track configurations.</param>
 public class BatchTrackConfigurationInitializer(
     IBatchConfiguration batchConfig,
-    IFileTrackAvailabilityRecorder availabilityRecorder,
     ITrackConfigurationFactory trackConfigFactory) : IBatchTrackConfigurationInitializer
 {
     /// <inheritdoc/>
@@ -28,9 +25,6 @@ public class BatchTrackConfigurationInitializer(
     {
         if (scannedFile?.Result?.Media?.Track == null || trackTypes.Length == 0)
             return;
-
-        // Record track availability for this file
-        availabilityRecorder.RecordAvailability(scannedFile);
 
         // Ensure per-file configuration exists
         if (!batchConfig.FileConfigurations.TryGetValue(scannedFile.Id, out FileTrackConfiguration? fileConfig))
@@ -77,20 +71,20 @@ public class BatchTrackConfigurationInitializer(
             int maxTrackCount = 0;
             Guid fileIdWithMaxTracks = Guid.Empty;
 
-            foreach (var kvp in batchConfig.FileTrackMap)
+            foreach (var file in batchConfig.FileList)
             {
                 int trackCount = trackType switch
                 {
-                    TrackType.Audio => kvp.Value.AudioTrackCount,
-                    TrackType.Video => kvp.Value.VideoTrackCount,
-                    TrackType.Text => kvp.Value.SubtitleTrackCount,
+                    TrackType.Audio => file.AudioTrackCount,
+                    TrackType.Video => file.VideoTrackCount,
+                    TrackType.Text => file.SubtitleTrackCount,
                     _ => 0
                 };
 
                 if (trackCount > maxTrackCount)
                 {
                     maxTrackCount = trackCount;
-                    fileIdWithMaxTracks = kvp.Key;
+                    fileIdWithMaxTracks = file.Id;
                 }
             }
 

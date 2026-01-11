@@ -64,7 +64,6 @@ public partial class App : Application
         ConfigureServices((context, services) =>
         {
             // Register services.
-            services.AddSingleton<IFileTrackAvailabilityRecorder, FileTrackAvailabilityRecorder>();
             services.AddSingleton<ITrackConfigurationFactory, TrackConfigurationFactory>();
             services.AddSingleton<IBatchTrackConfigurationInitializer, BatchTrackConfigurationInitializer>();
             services.AddSingleton<IActivationService, ActivationService>();
