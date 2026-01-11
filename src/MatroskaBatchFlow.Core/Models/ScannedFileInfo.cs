@@ -7,21 +7,15 @@ namespace MatroskaBatchFlow.Core.Models;
 /// </summary>
 public sealed record ScannedFileInfo
 {
-    private string? _path;
-
     /// <summary>
     /// Stable identifier to correlate with processing results.
     /// </summary>
     public Guid Id { get; } = Guid.NewGuid();
 
     /// <summary>
-    /// Path of the scanned file. Automatically normalized to fully-qualified path.
+    /// Path of the scanned file.
     /// </summary>
-    public string Path
-    {
-        get => _path ?? string.Empty;
-        init => _path = string.IsNullOrWhiteSpace(value) ? value : System.IO.Path.GetFullPath(value);
-    }
+    public string Path { get; }
 
     /// <summary>
     /// Resulting details from the MediaInfo scan.
@@ -47,9 +41,13 @@ public sealed record ScannedFileInfo
     /// Initializes a new instance with auto-computed track counts.
     /// </summary>
     /// <param name="result">The MediaInfo scan result.</param>
-    /// <param name="path">The file path (will be normalized to full path).</param>
+    /// <param name="path">The file path.</param>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="path"/> is null, empty, 
+    /// or whitespace.</exception>
     public ScannedFileInfo(MediaInfoResult result, string path)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+
         Result = result;
         Path = path;
 
@@ -63,11 +61,14 @@ public sealed record ScannedFileInfo
     /// Checks if a specific track exists in this file.
     /// </summary>
     /// <param name="trackType">Type of track to check.</param>
-    /// <param name="trackIndex">Zero-based index of the track.</param>
+    /// <param name="trackIndex">Zero-based index of the track. Must be greater than or equal 
+    /// to 0; negative indices are treated as invalid and will cause this method to return 
+    /// <see langword="false" />.</param>
     /// <returns>True if the track exists, false otherwise.</returns>
     public bool HasTrack(TrackType trackType, int trackIndex)
     {
-        if (trackIndex < 0) return false;
+        if (trackIndex < 0)
+            return false;
 
         return trackType switch
         {
