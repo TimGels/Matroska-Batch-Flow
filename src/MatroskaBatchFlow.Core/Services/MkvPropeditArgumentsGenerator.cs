@@ -115,13 +115,10 @@ public sealed class MkvPropeditArgumentsGenerator : IMkvPropeditArgumentsGenerat
             }
 
             // Check if this track actually exists in the file
-            if (batchConfig.FileTrackMap.TryGetValue(file.Id, out var availability))
+            if (!file.HasTrack(type, track.Index))
             {
-                if (!availability.HasTrack(type, track.Index))
-                {
-                    // Track doesn't exist in this file, skip gracefully
-                    continue;
-                }
+                // Track doesn't exist in this file, skip gracefully
+                continue;
             }
 
             builder.AddTrack(tb =>

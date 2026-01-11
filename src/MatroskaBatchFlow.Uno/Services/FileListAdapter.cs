@@ -133,14 +133,10 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
     /// <summary>
     /// Removes the specified file from the batch configuration's file list.
     /// </summary>
-    /// <remarks>This method removes the provided file from the internal file list of the batch configuration,
-    /// along with its per-file track configuration and availability data. If the file is not present in the list,
-    /// no action is taken.</remarks>
     /// <param name="file">The file to be removed. Cannot be <see langword="null"/>.</param>
     public void RemoveFile(ScannedFileInfo file)
     {
         _batchConfig.FileConfigurations.Remove(file.Id);
-        _batchConfig.FileTrackMap.Remove(file.Id);
         _batchConfig.FileList.Remove(file);
     }
 

@@ -58,9 +58,8 @@ public class TrackModificationIntegrationTests
         batchConfig.FileList.Add(file2);
 
         // Initialize per-file configurations
-        var availabilityRecorder = new FileTrackAvailabilityRecorder(batchConfig);
         var trackConfigFactory = new TrackConfigurationFactory(mockLanguageProvider);
-        var initializer = new BatchTrackConfigurationInitializer(batchConfig, availabilityRecorder, trackConfigFactory);
+        var initializer = new BatchTrackConfigurationInitializer(batchConfig, trackConfigFactory);
         initializer.Initialize(file1, TrackType.Text);
         initializer.Initialize(file2, TrackType.Text);
 
