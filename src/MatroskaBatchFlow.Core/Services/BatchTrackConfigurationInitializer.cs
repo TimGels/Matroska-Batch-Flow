@@ -33,12 +33,13 @@ public class BatchTrackConfigurationInitializer(
             {
                 FilePath = scannedFile.Path
             };
-            batchConfig.FileConfigurations[scannedFile.Id] = fileConfig;
+            batchConfig.FileConfigurations.Add(scannedFile.Id, fileConfig);
         }
 
         // Populate file-specific track configurations based on what this file has
         foreach (var trackType in trackTypes)
         {
+            // Ordering tracks by StreamKindID as it represents the track order in the file
             var scannedTracks = scannedFile.Result.Media.Track
                 .Where(t => t.Type == trackType)
                 .OrderBy(t => t.StreamKindID)
@@ -46,15 +47,17 @@ public class BatchTrackConfigurationInitializer(
 
             var fileTracks = fileConfig.GetTrackListForType(trackType);
 
-            while (fileTracks.Count < scannedTracks.Count)
+            int existingCount = fileTracks.Count;
+            int scannedCount = scannedTracks.Count;
+
+            for (int i = existingCount; i < scannedCount; i++)
             {
-                var scannedTrackInfo = scannedTracks[fileTracks.Count];
-                fileTracks.Add(trackConfigFactory.Create(scannedTrackInfo, trackType, fileTracks.Count));
+                fileTracks.Add(trackConfigFactory.Create(scannedTracks[i], trackType, i));
             }
         }
 
         // Update global collections for UI display based on maximum track counts
-        UpdateGlobalTracksForMaximumCounts(trackTypes);
+        UpdateGlobalTracksForMaximumCounts(fileConfig, trackTypes);
     }
 
     /// <summary>
@@ -62,49 +65,26 @@ public class BatchTrackConfigurationInitializer(
     /// This ensures the UI displays all tracks that exist in any file, allowing users to
     /// configure tracks that may not exist in all files.
     /// </summary>
+    /// <remarks>
+    /// This will not remove any existing global tracks; it only adds new ones as needed.
+    /// </remarks>
+    /// <param name="fileConfig">The file configuration being initialized.</param>
     /// <param name="trackTypes">The track types to update.</param>
-    private void UpdateGlobalTracksForMaximumCounts(TrackType[] trackTypes)
+    private void UpdateGlobalTracksForMaximumCounts(FileTrackConfiguration fileConfig, TrackType[] trackTypes)
     {
         foreach (var trackType in trackTypes)
         {
-            // Find the maximum track count for this track type across all files
-            int maxTrackCount = 0;
-            Guid fileIdWithMaxTracks = Guid.Empty;
+            var fileTracks = fileConfig.GetTrackListForType(trackType);
+            var batchTracks = batchConfig.GetTrackListForType(trackType);
 
-            foreach (var file in batchConfig.FileList)
+            int fileTrackCount = fileTracks.Count;
+            int batchTrackCount = batchTracks.Count;
+
+            // Expand global collection if this file has more tracks than currently represented
+            for (int i = batchTrackCount; i < fileTrackCount; i++)
             {
-                int trackCount = trackType switch
-                {
-                    TrackType.Audio => file.AudioTrackCount,
-                    TrackType.Video => file.VideoTrackCount,
-                    TrackType.Text => file.SubtitleTrackCount,
-                    _ => 0
-                };
-
-                if (trackCount > maxTrackCount)
-                {
-                    maxTrackCount = trackCount;
-                    fileIdWithMaxTracks = file.Id;
-                }
-            }
-
-            // If we found a file with tracks, use it to populate the global collection
-            if (fileIdWithMaxTracks != Guid.Empty && maxTrackCount > 0)
-            {
-                var batchTracks = batchConfig.GetTrackListForType(trackType);
-
-                // Get the file's track configuration to use as a template
-                if (batchConfig.FileConfigurations.TryGetValue(fileIdWithMaxTracks, out var fileConfig))
-                {
-                    var fileTracks = fileConfig.GetTrackListForType(trackType);
-
-                    // Ensure global collection matches the maximum count
-                    while (batchTracks.Count < fileTracks.Count)
-                    {
-                        var sourceTrack = fileTracks[batchTracks.Count];
-                        batchTracks.Add(trackConfigFactory.Create(sourceTrack.ScannedTrackInfo, trackType, batchTracks.Count));
-                    }
-                }
+                var sourceTrack = fileTracks[i];
+                batchTracks.Add(trackConfigFactory.Create(sourceTrack.ScannedTrackInfo, trackType, i));
             }
         }
     }
