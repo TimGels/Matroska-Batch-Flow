@@ -197,20 +197,12 @@ public class ScannedFileInfoPathComparerTests
         Assert.Equal(0, hash);
     }
 
-    [Theory]
-    [InlineData(true)]  // Windows comparer: case-insensitive
-    [InlineData(false)] // Linux comparer: case-sensitive
-    public void GetHashCode_NullPath_ReturnsEmptyStringHash(bool isWindows)
+    [Fact]
+    public void GetHashCode_NullPath_ThrowsArgumentNullException()
     {
-        var comparer = isWindows ? _windowsComparer : _linuxComparer;
-        var file = new ScannedFileInfo(new MediaInfoResultBuilder().Build(), null!);
+        var mediaInfo = new MediaInfoResultBuilder().Build();
 
-        int hash = comparer.GetHashCode(file);
-
-        var expectedHash = isWindows
-            ? string.Empty.GetHashCode(StringComparison.OrdinalIgnoreCase)
-            : string.Empty.GetHashCode(StringComparison.Ordinal);
-        Assert.Equal(expectedHash, hash);
+        Assert.Throws<ArgumentNullException>(() => new ScannedFileInfo(mediaInfo, null!));
     }
 
     // Integration Tests
