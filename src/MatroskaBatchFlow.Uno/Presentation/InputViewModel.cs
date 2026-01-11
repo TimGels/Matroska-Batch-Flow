@@ -225,24 +225,35 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     /// <returns>A list containing only unique files that are not already in the batch configuration.</returns>
     private List<StorageFile> FilterDuplicateFiles(IReadOnlyList<StorageFile> files)
     {
-        // Build lookup of existing paths once
-        var existingPaths = new HashSet<string>(
-            _batchConfig.FileList.Select(f => f.Path));
+        // Platform-aware comparison. Not perfect, but should be good enough for our purposes.
+        var comparer = _platformService.IsWindows()
+            ? StringComparer.OrdinalIgnoreCase
+            : StringComparer.Ordinal;
 
-        // Separate files into duplicates and unique, normalizing path only once per file
+        // Build lookup of existing paths with appropriate comparer for O(1) lookups
+        var existingPaths = new HashSet<string>(
+            _batchConfig.FileList.Select(f => Path.GetFullPath(f.Path)), 
+            comparer);
+
+        // Track seen paths in this batch to detect duplicates within the input
+        var seenPaths = new HashSet<string>(comparer);
         var duplicates = new List<string>();
         var uniqueFiles = new List<StorageFile>();
-
-        // Platform-aware comparison. Not perfect, but should be good enough for our purposes.
-        var pathComparison = _platformService.IsWindows() 
-            ? StringComparison.OrdinalIgnoreCase 
-            : StringComparison.Ordinal;
 
         foreach (var file in files)
         {
             var normalizedPath = Path.GetFullPath(file.Path);
-            if (existingPaths.Any(p => string.Equals(p, normalizedPath, pathComparison)) ||
-                uniqueFiles.Any(f => string.Equals(Path.GetFullPath(f.Path), normalizedPath, pathComparison)))
+
+            // If the file is already in the existing batch configuration, treat as duplicate.
+            if (existingPaths.Contains(normalizedPath))
+            {
+                duplicates.Add(normalizedPath);
+                continue;
+            }
+
+            // Track duplicates within the current set of input files.
+            var isNewPathInBatch = seenPaths.Add(normalizedPath);
+            if (!isNewPathInBatch)
             {
                 duplicates.Add(normalizedPath);
             }
