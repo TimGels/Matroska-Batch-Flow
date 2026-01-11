@@ -230,9 +230,10 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
             ? StringComparer.OrdinalIgnoreCase
             : StringComparer.Ordinal;
 
-        // Build lookup of existing paths with appropriate comparer for O(1) lookups
+        // Build lookup of existing paths with appropriate comparer for O(1) lookups.
+        // Paths in _batchConfig are assumed to be normalized already.
         var existingPaths = new HashSet<string>(
-            _batchConfig.FileList.Select(f => Path.GetFullPath(f.Path)), 
+            _batchConfig.FileList.Select(f => f.Path), 
             comparer);
 
         // Track seen paths in this batch to detect duplicates within the input
