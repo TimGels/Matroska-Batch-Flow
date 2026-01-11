@@ -91,6 +91,8 @@ public partial class App : Application
             services.AddSingleton<IMkvToolExecutor, MkvPropeditExecutor>();
             services.AddSingleton<IProcessRunner, ProcessRunner>();
             services.AddSingleton<IMkvPropeditArgumentsGenerator, MkvPropeditArgumentsGenerator>();
+            services.AddSingleton<IScannedFileInfoPathComparer, ScannedFileInfoPathComparer>();
+            services.AddSingleton<IPlatformService, PlatformService>();
 
             // Register file validation rules engine service and it's accommodating rules.
             services.AddSingleton<IFileValidationEngine, FileValidationEngine>();

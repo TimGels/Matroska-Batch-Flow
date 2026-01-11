@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
+using MatroskaBatchFlow.Core.Utilities;
 
 namespace MatroskaBatchFlow.Core.Services;
 
@@ -21,20 +22,22 @@ public interface IBatchConfiguration : INotifyPropertyChanged
     bool DeleteTrackStatisticsTags { get; set; }
     bool ShouldModifyTrackStatisticsTags { get; set; }
 
-    ObservableCollection<ScannedFileInfo> FileList { get; }
+    UniqueObservableCollection<ScannedFileInfo> FileList { get; }
     ObservableCollection<TrackConfiguration> AudioTracks { get; set; }
     ObservableCollection<TrackConfiguration> VideoTracks { get; set; }
     ObservableCollection<TrackConfiguration> SubtitleTracks { get; set; }
 
     /// <summary>
     /// Per-file track configurations for flexible batch processing.
+    /// Key is the ScannedFileInfo.Id (Guid), not the file path.
     /// </summary>
-    Dictionary<string, FileTrackConfiguration> FileConfigurations { get; set; }
+    Dictionary<Guid, FileTrackConfiguration> FileConfigurations { get; set; }
 
     /// <summary>
     /// Track availability tracking for all files.
+    /// Key is the ScannedFileInfo.Id (Guid), not the file path.
     /// </summary>
-    Dictionary<string, FileTrackAvailability> FileTrackMap { get; set; }
+    Dictionary<Guid, FileTrackAvailability> FileTrackMap { get; set; }
 
     event EventHandler? StateChanged;
 
@@ -57,8 +60,8 @@ public interface IBatchConfiguration : INotifyPropertyChanged
     /// Gets track configuration for a specific file and track type.
     /// Always uses per-file configurations. Falls back to global if file config not found.
     /// </summary>
-    /// <param name="filePath">Path to the file.</param>
+    /// <param name="fileId">The ScannedFileInfo.Id (Guid) of the file.</param>
     /// <param name="trackType">Type of track to retrieve.</param>
     /// <returns>List of track configurations for the specified file and track type.</returns>
-    public IList<TrackConfiguration> GetTrackListForFile(string filePath, TrackType trackType);
+    public IList<TrackConfiguration> GetTrackListForFile(Guid fileId, TrackType trackType);
 }

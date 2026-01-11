@@ -1,6 +1,7 @@
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
+using NSubstitute;
 
 namespace MatroskaBatchFlow.Core.UnitTests.Services;
 
@@ -13,6 +14,8 @@ namespace MatroskaBatchFlow.Core.UnitTests.Services;
 /// intended to validate the public API and expected usage scenarios of BatchConfiguration.</remarks>
 public class BatchConfigurationTests
 {
+    private readonly IScannedFileInfoPathComparer _comparer = Substitute.For<IScannedFileInfoPathComparer>();
+
     [Fact]
     public void Clear_WhenCalled_ResetsAllPropertiesAndTrackCollections()
     {
@@ -35,7 +38,7 @@ public class BatchConfigurationTests
             .Build()
             .Media.Track.First(t => t.Type == TrackType.Text);
         
-        var config = new BatchConfiguration
+        var config = new BatchConfiguration(_comparer)
         {
             DirectoryPath = "C:\\media",
             Title = "TestTitle",
@@ -59,7 +62,7 @@ public class BatchConfigurationTests
     public void Clear_WhenCalledOnDefaultInstance_KeepsPropertiesAndCollectionsEmpty()
     {
         // Arrange
-        var config = new BatchConfiguration();
+        var config = new BatchConfiguration(_comparer);
 
         // Act
         config.Clear();
@@ -79,7 +82,7 @@ public class BatchConfigurationTests
     public void GetTrackListForType_WhenCalledWithKnownType_ReturnsCorrectCollection(TrackType type)
     {
         // Arrange
-        var config = new BatchConfiguration();
+        var config = new BatchConfiguration(_comparer);
         var audio = config.AudioTracks;
         var video = config.VideoTracks;
         var sub = config.SubtitleTracks;
@@ -100,7 +103,7 @@ public class BatchConfigurationTests
     public void GetTrackListForType_WhenCalledWithUnknownType_ReturnsEmptyList()
     {
         // Arrange
-        var config = new BatchConfiguration();
+        var config = new BatchConfiguration(_comparer);
         var unknownType = (TrackType)999;
 
         // Act

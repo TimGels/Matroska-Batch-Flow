@@ -4,6 +4,7 @@ using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
+using MatroskaBatchFlow.Core.Utilities;
 using NSubstitute;
 
 namespace MatroskaBatchFlow.Core.UnitTests.Services;
@@ -22,19 +23,20 @@ public class BatchTrackConfigurationInitializerTests
     }
 
     private static (IBatchConfiguration mockConfig, 
-                    Dictionary<string, FileTrackConfiguration> fileConfigs, 
-                    Dictionary<string, FileTrackAvailability> fileTrackMap,
+                    Dictionary<Guid, FileTrackConfiguration> fileConfigs, 
+                    Dictionary<Guid, FileTrackAvailability> fileTrackMap,
                     ObservableCollection<TrackConfiguration> audioTracks,
                     ObservableCollection<TrackConfiguration> videoTracks,
                     ObservableCollection<TrackConfiguration> subtitleTracks) CreateMockConfig()
     {
         var mockConfig = Substitute.For<IBatchConfiguration>();
-        var fileConfigs = new Dictionary<string, FileTrackConfiguration>();
-        var fileTrackMap = new Dictionary<string, FileTrackAvailability>();
+        var fileConfigs = new Dictionary<Guid, FileTrackConfiguration>();
+        var fileTrackMap = new Dictionary<Guid, FileTrackAvailability>();
         var audioTracks = new ObservableCollection<TrackConfiguration>();
         var videoTracks = new ObservableCollection<TrackConfiguration>();
         var subtitleTracks = new ObservableCollection<TrackConfiguration>();
-        var fileList = new ObservableCollection<ScannedFileInfo>();
+        var mockComparer = Substitute.For<IScannedFileInfoPathComparer>();
+        var fileList = new UniqueObservableCollection<ScannedFileInfo>(mockComparer);
         
         mockConfig.FileConfigurations.Returns(fileConfigs);
         mockConfig.FileTrackMap.Returns(fileTrackMap);
@@ -72,18 +74,18 @@ public class BatchTrackConfigurationInitializerTests
             .AddTrackOfType(TrackType.Audio)
             .AddTrackOfType(TrackType.Audio)
             .Build();
-        var scannedFile = new ScannedFileInfo { Path = "file.mkv", Result = mediaInfoResult };
+        var scannedFile = new ScannedFileInfo(mediaInfoResult, "file.mkv");
 
         // Act
         initializer.Initialize(scannedFile, TrackType.Audio);
 
         // Assert - Verify per-file configuration was created
-        Assert.True(fileConfigs.ContainsKey("file.mkv"));
-        Assert.Equal(3, fileConfigs["file.mkv"].AudioTracks.Count);
+        Assert.True(fileConfigs.ContainsKey(scannedFile.Id));
+        Assert.Equal(3, fileConfigs[scannedFile.Id].AudioTracks.Count);
         
         // Verify track availability was recorded
-        Assert.True(fileTrackMap.ContainsKey("file.mkv"));
-        Assert.Equal(3, fileTrackMap["file.mkv"].AudioTrackCount);
+        Assert.True(fileTrackMap.ContainsKey(scannedFile.Id));
+        Assert.Equal(3, fileTrackMap[scannedFile.Id].AudioTrackCount);
         
         // Verify global tracks were populated (first file)
         Assert.Equal(3, audioTracks.Count);
@@ -104,18 +106,18 @@ public class BatchTrackConfigurationInitializerTests
             .AddTrackOfType(TrackType.Text)
             .AddTrackOfType(TrackType.Text)
             .Build();
-        var scannedFile = new ScannedFileInfo { Path = "file.mkv", Result = mediaInfoResult };
+        var scannedFile = new ScannedFileInfo(mediaInfoResult, "file.mkv");
 
         // Act
         initializer.Initialize(scannedFile, TrackType.Audio, TrackType.Video, TrackType.Text);
 
         // Assert
-        var fileConfig = fileConfigs["file.mkv"];
+        var fileConfig = fileConfigs[scannedFile.Id];
         Assert.Equal(2, fileConfig.AudioTracks.Count);
         Assert.Single(fileConfig.VideoTracks);
         Assert.Equal(2, fileConfig.SubtitleTracks.Count);
         
-        var availability = fileTrackMap["file.mkv"];
+        var availability = fileTrackMap[scannedFile.Id];
         Assert.Equal(2, availability.AudioTrackCount);
         Assert.Equal(1, availability.VideoTrackCount);
         Assert.Equal(2, availability.SubtitleTrackCount);
@@ -134,36 +136,34 @@ public class BatchTrackConfigurationInitializerTests
         var initializer = CreateInitializer(mockConfig);
 
         // First file - 2 audio tracks
-        var firstFile = new ScannedFileInfo
-        {
-            Path = "file1.mkv",
-            Result = new MediaInfoResultBuilder()
+        var firstFile = new ScannedFileInfo(
+            new MediaInfoResultBuilder()
                 .WithCreatingLibrary()
                 .AddTrackOfType(TrackType.Audio)
                 .AddTrackOfType(TrackType.Audio)
-                .Build()
-        };
+                .Build(),
+            "file1.mkv"
+        );
         initializer.Initialize(firstFile, TrackType.Audio);
 
         // Second file - 3 audio tracks
-        var secondFile = new ScannedFileInfo
-        {
-            Path = "file2.mkv",
-            Result = new MediaInfoResultBuilder()
+        var secondFile = new ScannedFileInfo(
+            new MediaInfoResultBuilder()
                 .WithCreatingLibrary()
                 .AddTrackOfType(TrackType.Audio)
                 .AddTrackOfType(TrackType.Audio)
                 .AddTrackOfType(TrackType.Audio)
-                .Build()
-        };
+                .Build(),
+            "file2.mkv"
+        );
         initializer.Initialize(secondFile, TrackType.Audio);
 
         // Assert - Global tracks should now be 3 (maximum across all files)
         Assert.Equal(3, audioTracks.Count);
         
         // Per-file configurations should be correct
-        Assert.Equal(2, fileConfigs["file1.mkv"].AudioTracks.Count);
-        Assert.Equal(3, fileConfigs["file2.mkv"].AudioTracks.Count);
+        Assert.Equal(2, fileConfigs[firstFile.Id].AudioTracks.Count);
+        Assert.Equal(3, fileConfigs[secondFile.Id].AudioTracks.Count);
     }
 
     [Fact]
@@ -177,14 +177,14 @@ public class BatchTrackConfigurationInitializerTests
             .WithCreatingLibrary()
             .AddTrackOfType(TrackType.Audio)
             .Build();
-        var scannedFile = new ScannedFileInfo { Path = "file.mkv", Result = mediaInfoResult };
+        var scannedFile = new ScannedFileInfo(mediaInfoResult, "file.mkv");
 
         // Act - Call with no track types (empty params array)
         initializer.Initialize(scannedFile);
 
         // Assert - Nothing should be created (method returns early when trackTypes is empty)
-        Assert.False(fileTrackMap.ContainsKey("file.mkv"));
-        Assert.False(fileConfigs.ContainsKey("file.mkv"));
+        Assert.False(fileTrackMap.ContainsKey(scannedFile.Id));
+        Assert.False(fileConfigs.ContainsKey(scannedFile.Id));
     }
 
     [Fact]
@@ -209,7 +209,7 @@ public class BatchTrackConfigurationInitializerTests
         var (mockConfig, fileConfigs, fileTrackMap, _, _, _) = CreateMockConfig();
         var initializer = CreateInitializer(mockConfig);
 
-        var scannedFile = new ScannedFileInfo { Path = "file.mkv", Result = null! };
+        var scannedFile = new ScannedFileInfo(null!, "file.mkv");
 
         // Act
         initializer.Initialize(scannedFile, TrackType.Audio);
@@ -228,17 +228,17 @@ public class BatchTrackConfigurationInitializerTests
 
         // Create a MediaInfoResult with creating library but no tracks
         var emptyResult = new MediaInfoResultBuilder().WithCreatingLibrary().Build();
-        var scannedFile = new ScannedFileInfo { Path = "file.mkv", Result = emptyResult };
+        var scannedFile = new ScannedFileInfo(emptyResult, "file.mkv");
 
         // Act
         initializer.Initialize(scannedFile, TrackType.Audio);
 
         // Assert - FileTrackMap should have entry with 0 tracks
-        Assert.True(fileTrackMap.ContainsKey("file.mkv"));
-        Assert.Equal(0, fileTrackMap["file.mkv"].AudioTrackCount);
+        Assert.True(fileTrackMap.ContainsKey(scannedFile.Id));
+        Assert.Equal(0, fileTrackMap[scannedFile.Id].AudioTrackCount);
         
         // FileConfiguration should be created even with no tracks
-        Assert.True(fileConfigs.ContainsKey("file.mkv"));
-        Assert.Empty(fileConfigs["file.mkv"].AudioTracks);
+        Assert.True(fileConfigs.ContainsKey(scannedFile.Id));
+        Assert.Empty(fileConfigs[scannedFile.Id].AudioTracks);
     }
 }

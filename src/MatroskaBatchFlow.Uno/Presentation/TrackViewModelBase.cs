@@ -247,7 +247,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
 
         foreach (var file in _batchConfiguration.FileList)
         {
-            if (_batchConfiguration.FileTrackMap.TryGetValue(file.Path, out var availability))
+            if (_batchConfiguration.FileTrackMap.TryGetValue(file.Id, out var availability))
             {
                 if (availability.HasTrack(trackType, trackIndex))
                 {

@@ -109,11 +109,7 @@ public class FileScanner(IOptionsMonitor<ScanOptions> optionsMonitor) : IFileSca
         var mediaInfoResult = JsonSerializer.Deserialize<MediaInfoResult>(json, options)
             ?? throw new InvalidOperationException("Failed to deserialize MediaInfo JSON.");
 
-        return new ScannedFileInfo()
-        {
-            Path = filePath,
-            Result = mediaInfoResult
-        };
+        return new ScannedFileInfo(mediaInfoResult, filePath);
     }
 
     /// <summary>

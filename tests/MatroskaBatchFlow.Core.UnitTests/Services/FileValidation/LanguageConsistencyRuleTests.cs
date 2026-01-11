@@ -231,10 +231,6 @@ public class LanguageConsistencyRuleTests
             .WithLanguage(subtitleLang)
             .Build());
 
-        return new ScannedFileInfo
-        {
-            Path = path,
-            Result = builder.Build()
-        };
+        return new ScannedFileInfo(builder.Build(), path);
     }
 }
