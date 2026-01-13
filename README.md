@@ -48,7 +48,7 @@ Donations can be made as a one-time donation or a recurring sponsorship. Your su
 
 ## Download
 
-Pre-release builds are available on the [Releases page](../../releases). Currently, only Windows builds are available. Note that 0.x.x versions are early builds and are expected to contain bugs or incomplete features.
+Pre-release builds are available on the [Releases page](../../releases). Currently, only Windows builds are available. Note that these are early builds and are expected to contain bugs or incomplete features.
 
 ## Development
 
