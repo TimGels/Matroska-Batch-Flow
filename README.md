@@ -54,6 +54,9 @@ Pre-release builds are available on the [Releases page](../../releases). Current
 
 Follow these instructions to set up the project locally for development and testing.
 
+> [!WARNING]
+> The cross-platform Skia target (`net10.0-desktop`) is currently experimental and unsupported. Expect bugs, missing features, and platform-specific issues.
+
 ### Prerequisites
 
 These prerequisites are required to build the project:
@@ -85,13 +88,6 @@ These prerequisites are required to build the project:
    ```
 
 3. Build and run (see [Development](#development) for detailed instructions)
-
-## Development
-
-To get started with development, follow the instructions below.
-
-> [!WARNING]
-> The cross-platform Skia target (`net10.0-desktop`) is currently experimental and unsupported. Expect bugs, missing features, and platform-specific issues.
 
 ### Project Structure
 
