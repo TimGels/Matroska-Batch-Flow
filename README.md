@@ -1,4 +1,6 @@
-![Matroska Batch Flow Banner](Assets/Title-Banner.png)
+![Matroska Batch Flow — Batch MKV Properties Editor](Assets/Title-Banner.png)
+
+# Matroska Batch Flow
 
 **Matroska Batch Flow** is a powerful tool for batch processing Matroska (`.mkv`) files, designed to help you efficiently manage and modify large collections. It features a modern graphical user interface built with WinUI 3 and Uno Platform, and integrates [MediaInfo](https://mediaarea.net/en/MediaInfo) for extracting detailed file information, as well as [MKVToolNix's](https://mkvtoolnix.org) mkvpropedit for fast, direct container property editing.
 
@@ -26,7 +28,7 @@ Whether you're an archivist, home theater enthusiast, or anyone who works with M
 - **Lenient Mode** — Allows files with different track counts, with non-blocking notifications
 - **Custom Mode** — Configure validation severity per track type and property for maximum control
 
-## Preview
+## Screenshots
 
 <p align="center">
   <img src="Assets/Input.png" alt="Screenshot: Example input view in Matroska Batch Flow" width="800">
@@ -34,7 +36,7 @@ Whether you're an archivist, home theater enthusiast, or anyone who works with M
 
 ## Support the Project
 
-Matroska Batch Flow is free, open-source software built and maintained in my spare time. I built it to help me reduce the tedious task of spending hours manually fixing track names across hundreds of files. If this tool has been helpful to you, consider supporting its continued development.
+Matroska Batch Flow is free, open-source software built and maintained in my spare time. I built it to help me reduce the tedious task of spending hours manually fixing track properties across hundreds of files. If this tool has been helpful to you, consider supporting its continued development.
 
 Donations can be made as a one-time donation or a recurring sponsorship. Your support helps cover development time and motivates continued development.
 
@@ -44,7 +46,11 @@ Donations can be made as a one-time donation or a recurring sponsorship. Your su
   <a href="https://buymeacoffee.com/timgels"><img src="https://img.shields.io/badge/Buy_Me_a_Coffee-ffdd00?style=for-the-badge&logo=buymeacoffee&logoColor=black" alt="Buy Me a Coffee"></a>
 </p>
 
-## Getting Started
+## Download
+
+Pre-release builds are available on the [Releases page](../../releases). Currently, only Windows builds are available. Note that 0.x.x versions are early builds and are expected to contain bugs or incomplete features.
+
+## Development
 
 Follow these instructions to set up the project locally for development and testing.
 
