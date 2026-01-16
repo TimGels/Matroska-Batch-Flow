@@ -53,7 +53,7 @@
         <PackageCertificateKeyFile>MatroskaBatchFlow.Uno_TemporaryKey.pfx</PackageCertificateKeyFile>
         <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
         <PublishAot>False</PublishAot>
-        <AssemblyVersion>0.5.0.0</AssemblyVersion>
+        <AssemblyVersion>0.6.0.0</AssemblyVersion>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" />
