@@ -3,6 +3,7 @@ using MatroskaBatchFlow.Core.Models.AppSettings;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
+using MatroskaBatchFlow.Uno.Enums;
 using MatroskaBatchFlow.Uno.Utilities;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
@@ -47,6 +48,9 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private int subtitleForcedFlagSeverityIndex;
 
+    [ObservableProperty]
+    private int selectedThemeIndex;
+
     public bool ShowTrackAvailabilityText
     {
         get => _uiPreferences.ShowTrackAvailabilityText;
@@ -65,6 +69,9 @@ public partial class SettingsViewModel : ObservableObject
         customMkvPropeditPath = ExecutableLocator.FindExecutable(_userSettings.Value.MkvPropedit.CustomPath ?? string.Empty) ?? string.Empty;
         // If Skia is being used, we force the custom path to be enabled since the bundled mkvpropedit executable is only for Windows.
         isCustomMkvPropeditPathEnabled = PlatformInfo.IsSkia || _userSettings.Value.MkvPropedit.IsCustomPathEnabled;
+
+        // Load theme setting
+        selectedThemeIndex = (int)_uiPreferences.AppTheme;
 
         // Load batch validation settings
         LoadValidationSettings();
@@ -182,6 +189,15 @@ public partial class SettingsViewModel : ObservableObject
     async partial void OnSubtitleForcedFlagSeverityIndexChanged(int value)
     {
         await SaveValidationSeverityAsync();
+    }
+
+    /// <summary>
+    /// Handles changes to the selected theme.
+    /// </summary>
+    /// <param name="value">The new theme index value.</param>
+    partial void OnSelectedThemeIndexChanged(int value)
+    {
+        _uiPreferences.AppTheme = (AppThemePreference)value;
     }
 
     /// <summary>
