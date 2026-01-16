@@ -1,13 +1,41 @@
-![Matroska Batch Flow — Batch MKV Properties Editor](Assets/Title-Banner.png)
+<h1 align="center">
+  <br>
+    <a href="https://github.com/TimGels/Matroska-Batch-Flow">
+      <img src="Assets/Logo-Medium.png" alt="Matroska Batch Flow — Logo" style="width: 200px; filter: drop-shadow(2px 2px 10px #0000006c);" alt="Matroska Batch Flow Logo">
+    </a>
+  <br>
+    Matroska Batch Flow
+  <br>
+</h1>
 
-# Matroska Batch Flow
+<h4 align="center">A powerful tool for batch editing Matroska file properties.</h4>
+
+<p align="center">
+  <a href="#what-is-matroska-batch-flow">Introduction</a> •
+  <a href="#features">Features</a> •
+  <a href="#screenshots">Screenshots</a> •
+  <a href="#download">Download</a> •
+  <a href="#support-the-project">Support the Project</a> •
+  <a href="#development">Development</a> •
+  <a href="#contributing">Contributing</a> •
+  <a href="#acknowledgements">Credits</a> •
+  <a href="#license">License</a>
+</p>
+
+<div align="center">
+
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![GitHub Release](https://img.shields.io/github/v/release/TimGels/Matroska-Batch-Flow?logo=github&sort=semver)](https://github.com/TimGels/Matroska-Batch-Flow/releases)
+</div>
+
+## Introduction
 
 **Matroska Batch Flow** is a powerful tool for batch processing Matroska (`.mkv`) files, designed to help you efficiently manage and modify large collections. It features a modern graphical user interface built with WinUI 3 and Uno Platform, and integrates [MediaInfo](https://mediaarea.net/en/MediaInfo) for extracting detailed file information, as well as [MKVToolNix's](https://mkvtoolnix.org) mkvpropedit for fast, direct container property editing.
 
 Whether you're an archivist, home theater enthusiast, or anyone who works with Matroska files, Matroska Batch Flow helps you save time and effort. Quickly perform tasks like fixing language tags, updating track names, or preparing files for media servers such as Jellyfin. The tool is suitable for both small batches and large collections, making repetitive editing tasks efficient and ensuring consistency throughout your library.
 
 > [!WARNING]
-> This project is under active development. Features and behavior may change, and it may not be suitable for production use.
+> This project is currently under active development with no stable release yet. Expect bugs, incomplete features, and breaking changes with pre-release builds.
 
 > [!NOTE]
 > Consider [supporting the project](#support-the-project) to help with its continued development.
@@ -155,9 +183,9 @@ dotnet test tests/MatroskaBatchFlow.Core.UnitTests
 
 This is a personal project. If you encounter a bug or have a feature suggestion, you're welcome to [open an issue](../../issues), but please ensure it's detailed and actionable. Low-effort submissions (low quality pull requests, vague reports, duplicate issues, feature requests without context) may be closed without action.
 
-## Acknowledgements
+## Credits
 
-This project relies on the following excellent tools:
+This project relies on the following tools:
 
 - **[MediaInfo](https://mediaarea.net/en/MediaInfo)** — Media file analysis library
 - **[MKVToolNix](https://mkvtoolnix.download/)** — Matroska tools including `mkvpropedit`
