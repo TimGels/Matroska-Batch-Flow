@@ -1,11 +1,9 @@
 <h1 align="center">
+  <a href="https://github.com/TimGels/Matroska-Batch-Flow">
+    <img src="Assets/Logo-Medium.png" width="200" alt="Matroska Batch Flow Logo">
+  </a>
   <br>
-    <a href="https://github.com/TimGels/Matroska-Batch-Flow">
-      <img src="Assets/Logo-Medium.png" alt="Matroska Batch Flow — Logo" style="width: 200px; filter: drop-shadow(2px 2px 10px #0000006c);" alt="Matroska Batch Flow Logo">
-    </a>
-  <br>
-    Matroska Batch Flow
-  <br>
+  Matroska Batch Flow
 </h1>
 
 <h4 align="center">A powerful tool for batch editing Matroska file properties.</h4>
@@ -18,7 +16,7 @@
   <a href="#support-the-project">Support the Project</a> •
   <a href="#development">Development</a> •
   <a href="#contributing">Contributing</a> •
-  <a href="#acknowledgements">Credits</a> •
+  <a href="#credits">Credits</a> •
   <a href="#license">License</a>
 </p>
 
@@ -26,6 +24,7 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![GitHub Release](https://img.shields.io/github/v/release/TimGels/Matroska-Batch-Flow?logo=github&sort=semver)](https://github.com/TimGels/Matroska-Batch-Flow/releases)
+
 </div>
 
 ## Introduction
