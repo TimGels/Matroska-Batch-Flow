@@ -12,7 +12,5 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-
-        AppWindow.TitleBar.PreferredTheme = TitleBarTheme.UseDefaultAppMode;
     }
 }

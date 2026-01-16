@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using MatroskaBatchFlow.Core.Models.AppSettings;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileProcessing;
@@ -7,6 +8,7 @@ using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Core.Services.Processing;
 using MatroskaBatchFlow.Uno.Activation;
 using MatroskaBatchFlow.Uno.Contracts.Services;
+using MatroskaBatchFlow.Uno.Enums;
 using MatroskaBatchFlow.Uno.Services;
 using Microsoft.Extensions.Configuration;
 using Serilog.Core;
@@ -44,9 +46,6 @@ public partial class App : Application
     public App()
     {
         this.InitializeComponent();
-#if DEBUG
-        RequestedTheme = ApplicationTheme.Dark;
-#endif
     }
 
     public static MainWindow? MainWindow { get; private set; }
@@ -157,9 +156,64 @@ public partial class App : Application
         MainWindow.SetWindowIcon();
 #endif
 
+        // Subscribe to theme changes and apply initial theme
+        var uiPreferences = GetService<IUIPreferencesService>();
+        uiPreferences.PropertyChanged += OnUIPreferencesChanged;
+
+        ApplyTheme(uiPreferences.AppTheme);
+
         if (MainWindow?.Content is not null)
         {
-            await App.GetService<IActivationService>().ActivateAsync(args);
+            await GetService<IActivationService>().ActivateAsync(args);
+        }
+    }
+
+    /// <summary>
+    /// Handles changes to UI preferences by responding to property change notifications.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="eventArgs">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
+    private void OnUIPreferencesChanged(object? sender, PropertyChangedEventArgs eventArgs)
+    {
+        if (eventArgs.PropertyName == nameof(IUIPreferencesService.AppTheme) && sender is IUIPreferencesService preferences)
+        {
+            ApplyTheme(preferences.AppTheme);
+        }
+    }
+
+    /// <summary>
+    /// Applies the specified application theme to the main window and its title bar.
+    /// </summary>
+    /// <param name="theme">The preferred theme to apply. Must be a valid value of <see cref="AppThemePreference"/>.</param>
+    private static void ApplyTheme(AppThemePreference theme)
+    {
+        // Apply theme to the window's content
+        if (MainWindow?.Content is FrameworkElement rootElement)
+        {
+            rootElement.RequestedTheme = theme switch
+            {
+                AppThemePreference.Light => ElementTheme.Light,
+                AppThemePreference.Dark => ElementTheme.Dark,
+                AppThemePreference.System => ElementTheme.Default,
+                _ => ElementTheme.Default
+            };
+        }
+
+        // Apply theme to title bar
+        if (MainWindow?.AppWindow?.TitleBar is not null)
+        {
+            var titleBarTheme = theme switch
+            {
+                AppThemePreference.Light => Microsoft.UI.Windowing.TitleBarTheme.Light,
+                AppThemePreference.Dark => Microsoft.UI.Windowing.TitleBarTheme.Dark,
+                AppThemePreference.System => Microsoft.UI.Windowing.TitleBarTheme.UseDefaultAppMode,
+                _ => Microsoft.UI.Windowing.TitleBarTheme.UseDefaultAppMode
+            };
+
+            // Currently, Uno Skia Desktop does not support setting title bar theme.
+#if WINDOWS10_0_19041_0_OR_GREATER
+            MainWindow.AppWindow.TitleBar.PreferredTheme = titleBarTheme;
+#endif
         }
     }
 }

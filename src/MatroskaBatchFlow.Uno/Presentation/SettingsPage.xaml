@@ -318,6 +318,17 @@
                 <TextBlock Text="User Interface"
                            Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
 
+                <controls:SettingsCard Header="App Theme"
+                                       Description="Choose the color theme for the app."
+                                       HeaderIcon="{ui:FontIcon Glyph=&#xE771;}">
+                    <ComboBox SelectedIndex="{x:Bind ViewModel.SelectedThemeIndex, Mode=TwoWay}"
+                              MinWidth="150">
+                        <ComboBoxItem Content="Use System Settings" />
+                        <ComboBoxItem Content="Light" />
+                        <ComboBoxItem Content="Dark" />
+                    </ComboBox>
+                </controls:SettingsCard>
+
                 <controls:SettingsCard Header="Track Availability Display"
                                        Description="Show detailed file count together with colored indicators in track selection dropdowns."
                                        HeaderIcon="{ui:FontIcon Glyph=&#xE7EE;}">

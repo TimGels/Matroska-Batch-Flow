@@ -36,5 +36,12 @@ public sealed class UserSettings
         /// </summary>
         [JsonPropertyName("ShowTrackAvailabilityText")]
         public bool ShowTrackAvailabilityText { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the application theme preference.
+        /// Valid values: "Default" (system theme), "Light", or "Dark".
+        /// </summary>
+        [JsonPropertyName("Theme")]
+        public string Theme { get; set; } = "Default";
     }
 }
