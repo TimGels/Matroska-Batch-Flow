@@ -61,6 +61,7 @@ Whether you're an archivist, home theater enthusiast, or anyone who works with M
 > Screenshots show the WinUI 3 (WinAppSDK) Windows build.
 
 <details>
+
 <summary>View Screenshots</summary>
 
 <p align="center">
