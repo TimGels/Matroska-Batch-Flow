@@ -323,7 +323,7 @@
                                        HeaderIcon="{ui:FontIcon Glyph=&#xE771;}">
                     <ComboBox SelectedIndex="{x:Bind ViewModel.SelectedThemeIndex, Mode=TwoWay}"
                               MinWidth="150">
-                        <ComboBoxItem Content="Use System Settings" />
+                        <ComboBoxItem Content="Use system setting" />
                         <ComboBoxItem Content="Light" />
                         <ComboBoxItem Content="Dark" />
                     </ComboBox>
