@@ -39,9 +39,9 @@ public sealed class UserSettings
 
         /// <summary>
         /// Gets or sets the application theme preference.
-        /// Valid values: "Default" (system theme), "Light", or "Dark".
+        /// Valid values: "System", "Light", or "Dark".
         /// </summary>
         [JsonPropertyName("Theme")]
-        public string Theme { get; set; } = "Default";
+        public string Theme { get; set; } = "System";
     }
 }
