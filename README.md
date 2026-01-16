@@ -57,9 +57,33 @@ Whether you're an archivist, home theater enthusiast, or anyone who works with M
 
 ## Screenshots
 
+> [!NOTE]
+> Screenshots show the WinUI 3 (WinAppSDK) Windows build.
+
+<details>
+<summary>View Screenshots</summary>
+
 <p align="center">
-  <img src="Assets/Input.png" alt="Screenshot: Example input view in Matroska Batch Flow" width="800">
+  <img src="Assets/Screenshots/Input-Page.jpg" alt="Input Page" width="800">
+  <br><em>Input Page - Add files for batch processing</em>
 </p>
+
+<p align="center">
+  <img src="Assets/Screenshots/Audio-Config-Page.jpg" alt="Audio Configuration Page" width="800">
+  <br><em>Audio Configuration - Edit audio track properties</em>
+</p>
+
+<p align="center">
+  <img src="Assets/Screenshots/Results-Page.jpg" alt="Results Page" width="800">
+  <br><em>Results Page - Review processing results</em>
+</p>
+
+<p align="center">
+  <img src="Assets/Screenshots/Settings-Page.jpg" alt="Settings Page" width="800">
+  <br><em>Settings Page - Customize application preferences</em>
+</p>
+
+</details>
 
 ## Support the Project
 
