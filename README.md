@@ -48,6 +48,7 @@ Whether you're an archivist, home theater enthusiast, or anyone who works with M
 | **Drag-and-Drop** | Add files or folders by dragging them into the application |
 | **Flexible Validation** | Three configurable strictness levels for file validation (see [Validation Modes](#validation-modes)) |
 | **Track Availability Indicators** | Visual indicators showing track coverage across files in your batch |
+| **Themes** | Choose between Light, Dark, or System theme |
 
 ### Validation Modes
 
