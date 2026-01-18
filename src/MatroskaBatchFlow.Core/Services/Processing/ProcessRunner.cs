@@ -1,18 +1,21 @@
 using System.Diagnostics;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace MatroskaBatchFlow.Core.Services.Processing;
 
 /// <summary>
 /// Default implementation for running external processes and aggregating output.
 /// </summary>
-public sealed class ProcessRunner : IProcessRunner
+public sealed partial class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRunner
 {
+
     /// <inheritdoc />
     public async Task<ProcessExecutionResult> RunAsync(ProcessStartInfo startInfo, Func<string, bool>? isWarning = null, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(startInfo);
 
+        LogProcessStarting(startInfo.FileName);
         isWarning ??= static _ => false; // Default: no warnings.
 
         var stdout = new List<string>();
@@ -68,6 +71,7 @@ public sealed class ProcessRunner : IProcessRunner
         // Start the process.
         if (!process.Start())
         {
+            LogProcessStartFailed(startInfo.FileName);
             throw new InvalidOperationException($"Failed to start process '{startInfo.FileName}'.");
         }
 
@@ -92,6 +96,15 @@ public sealed class ProcessRunner : IProcessRunner
         }
 
         var exitCode = process.HasExited ? process.ExitCode : -1;
+        
+        if (ct.IsCancellationRequested)
+        {
+            LogProcessCanceled(startInfo.FileName);
+        }
+        else
+        {
+            LogProcessExited(startInfo.FileName, exitCode);
+        }
 
         return new ProcessExecutionResult(
             ExitCode: exitCode,

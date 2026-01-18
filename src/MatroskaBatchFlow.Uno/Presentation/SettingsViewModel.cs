@@ -13,6 +13,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IWritableSettings<UserSettings> _userSettings;
     private readonly IValidationSettingsService _validationSettingsService;
     private readonly IUIPreferencesService _uiPreferences;
+    private readonly ILogger<SettingsViewModel> _logger;
 
     [ObservableProperty]
     private string customMkvPropeditPath;
@@ -60,11 +61,16 @@ public partial class SettingsViewModel : ObservableObject
     public bool IsCustomMode => SelectedStrictnessModeIndex == (int)StrictnessMode.Custom;
     public bool IsCustomStrictnessEnabled => IsCustomMode;
 
-    public SettingsViewModel(IWritableSettings<UserSettings> userSettings, IValidationSettingsService validationSettingsService, IUIPreferencesService uiPreferences)
+    public SettingsViewModel(
+        IWritableSettings<UserSettings> userSettings,
+        IValidationSettingsService validationSettingsService,
+        IUIPreferencesService uiPreferences,
+        ILogger<SettingsViewModel> logger)
     {
         _userSettings = userSettings;
         _validationSettingsService = validationSettingsService;
         _uiPreferences = uiPreferences;
+        _logger = logger;
 
         customMkvPropeditPath = ExecutableLocator.FindExecutable(_userSettings.Value.MkvPropedit.CustomPath ?? string.Empty) ?? string.Empty;
         // If Skia is being used, we force the custom path to be enabled since the bundled mkvpropedit executable is only for Windows.
@@ -98,7 +104,8 @@ public partial class SettingsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            // TODO: Handle exception properly (e.g., log it, show a message to the user, etc.)
+            LogSaveMkvPropeditPathEnabledFailed(ex);
+            // TODO: add weakreference messenger dialog message here
         }
     }
 
@@ -114,7 +121,7 @@ public partial class SettingsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            // TODO: Handle exception properly (e.g., log it, show a message to the user, etc.)
+            LogSaveCustomPathFailed(ex);
         }
     }
 
@@ -144,7 +151,7 @@ public partial class SettingsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            // TODO: Log exception and show error to user
+            LogSaveStrictnessModeFailed(ex, mode);
         }
     }
 
@@ -280,7 +287,7 @@ public partial class SettingsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            // TODO: Log exception and show error to user
+            LogSaveValidationSeverityFailed(ex);
         }
     }
 }

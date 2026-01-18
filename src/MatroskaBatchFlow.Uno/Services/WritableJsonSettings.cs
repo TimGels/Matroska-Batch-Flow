@@ -10,9 +10,10 @@ namespace MatroskaBatchFlow.Uno.Services;
 /// Allows thread-safe updates and persistence of settings.
 /// </summary>
 /// <typeparam name="T">The settings type. Must be a class with a parameterless constructor.</typeparam>
-public class WritableJsonSettings<T> : IWritableSettings<T> where T : class, new()
+public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : class, new()
 {
     private readonly string _filePath;
+    private readonly ILogger<WritableJsonSettings<T>> _logger;
     private readonly SemaphoreSlim _lock = new(1, 1);
     private static readonly JsonSerializerOptions SerializerOptions = new() { WriteIndented = true };
     [SuppressMessage("Style", "IDE0044:Add readonly modifier", Justification = "Is modified in UpdateAsync method.")]
@@ -22,11 +23,14 @@ public class WritableJsonSettings<T> : IWritableSettings<T> where T : class, new
     /// Initializes a new instance of <see cref="WritableJsonSettings{T}"/> using the specified file path.
     /// If no file path is provided, a default path is used based on the type name in the local application data folder.
     /// </summary>
+    /// <param name="logger">The logger instance for recording settings operations.</param>
     /// <param name="filePath">
     /// The path to the JSON settings file. If null, defaults to <c>{LocalAppData}/{TypeName}.json</c>.
     /// </param>
-    public WritableJsonSettings(string? filePath = null)
+    public WritableJsonSettings(ILogger<WritableJsonSettings<T>> logger, string? filePath = null)
     {
+        _logger = logger;
+
         if (string.IsNullOrWhiteSpace(filePath) || !Path.IsPathRooted(filePath))
         {
             _filePath = Path.Combine(AppPathHelper.GetLocalAppDataFolder(), $"{typeof(T).Name}.json");
@@ -36,6 +40,7 @@ public class WritableJsonSettings<T> : IWritableSettings<T> where T : class, new
             _filePath = filePath;
         }
 
+        LogInitializingSettings(_filePath);
         _value = Load();
     }
 
@@ -90,6 +95,7 @@ public class WritableJsonSettings<T> : IWritableSettings<T> where T : class, new
         {
             if (!File.Exists(_filePath))
             {
+                LogSettingsFileNotFound(_filePath);
                 return new T();
             }
 
@@ -98,14 +104,16 @@ public class WritableJsonSettings<T> : IWritableSettings<T> where T : class, new
 
             if (settings is null)
             {
+                LogDeserializationFailed(_filePath);
                 return new T();
             }
 
+            LogSettingsLoaded(_filePath);
             return settings;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // TODO: Add logging and let the user know about the error.
+            LogSettingsLoadFailed(ex, _filePath);
             return new T();
         }
     }

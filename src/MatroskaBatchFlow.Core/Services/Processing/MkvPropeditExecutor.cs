@@ -5,6 +5,7 @@ using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Models.AppSettings;
 using MatroskaBatchFlow.Core.Utilities;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace MatroskaBatchFlow.Core.Services.Processing;
@@ -14,13 +15,15 @@ namespace MatroskaBatchFlow.Core.Services.Processing;
 /// </summary>
 /// <param name="optionsMonitor">The options monitor for application configuration settings.</param>
 /// <param name="processRunner">The process runner to execute external processes.</param>
-public class MkvPropeditExecutor(IOptions<AppConfigOptions> optionsMonitor, IWritableSettings<UserSettings> userSettings, IProcessRunner processRunner) : IMkvToolExecutor
+/// <param name="logger">The logger for recording execution information.</param>
+public partial class MkvPropeditExecutor(IOptions<AppConfigOptions> optionsMonitor, IWritableSettings<UserSettings> userSettings, IProcessRunner processRunner, ILogger<MkvPropeditExecutor> logger) : IMkvToolExecutor
 {
     /// <inheritdoc/>
     public async Task<MkvPropeditResult> ExecuteAsync(string commandLineArguments, CancellationToken ct = default)
     {
         if (!TryResolveExecutable(out var resolvedExe, out var resolveError))
         {
+            LogExecutableResolutionFailed(resolveError);
             return new MkvPropeditResult
             {
                 Status = MkvPropeditStatus.Unknown,
@@ -32,15 +35,19 @@ public class MkvPropeditExecutor(IOptions<AppConfigOptions> optionsMonitor, IWri
             };
         }
 
+        LogExecutingCommand(resolvedExe, commandLineArguments);
+
         var startInfo = CreateStartInfo(resolvedExe, commandLineArguments);
         try
         {
             ProcessExecutionResult executionResult = await processRunner.RunAsync(startInfo, IsWarning, ct).ConfigureAwait(false);
-
+            
+            LogCommandCompleted(executionResult.ExitCode);
             return MapToResult(executionResult, resolvedExe, commandLineArguments);
         }
         catch (Exception ex)
         {
+            LogExecutionException(ex, commandLineArguments);
             return new MkvPropeditResult
             {
                 Status = MkvPropeditStatus.Unknown,

@@ -13,6 +13,11 @@ namespace MatroskaBatchFlow.Uno.Services;
 public partial class FileListAdapter : IFileListAdapter, IDisposable
 {
     /// <summary>
+    /// The logger instance for recording file list operations.
+    /// </summary>
+    private readonly ILogger<FileListAdapter> _logger;
+
+    /// <summary>
     /// The collection of view-models for UI binding.
     /// </summary>
     public ObservableCollection<ScannedFileViewModel> ScannedFileViewModels { get; }
@@ -31,9 +36,11 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
     /// Initializes a new instance of the <see cref="FileListAdapter"/> class and sets up synchronization.
     /// </summary>
     /// <param name="batchConfig">The batch configuration containing the core file list.</param>
-    public FileListAdapter(IBatchConfiguration batchConfig)
+    /// <param name="logger">The logger instance for recording file list operations.</param>
+    public FileListAdapter(IBatchConfiguration batchConfig, ILogger<FileListAdapter> logger)
     {
         _batchConfig = batchConfig;
+        _logger = logger;
         ScannedFileViewModels = new ObservableCollection<ScannedFileViewModel>(
             batchConfig.FileList.Select(f => new ScannedFileViewModel(f, batchConfig))
         );
@@ -126,9 +133,20 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
     /// </summary>
     /// <remarks>This method appends the provided files to the existing file list in the batch
     /// configuration.</remarks>
-    /// <param name="files">A collection of <see cref="ScannedFileInfo"/> objects representing the files to be added. 
+    /// <param name="files">A collection of <see cref="ScannedFileInfo"/> objects representing the files to be added.
     /// Cannot be <see langword="null"/>.</param>
-    public void AddFiles(IEnumerable<ScannedFileInfo> files) => _batchConfig.FileList.AddRange(files);
+    public void AddFiles(IEnumerable<ScannedFileInfo> files)
+    {
+        var fileList = files.ToList();
+        if (fileList.Count == 0)
+            return;
+
+        int countBefore = _batchConfig.FileList.Count;
+        _batchConfig.FileList.AddRange(fileList);
+        int addedCount = _batchConfig.FileList.Count - countBefore;
+
+        LogFilesAdded(addedCount);
+    }
 
     /// <summary>
     /// Removes the specified file from the batch configuration's file list.
@@ -136,6 +154,7 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
     /// <param name="file">The file to be removed. Cannot be <see langword="null"/>.</param>
     public void RemoveFile(ScannedFileInfo file)
     {
+        LogRemovingFile(file.Path);
         _batchConfig.FileConfigurations.Remove(file.Id);
         _batchConfig.FileList.Remove(file);
     }
@@ -149,7 +168,11 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
     /// <summary>
     /// Clears both the core and view-model collections.
     /// </summary>
-    public void Clear() => _batchConfig.FileList.Clear();
+    public void Clear()
+    {
+        LogClearingFiles();
+        _batchConfig.FileList.Clear();
+    }
 
     /// <summary>
     /// Rebuilds the view-model collection from the current core file list.

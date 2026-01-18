@@ -6,7 +6,7 @@ using Microsoft.UI.Xaml.Media.Animation;
 
 namespace MatroskaBatchFlow.Uno.Services;
 
-public class NavigationService(IPageService pageService) : INavigationService
+public partial class NavigationService(IPageService pageService, ILogger<NavigationService> logger) : INavigationService
 {
     private object? _lastParameterUsed;
     private Frame? _frame;
@@ -75,6 +75,8 @@ public class NavigationService(IPageService pageService) : INavigationService
 
         if (!shouldNavigate)
             return false;
+
+        LogNavigatingTo(pageKey, clearNavigation, transitionInfo);
 
         _frame.Tag = clearNavigation;
 

@@ -1,11 +1,16 @@
+using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Models.AppSettings;
+using Microsoft.Extensions.Logging;
 
 namespace MatroskaBatchFlow.Core.Services.FileValidation;
 
-public class FileValidationEngine(IEnumerable<IFileValidationRule> rules) : IFileValidationEngine
+public partial class FileValidationEngine(
+    IEnumerable<IFileValidationRule> rules,
+    ILogger<FileValidationEngine> logger) : IFileValidationEngine
 {
     private readonly List<IFileValidationRule> _rules = [.. rules];
+    private readonly ILogger<FileValidationEngine> _logger = logger;
 
     /// <summary>
     /// Validates a collection of scanned files against a set of predefined rules.
@@ -19,12 +24,31 @@ public class FileValidationEngine(IEnumerable<IFileValidationRule> rules) : IFil
     /// the outcome of applying the validation rules to the files.</returns>
     public IEnumerable<FileValidationResult> Validate(IEnumerable<ScannedFileInfo> files, BatchValidationSettings settings)
     {
+        var fileList = files as IList<ScannedFileInfo> ?? files.ToList();
+        LogValidationStarted(fileList.Count, _rules.Count);
+
+        int errorCount = 0;
+        int warningCount = 0;
+
         foreach (var rule in _rules)
         {
-            foreach (var result in rule.Validate(files, settings))
+            foreach (var result in rule.Validate(fileList, settings))
             {
+                if (result.Severity == ValidationSeverity.Error)
+                {
+                    LogValidationError(result.ValidatedFilePath, result.Message);
+                    errorCount++;
+                }
+                else if (result.Severity == ValidationSeverity.Warning)
+                {
+                    LogValidationWarning(result.ValidatedFilePath, result.Message);
+                    warningCount++;
+                }
+
                 yield return result;
             }
         }
+
+        LogValidationCompleted(errorCount, warningCount);
     }
 }

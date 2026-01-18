@@ -13,6 +13,7 @@ public partial class MainViewModel : ObservableObject
     private readonly IBatchReportStore _batchReportStore;
     private readonly IFileProcessingOrchestrator _orchestrator;
     private readonly IMkvPropeditArgumentsGenerator _mkvPropeditArgumentsBuilder;
+    private readonly ILogger<MainViewModel> _logger;
     private CancellationTokenSource _processingCts = new();
 
     [ObservableProperty]
@@ -42,12 +43,14 @@ public partial class MainViewModel : ObservableObject
         INavigationViewService navigationViewService,
         IFileProcessingOrchestrator orchestrator,
         IBatchReportStore batchResultStore,
-        IMkvPropeditArgumentsGenerator argumentsService)
+        IMkvPropeditArgumentsGenerator argumentsService,
+        ILogger<MainViewModel> logger)
     {
         _batchConfiguration = batchConfiguration;
         _orchestrator = orchestrator;
         _batchReportStore = batchResultStore;
         _mkvPropeditArgumentsBuilder = argumentsService;
+        _logger = logger;
 
         NavigationService = navigationService;
         NavigationViewService = navigationViewService;
@@ -96,6 +99,7 @@ public partial class MainViewModel : ObservableObject
             var (isValid, errorMessage) = ValidateMkvpropeditArguments(commands);
             if (!isValid)
             {
+                LogBatchProcessingAborted(errorMessage);
                 WeakReferenceMessenger.Default.Send(new DialogMessage("Error", errorMessage));
                 return;
             }
@@ -111,10 +115,12 @@ public partial class MainViewModel : ObservableObject
         }
         catch (OperationCanceledException)
         {
+            LogBatchProcessingCancelled();
             WeakReferenceMessenger.Default.Send(new DialogMessage("Cancelled", "Batch processing was cancelled."));
         }
         catch (Exception ex)
         {
+            LogBatchProcessingError(ex);
             WeakReferenceMessenger.Default.Send(new DialogMessage("Error", $"Unexpected error: {ex.Message}"));
         }
         finally

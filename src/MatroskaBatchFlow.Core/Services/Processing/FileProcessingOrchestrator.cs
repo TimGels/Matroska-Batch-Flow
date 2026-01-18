@@ -1,29 +1,33 @@
 using System.Diagnostics;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
+using Microsoft.Extensions.Logging;
 
 namespace MatroskaBatchFlow.Core.Services.Processing;
 
 /// <summary>
 /// Orchestrates the processing of scannedFiles using mkvpropedit based on batch configurations.
 /// </summary>
-public class FileProcessingOrchestrator : IFileProcessingOrchestrator
+public partial class FileProcessingOrchestrator : IFileProcessingOrchestrator
 {
     private readonly IBatchConfiguration _batchConfig;
     private readonly IBatchReportStore _batchReportStore;
     private readonly IMkvToolExecutor _mkvToolExecutor;
     private readonly IMkvPropeditArgumentsGenerator _mkvPropeditArgumentsGenerator;
+    private readonly ILogger<FileProcessingOrchestrator> _logger;
 
     public FileProcessingOrchestrator(
         IBatchConfiguration batchConfig,
         IBatchReportStore batchReportStore,
         IMkvToolExecutor mkvToolExecutor,
-        IMkvPropeditArgumentsGenerator mkvPropeditArgumentsGenerator)
+        IMkvPropeditArgumentsGenerator mkvPropeditArgumentsGenerator,
+        ILogger<FileProcessingOrchestrator> logger)
     {
         _batchConfig = batchConfig;
         _batchReportStore = batchReportStore;
         _mkvToolExecutor = mkvToolExecutor;
         _mkvPropeditArgumentsGenerator = mkvPropeditArgumentsGenerator;
+        _logger = logger;
     }
 
     /// <summary>
@@ -63,11 +67,13 @@ public class FileProcessingOrchestrator : IFileProcessingOrchestrator
 
         if (ct.IsCancellationRequested)
         {
+            LogProcessingCanceledBeforeStart(fileReport.Path);
             fileReport.Status = ProcessingStatus.Canceled;
             fileReport.Notes = "Processing canceled before start.";
             return fileReport;
         }
 
+        LogFileProcessingStart(fileReport.Path);
         fileReport.Status = ProcessingStatus.Running;
         fileReport.StartedAt = DateTimeOffset.Now;
 
@@ -82,6 +88,7 @@ public class FileProcessingOrchestrator : IFileProcessingOrchestrator
             // No modifications requested => skip processing.
             if (string.IsNullOrWhiteSpace(argString))
             {
+                LogFileSkipped(fileReport.Path);
                 fileReport.Status = ProcessingStatus.Skipped;
                 fileReport.Notes = "No modifications requested for this scannedFile.";
 
@@ -95,12 +102,15 @@ public class FileProcessingOrchestrator : IFileProcessingOrchestrator
             if (propeditResult.IsFatal)
             {
                 var combined = Combine(propeditResult.StandardError, propeditResult.StandardOutput);
-                fileReport.AddError(string.IsNullOrWhiteSpace(combined)
+                var errorMessage = string.IsNullOrWhiteSpace(combined)
                     ? $"mkvpropedit failed (exit code {(int)propeditResult.Status})."
-                    : combined);
+                    : combined;
+                LogMkvpropeditFailed(fileReport.Path, errorMessage);
+                fileReport.AddError(errorMessage);
             }
             else if (propeditResult.Status == MkvPropeditStatus.Warning)
             {
+                LogMkvpropeditWarnings(fileReport.Path, string.Join("; ", propeditResult.Warnings));
                 fileReport.AddWarnings(propeditResult.Warnings);
             }
 
@@ -109,15 +119,18 @@ public class FileProcessingOrchestrator : IFileProcessingOrchestrator
                 fileReport.Status = fileReport.Warnings.Count > 0
                     ? ProcessingStatus.SucceededWithWarnings
                     : ProcessingStatus.Succeeded;
+                LogFileProcessingCompleted(fileReport.Path);
             }
         }
         catch (OperationCanceledException)
         {
+            LogProcessingCanceled(fileReport.Path);
             fileReport.Status = ProcessingStatus.Canceled;
             fileReport.Notes = "Processing canceled.";
         }
         catch (Exception ex)
         {
+            LogUnexpectedError(ex, fileReport.Path);
             fileReport.AddError(ex.Message);
         }
         finally
@@ -134,10 +147,21 @@ public class FileProcessingOrchestrator : IFileProcessingOrchestrator
     public async Task<List<FileProcessingReport>> ProcessAllAsync(IEnumerable<ScannedFileInfo> scannedFiles, CancellationToken ct = default)
     {
         List<FileProcessingReport> reports = EnrollFiles(scannedFiles);
+        LogBatchStart(reports.Count);
 
+        var stopwatch = Stopwatch.StartNew();
         foreach (var report in reports)
         {
             await ProcessFileAsync(report, ct);       
+        }
+        stopwatch.Stop();
+
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            var succeeded = reports.Count(r => r.Status == ProcessingStatus.Succeeded || r.Status == ProcessingStatus.SucceededWithWarnings);
+            var failed = reports.Count(r => r.Status == ProcessingStatus.Failed);
+            var canceled = reports.Count(r => r.Status == ProcessingStatus.Canceled);
+            LogBatchCompleted(stopwatch.ElapsedMilliseconds, succeeded, failed, canceled);
         }
 
         return reports;
