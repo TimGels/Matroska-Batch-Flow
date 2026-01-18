@@ -1,9 +1,5 @@
 using System.Text;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.Logging;
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Storage;
 
 namespace MatroskaBatchFlow.Uno.Presentation.Dialogs;
 
@@ -81,7 +77,7 @@ public partial class ErrorDialogViewModel : ObservableObject
         dataPackage.SetText(TechnicalDetails);
         Clipboard.SetContent(dataPackage);
 
-        _logger.LogInformation("Exception details copied to clipboard");
+        LogDetailsCopied();
     }
 
     /// <summary>
@@ -99,11 +95,11 @@ public partial class ErrorDialogViewModel : ObservableObject
             await FileIO.WriteTextAsync(logFile, FormattedDetails);
 
             LogFilePath = logFile.Path;
-            _logger.LogInformation("Exception log saved to: {LogFilePath}", LogFilePath);
+            LogErrorReportSaved(LogFilePath);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to save exception log file");
+            LogErrorReportSaveFailed(ex);
         }
     }
 

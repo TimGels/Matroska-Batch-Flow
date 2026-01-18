@@ -13,6 +13,7 @@ using MatroskaBatchFlow.Uno.Enums;
 using MatroskaBatchFlow.Uno.Messages;
 using MatroskaBatchFlow.Uno.Presentation.Dialogs;
 using MatroskaBatchFlow.Uno.Services;
+using MatroskaBatchFlow.Uno.Utilities;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 
@@ -57,10 +58,12 @@ public partial class App : Application
     public static MainWindow? MainWindow { get; private set; }
     protected IHost? Host { get; private set; }
 
+    private ILogger<App>? _logger;
+
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {
         // Configure Serilog with file logging
-        var logPath = Path.Combine(ApplicationData.Current.LocalFolder.Path, "logs", "log-.txt");
+        var logPath = Path.Combine(AppPathHelper.GetLocalAppDataFolder(), "logs", "log-.txt");
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
             .WriteTo.Debug()
@@ -72,8 +75,6 @@ public partial class App : Application
                 rollOnFileSizeLimit: true)
             .Enrich.FromLogContext()
             .CreateLogger();
-
-        Log.Information("Application starting - Matroska Batch Flow");
 
         Host = Microsoft.Extensions.Hosting.Host.
         CreateDefaultBuilder().
@@ -101,8 +102,9 @@ public partial class App : Application
             services.AddSingleton<IWritableSettings<UserSettings>>(sp =>
             {
                 IOptions<AppConfigOptions> options = sp.GetRequiredService<IOptions<AppConfigOptions>>();
+                ILogger<WritableJsonSettings<UserSettings>> logger = sp.GetRequiredService<ILogger<WritableJsonSettings<UserSettings>>>();
                 string userSettingsFilePath = options.Value.UserSettingsPath;
-                return new WritableJsonSettings<UserSettings>(userSettingsFilePath);
+                return new WritableJsonSettings<UserSettings>(logger, userSettingsFilePath);
             });
             services.AddSingleton<IFileListAdapter, FileListAdapter>();
             services.AddSingleton<IFilePickerDialogService, FilePickerDialogService>();
@@ -165,6 +167,9 @@ public partial class App : Application
                 .ValidateDataAnnotations();
         }).
         Build();
+
+        _logger = Host.Services.GetRequiredService<ILogger<App>>();
+        LogStartupInfo();
 
         MainWindow = new MainWindow
         {
@@ -255,8 +260,10 @@ public partial class App : Application
         // Log the exception
         try
         {
-            var logger = Host?.Services.GetService<ILogger<App>>();
-            logger?.LogCritical(e.Exception, "Unhandled exception occurred: {Message}", e.Message);
+            if (_logger is not null)
+            {
+                LogUnhandledException(e.Exception, e.Message);
+            }
         }
         catch
         {

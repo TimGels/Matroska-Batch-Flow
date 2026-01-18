@@ -55,6 +55,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     private readonly IWritableSettings<UserSettings> _userSettings;
     private readonly IValidationSettingsService _validationSettingsService;
     private readonly IPlatformService _platformService;
+    private readonly ILogger<InputViewModel> _logger;
 
     public bool CanSelectAll => _batchConfig.FileList.Count > SelectedFiles.Count;
     public ObservableCollection<ScannedFileViewModel> FileList => _fileListAdapter.ScannedFileViewModels;
@@ -70,12 +71,12 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     public IEnumerable<ValidationNotificationItem> ValidationErrors => ValidationNotifications.Errors;
     public IEnumerable<ValidationNotificationItem> ValidationWarnings => ValidationNotifications.Warnings;
     public IEnumerable<ValidationNotificationItem> ValidationInfoMessages => ValidationNotifications.InfoMessages;
-    
+
     /// <summary>
     /// Gets the visibility of the validation InfoBar.
     /// Returns Visible when there are notifications, Collapsed otherwise.
     /// </summary>
-    public Visibility ValidationInfoBarVisibility => 
+    public Visibility ValidationInfoBarVisibility =>
         HasValidationNotifications ? Visibility.Visible : Visibility.Collapsed;
 
     public ICommand RemoveSelected { get; }
@@ -98,7 +99,8 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         IFilePickerDialogService filePickerDialogService,
         IWritableSettings<UserSettings> userSettings,
         IValidationSettingsService validationSettingsService,
-        IPlatformService platformService
+        IPlatformService platformService,
+        ILogger<InputViewModel> logger
         )
     {
         _fileListAdapter = fileListAdapter;
@@ -111,6 +113,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         _userSettings = userSettings;
         _validationSettingsService = validationSettingsService;
         _platformService = platformService;
+        _logger = logger;
 
         RemoveSelected = new RelayCommand(RemoveSelectedFiles);
         RemoveAll = new RelayCommand(RemoveAllFiles);
@@ -173,7 +176,9 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     {
         if (files is null or not { Count: > 0 })
             return;
-            
+
+        LogImportingFiles(files.Count);
+
         // Check for duplicates and filter to unique files only
         var uniqueFiles = FilterDuplicateFiles(files);
 
@@ -182,11 +187,14 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
 
         // Scan the files to get their information.
         IEnumerable<ScannedFileInfo> newFiles = await _fileScanner.ScanAsync(uniqueFiles.ToFileInfo());
-        if (!newFiles.Any())
+        var scannedFiles = newFiles.ToList();
+        if (scannedFiles.Count == 0)
             return;
 
+        LogFilesScanned(scannedFiles.Count);
+
         // Combine existing files with new files.
-        List<ScannedFileInfo> combinedFiles = [.. _batchConfig.FileList, .. newFiles];
+        List<ScannedFileInfo> combinedFiles = [.. _batchConfig.FileList, .. scannedFiles];
         if (combinedFiles.Count == 0)
             return;
 
@@ -197,7 +205,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
             return;
 
         // Initialize per-file track configurations for all new files
-        foreach (var file in newFiles)
+        foreach (var file in scannedFiles)
         {
             _trackConfigInitializer.Initialize(
                 file,
@@ -208,16 +216,16 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         }
 
         // Apply processing rules to the new files.
-        foreach (var file in newFiles)
+        foreach (var file in scannedFiles)
         {
             _fileProcessingRuleEngine.Apply(file, _batchConfig);
         }
 
         // Add files via the adapter to keep everything in sync.
-        _fileListAdapter.AddFiles(newFiles);
+        _fileListAdapter.AddFiles(scannedFiles);
     }
 
-    
+
     /// <summary>
     /// Filters out duplicate files from the provided list and notifies the user if any duplicates are found.
     /// </summary>
@@ -233,7 +241,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         // Build lookup of existing paths with appropriate comparer for O(1) lookups.
         // Paths in _batchConfig are assumed to be normalized already.
         var existingPaths = new HashSet<string>(
-            _batchConfig.FileList.Select(f => f.Path), 
+            _batchConfig.FileList.Select(f => f.Path),
             comparer);
 
         // Track seen paths in this batch to detect duplicates within the input
@@ -267,6 +275,8 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         // Show duplicate message if any were found
         if (duplicates.Count > 0)
         {
+            LogDuplicatesSkipped(duplicates.Count);
+
             var duplicateFileNames = string.Join(Environment.NewLine, duplicates.Select(p => Path.GetFileName(p) ?? p));
             var message = duplicates.Count == 1
                 ? $"This file is already in the list:{Environment.NewLine}{duplicateFileNames}"
@@ -289,7 +299,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         foreach (ScannedFileViewModel file in SelectedFiles.ToArray())
         {
             _fileListAdapter.RemoveFile(file.FileInfo);
-        }  
+        }
     }
 
     /// <summary>
@@ -371,7 +381,13 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         IsValidationInfoBarOpen = ValidationNotifications.HasNotifications;
 
         // Only errors block file addition
-        return ValidationNotifications.HasErrors;
+        if (ValidationNotifications.HasErrors)
+        {
+            LogValidationBlocked(ValidationNotifications.Errors.Count());
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>

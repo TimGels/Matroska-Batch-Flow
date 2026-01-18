@@ -2,18 +2,21 @@ using System.Collections.Immutable;
 using System.Text.Json;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Models.AppSettings;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace MatroskaBatchFlow.Core.Services;
 
-public class LanguageProvider : ILanguageProvider
+public partial class LanguageProvider : ILanguageProvider
 {
     private readonly LanguageOptions _options;
+    private readonly ILogger<LanguageProvider> _logger;
     public ImmutableList<MatroskaLanguageOption> Languages { get; private set; } = [];
 
-    public LanguageProvider(IOptions<LanguageOptions> options)
+    public LanguageProvider(IOptions<LanguageOptions> options, ILogger<LanguageProvider> logger)
     {
         _options = options.Value;
+        _logger = logger;
         LoadLanguages();
     }
 
@@ -39,9 +42,11 @@ public class LanguageProvider : ILanguageProvider
             if (File.Exists(userFile))
             {
                 Languages = LoadFromFile(userFile);
+                LogLanguagesLoaded(Languages.Count, userFile);
                 return;
             }
 
+            LogLanguageFileNotFound(userFile);
             //// Fallback to embedded
             //var assembly = Assembly.GetExecutingAssembly();
             //using var stream = assembly.GetManifestResourceStream(
@@ -50,10 +55,10 @@ public class LanguageProvider : ILanguageProvider
             //_languages = JsonSerializer.Deserialize<List<Language>>(stream)!
             //    .ToImmutableDictionary(x => x.Code);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            //_logger.LogError(ex, "Language load failed");
-            //_languages = ImmutableDictionary<string, Language>.Empty;
+            LogLanguageLoadFailed(ex, _options.FilePath);
+            Languages = [];
         }
     }
 }

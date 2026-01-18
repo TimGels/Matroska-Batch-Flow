@@ -161,7 +161,7 @@ public sealed partial class MainPage : Page
         }
 
         // TODO: REMOVE THIS TEST EXCEPTION AFTER TESTING
-        ThrowTestException();
+        //ThrowTestException();
     }
 
     // TODO: REMOVE THESE TEST METHODS AFTER TESTING

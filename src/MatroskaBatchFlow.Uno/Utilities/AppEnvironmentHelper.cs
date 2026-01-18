@@ -16,6 +16,23 @@ public static class AppEnvironmentHelper
     /// <returns><see langword="true"/> if the application is running as a packaged app; otherwise, <see langword="false"/>.</returns>
     public static bool IsPackagedApp() => _isPackagedApp.Value;
 
+    /// <summary>
+    /// Gets the application version.
+    /// </summary>
+    /// <returns>The application <see cref="Version"/>, or a default version (0.0.0) if unavailable.</returns>
+    public static Version GetApplicationVersion()
+    {
+        if (IsPackagedApp())
+        {
+#if WINDOWS10_0_19041_0_OR_GREATER
+            var pkgVersion = Windows.ApplicationModel.Package.Current.Id.Version;
+            return new Version(pkgVersion.Major, pkgVersion.Minor, pkgVersion.Build, pkgVersion.Revision);
+#endif
+        }
+
+        return Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0);
+    }
+
     private static bool DetectIsPackagedApp()
     {
 #if WINDOWS10_0_19041_0_OR_GREATER

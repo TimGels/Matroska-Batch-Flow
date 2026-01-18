@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Uno.Messages;
 using MatroskaBatchFlow.Uno.Utilities;
@@ -15,23 +14,7 @@ public sealed partial class SettingsPage : Page
 
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Binding requires instance member.")]
     [SuppressMessage("CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "Suppression is necessary.")]
-    public string AppVersion
-    {
-        get
-        {
-            if (AppEnvironmentHelper.IsPackagedApp())
-            {
-                var version = Package.Current.Id.Version;
-                return $"Version {version.Major}.{version.Minor}.{version.Build}";
-            }
-            else
-            {
-                var assembly = Assembly.GetExecutingAssembly();
-                var version = assembly.GetName().Version;
-                return $"Version {version?.Major}.{version?.Minor}.{version?.Build}";
-            }
-        }
-    }
+    public string AppVersion => $"Version {AppEnvironmentHelper.GetApplicationVersion().ToString(3)}";
 
     public SettingsPage()
     {

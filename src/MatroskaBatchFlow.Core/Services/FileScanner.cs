@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Models.AppSettings;
 using MatroskaBatchFlow.Core.Utilities.MediaInfoLib;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace MatroskaBatchFlow.Core.Services;
@@ -11,17 +12,28 @@ namespace MatroskaBatchFlow.Core.Services;
 /// <summary>
 /// Scans directories for files based on specified options and analyzes them using MediaInfo.
 /// </summary>
-public class FileScanner(IOptionsMonitor<ScanOptions> optionsMonitor) : IFileScanner
+public partial class FileScanner : IFileScanner
 {
     /// <summary>
     /// The options used for scanning directories and filtering files.
     /// </summary>
-    private readonly ScanOptions _options = optionsMonitor.CurrentValue;
+    private readonly ScanOptions _options;
+
+    /// <summary>
+    /// The logger for recording scan operations.
+    /// </summary>
+    private readonly ILogger<FileScanner> _logger;
 
     /// <summary>
     /// List of scanned files containing their paths and MediaInfo parsed results.
     /// </summary>
     private readonly List<ScannedFileInfo> _scannedFiles = [];
+
+    public FileScanner(IOptionsMonitor<ScanOptions> optionsMonitor, ILogger<FileScanner> logger)
+    {
+        _options = optionsMonitor.CurrentValue;
+        _logger = logger;
+    }
 
     /// <summary>
     /// Scans the directory for files that match the specified filtering options.
@@ -34,10 +46,12 @@ public class FileScanner(IOptionsMonitor<ScanOptions> optionsMonitor) : IFileSca
         if (files == null || files.Length == 0)
             throw new ArgumentException("No files provided for scanning.", nameof(files));
 
+        LogScanningFiles(files.Length);
         var scannedFiles = await AnalyzeFilesWithMediaInfoAsync(files.Select(f => f.FullName));
 
         _scannedFiles.Clear();
         _scannedFiles.AddRange(scannedFiles);
+        LogScanCompleted(_scannedFiles.Count);
         return scannedFiles;
     }
 
@@ -48,7 +62,9 @@ public class FileScanner(IOptionsMonitor<ScanOptions> optionsMonitor) : IFileSca
     public async Task<IEnumerable<ScannedFileInfo>> ScanWithMediaInfoAsync()
     {
         EnsureDirectoryExists();
+        LogScanningDirectory(_options.DirectoryPath, _options.Recursive);
         var files = await Task.Run(() => GetFilteredFiles());
+        LogFilesFound(files.Count());
         var scannedFiles = await AnalyzeFilesWithMediaInfoAsync(files);
 
         _scannedFiles.Clear();
