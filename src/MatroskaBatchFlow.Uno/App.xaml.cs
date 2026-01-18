@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Core.Models.AppSettings;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileProcessing;
@@ -9,9 +10,11 @@ using MatroskaBatchFlow.Core.Services.Processing;
 using MatroskaBatchFlow.Uno.Activation;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Enums;
+using MatroskaBatchFlow.Uno.Messages;
+using MatroskaBatchFlow.Uno.Presentation.Dialogs;
 using MatroskaBatchFlow.Uno.Services;
 using Microsoft.Extensions.Configuration;
-using Serilog.Core;
+using Serilog;
 
 namespace MatroskaBatchFlow.Uno;
 
@@ -46,6 +49,9 @@ public partial class App : Application
     public App()
     {
         this.InitializeComponent();
+
+        // Subscribe to unhandled exceptions early to also catch errors during startup.
+        this.UnhandledException += OnUnhandledException;
     }
 
     public static MainWindow? MainWindow { get; private set; }
@@ -53,6 +59,22 @@ public partial class App : Application
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {
+        // Configure Serilog with file logging
+        var logPath = Path.Combine(ApplicationData.Current.LocalFolder.Path, "logs", "log-.txt");
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .WriteTo.Debug()
+            .WriteTo.File(
+                logPath,
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 31,
+                fileSizeLimitBytes: 10_000_000,
+                rollOnFileSizeLimit: true)
+            .Enrich.FromLogContext()
+            .CreateLogger();
+
+        Log.Information("Application starting - Matroska Batch Flow");
+
         Host = Microsoft.Extensions.Hosting.Host.
         CreateDefaultBuilder().
         ConfigureHostConfiguration(config =>
@@ -60,6 +82,7 @@ public partial class App : Application
             config.SetBasePath(AppContext.BaseDirectory);
             config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
         }).
+        UseSerilog(Log.Logger, dispose: true).
         ConfigureServices((context, services) =>
         {
             // Register services.
@@ -75,7 +98,6 @@ public partial class App : Application
             services.AddSingleton<ILanguageProvider, LanguageProvider>();
             services.AddSingleton<IFileScanner, FileScanner>();
             services.AddSingleton<IBatchConfiguration, BatchConfiguration>();
-            services.AddSingleton<ILogger, Logger<Logger>>();
             services.AddSingleton<IWritableSettings<UserSettings>>(sp =>
             {
                 IOptions<AppConfigOptions> options = sp.GetRequiredService<IOptions<AppConfigOptions>>();
@@ -120,6 +142,9 @@ public partial class App : Application
             services.AddSingleton<MainViewModel, MainViewModel>();
             services.AddSingleton<BatchResultsViewModel, BatchResultsViewModel>();
             services.AddSingleton<SettingsViewModel, SettingsViewModel>();
+
+            // Register dialog view models (transient so each dialog gets a fresh instance).
+            services.AddTransient<ErrorDialogViewModel>();
 
             // Register pages.
             services.AddSingleton<Shell>();
@@ -215,5 +240,35 @@ public partial class App : Application
             MainWindow.AppWindow.TitleBar.PreferredTheme = titleBarTheme;
 #endif
         }
+    }
+
+    /// <summary>
+    /// Handles unhandled exceptions globally by logging them and displaying an error dialog.
+    /// </summary>
+    /// <param name="sender">The source of the unhandled exception event.</param>
+    /// <param name="e">The event arguments containing the exception details.</param>
+    private void OnUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
+    {
+        // Mark as handled to prevent app termination
+        e.Handled = true;
+
+        // Log the exception
+        try
+        {
+            var logger = Host?.Services.GetService<ILogger<App>>();
+            logger?.LogCritical(e.Exception, "Unhandled exception occurred: {Message}", e.Message);
+        }
+        catch
+        {
+            // If logging fails, we still want to show the dialog
+            System.Diagnostics.Debug.WriteLine($"Unhandled exception (logging failed): {e.Exception}");
+        }
+
+        // Send message to display error dialog
+        WeakReferenceMessenger.Default.Send(new ExceptionDialogMessage(
+            Title: "Unexpected Error Occurred",
+            Summary: "An unexpected error occurred.\nThe application can attempt to continue or safely exit.",
+            Exception: e.Exception,
+            Timestamp: DateTimeOffset.Now));
     }
 }

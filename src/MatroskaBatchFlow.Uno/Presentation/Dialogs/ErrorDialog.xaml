@@ -4,11 +4,73 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MatroskaBatchFlow.Uno.Presentation.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="{x:Bind ViewModel.Title, Mode=OneWay}"
     Style="{ThemeResource DefaultContentDialogStyle}"
-    PrimaryButtonText="Close">
-	<Grid>
-        <ScrollViewer>
-            <TextBlock Text="{x:Bind MessageText, Mode=OneWay}" TextWrapping="Wrap"/>
-        </ScrollViewer>
+    PrimaryButtonText="Copy Details"
+    SecondaryButtonText="Continue"
+    CloseButtonText="Save &amp; Exit"
+    DefaultButton="Secondary"
+    PrimaryButtonClick="OnCopyDetailsClick"
+    SecondaryButtonClick="OnContinueClick"
+    CloseButtonClick="OnSaveAndExitClick">
+
+    <Grid Width="500" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Summary Message -->
+        <TextBlock Grid.Row="0"
+                   Text="{x:Bind ViewModel.Summary, Mode=OneWay}"
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource BodyTextBlockStyle}" />
+
+        <!-- Exception Info -->
+        <StackPanel Grid.Row="1" Spacing="4">
+            <TextBlock TextWrapping="Wrap">
+                <Run Text="Exception: " FontWeight="SemiBold" />
+                <Run Text="{x:Bind ViewModel.ExceptionType, Mode=OneWay}" />
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap">
+                <Run Text="Message: " FontWeight="SemiBold" />
+                <Run Text="{x:Bind ViewModel.ExceptionMessage, Mode=OneWay}" />
+            </TextBlock>
+        </StackPanel>
+
+        <!-- Expandable Technical Details -->
+        <Expander Grid.Row="2"
+                  Header="Show technical details"
+                  IsExpanded="{x:Bind ViewModel.IsDetailsExpanded, Mode=TwoWay}"
+                  HorizontalAlignment="Stretch"
+                  HorizontalContentAlignment="Stretch">
+            <ScrollViewer MaxHeight="300"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Padding="12">
+                    <TextBlock x:Name="StackTraceTextBlock"
+                               Text="{x:Bind ViewModel.TechnicalDetails, Mode=OneWay}"
+                               IsTextSelectionEnabled="True"
+                               FontFamily="Consolas"
+                               FontSize="12"
+                               TextWrapping="Wrap" />
+                </Border>
+            </ScrollViewer>
+        </Expander>
+
+        <!-- Log Saved Notification -->
+        <TextBlock Grid.Row="3"
+                   Visibility="{x:Bind ViewModel.LogFilePath, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}"
+                   TextWrapping="Wrap"
+                   Foreground="{ThemeResource SystemFillColorSuccessBrush}">
+            <Run Text="Log saved to: " />
+            <Run Text="{x:Bind ViewModel.LogFilePath, Mode=OneWay}" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+        </TextBlock>
     </Grid>
 </ContentDialog>

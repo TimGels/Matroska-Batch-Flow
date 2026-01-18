@@ -33,6 +33,12 @@ public sealed partial class MainPage : Page
             await ShowDialogAsync().ConfigureAwait(true);
         });
 
+        WeakReferenceMessenger.Default.Register<ExceptionDialogMessage>(this, async (r, m) =>
+        {
+            _dialogQueue.Enqueue(m);
+            await ShowDialogAsync().ConfigureAwait(true);
+        });
+
         // Clip navigation view content to the content host's bounds to prevent navigation transitions from overlapping other UI elements.
         ContentHost.SizeChanged += (s, e) =>
         {
@@ -69,6 +75,9 @@ public sealed partial class MainPage : Page
                     case MkvPropeditArgumentsDialogMessage mkvMessage:
                         await ShowDialogForMessageAsync(mkvMessage, XamlRoot);
                         break;
+                    case ExceptionDialogMessage exceptionMessage:
+                        await ShowDialogForMessageAsync(exceptionMessage, XamlRoot);
+                        break;
                     default:
                         // Unknown message type.
                         Debug.WriteLine($"Unknown dialog message type: {message.GetType().FullName}");
@@ -83,19 +92,44 @@ public sealed partial class MainPage : Page
     }
 
     /// <summary>
-    /// Displays an error dialog with the specified message and title.
+    /// Displays a simple dialog with the specified message and title.
     /// </summary>
     /// <param name="message">The <see cref="DialogMessage"/> containing the title and message text to display in the dialog.</param>
     /// <param name="xamlRoot">The <see cref="XamlRoot"/> that defines the UI context in which the dialog is displayed.</param>
     /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
     private static async Task ShowDialogForMessageAsync(DialogMessage message, XamlRoot xamlRoot)
     {
-        await new ErrorDialog
+        await new ContentDialog
         {
             Title = message.Title,
-            MessageText = message.Message,
+            Content = message.Message,
+            CloseButtonText = "OK",
             XamlRoot = xamlRoot,
         }.ShowAsync();
+    }
+
+    /// <summary>
+    /// Displays an exception dialog with full error details and options to copy, continue, or exit.
+    /// </summary>
+    /// <param name="message">The <see cref="ExceptionDialogMessage"/> containing the exception details to display.</param>
+    /// <param name="xamlRoot">The <see cref="XamlRoot"/> that defines the UI context in which the dialog is displayed.</param>
+    /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
+    private static async Task ShowDialogForMessageAsync(ExceptionDialogMessage message, XamlRoot xamlRoot)
+    {
+        var viewModel = App.GetService<ErrorDialogViewModel>();
+        viewModel.Initialize(message.Title, message.Summary, message.Exception, message.Timestamp);
+
+        var dialog = new ErrorDialog(viewModel)
+        {
+            XamlRoot = xamlRoot,
+        };
+
+        await dialog.ShowAsync();
+
+        if (dialog.ShouldExit)
+        {
+            Application.Current.Exit();
+        }
     }
 
     /// <summary>
@@ -125,6 +159,63 @@ public sealed partial class MainPage : Page
         {
             NavigationView.SelectedItem = InputPageNavItem;
         }
+
+        // TODO: REMOVE THIS TEST EXCEPTION AFTER TESTING
+        ThrowTestException();
+    }
+
+    // TODO: REMOVE THESE TEST METHODS AFTER TESTING
+    private static void ThrowTestException()
+    {
+        try
+        {
+            Level1();
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to process batch configuration during initialization.", ex);
+        }
+    }
+
+    private static void Level1()
+    {
+        try
+        {
+            Level2();
+        }
+        catch (Exception ex)
+        {
+            throw new ArgumentException("Invalid track configuration detected in media file.", ex);
+        }
+    }
+
+    private static void Level2()
+    {
+        try
+        {
+            Level3();
+        }
+        catch (Exception ex)
+        {
+            throw new FileNotFoundException("Could not locate mkvpropedit executable.", "mkvpropedit.exe", ex);
+        }
+    }
+
+    private static void Level3()
+    {
+        try
+        {
+            Level4();
+        }
+        catch (Exception ex)
+        {
+            throw new IOException("Failed to read file metadata from disk.", ex);
+        }
+    }
+
+    private static void Level4()
+    {
+        throw new NullReferenceException("Object reference not set to an instance of an object.");
     }
 }
 
