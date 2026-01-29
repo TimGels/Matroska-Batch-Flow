@@ -12,28 +12,20 @@ namespace MatroskaBatchFlow.Core.Services;
 /// <summary>
 /// Scans directories for files based on specified options and analyzes them using MediaInfo.
 /// </summary>
-public partial class FileScanner : IFileScanner
+/// <param name="logger">
+/// The logger for recording scan operations.
+/// </param>
+public partial class FileScanner(IOptionsMonitor<ScanOptions> optionsMonitor, ILogger<FileScanner> logger) : IFileScanner
 {
     /// <summary>
     /// The options used for scanning directories and filtering files.
     /// </summary>
-    private readonly ScanOptions _options;
-
-    /// <summary>
-    /// The logger for recording scan operations.
-    /// </summary>
-    private readonly ILogger<FileScanner> _logger;
+    private readonly ScanOptions _options = optionsMonitor.CurrentValue;
 
     /// <summary>
     /// List of scanned files containing their paths and MediaInfo parsed results.
     /// </summary>
     private readonly List<ScannedFileInfo> _scannedFiles = [];
-
-    public FileScanner(IOptionsMonitor<ScanOptions> optionsMonitor, ILogger<FileScanner> logger)
-    {
-        _options = optionsMonitor.CurrentValue;
-        _logger = logger;
-    }
 
     /// <summary>
     /// Scans the directory for files that match the specified filtering options.

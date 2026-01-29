@@ -334,6 +334,26 @@
                                        HeaderIcon="{ui:FontIcon Glyph=&#xE7EE;}">
                     <ToggleSwitch IsOn="{x:Bind ViewModel.ShowTrackAvailabilityText, Mode=TwoWay}" />
                 </controls:SettingsCard>
+
+                <!--Logging section-->
+                <TextBlock Text="Logging"
+                           Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
+
+                <controls:SettingsCard Header="Log Level"
+                                       HeaderIcon="{ui:FontIcon Glyph=&#xE7BA;}"
+                                       Description="{x:Bind ViewModel.LogLevelDescription}">
+                    <ComboBox SelectedIndex="{x:Bind ViewModel.SelectedLogLevelIndex, Mode=TwoWay}"
+                              IsEnabled="{x:Bind ViewModel.IsLogLevelControlEnabled, Mode=OneWay}"
+                              MinWidth="150">
+                        <ComboBoxItem Content="Verbose" />
+                        <ComboBoxItem Content="Debug" />
+                        <ComboBoxItem Content="Information" />
+                        <ComboBoxItem Content="Warning" />
+                        <ComboBoxItem Content="Error" />
+                        <ComboBoxItem Content="Fatal" />
+                    </ComboBox>
+                </controls:SettingsCard>
+
                 <!--About section-->
                 <TextBlock Text="About"
                            Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>

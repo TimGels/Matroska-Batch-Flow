@@ -8,7 +8,7 @@ namespace MatroskaBatchFlow.Core.Services.Processing;
 /// </summary>
 public partial class MkvPropeditExecutor
 {
-    [LoggerMessage(EventId = CoreLogEvents.ToolExecution.ExecutableResolutionFailed, Level = LogLevel.Error, Message = "Failed to resolve mkvpropedit executable: {Error}")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to resolve mkvpropedit executable: {Error}")]
     private partial void LogExecutableResolutionFailed(string error);
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Executing mkvpropedit: {Executable} {Arguments}")]
@@ -17,6 +17,6 @@ public partial class MkvPropeditExecutor
     [LoggerMessage(Level = LogLevel.Debug, Message = "mkvpropedit completed with exit code {ExitCode}")]
     private partial void LogCommandCompleted(int exitCode);
 
-    [LoggerMessage(EventId = CoreLogEvents.ToolExecution.MkvpropeditExecutionException, Level = LogLevel.Error, Message = "Exception executing mkvpropedit with arguments: {Arguments}")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Exception executing mkvpropedit with arguments: {Arguments}")]
     private partial void LogExecutionException(Exception ex, string arguments);
 }

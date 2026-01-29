@@ -1,4 +1,3 @@
-using MatroskaBatchFlow.Core.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace MatroskaBatchFlow.Core.Services.FileValidation;
@@ -14,9 +13,9 @@ public partial class FileValidationEngine
     [LoggerMessage(Level = LogLevel.Debug, Message = "Validation completed: {ErrorCount} error(s), {WarningCount} warning(s)")]
     private partial void LogValidationCompleted(int errorCount, int warningCount);
 
-    [LoggerMessage(EventId = CoreLogEvents.Validation.ValidationError, Level = LogLevel.Error, Message = "Validation error for {FilePath}: {ValidationMessage}")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Validation error for {FilePath}: {ValidationMessage}")]
     private partial void LogValidationError(string filePath, string validationMessage);
 
-    [LoggerMessage(EventId = CoreLogEvents.Validation.ValidationWarning, Level = LogLevel.Warning, Message = "Validation warning for {FilePath}: {ValidationMessage}")]
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Validation warning for {FilePath}: {ValidationMessage}")]
     private partial void LogValidationWarning(string filePath, string validationMessage);
 }

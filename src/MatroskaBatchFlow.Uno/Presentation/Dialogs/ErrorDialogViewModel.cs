@@ -6,10 +6,8 @@ namespace MatroskaBatchFlow.Uno.Presentation.Dialogs;
 /// <summary>
 /// ViewModel for the error dialog that displays unhandled exception details.
 /// </summary>
-public partial class ErrorDialogViewModel : ObservableObject
+public partial class ErrorDialogViewModel(ILogger<ErrorDialogViewModel> logger) : ObservableObject
 {
-    private readonly ILogger<ErrorDialogViewModel> _logger;
-
     [ObservableProperty]
     private string title = "Unexpected Error Occurred";
 
@@ -36,11 +34,6 @@ public partial class ErrorDialogViewModel : ObservableObject
 
     [ObservableProperty]
     private string? logFilePath;
-
-    public ErrorDialogViewModel(ILogger<ErrorDialogViewModel> logger)
-    {
-        _logger = logger;
-    }
 
     /// <summary>
     /// Initializes the ViewModel with exception data.

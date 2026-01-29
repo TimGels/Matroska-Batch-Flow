@@ -43,5 +43,12 @@ public sealed class UserSettings
         /// </summary>
         [JsonPropertyName("Theme")]
         public string Theme { get; set; } = "System";
+
+        /// <summary>
+        /// Gets or sets the minimum log level.
+        /// Valid values: "Trace", "Debug", "Information", "Warning", "Error", "Critical".
+        /// </summary>
+        [JsonPropertyName("LogLevel")]
+        public string LogLevel { get; set; } = "Information";
     }
 }

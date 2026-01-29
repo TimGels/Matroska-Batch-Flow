@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Reflection;
 using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Core.Models.AppSettings;
 using MatroskaBatchFlow.Core.Services;
@@ -16,6 +17,8 @@ using MatroskaBatchFlow.Uno.Services;
 using MatroskaBatchFlow.Uno.Utilities;
 using Microsoft.Extensions.Configuration;
 using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 
 namespace MatroskaBatchFlow.Uno;
 
@@ -25,6 +28,11 @@ public partial class App : Application
     /// The display name of the application for use in user-facing contexts.
     /// </summary>
     private const string AppDisplayName = "Matroska Batch Flow";
+
+    /// <summary>
+    /// Error message prefix for configuration validation failures.
+    /// </summary>
+    private const string ConfigValidationErrorPrefix = "Configuration validation failed in appsettings.json:\n\n";
 
     /// <summary>
     /// A PascalCase representation of the application name, which can be used for folder names and other identifiers.
@@ -62,10 +70,13 @@ public partial class App : Application
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {
+        // Create a level switch for dynamic log level control
+        var levelSwitch = new LoggingLevelSwitch();
+
         // Configure Serilog with file logging
         var logPath = Path.Combine(AppPathHelper.GetLocalAppDataFolder(), "logs", "log-.txt");
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Information()
+            .MinimumLevel.ControlledBy(levelSwitch)
             .WriteTo.Debug()
             .WriteTo.File(
                 logPath,
@@ -76,7 +87,9 @@ public partial class App : Application
             .Enrich.FromLogContext()
             .CreateLogger();
 
-        Host = Microsoft.Extensions.Hosting.Host.
+        try
+        {
+            Host = Microsoft.Extensions.Hosting.Host.
         CreateDefaultBuilder().
         ConfigureHostConfiguration(config =>
         {
@@ -86,7 +99,11 @@ public partial class App : Application
         UseSerilog(Log.Logger, dispose: true).
         ConfigureServices((context, services) =>
         {
+            // Register the logging level switch as a singleton
+            services.AddSingleton(levelSwitch);
+
             // Register services.
+            services.AddSingleton<ILogLevelService, LogLevelService>();
             services.AddSingleton<ITrackConfigurationFactory, TrackConfigurationFactory>();
             services.AddSingleton<IBatchTrackConfigurationInitializer, BatchTrackConfigurationInitializer>();
             services.AddSingleton<IActivationService, ActivationService>();
@@ -165,8 +182,42 @@ public partial class App : Application
             services.AddOptions<AppConfigOptions>()
                 .Bind(context.Configuration.GetSection(nameof(AppConfigOptions)))
                 .ValidateDataAnnotations();
+
+            services.AddOptions<LoggingOptions>()
+                .Bind(context.Configuration.GetSection(nameof(LoggingOptions)))
+                .ValidateDataAnnotations();
         }).
         Build();
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Failed to build host during application startup.");
+
+            var innermost = ex.GetBaseException();
+            var errorMessage = "The application failed to start due to an unexpected error.\n\n" +
+                               $"Error: {innermost.Message}";
+
+            ShowConfigurationErrorDialog(errorMessage, ex.ToString());
+            return;
+        }
+
+        ApplyConfiguredLogLevel(levelSwitch);
+
+        // Validate all configuration options at startup
+        // This ensures invalid appsettings.json values are caught early
+        // If validation fails, the app exits after showing an error dialog
+        var validationErrors = ValidateAllOptions(Host.Services);
+        if (validationErrors.Count != 0)
+        {
+            // Log raw errors without UI formatting
+            Log.Fatal("Configuration validation failed: {Errors}", validationErrors);
+
+            // Format errors for display with bullet points
+            var formattedErrors = validationErrors.Select(e => $"• {e}");
+            var displayMessage = ConfigValidationErrorPrefix + string.Join("\n\n", formattedErrors);
+            ShowConfigurationErrorDialog(displayMessage);
+            return; // Exit early, the dialog will handle app termination
+        }
 
         _logger = Host.Services.GetRequiredService<ILogger<App>>();
         LogStartupInfo();
@@ -196,6 +247,96 @@ public partial class App : Application
         {
             await GetService<IActivationService>().ActivateAsync(args);
         }
+    }
+
+    /// <summary>
+    /// Validates all registered configuration options at startup by triggering their lazy validation.
+    /// </summary>
+    /// <param name="services">The service provider containing the registered options.</param>
+    /// <returns>A list of validation error messages, or an empty list if all options are valid.</returns>
+    /// <remarks>
+    /// <para>
+    /// This method uses reflection to access <see cref="IOptions{TOptions}.Value"/>, which triggers
+    /// the validation configured via <see cref="OptionsBuilderDataAnnotationsExtensions.ValidateDataAnnotations{TOptions}(OptionsBuilder{TOptions})"/>
+    /// during service registration.
+    /// </para>
+    /// <para>
+    /// To add validation for a new option type:
+    /// <list type="number">
+    ///   <item><description>Add DataAnnotations validation attributes to the option class.</description></item>
+    ///   <item><description>Register with <see cref="OptionsBuilderDataAnnotationsExtensions.ValidateDataAnnotations{TOptions}(OptionsBuilder{TOptions})"/>.</description></item>
+    ///   <item><description>Add the type to the <c>optionTypes</c> array in this method.</description></item>
+    /// </list>
+    /// </para>
+    /// </remarks>
+    private static List<string> ValidateAllOptions(IServiceProvider services)
+    {
+        var validationErrors = new List<string>();
+
+        // Add new option types here to include them in startup validation
+        var optionTypes = new[]
+        {
+            typeof(LoggingOptions),
+            typeof(LanguageOptions),
+            typeof(ScanOptions),
+            typeof(AppConfigOptions)
+        };
+
+        foreach (var optionType in optionTypes)
+        {
+            try
+            {
+                // Construct IOptions<T> type using reflection
+                var genericOptionsType = typeof(IOptions<>).MakeGenericType(optionType);
+                var optionsInstance = services.GetRequiredService(genericOptionsType);
+
+                // Get the Value property to trigger lazy validation
+                var valueProperty = genericOptionsType.GetProperty("Value");
+                if (valueProperty is null)
+                {
+                    continue; // Skip if Value property doesn't exist (defensive)
+                }
+
+                // Access Value to trigger validation (result intentionally discarded)
+                _ = valueProperty.GetValue(optionsInstance);
+            }
+            catch (TargetInvocationException ex) when (ex.GetBaseException() is OptionsValidationException)
+            {
+                // OptionsValidationException concatenates multiple failures with "; "
+                // Split them into individual errors
+                var errorMessages = ex.GetBaseException().Message
+                    .Split("; ", StringSplitOptions.RemoveEmptyEntries)
+                    .Select(msg => $"{optionType.Name}: {msg.Trim()}");
+
+                validationErrors.AddRange(errorMessages);
+            }
+            catch (Exception ex)
+            {
+                validationErrors.Add($"{optionType.Name}: {ex.GetBaseException().Message}");
+            }
+        }
+
+        return validationErrors;
+    }
+
+    /// <summary>
+    /// Shows a configuration error dialog to the user with details about validation failures.
+    /// </summary>
+    /// <param name="errorMessage">The validation error message(s) to display to the user.</param>
+    /// <param name="errorDetails">Optional detailed error information (e.g., stack trace).</param>
+    private static void ShowConfigurationErrorDialog(string errorMessage, string? errorDetails = null)
+    {
+        var errorWindow = new ConfigurationErrorWindow
+        {
+            ViewModel =
+            {
+                ErrorMessage = errorMessage,
+                ErrorDetails = errorDetails ?? string.Empty
+            },
+            Title = AppDisplayName
+        };
+
+        errorWindow.Activate();
     }
 
     /// <summary>
@@ -277,5 +418,27 @@ public partial class App : Application
             Summary: "An unexpected error occurred.\nThe application can attempt to continue or safely exit.",
             Exception: e.Exception,
             Timestamp: DateTimeOffset.Now));
+    }
+
+    /// <summary>
+    /// Applies the configured log level to the LoggingLevelSwitch.
+    /// Priority: appsettings.json > UserSettings.json > default (Information).
+    /// </summary>
+    /// <param name="levelSwitch">The Serilog level switch to configure.</param>
+    private void ApplyConfiguredLogLevel(LoggingLevelSwitch levelSwitch)
+    {
+        var loggingOptions = Host!.Services.GetRequiredService<IOptions<LoggingOptions>>().Value;
+        var userSettings = Host.Services.GetRequiredService<IWritableSettings<UserSettings>>();
+
+        // First try appsettings.json, then fall back to UserSettings.json
+        var effectiveLogLevel = !string.IsNullOrWhiteSpace(loggingOptions.MinimumLevel)
+            ? loggingOptions.MinimumLevel
+            : userSettings.Value.UI.LogLevel;
+
+        if (!string.IsNullOrWhiteSpace(effectiveLogLevel) &&
+            Enum.TryParse<LogEventLevel>(effectiveLogLevel, ignoreCase: true, out var configuredLevel))
+        {
+            levelSwitch.MinimumLevel = configuredLevel;
+        }
     }
 }
