@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using MatroskaBatchFlow.Uno.Logging;
 using MatroskaBatchFlow.Uno.Utilities;
 
 namespace MatroskaBatchFlow.Uno;
@@ -11,7 +10,7 @@ namespace MatroskaBatchFlow.Uno;
 /// </summary>
 public partial class App
 {
-    [LoggerMessage(EventId = UnoLogEvents.AppLifecycle.ApplicationStarted, Level = LogLevel.Information, Message = "Application started")]
+    [LoggerMessage(Level = LogLevel.Information, Message = "Application started")]
     private partial void LogApplicationStarted();
 
     [LoggerMessage(Level = LogLevel.Information, Message = "  Version: {Version}")]
@@ -35,7 +34,7 @@ public partial class App
     [LoggerMessage(Level = LogLevel.Information, Message = "  Culture: {Culture}")]
     private partial void LogStartupCulture(string culture);
 
-    [LoggerMessage(EventId = UnoLogEvents.AppLifecycle.UnhandledExceptionOccurred, Level = LogLevel.Critical, Message = "Unhandled exception occurred: {Message}")]
+    [LoggerMessage(Level = LogLevel.Critical, Message = "Unhandled exception occurred: {Message}")]
     private partial void LogUnhandledException(Exception ex, string message);
 
     /// <summary>

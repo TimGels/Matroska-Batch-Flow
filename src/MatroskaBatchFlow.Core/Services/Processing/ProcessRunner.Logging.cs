@@ -1,4 +1,3 @@
-using MatroskaBatchFlow.Core.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace MatroskaBatchFlow.Core.Services.Processing;
@@ -11,7 +10,7 @@ public sealed partial class ProcessRunner
     [LoggerMessage(Level = LogLevel.Debug, Message = "Starting process: {FileName}")]
     private partial void LogProcessStarting(string fileName);
 
-    [LoggerMessage(EventId = CoreLogEvents.ToolExecution.ProcessStartFailed, Level = LogLevel.Error, Message = "Failed to start process: {FileName}")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to start process: {FileName}")]
     private partial void LogProcessStartFailed(string fileName);
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Process {FileName} was canceled")]

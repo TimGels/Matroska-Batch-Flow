@@ -4,6 +4,7 @@ using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Enums;
+using MatroskaBatchFlow.Uno.Services;
 using MatroskaBatchFlow.Uno.Utilities;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
@@ -14,6 +15,8 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IValidationSettingsService _validationSettingsService;
     private readonly IUIPreferencesService _uiPreferences;
     private readonly ILogger<SettingsViewModel> _logger;
+    private readonly ILogLevelService _logLevelService;
+    private readonly LoggingOptions _loggingOptions;
 
     [ObservableProperty]
     private string customMkvPropeditPath;
@@ -52,6 +55,16 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private int selectedThemeIndex;
 
+    [ObservableProperty]
+    private int selectedLogLevelIndex;
+
+    [ObservableProperty]
+    private bool isLogLevelControlEnabled;
+
+    public string LogLevelDescription => IsLogLevelControlEnabled
+        ? "Set the minimum logging level. Lower levels produce more detailed logs."
+        : $"Currently set by appsettings.json to '{_loggingOptions.MinimumLevel}' and cannot be changed here.";
+
     public bool ShowTrackAvailabilityText
     {
         get => _uiPreferences.ShowTrackAvailabilityText;
@@ -65,11 +78,15 @@ public partial class SettingsViewModel : ObservableObject
         IWritableSettings<UserSettings> userSettings,
         IValidationSettingsService validationSettingsService,
         IUIPreferencesService uiPreferences,
+        ILogLevelService logLevelService,
+        IOptions<LoggingOptions> loggingOptions,
         ILogger<SettingsViewModel> logger)
     {
         _userSettings = userSettings;
         _validationSettingsService = validationSettingsService;
         _uiPreferences = uiPreferences;
+        _logLevelService = logLevelService;
+        _loggingOptions = loggingOptions.Value;
         _logger = logger;
 
         customMkvPropeditPath = ExecutableLocator.FindExecutable(_userSettings.Value.MkvPropedit.CustomPath ?? string.Empty) ?? string.Empty;
@@ -78,6 +95,16 @@ public partial class SettingsViewModel : ObservableObject
 
         // Load theme setting
         selectedThemeIndex = (int)_uiPreferences.AppTheme;
+
+        // Determine if log level control should be enabled
+        // If appsettings.json has a non-empty log level configured, disable user control
+        isLogLevelControlEnabled = string.IsNullOrWhiteSpace(_loggingOptions.MinimumLevel);
+        
+        // Load log level - show appsettings value if configured, otherwise user setting
+        var effectiveLogLevel = !string.IsNullOrWhiteSpace(_loggingOptions.MinimumLevel)
+            ? _loggingOptions.MinimumLevel
+            : _userSettings.Value.UI.LogLevel;
+        selectedLogLevelIndex = ConvertLogLevelToIndex(effectiveLogLevel);
 
         // Load batch validation settings
         LoadValidationSettings();
@@ -151,7 +178,7 @@ public partial class SettingsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            LogSaveStrictnessModeFailed(ex, mode);
+            LogSaveStrictnessFailed(mode, ex);
         }
     }
 
@@ -205,6 +232,77 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnSelectedThemeIndexChanged(int value)
     {
         _uiPreferences.AppTheme = (AppThemePreference)value;
+    }
+
+    /// <summary>
+    /// Handles changes to the selected log level.
+    /// </summary>
+    /// <param name="value">The new log level index value.</param>
+    async partial void OnSelectedLogLevelIndexChanged(int value)
+    {
+        // Only allow changes if the control is enabled (not overridden by appsettings.json)
+        if (!IsLogLevelControlEnabled)
+        {
+            return;
+        }
+
+        var logLevelName = ConvertIndexToLogLevel(value);
+        
+        try
+        {
+            // Update user settings
+            await _userSettings.UpdateAsync(settings =>
+            {
+                settings.UI.LogLevel = logLevelName;
+            });
+
+            // Apply the new log level immediately
+            if (Enum.TryParse<Serilog.Events.LogEventLevel>(logLevelName, out var level))
+            {
+                _logLevelService.MinimumLevel = level;
+                LogLogLevelChanged(logLevelName);
+            }
+        }
+        catch (Exception ex)
+        {
+            LogSaveLogLevelFailed(ex);
+        }
+    }
+
+    /// <summary>
+    /// Converts a log level string to a combo box index.
+    /// </summary>
+    /// <param name="logLevel">The log level string.</param>
+    private static int ConvertLogLevelToIndex(string logLevel)
+    {
+        return logLevel switch
+        {
+            "Verbose" => 0,
+            "Debug" => 1,
+            "Information" => 2,
+            "Warning" => 3,
+            "Error" => 4,
+            "Fatal" => 5,
+            _ => 2 // Default to Information
+        };
+    }
+
+    /// <summary>
+    /// Converts a combo box index to a log level string.
+    /// </summary>
+    /// <param name="index">The combo box index.</param>
+    private static string ConvertIndexToLogLevel(int index)
+    {
+        return index switch
+        {
+            0 => "Verbose",
+            1 => "Debug",
+            2 => "Information",
+            3 => "Warning",
+            4 => "Error",
+            5 => "Fatal",
+            _ => "Information"
+        };
     }
 
     /// <summary>

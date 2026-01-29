@@ -8,6 +8,6 @@ namespace MatroskaBatchFlow.Uno.Services;
 /// </summary>
 public partial class NavigationService
 {
-    [LoggerMessage(EventId = UnoLogEvents.Navigation.NavigatingTo, Level = LogLevel.Debug, Message = "Navigating to {PageKey}, ClearNavigation: {ClearNavigation} TransitionInfo: {TransitionInfo}")]
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Navigating to {PageKey}, ClearNavigation: {ClearNavigation} TransitionInfo: {TransitionInfo}")]
     private partial void LogNavigatingTo(string pageKey, bool clearNavigation, NavigationTransitionInfo? transitionInfo);
 }
