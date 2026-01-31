@@ -18,10 +18,14 @@ public sealed partial class UIPreferencesService : ObservableObject, IUIPreferen
     [ObservableProperty]
     private AppThemePreference appTheme;
 
+    [ObservableProperty]
+    private bool enableLoggingView;
+
     public UIPreferencesService(IWritableSettings<UserSettings> userSettings)
     {
         _userSettings = userSettings;
         showTrackAvailabilityText = userSettings.Value.UI.ShowTrackAvailabilityText;
+        enableLoggingView = userSettings.Value.UI.EnableLoggingView;
         
         // Parse the theme from settings, defaulting to System if invalid
         if (Enum.TryParse<AppThemePreference>(userSettings.Value.UI.Theme, out var parsedTheme))
@@ -52,5 +56,14 @@ public sealed partial class UIPreferencesService : ObservableObject, IUIPreferen
     partial void OnAppThemeChanged(AppThemePreference value)
     {
         _ = _userSettings.UpdateAsync(settings => settings.UI.Theme = value.ToString());
+    }
+
+    /// <summary>
+    /// Handles changes to the EnableLoggingView setting and persists the new value to user settings.
+    /// </summary>
+    /// <param name="value">The new value indicating whether the logging viewer should be enabled.</param>
+    partial void OnEnableLoggingViewChanged(bool value)
+    {
+        _ = _userSettings.UpdateAsync(settings => settings.UI.EnableLoggingView = value);
     }
 }

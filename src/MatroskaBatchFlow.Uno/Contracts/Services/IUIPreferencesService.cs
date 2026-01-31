@@ -17,4 +17,9 @@ public interface IUIPreferencesService : INotifyPropertyChanged
     /// Gets or sets the application theme preference.
     /// </summary>
     AppThemePreference AppTheme { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the logging viewer tab is enabled in the navigation menu.
+    /// </summary>
+    bool EnableLoggingView { get; set; }
 }

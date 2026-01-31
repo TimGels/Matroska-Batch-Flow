@@ -339,6 +339,12 @@
                 <TextBlock Text="Logging"
                            Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
 
+                <controls:SettingsCard Header="Show Log Viewer"
+                                       Description="Display a log viewer tab in the navigation menu to monitor application logs in real-time."
+                                       HeaderIcon="{ui:FontIcon Glyph=&#xE7C4;}">
+                    <ToggleSwitch IsOn="{x:Bind ViewModel.EnableLoggingView, Mode=TwoWay}" />
+                </controls:SettingsCard>
+
                 <controls:SettingsCard Header="Log Level"
                                        HeaderIcon="{ui:FontIcon Glyph=&#xE7BA;}"
                                        Description="{x:Bind ViewModel.LogLevelDescription}">
