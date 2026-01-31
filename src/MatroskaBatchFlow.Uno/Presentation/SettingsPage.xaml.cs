@@ -16,6 +16,10 @@ public sealed partial class SettingsPage : Page
     [SuppressMessage("CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "Suppression is necessary.")]
     public string AppVersion => $"Version {AppEnvironmentHelper.GetApplicationVersion().ToString(3)}";
 
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Binding requires instance member.")]
+    [SuppressMessage("CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "Suppression is necessary.")]
+    public string CopyrightNotice => $"© 2025-{DateTime.Now.Year}. All rights reserved.";
+
     public SettingsPage()
     {
         this.InitializeComponent();

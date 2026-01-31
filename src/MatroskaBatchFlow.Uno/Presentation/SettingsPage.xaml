@@ -365,7 +365,7 @@
                            Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
                 <controls:SettingsExpander Header="Matroska Batch Flow"
-                                   Description="© 2025. All rights reserved."
+                                   Description="{x:Bind CopyrightNotice}"
                                    IsExpanded="True">
                     <controls:SettingsExpander.HeaderIcon>
                         <BitmapIcon ShowAsMonochrome="False"
