@@ -130,7 +130,7 @@ These prerequisites are required to build the project:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/Matroska-Batch-Flow.git
+   git clone https://github.com/TimGels/Matroska-Batch-Flow.git
    cd Matroska-Batch-Flow
    ```
 
