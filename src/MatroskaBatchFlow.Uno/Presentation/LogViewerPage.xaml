@@ -92,7 +92,7 @@
 
         <!-- Header with title -->
         <TextBlock Grid.Row="0"
-                   Text="Log Viewer"
+                   Text="Log viewer"
                    FontSize="28"
                    FontWeight="SemiBold"
                    VerticalAlignment="Center" />
