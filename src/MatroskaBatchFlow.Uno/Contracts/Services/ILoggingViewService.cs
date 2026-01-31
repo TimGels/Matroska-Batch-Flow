@@ -15,9 +15,9 @@ public interface ILoggingViewService
     ObservableCollection<LogEntry> LogEntries { get; }
 
     /// <summary>
-    /// Gets the Serilog sink that captures log entries, or null if logging view is disabled.
+    /// Gets the Serilog sink that captures log entries.
     /// </summary>
-    ILogEventSink? Sink { get; }
+    ILogEventSink Sink { get; }
 
     /// <summary>
     /// Gets all log entries as a single formatted text string.
