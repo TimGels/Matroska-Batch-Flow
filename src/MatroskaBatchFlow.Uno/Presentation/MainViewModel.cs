@@ -13,6 +13,7 @@ public partial class MainViewModel : ObservableObject
     private readonly IBatchReportStore _batchReportStore;
     private readonly IFileProcessingOrchestrator _orchestrator;
     private readonly IMkvPropeditArgumentsGenerator _mkvPropeditArgumentsBuilder;
+    private readonly IUIPreferencesService _uiPreferences;
     private readonly ILogger<MainViewModel> _logger;
     private CancellationTokenSource _processingCts = new();
 
@@ -31,6 +32,11 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private BatchExecutionReport? batchReport; // expose current batch summary to UI
 
+    /// <summary>
+    /// Gets a value indicating whether the log viewer tab should be visible.
+    /// </summary>
+    public bool EnableLoggingView => _uiPreferences.EnableLoggingView;
+
     public INavigationService NavigationService { get; }
     public INavigationViewService NavigationViewService { get; }
     public ICommand GenerateMkvpropeditArgumentsCommand { get; }
@@ -44,12 +50,14 @@ public partial class MainViewModel : ObservableObject
         IFileProcessingOrchestrator orchestrator,
         IBatchReportStore batchResultStore,
         IMkvPropeditArgumentsGenerator argumentsService,
+        IUIPreferencesService uiPreferences,
         ILogger<MainViewModel> logger)
     {
         _batchConfiguration = batchConfiguration;
         _orchestrator = orchestrator;
         _batchReportStore = batchResultStore;
         _mkvPropeditArgumentsBuilder = argumentsService;
+        _uiPreferences = uiPreferences;
         _logger = logger;
 
         NavigationService = navigationService;
@@ -61,8 +69,17 @@ public partial class MainViewModel : ObservableObject
 
         NavigationService.Navigated += OnNavigated;
         _batchConfiguration.StateChanged += BatchConfigurationOnStateChangedHandler;
+        _uiPreferences.PropertyChanged += OnUIPreferencesChanged;
 
         BatchReport = _batchReportStore.ActiveBatch;
+    }
+
+    private void OnUIPreferencesChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(IUIPreferencesService.EnableLoggingView))
+        {
+            OnPropertyChanged(nameof(EnableLoggingView));
+        }
     }
 
     /// <summary>

@@ -71,6 +71,12 @@ public partial class SettingsViewModel : ObservableObject
         set => _uiPreferences.ShowTrackAvailabilityText = value;
     }
 
+    public bool EnableLoggingView
+    {
+        get => _uiPreferences.EnableLoggingView;
+        set => _uiPreferences.EnableLoggingView = value;
+    }
+
     public bool IsCustomMode => SelectedStrictnessModeIndex == (int)StrictnessMode.Custom;
     public bool IsCustomStrictnessEnabled => IsCustomMode;
 

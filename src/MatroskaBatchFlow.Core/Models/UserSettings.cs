@@ -50,5 +50,11 @@ public sealed class UserSettings
         /// </summary>
         [JsonPropertyName("LogLevel")]
         public string LogLevel { get; set; } = "Information";
+
+        /// <summary>
+        /// Gets or sets whether the logging viewer tab is enabled in the navigation menu.
+        /// </summary>
+        [JsonPropertyName("EnableLoggingView")]
+        public bool EnableLoggingView { get; set; } = false;
     }
 }

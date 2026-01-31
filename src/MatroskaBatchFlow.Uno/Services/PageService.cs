@@ -17,6 +17,7 @@ public class PageService : IPageService
         Configure<SubtitleViewModel, SubtitlePage>();
         Configure<OutputViewModel, OutputPage>();
         Configure<SettingsViewModel, SettingsPage>();
+        Configure<LogViewerViewModel, LogViewerPage>();
     }
 
     public Type GetPageType(string key)

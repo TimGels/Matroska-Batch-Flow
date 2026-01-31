@@ -42,6 +42,9 @@
                                     helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.OutputViewModel" />
                 <NavigationViewItem Content="Results" Tag="BatchResultsPage" Visibility="Visible"
                                     helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.BatchResultsViewModel" />
+                <NavigationViewItem Content="Log" Tag="LogViewerPage"
+                                    Visibility="{x:Bind ViewModel.EnableLoggingView, Mode=OneWay}"
+                                    helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.LogViewerViewModel" />
             </NavigationView.MenuItems>
             <NavigationView.Content>
                 <Grid x:Name="ContentHost">

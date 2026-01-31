@@ -73,9 +73,13 @@ public partial class App : Application
         // Create a level switch for dynamic log level control
         var levelSwitch = new LoggingLevelSwitch();
 
+        // Always create the logging view service to capture logs from startup
+        // The setting only controls whether the Log tab is visible in the UI
+        var loggingViewService = new LoggingViewService();
+
         // Configure Serilog with file logging
         var logPath = Path.Combine(AppPathHelper.GetLocalAppDataFolder(), "logs", "log-.txt");
-        Log.Logger = new LoggerConfiguration()
+        var loggerConfig = new LoggerConfiguration()
             .MinimumLevel.ControlledBy(levelSwitch)
             .WriteTo.Debug()
             .WriteTo.File(
@@ -85,7 +89,9 @@ public partial class App : Application
                 fileSizeLimitBytes: 10_000_000,
                 rollOnFileSizeLimit: true)
             .Enrich.FromLogContext()
-            .CreateLogger();
+            .WriteTo.Sink(loggingViewService.Sink);
+
+        Log.Logger = loggerConfig.CreateLogger();
 
         try
         {
@@ -101,6 +107,9 @@ public partial class App : Application
         {
             // Register the logging level switch as a singleton
             services.AddSingleton(levelSwitch);
+
+            // Register the logging view service (always active, setting only controls UI visibility)
+            services.AddSingleton<ILoggingViewService>(loggingViewService);
 
             // Register services.
             services.AddSingleton<ILogLevelService, LogLevelService>();
@@ -161,6 +170,7 @@ public partial class App : Application
             services.AddSingleton<MainViewModel, MainViewModel>();
             services.AddSingleton<BatchResultsViewModel, BatchResultsViewModel>();
             services.AddSingleton<SettingsViewModel, SettingsViewModel>();
+            services.AddSingleton<LogViewerViewModel, LogViewerViewModel>();
 
             // Register dialog view models (transient so each dialog gets a fresh instance).
             services.AddTransient<ErrorDialogViewModel>();
@@ -228,6 +238,12 @@ public partial class App : Application
             Content = Host.Services.GetRequiredService<Shell>(),
             ExtendsContentIntoTitleBar = false,
         };
+
+        // Set the dispatcher queue for the logging view service to enable UI thread marshalling
+        if (loggingViewService is LoggingViewService activeLoggingViewService)
+        {
+            activeLoggingViewService.SetDispatcherQueue(MainWindow.DispatcherQueue);
+        }
 
 #if DEBUG
         //MainWindow.UseStudio();
