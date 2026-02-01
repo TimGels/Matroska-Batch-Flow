@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using MatroskaBatchFlow.Core.Attributes;
 
 namespace MatroskaBatchFlow.Core.Models.AppSettings;
 
+[ValidatedOptions]
 public class AppConfigOptions
 {
     [Required]

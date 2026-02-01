@@ -1,16 +1,9 @@
-using System.ComponentModel;
-using System.Reflection;
+using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Core.Models.AppSettings;
 using MatroskaBatchFlow.Core.Services;
-using MatroskaBatchFlow.Core.Services.FileProcessing;
-using MatroskaBatchFlow.Core.Services.FileProcessing.Track;
-using MatroskaBatchFlow.Core.Services.FileProcessing.Track.Name;
-using MatroskaBatchFlow.Core.Services.FileValidation;
-using MatroskaBatchFlow.Core.Services.Processing;
-using MatroskaBatchFlow.Uno.Activation;
 using MatroskaBatchFlow.Uno.Contracts.Services;
-using MatroskaBatchFlow.Uno.Enums;
+using MatroskaBatchFlow.Uno.Extensions;
 using MatroskaBatchFlow.Uno.Messages;
 using MatroskaBatchFlow.Uno.Presentation.Dialogs;
 using MatroskaBatchFlow.Uno.Services;
@@ -18,7 +11,6 @@ using MatroskaBatchFlow.Uno.Utilities;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Core;
-using Serilog.Events;
 
 namespace MatroskaBatchFlow.Uno;
 
@@ -74,190 +66,45 @@ public partial class App : Application
         var levelSwitch = new LoggingLevelSwitch();
 
         // Always create the logging view service to capture logs from startup
-        // The setting only controls whether the Log tab is visible in the UI
         var loggingViewService = new LoggingViewService();
 
-        // Configure Serilog with file logging
-        var logPath = Path.Combine(AppPathHelper.GetLocalAppDataFolder(), "logs", "log-.txt");
-        var loggerConfig = new LoggerConfiguration()
-            .MinimumLevel.ControlledBy(levelSwitch)
-            .WriteTo.Debug()
-            .WriteTo.File(
-                logPath,
-                rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 31,
-                fileSizeLimitBytes: 10_000_000,
-                rollOnFileSizeLimit: true)
-            .Enrich.FromLogContext()
-            .WriteTo.Sink(loggingViewService.Sink);
-
-        Log.Logger = loggerConfig.CreateLogger();
-
-        try
+        // Load and validate logging options, then create logger
+        var logger = InitializeLogger(levelSwitch, loggingViewService);
+        if (logger is null)
         {
-            Host = Microsoft.Extensions.Hosting.Host.
-        CreateDefaultBuilder().
-        ConfigureHostConfiguration(config =>
-        {
-            config.SetBasePath(AppContext.BaseDirectory);
-            config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-        }).
-        UseSerilog(Log.Logger, dispose: true).
-        ConfigureServices((context, services) =>
-        {
-            // Register the logging level switch as a singleton
-            services.AddSingleton(levelSwitch);
-
-            // Register the logging view service (always active, setting only controls UI visibility)
-            services.AddSingleton<ILoggingViewService>(loggingViewService);
-
-            // Register services.
-            services.AddSingleton<ILogLevelService, LogLevelService>();
-            services.AddSingleton<ITrackConfigurationFactory, TrackConfigurationFactory>();
-            services.AddSingleton<IBatchTrackConfigurationInitializer, BatchTrackConfigurationInitializer>();
-            services.AddSingleton<IActivationService, ActivationService>();
-            services.AddSingleton<ActivationHandler<LaunchActivatedEventArgs>, DefaultActivationHandler>();
-            services.AddSingleton<IPageService, PageService>();
-            services.AddSingleton<INavigationService, NavigationService>();
-            services.AddSingleton<INavigationViewService, NavigationViewService>();
-            services.AddSingleton<IValidationSettingsService, ValidationSettingsService>();
-            services.AddSingleton<IUIPreferencesService, UIPreferencesService>();
-            services.AddSingleton<ILanguageProvider, LanguageProvider>();
-            services.AddSingleton<IFileScanner, FileScanner>();
-            services.AddSingleton<IBatchConfiguration, BatchConfiguration>();
-            services.AddSingleton<IWritableSettings<UserSettings>>(sp =>
-            {
-                IOptions<AppConfigOptions> options = sp.GetRequiredService<IOptions<AppConfigOptions>>();
-                ILogger<WritableJsonSettings<UserSettings>> logger = sp.GetRequiredService<ILogger<WritableJsonSettings<UserSettings>>>();
-                string userSettingsFilePath = options.Value.UserSettingsPath;
-                return new WritableJsonSettings<UserSettings>(logger, userSettingsFilePath);
-            });
-            services.AddSingleton<IFileListAdapter, FileListAdapter>();
-            services.AddSingleton<IFilePickerDialogService, FilePickerDialogService>();
-            services.AddSingleton<IBatchReportStore, InMemoryBatchReportStore>();
-            services.AddSingleton<IFileProcessingOrchestrator, FileProcessingOrchestrator>();
-            services.AddSingleton<IMkvToolExecutor, MkvPropeditExecutor>();
-            services.AddSingleton<IProcessRunner, ProcessRunner>();
-            services.AddSingleton<IMkvPropeditArgumentsGenerator, MkvPropeditArgumentsGenerator>();
-            services.AddSingleton<IScannedFileInfoPathComparer, ScannedFileInfoPathComparer>();
-            services.AddSingleton<IPlatformService, PlatformService>();
-
-            // Register file validation rules engine service and it's accommodating rules.
-            services.AddSingleton<IFileValidationEngine, FileValidationEngine>();
-            services.AddSingleton<IFileValidationRule, LanguageConsistencyRule>();
-            services.AddSingleton<IFileValidationRule, TrackCountConsistencyRule>();
-            services.AddSingleton<IFileValidationRule, FileFormatValidationRule>();
-
-            // Register file processing rule engine service and it's accommodating rules.
-            services.AddSingleton<IFileProcessingEngine, FileProcessingEngine>();
-            services.AddSingleton<IFileProcessingRule, TrackPositionRule>();
-            services.AddSingleton<IFileProcessingRule, SubtitleTrackNamingRule>();
-            services.AddSingleton<IFileProcessingRule, AudioTrackNamingRule>();
-            services.AddSingleton<IFileProcessingRule, VideoTrackNamingRule>();
-            services.AddSingleton<IFileProcessingRule, TrackLanguageRule>();
-            services.AddSingleton<IFileProcessingRule, TrackDefaultRule>();
-            services.AddSingleton<IFileProcessingRule, TrackForcedRule>();
-            services.AddSingleton<IFileProcessingRule, FileTitleNamingRule>();
-
-            // Register view models.
-            services.AddSingleton<InputViewModel, InputViewModel>();
-            services.AddSingleton<GeneralViewModel, GeneralViewModel>();
-            services.AddSingleton<VideoViewModel, VideoViewModel>();
-            services.AddSingleton<AudioViewModel, AudioViewModel>();
-            services.AddSingleton<SubtitleViewModel, SubtitleViewModel>();
-            services.AddSingleton<OutputViewModel, OutputViewModel>();
-            services.AddSingleton<ShellViewModel, ShellViewModel>();
-            services.AddSingleton<MainViewModel, MainViewModel>();
-            services.AddSingleton<BatchResultsViewModel, BatchResultsViewModel>();
-            services.AddSingleton<SettingsViewModel, SettingsViewModel>();
-            services.AddSingleton<LogViewerViewModel, LogViewerViewModel>();
-
-            // Register dialog view models (transient so each dialog gets a fresh instance).
-            services.AddTransient<ErrorDialogViewModel>();
-
-            // Register pages.
-            services.AddSingleton<Shell>();
-            services.AddSingleton<MainPage>();
-            services.AddSingleton<InputPage>();
-
-            //Configure the app settings.
-            services.AddOptions<LanguageOptions>()
-                .Bind(context.Configuration.GetSection(nameof(LanguageOptions)))
-                .ValidateDataAnnotations();
-
-            services.AddOptions<ScanOptions>()
-                .Bind(context.Configuration.GetSection(nameof(ScanOptions)))
-                .ValidateDataAnnotations();
-
-            services.AddOptions<AppConfigOptions>()
-                .Bind(context.Configuration.GetSection(nameof(AppConfigOptions)))
-                .ValidateDataAnnotations();
-
-            services.AddOptions<LoggingOptions>()
-                .Bind(context.Configuration.GetSection(nameof(LoggingOptions)))
-                .ValidateDataAnnotations();
-        }).
-        Build();
-        }
-        catch (Exception ex)
-        {
-            Log.Fatal(ex, "Failed to build host during application startup.");
-
-            var innermost = ex.GetBaseException();
-            var errorMessage = "The application failed to start due to an unexpected error.\n\n" +
-                               $"Error: {innermost.Message}";
-
-            ShowConfigurationErrorDialog(errorMessage, ex.ToString());
-            return;
+            return; // Error dialog already shown
         }
 
-        ApplyConfiguredLogLevel(levelSwitch);
+        Log.Logger = logger;
 
-        // Validate all configuration options at startup
-        // This ensures invalid appsettings.json values are caught early
-        // If validation fails, the app exits after showing an error dialog
-        var validationErrors = ValidateAllOptions(Host.Services);
+        // Build the host with all services
+        if (!TryBuildHost(levelSwitch, loggingViewService))
+        {
+            return; // Error dialog already shown
+        }
+
+        // Resolve log level service to apply configured log level
+        _ = Host!.Services.GetRequiredService<ILogLevelService>();
+
+        var configValidator = new ConfigurationValidator(Host!.Services.GetRequiredService<ILogger<ConfigurationValidator>>());
+        var validationErrors = configValidator.ValidateAllOptions(Host!.Services);
         if (validationErrors.Count != 0)
         {
-            // Log raw errors without UI formatting
             Log.Fatal("Configuration validation failed: {Errors}", validationErrors);
-
-            // Format errors for display with bullet points
             var formattedErrors = validationErrors.Select(e => $"• {e}");
             var displayMessage = ConfigValidationErrorPrefix + string.Join("\n\n", formattedErrors);
             ShowConfigurationErrorDialog(displayMessage);
-            return; // Exit early, the dialog will handle app termination
+            return;
         }
 
-        _logger = Host.Services.GetRequiredService<ILogger<App>>();
+        _logger = Host!.Services.GetRequiredService<ILogger<App>>();
         LogStartupInfo();
 
-        MainWindow = new MainWindow
-        {
-            Title = AppDisplayName,
-            Content = Host.Services.GetRequiredService<Shell>(),
-            ExtendsContentIntoTitleBar = false,
-        };
+        // Create and configure the main window
+        MainWindow = CreateMainWindow(loggingViewService);
 
-        // Set the dispatcher queue for the logging view service to enable UI thread marshalling
-        if (loggingViewService is LoggingViewService activeLoggingViewService)
-        {
-            activeLoggingViewService.SetDispatcherQueue(MainWindow.DispatcherQueue);
-        }
-
-#if DEBUG
-        //MainWindow.UseStudio();
-#endif
-
-#if WINDOWS10_0_19041_0_OR_GREATER
-        MainWindow.SetWindowIcon();
-#endif
-
-        // Subscribe to theme changes and apply initial theme
-        var uiPreferences = GetService<IUIPreferencesService>();
-        uiPreferences.PropertyChanged += OnUIPreferencesChanged;
-
-        ApplyTheme(uiPreferences.AppTheme);
+        // Initialize theme applier (must be after window creation)
+        GetService<IThemeApplierService>().Initialize();
 
         if (MainWindow?.Content is not null)
         {
@@ -266,73 +113,123 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Validates all registered configuration options at startup by triggering their lazy validation.
+    /// Initializes the Serilog logger with validated configuration.
     /// </summary>
-    /// <param name="services">The service provider containing the registered options.</param>
-    /// <returns>A list of validation error messages, or an empty list if all options are valid.</returns>
-    /// <remarks>
-    /// <para>
-    /// This method uses reflection to access <see cref="IOptions{TOptions}.Value"/>, which triggers
-    /// the validation configured via <see cref="OptionsBuilderDataAnnotationsExtensions.ValidateDataAnnotations{TOptions}(OptionsBuilder{TOptions})"/>
-    /// during service registration.
-    /// </para>
-    /// <para>
-    /// To add validation for a new option type:
-    /// <list type="number">
-    ///   <item><description>Add DataAnnotations validation attributes to the option class.</description></item>
-    ///   <item><description>Register with <see cref="OptionsBuilderDataAnnotationsExtensions.ValidateDataAnnotations{TOptions}(OptionsBuilder{TOptions})"/>.</description></item>
-    ///   <item><description>Add the type to the <c>optionTypes</c> array in this method.</description></item>
-    /// </list>
-    /// </para>
-    /// </remarks>
-    private static List<string> ValidateAllOptions(IServiceProvider services)
+    /// <returns>The configured logger, or null if validation failed.</returns>
+    private static Logger? InitializeLogger(LoggingLevelSwitch levelSwitch, LoggingViewService loggingViewService)
     {
-        var validationErrors = new List<string>();
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+            .Build();
 
-        // Add new option types here to include them in startup validation
-        var optionTypes = new[]
+        var loggingOptions = LoadLoggingOptions(configuration, out var validationErrors);
+        if (loggingOptions is null)
         {
-            typeof(LoggingOptions),
-            typeof(LanguageOptions),
-            typeof(ScanOptions),
-            typeof(AppConfigOptions)
-        };
-
-        foreach (var optionType in optionTypes)
-        {
-            try
-            {
-                // Construct IOptions<T> type using reflection
-                var genericOptionsType = typeof(IOptions<>).MakeGenericType(optionType);
-                var optionsInstance = services.GetRequiredService(genericOptionsType);
-
-                // Get the Value property to trigger lazy validation
-                var valueProperty = genericOptionsType.GetProperty("Value");
-                if (valueProperty is null)
-                {
-                    continue; // Skip if Value property doesn't exist (defensive)
-                }
-
-                // Access Value to trigger validation (result intentionally discarded)
-                _ = valueProperty.GetValue(optionsInstance);
-            }
-            catch (TargetInvocationException ex) when (ex.GetBaseException() is OptionsValidationException)
-            {
-                // OptionsValidationException concatenates multiple failures with "; "
-                // Split them into individual errors
-                var errorMessages = ex.GetBaseException().Message
-                    .Split("; ", StringSplitOptions.RemoveEmptyEntries)
-                    .Select(msg => $"{optionType.Name}: {msg.Trim()}");
-
-                validationErrors.AddRange(errorMessages);
-            }
-            catch (Exception ex)
-            {
-                validationErrors.Add($"{optionType.Name}: {ex.GetBaseException().Message}");
-            }
+            var formattedErrors = validationErrors.Select(e => $"• {e}");
+            var displayMessage = ConfigValidationErrorPrefix + string.Join("\n\n", formattedErrors);
+            ShowConfigurationErrorDialog(displayMessage);
+            return null;
         }
 
-        return validationErrors;
+        var logPath = Path.Combine(AppPathHelper.GetLocalAppDataFolder(), "logs", "log-.txt");
+        return LoggingFactory.CreateAppLogger(levelSwitch, loggingViewService, loggingOptions, logPath);
+    }
+
+    /// <summary>
+    /// Builds the application host with all registered services.
+    /// </summary>
+    /// <returns>True if host was built successfully, false otherwise.</returns>
+    private bool TryBuildHost(LoggingLevelSwitch levelSwitch, LoggingViewService loggingViewService)
+    {
+        try
+        {
+            Host = Microsoft.Extensions.Hosting.Host
+                .CreateDefaultBuilder()
+                .ConfigureHostConfiguration(config =>
+                {
+                    config.SetBasePath(AppContext.BaseDirectory);
+                    config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                })
+                .UseSerilog(Log.Logger, dispose: true)
+                .ConfigureServices((context, services) =>
+                {
+                    services.AddCoreServices(levelSwitch, loggingViewService);
+                    services.AddFileValidationRules();
+                    services.AddFileProcessingRules();
+                    services.AddViewModels();
+                    services.AddPages();
+                    services.AddUserSettings();
+                    services.AddAppConfiguration(context.Configuration);
+                    services.AddThemeServices();
+                })
+                .Build();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Failed to build host during application startup.");
+            var innermost = ex.GetBaseException();
+            var errorMessage = "The application failed to start due to an unexpected error.\n\n" +
+                               $"Error: {innermost.Message}";
+            ShowConfigurationErrorDialog(errorMessage, ex.ToString());
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Creates and configures the main application window.
+    /// </summary>
+    private MainWindow CreateMainWindow(LoggingViewService loggingViewService)
+    {
+        var window = new MainWindow
+        {
+            Title = AppDisplayName,
+            Content = Host!.Services.GetRequiredService<Shell>(),
+            ExtendsContentIntoTitleBar = false,
+        };
+
+        // Set the dispatcher queue for the logging view service to enable UI thread marshalling
+        loggingViewService.SetDispatcherQueue(window.DispatcherQueue);
+
+#if DEBUG
+        //window.UseStudio();
+#endif
+
+#if WINDOWS10_0_19041_0_OR_GREATER
+        window.SetWindowIcon();
+#endif
+
+        return window;
+    }
+
+    /// <summary>
+    /// Loads and validates logging options from configuration.
+    /// </summary>
+    /// <param name="configuration">The configuration to read from.</param>
+    /// <param name="validationErrors">The validation errors, if any.</param>
+    /// <returns>The validated logging options, or null if validation failed.</returns>
+    private static LoggingOptions? LoadLoggingOptions(IConfiguration configuration, out List<string> validationErrors)
+    {
+        validationErrors = [];
+        var loggingOptions = new LoggingOptions();
+        configuration.GetSection(nameof(LoggingOptions)).Bind(loggingOptions);
+
+        var validationContext = new ValidationContext(loggingOptions);
+        var validationResults = new List<ValidationResult>();
+
+        if (!Validator.TryValidateObject(loggingOptions, validationContext, validationResults, validateAllProperties: true))
+        {
+            validationErrors = validationResults
+                .Where(r => r.ErrorMessage is not null)
+                .Select(r => r.ErrorMessage!)
+                .ToList();
+
+            return null;
+        }
+
+        return loggingOptions;
     }
 
     /// <summary>
@@ -353,55 +250,6 @@ public partial class App : Application
         };
 
         errorWindow.Activate();
-    }
-
-    /// <summary>
-    /// Handles changes to UI preferences by responding to property change notifications.
-    /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="eventArgs">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
-    private void OnUIPreferencesChanged(object? sender, PropertyChangedEventArgs eventArgs)
-    {
-        if (eventArgs.PropertyName == nameof(IUIPreferencesService.AppTheme) && sender is IUIPreferencesService preferences)
-        {
-            ApplyTheme(preferences.AppTheme);
-        }
-    }
-
-    /// <summary>
-    /// Applies the specified application theme to the main window and its title bar.
-    /// </summary>
-    /// <param name="theme">The preferred theme to apply. Must be a valid value of <see cref="AppThemePreference"/>.</param>
-    private static void ApplyTheme(AppThemePreference theme)
-    {
-        // Apply theme to the window's content
-        if (MainWindow?.Content is FrameworkElement rootElement)
-        {
-            rootElement.RequestedTheme = theme switch
-            {
-                AppThemePreference.Light => ElementTheme.Light,
-                AppThemePreference.Dark => ElementTheme.Dark,
-                AppThemePreference.System => ElementTheme.Default,
-                _ => ElementTheme.Default
-            };
-        }
-
-        // Apply theme to title bar
-        if (MainWindow?.AppWindow?.TitleBar is not null)
-        {
-            var titleBarTheme = theme switch
-            {
-                AppThemePreference.Light => Microsoft.UI.Windowing.TitleBarTheme.Light,
-                AppThemePreference.Dark => Microsoft.UI.Windowing.TitleBarTheme.Dark,
-                AppThemePreference.System => Microsoft.UI.Windowing.TitleBarTheme.UseDefaultAppMode,
-                _ => Microsoft.UI.Windowing.TitleBarTheme.UseDefaultAppMode
-            };
-
-            // Currently, Uno Skia Desktop does not support setting title bar theme.
-#if WINDOWS10_0_19041_0_OR_GREATER
-            MainWindow.AppWindow.TitleBar.PreferredTheme = titleBarTheme;
-#endif
-        }
     }
 
     /// <summary>
@@ -434,27 +282,5 @@ public partial class App : Application
             Summary: "An unexpected error occurred.\nThe application can attempt to continue or safely exit.",
             Exception: e.Exception,
             Timestamp: DateTimeOffset.Now));
-    }
-
-    /// <summary>
-    /// Applies the configured log level to the LoggingLevelSwitch.
-    /// Priority: appsettings.json > UserSettings.json > default (Information).
-    /// </summary>
-    /// <param name="levelSwitch">The Serilog level switch to configure.</param>
-    private void ApplyConfiguredLogLevel(LoggingLevelSwitch levelSwitch)
-    {
-        var loggingOptions = Host!.Services.GetRequiredService<IOptions<LoggingOptions>>().Value;
-        var userSettings = Host.Services.GetRequiredService<IWritableSettings<UserSettings>>();
-
-        // First try appsettings.json, then fall back to UserSettings.json
-        var effectiveLogLevel = !string.IsNullOrWhiteSpace(loggingOptions.MinimumLevel)
-            ? loggingOptions.MinimumLevel
-            : userSettings.Value.UI.LogLevel;
-
-        if (!string.IsNullOrWhiteSpace(effectiveLogLevel) &&
-            Enum.TryParse<LogEventLevel>(effectiveLogLevel, ignoreCase: true, out var configuredLevel))
-        {
-            levelSwitch.MinimumLevel = configuredLevel;
-        }
     }
 }

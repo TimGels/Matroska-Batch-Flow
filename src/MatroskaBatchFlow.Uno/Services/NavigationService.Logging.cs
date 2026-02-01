@@ -1,4 +1,3 @@
-using MatroskaBatchFlow.Uno.Logging;
 using Microsoft.UI.Xaml.Media.Animation;
 
 namespace MatroskaBatchFlow.Uno.Services;
