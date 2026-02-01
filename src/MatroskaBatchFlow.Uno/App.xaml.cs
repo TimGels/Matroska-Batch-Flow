@@ -1,11 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Core.Models.AppSettings;
-using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Extensions;
 using MatroskaBatchFlow.Uno.Messages;
-using MatroskaBatchFlow.Uno.Presentation.Dialogs;
 using MatroskaBatchFlow.Uno.Services;
 using MatroskaBatchFlow.Uno.Utilities;
 using Microsoft.Extensions.Configuration;
