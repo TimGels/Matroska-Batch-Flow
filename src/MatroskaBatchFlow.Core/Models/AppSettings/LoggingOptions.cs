@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using MatroskaBatchFlow.Core.Attributes;
 
 namespace MatroskaBatchFlow.Core.Models.AppSettings;
 
 /// <summary>
 /// Configuration options for application logging.
 /// </summary>
+[ValidatedOptions]
 public sealed class LoggingOptions
 {
     /// <summary>

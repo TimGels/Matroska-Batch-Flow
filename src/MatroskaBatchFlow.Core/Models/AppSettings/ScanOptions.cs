@@ -1,8 +1,11 @@
+using MatroskaBatchFlow.Core.Attributes;
+
 namespace MatroskaBatchFlow.Core.Models.AppSettings;
 
 /// <summary>
 /// Options for scanning files in a directory.
 /// </summary>
+[ValidatedOptions]
 public class ScanOptions
 {
     /// <summary>
