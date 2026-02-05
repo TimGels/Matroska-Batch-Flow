@@ -27,8 +27,8 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
 jobs:
-  build-and-test:
-    name: Build & Test
+  build:
+    name: Build ${{ matrix.target.name }}
     runs-on: windows-latest
     
     strategy:
@@ -63,20 +63,37 @@ jobs:
     - name: Build Uno app (${{ matrix.target.name }})
       run: dotnet build src/MatroskaBatchFlow.Uno/MatroskaBatchFlow.Uno.csproj --configuration Release --no-restore /property:TargetFramework=${{ matrix.target.framework }}
 
+  test:
+    name: Run Tests
+    runs-on: windows-latest
+    needs: build
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore MatroskaBatchFlow.sln
+
     - name: Run Core unit tests
-      run: dotnet test tests/MatroskaBatchFlow.Core.UnitTests/MatroskaBatchFlow.Core.UnitTests.csproj --configuration Release --no-restore --verbosity normal --logger "trx;LogFileName=core-tests.trx" --collect:"XPlat Code Coverage"
+      run: dotnet test tests/MatroskaBatchFlow.Core.UnitTests/MatroskaBatchFlow.Core.UnitTests.csproj --configuration Release --verbosity normal --logger "trx;LogFileName=core-tests.trx" --collect:"XPlat Code Coverage"
 
     - name: Run Uno unit tests
-      run: dotnet test tests/MatroskaBatchFlow.Uno.UnitTests/MatroskaBatchFlow.Uno.UnitTests.csproj --configuration Release --no-restore --verbosity normal --logger "trx;LogFileName=uno-tests.trx" --collect:"XPlat Code Coverage"
+      run: dotnet test tests/MatroskaBatchFlow.Uno.UnitTests/MatroskaBatchFlow.Uno.UnitTests.csproj --configuration Release --verbosity normal --logger "trx;LogFileName=uno-tests.trx" --collect:"XPlat Code Coverage"
 
     - name: Run Uno integration tests
-      run: dotnet test tests/MatroskaBatchFlow.Uno.IntegrationTests/MatroskaBatchFlow.Uno.IntegrationTests.csproj --configuration Release --no-restore --verbosity normal --logger "trx;LogFileName=integration-tests.trx" --collect:"XPlat Code Coverage"
+      run: dotnet test tests/MatroskaBatchFlow.Uno.IntegrationTests/MatroskaBatchFlow.Uno.IntegrationTests.csproj --configuration Release --verbosity normal --logger "trx;LogFileName=integration-tests.trx" --collect:"XPlat Code Coverage"
 
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v6
       with:
-        name: test-results-${{ matrix.target.name }}
+        name: test-results
         path: '**/TestResults/*.trx'
         retention-days: 7
 
@@ -84,22 +101,21 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v6
       with:
-        name: coverage-${{ matrix.target.name }}
+        name: coverage-reports
         path: '**/TestResults/**/coverage.cobertura.xml'
         retention-days: 7
 
   test-summary:
     name: Test Summary
     runs-on: windows-latest
-    needs: build-and-test
+    needs: test
     if: always()
     
     steps:
     - name: Download all test results
       uses: actions/download-artifact@v6
       with:
-        pattern: test-results-*
-        merge-multiple: true
+        name: test-results
         path: test-results
 
     - name: Test Report
@@ -114,14 +130,18 @@ jobs:
   build-status:
     name: Build Status Check
     runs-on: windows-latest
-    needs: [build-and-test, test-summary]
+    needs: [build, test, test-summary]
     if: always()
     
     steps:
     - name: Check build status
       run: |
-        if ("${{ needs.build-and-test.result }}" -ne "success") {
-          Write-Error "Build and test job failed"
+        if ("${{ needs.build.result }}" -ne "success") {
+          Write-Error "Build job failed"
+          exit 1
+        }
+        if ("${{ needs.test.result }}" -ne "success") {
+          Write-Error "Test job failed"
           exit 1
         }
         if ("${{ needs.test-summary.result }}" -ne "success" -and "${{ needs.test-summary.result }}" -ne "skipped") {
