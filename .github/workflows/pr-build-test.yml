@@ -1,0 +1,131 @@
+name: PR Build and Test
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/FUNDING.yml'
+      - '.github/copilot-instructions.md'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.gitattributes'
+      - '.editorconfig'
+      - '.vsconfig'
+      - '.filenesting.json'
+      - '.vscode/**'
+      - 'Assets/**'
+
+  # Allow manual trigger for testing
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: windows-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        target: 
+          - framework: net10.0-windows10.0.19041
+            name: WinAppSDK
+          - framework: net10.0-desktop
+            name: Skia Desktop
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0  # Fetch all history for better diagnostics
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Display .NET info
+      run: dotnet --info
+
+    - name: Restore dependencies
+      run: dotnet restore MatroskaBatchFlow.sln
+
+    - name: Build Core library
+      run: dotnet build src/MatroskaBatchFlow.Core/MatroskaBatchFlow.Core.csproj --configuration Release --no-restore
+
+    - name: Build Uno app (${{ matrix.target.name }})
+      run: dotnet build src/MatroskaBatchFlow.Uno/MatroskaBatchFlow.Uno.csproj --configuration Release --no-restore /property:TargetFramework=${{ matrix.target.framework }}
+
+    - name: Run Core unit tests
+      run: dotnet test tests/MatroskaBatchFlow.Core.UnitTests/MatroskaBatchFlow.Core.UnitTests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=core-tests.trx" --collect:"XPlat Code Coverage"
+
+    - name: Run Uno unit tests
+      run: dotnet test tests/MatroskaBatchFlow.Uno.UnitTests/MatroskaBatchFlow.Uno.UnitTests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=uno-tests.trx" --collect:"XPlat Code Coverage"
+
+    - name: Run Uno integration tests
+      run: dotnet test tests/MatroskaBatchFlow.Uno.IntegrationTests/MatroskaBatchFlow.Uno.IntegrationTests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=integration-tests.trx" --collect:"XPlat Code Coverage"
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v6
+      with:
+        name: test-results-${{ matrix.target.name }}
+        path: '**/TestResults/*.trx'
+        retention-days: 7
+
+    - name: Upload coverage reports
+      if: always()
+      uses: actions/upload-artifact@v6
+      with:
+        name: coverage-${{ matrix.target.name }}
+        path: '**/TestResults/**/coverage.cobertura.xml'
+        retention-days: 7
+
+  test-summary:
+    name: Test Summary
+    runs-on: windows-latest
+    needs: build-and-test
+    if: always()
+    
+    steps:
+    - name: Download all test results
+      uses: actions/download-artifact@v6
+      with:
+        pattern: test-results-*
+        merge-multiple: true
+        path: test-results
+
+    - name: Test Report
+      uses: dorny/test-reporter@v2
+      if: always()
+      with:
+        name: Test Results
+        path: 'test-results/**/*.trx'
+        reporter: dotnet-trx
+        fail-on-error: true
+
+  build-status:
+    name: Build Status Check
+    runs-on: windows-latest
+    needs: [build-and-test, test-summary]
+    if: always()
+    
+    steps:
+    - name: Check build status
+      run: |
+        if ("${{ needs.build-and-test.result }}" -ne "success") {
+          Write-Error "Build and test job failed"
+          exit 1
+        }
+        if ("${{ needs.test-summary.result }}" -ne "success" -and "${{ needs.test-summary.result }}" -ne "skipped") {
+          Write-Error "Test summary job failed"
+          exit 1
+        }
+        Write-Host "✅ All checks passed!"
