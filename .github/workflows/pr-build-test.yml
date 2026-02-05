@@ -112,6 +112,9 @@ jobs:
     if: always()
     
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+    
     - name: Download all test results
       uses: actions/download-artifact@v6
       with:
