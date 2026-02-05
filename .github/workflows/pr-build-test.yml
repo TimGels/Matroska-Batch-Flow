@@ -43,8 +43,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
-      with:
-        fetch-depth: 0  # Fetch all history for better diagnostics
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
