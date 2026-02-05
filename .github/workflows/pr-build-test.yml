@@ -64,13 +64,13 @@ jobs:
       run: dotnet build src/MatroskaBatchFlow.Uno/MatroskaBatchFlow.Uno.csproj --configuration Release --no-restore /property:TargetFramework=${{ matrix.target.framework }}
 
     - name: Run Core unit tests
-      run: dotnet test tests/MatroskaBatchFlow.Core.UnitTests/MatroskaBatchFlow.Core.UnitTests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=core-tests.trx" --collect:"XPlat Code Coverage"
+      run: dotnet test tests/MatroskaBatchFlow.Core.UnitTests/MatroskaBatchFlow.Core.UnitTests.csproj --configuration Release --no-restore --verbosity normal --logger "trx;LogFileName=core-tests.trx" --collect:"XPlat Code Coverage"
 
     - name: Run Uno unit tests
-      run: dotnet test tests/MatroskaBatchFlow.Uno.UnitTests/MatroskaBatchFlow.Uno.UnitTests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=uno-tests.trx" --collect:"XPlat Code Coverage"
+      run: dotnet test tests/MatroskaBatchFlow.Uno.UnitTests/MatroskaBatchFlow.Uno.UnitTests.csproj --configuration Release --no-restore --verbosity normal --logger "trx;LogFileName=uno-tests.trx" --collect:"XPlat Code Coverage"
 
     - name: Run Uno integration tests
-      run: dotnet test tests/MatroskaBatchFlow.Uno.IntegrationTests/MatroskaBatchFlow.Uno.IntegrationTests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=integration-tests.trx" --collect:"XPlat Code Coverage"
+      run: dotnet test tests/MatroskaBatchFlow.Uno.IntegrationTests/MatroskaBatchFlow.Uno.IntegrationTests.csproj --configuration Release --no-restore --verbosity normal --logger "trx;LogFileName=integration-tests.trx" --collect:"XPlat Code Coverage"
 
     - name: Upload test results
       if: always()
