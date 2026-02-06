@@ -124,93 +124,93 @@ if (-not (Test-Path $ProjectPath)) {
 
 # Build type configurations
 $BuildConfigs = @{
-    SingleFile = @{
-        DisplayName = 'Single-File Executable (Unpackaged)'
-        PublishProfile = 'win-x64-singlefile'
-        TargetFramework = $FRAMEWORK_WINAPPSDK
-        UsePublish = $true
-        OutputPattern = '*.exe'
+    SingleFile            = @{
+        DisplayName       = 'Single-File Executable (Unpackaged)'
+        PublishProfile    = 'win-x64-singlefile'
+        TargetFramework   = $FRAMEWORK_WINAPPSDK
+        UsePublish        = $true
+        OutputPattern     = '*.exe'
         OutputDescription = 'Single executable ready for distribution'
         DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\publish\win-{Platform}-singlefile'
     }
-    MultiFile = @{
-        DisplayName = 'Multi-File Deployment (Unpackaged)'
-        PublishProfile = 'win-x64'
-        TargetFramework = $FRAMEWORK_WINAPPSDK
-        UsePublish = $true
-        OutputPattern = 'MatroskaBatchFlow.exe'
+    MultiFile             = @{
+        DisplayName       = 'Multi-File Deployment (Unpackaged)'
+        PublishProfile    = 'win-x64'
+        TargetFramework   = $FRAMEWORK_WINAPPSDK
+        UsePublish        = $true
+        OutputPattern     = 'MatroskaBatchFlow.exe'
         OutputDescription = 'Multi-file application with separate dependencies'
         DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\publish\win-{Platform}-multifile'
     }
-    Store = @{
-        DisplayName = 'Microsoft Store MSIX Package'
-        TargetFramework = $FRAMEWORK_WINAPPSDK
-        UsePublish = $false
-        UseMSBuild = $true
-        OutputPattern = '*.msix'
+    Store                 = @{
+        DisplayName       = 'Microsoft Store MSIX Package'
+        TargetFramework   = $FRAMEWORK_WINAPPSDK
+        UsePublish        = $false
+        UseMSBuild        = $true
+        OutputPattern     = '*.msix'
         OutputDescription = 'Unsigned MSIX package for Store upload'
         DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\{Platform}\{Configuration}\{Framework}\win-{Platform}\AppPackages'
         MSBuildProperties = @{
-            UapAppxPackageBuildMode = 'StoreUpload'
-            AppxBundle = 'Never'
+            UapAppxPackageBuildMode    = 'StoreUpload'
+            AppxBundle                 = 'Never'
             GenerateAppxPackageOnBuild = 'true'
-            AppxPackageSigningEnabled = 'false'
+            AppxPackageSigningEnabled  = 'false'
         }
     }
-    SelfSigned = @{
-        DisplayName = 'Self-Signed MSIX Package'
-        TargetFramework = $FRAMEWORK_WINAPPSDK
-        UsePublish = $false
-        UseMSBuild = $true
-        OutputPattern = '*.msix'
+    SelfSigned            = @{
+        DisplayName       = 'Self-Signed MSIX Package'
+        TargetFramework   = $FRAMEWORK_WINAPPSDK
+        UsePublish        = $false
+        UseMSBuild        = $true
+        OutputPattern     = '*.msix'
         OutputDescription = 'Self-signed MSIX package for sideloading'
         DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\{Platform}\{Configuration}\{Framework}\win-{Platform}\AppPackages'
         MSBuildProperties = @{
-            UapAppxPackageBuildMode = 'SideloadOnly'
-            AppxBundle = 'Never'
+            UapAppxPackageBuildMode    = 'SideloadOnly'
+            AppxBundle                 = 'Never'
             GenerateAppxPackageOnBuild = 'true'
-            AppxPackageSigningEnabled = 'true'
+            AppxPackageSigningEnabled  = 'true'
         }
     }
-    SkiaDesktopWin = @{
-        DisplayName = 'Skia Desktop Single-File (Windows) - EXPERIMENTAL'
-        PublishProfile = 'skia-desktop-win-x64'
-        TargetFramework = $FRAMEWORK_SKIA_DESKTOP
-        UsePublish = $true
-        OutputPattern = '*.exe'
+    SkiaDesktopWin        = @{
+        DisplayName       = 'Skia Desktop Single-File (Windows) - EXPERIMENTAL'
+        PublishProfile    = 'skia-desktop-win-x64'
+        TargetFramework   = $FRAMEWORK_SKIA_DESKTOP
+        UsePublish        = $true
+        OutputPattern     = '*.exe'
         OutputDescription = 'Experimental Skia Desktop build for Windows'
         DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\publish\skia-win-{Platform}'
-        Experimental = $true
+        Experimental      = $true
     }
-    SkiaDesktopLinux = @{
-        DisplayName = 'Skia Desktop Single-File (Linux) - EXPERIMENTAL'
-        PublishProfile = 'skia-desktop-linux-x64'
-        TargetFramework = $FRAMEWORK_SKIA_DESKTOP
-        UsePublish = $true
-        OutputPattern = 'MatroskaBatchFlow'
+    SkiaDesktopLinux      = @{
+        DisplayName       = 'Skia Desktop Single-File (Linux) - EXPERIMENTAL'
+        PublishProfile    = 'skia-desktop-linux-x64'
+        TargetFramework   = $FRAMEWORK_SKIA_DESKTOP
+        UsePublish        = $true
+        OutputPattern     = 'MatroskaBatchFlow'
         OutputDescription = 'Experimental Skia Desktop build for Linux'
         DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\publish\skia-linux-{Platform}'
-        Experimental = $true
+        Experimental      = $true
     }
-    SkiaDesktopWinMulti = @{
-        DisplayName = 'Skia Desktop Multi-File (Windows) - EXPERIMENTAL'
-        PublishProfile = 'skia-desktop-win-x64-multi'
-        TargetFramework = $FRAMEWORK_SKIA_DESKTOP
-        UsePublish = $true
-        OutputPattern = 'MatroskaBatchFlow.exe'
+    SkiaDesktopWinMulti   = @{
+        DisplayName       = 'Skia Desktop Multi-File (Windows) - EXPERIMENTAL'
+        PublishProfile    = 'skia-desktop-win-x64-multi'
+        TargetFramework   = $FRAMEWORK_SKIA_DESKTOP
+        UsePublish        = $true
+        OutputPattern     = 'MatroskaBatchFlow.exe'
         OutputDescription = 'Experimental Skia Desktop multi-file build for Windows'
         DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\publish\skia-win-{Platform}-multi'
-        Experimental = $true
+        Experimental      = $true
     }
     SkiaDesktopLinuxMulti = @{
-        DisplayName = 'Skia Desktop Multi-File (Linux) - EXPERIMENTAL'
-        PublishProfile = 'skia-desktop-linux-x64-multi'
-        TargetFramework = $FRAMEWORK_SKIA_DESKTOP
-        UsePublish = $true
-        OutputPattern = 'MatroskaBatchFlow'
+        DisplayName       = 'Skia Desktop Multi-File (Linux) - EXPERIMENTAL'
+        PublishProfile    = 'skia-desktop-linux-x64-multi'
+        TargetFramework   = $FRAMEWORK_SKIA_DESKTOP
+        UsePublish        = $true
+        OutputPattern     = 'MatroskaBatchFlow'
         OutputDescription = 'Experimental Skia Desktop multi-file build for Linux'
         DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\publish\skia-linux-{Platform}-multi'
-        Experimental = $true
+        Experimental      = $true
     }
 }
 
@@ -335,8 +335,9 @@ function Write-BuildResult {
         Write-Host ""
         
         Show-BuildOutput -OutputLocation $OutputLocation -OutputPattern $OutputPattern `
-                         -Description $Description -BuildType $BuildType
-    } else {
+            -Description $Description -BuildType $BuildType
+    }
+    else {
         Write-Host "  $BORDER_LINE" -ForegroundColor Red
         Write-Host ""
         Write-Host "    ✗ BUILD FAILED" -ForegroundColor Red
@@ -416,6 +417,7 @@ function Invoke-DotNetCommand {
     .DESCRIPTION
         Runs dotnet with specified arguments. Output is streamed directly to console.
         Returns $true if exit code is 0, $false otherwise.
+        Sets $LASTEXITCODE to the process exit code for caller use.
     #>
     param(
         [string[]]$Arguments,
@@ -427,13 +429,18 @@ function Invoke-DotNetCommand {
     # Start process to preserve color output
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName = 'dotnet'
-    $psi.Arguments = $Arguments -join ' '
+    foreach ($arg in $Arguments) {
+        [void]$psi.ArgumentList.Add($arg)
+    }
     $psi.UseShellExecute = $false
     $psi.RedirectStandardOutput = $false
     $psi.RedirectStandardError = $false
     
     $process = [System.Diagnostics.Process]::Start($psi)
     $process.WaitForExit()
+    
+    # Set LASTEXITCODE so caller can use it for error messages and exit codes
+    $global:LASTEXITCODE = $process.ExitCode
     
     return ($process.ExitCode -eq 0)
 }
@@ -537,8 +544,8 @@ try {
     # Display build information
     Write-Header -Title $config.DisplayName -BuildInfo @{
         Configuration = $Configuration
-        Platform = $Platform
-        Framework = $TargetFramework
+        Platform      = $Platform
+        Framework     = $TargetFramework
     }
     
     # Display experimental warning if applicable
@@ -574,8 +581,10 @@ try {
             'publish',
             $ProjectPath,
             "-p:PublishProfile=$($config.PublishProfile)",
-            "-c:$Configuration",
-            "-f:$TargetFramework"
+            '-c', 
+            $Configuration,
+            '-f', 
+            $TargetFramework
         ) + $DOTNET_COMMON_ARGS
         
         if ($OutputPath) {
@@ -592,7 +601,8 @@ try {
             Remove-DebugSymbols -OutputPath $outputLocation
         }
         
-    } elseif ($config.UseMSBuild) {
+    }
+    elseif ($config.UseMSBuild) {
         # MSBuild-based builds (Store, SelfSigned)
         Write-StatusMessage "Building MSIX package..." -Type Info
         
@@ -613,7 +623,7 @@ try {
         }
         
         if ($OutputPath) {
-            $msbuildArgs += "/p:AppxPackageDir=$OutputPath\"
+            $msbuildArgs += "/p:AppxPackageDir=`"$OutputPath\`""
         }
         
         $success = Invoke-DotNetCommand -Arguments $msbuildArgs -OperationName 'Build'
@@ -632,11 +642,13 @@ try {
     
     if ($success) {
         exit 0
-    } else {
+    }
+    else {
         exit 1
     }
     
-} catch {
+}
+catch {
     Write-Host ""
     Write-Host "  $BORDER_LINE" -ForegroundColor Red
     Write-Host ""
