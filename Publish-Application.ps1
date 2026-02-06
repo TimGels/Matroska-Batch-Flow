@@ -81,7 +81,7 @@ $ErrorActionPreference = 'Stop'
 $BORDER_LINE = "═══════════════════════════════════════════════════════════════"
 $DOTNET_COMMON_ARGS = @('--nologo', '-v', 'minimal')
 $FRAMEWORK_SKIA_DESKTOP = 'net10.0-desktop'
-$FRAMEWORK_WINDOWS = 'net10.0-windows10.0.19041'
+$FRAMEWORK_WINAPPSDK = 'net10.0-windows10.0.19041'
 
 # ═══════════════════════════════════════════════════════════════
 # Platform Validation
@@ -127,7 +127,7 @@ $BuildConfigs = @{
     SingleFile = @{
         DisplayName = 'Single-File Executable (Unpackaged)'
         PublishProfile = 'win-x64-singlefile'
-        TargetFramework = $FRAMEWORK_WINDOWS
+        TargetFramework = $FRAMEWORK_WINAPPSDK
         UsePublish = $true
         OutputPattern = '*.exe'
         OutputDescription = 'Single executable ready for distribution'
@@ -136,7 +136,7 @@ $BuildConfigs = @{
     MultiFile = @{
         DisplayName = 'Multi-File Deployment (Unpackaged)'
         PublishProfile = 'win-x64'
-        TargetFramework = $FRAMEWORK_WINDOWS
+        TargetFramework = $FRAMEWORK_WINAPPSDK
         UsePublish = $true
         OutputPattern = 'MatroskaBatchFlow.exe'
         OutputDescription = 'Multi-file application with separate dependencies'
@@ -144,7 +144,7 @@ $BuildConfigs = @{
     }
     Store = @{
         DisplayName = 'Microsoft Store MSIX Package'
-        TargetFramework = $FRAMEWORK_WINDOWS
+        TargetFramework = $FRAMEWORK_WINAPPSDK
         UsePublish = $false
         UseMSBuild = $true
         OutputPattern = '*.msix'
@@ -159,7 +159,7 @@ $BuildConfigs = @{
     }
     SelfSigned = @{
         DisplayName = 'Self-Signed MSIX Package'
-        TargetFramework = $FRAMEWORK_WINDOWS
+        TargetFramework = $FRAMEWORK_WINAPPSDK
         UsePublish = $false
         UseMSBuild = $true
         OutputPattern = '*.msix'
