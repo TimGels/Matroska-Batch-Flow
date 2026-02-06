@@ -45,7 +45,7 @@
 
 .NOTES
     Author: Tim Gels
-    Designed for the Matroska CI/CD pipelines and local development
+    Designed for the Matroska Batch Flow CI/CD pipelines and local development
 #>
 
 [CmdletBinding()]
