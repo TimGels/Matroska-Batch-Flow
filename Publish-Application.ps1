@@ -4,13 +4,17 @@
 
 .DESCRIPTION
     Builds the application in various configurations for different distribution methods:
-    - SingleFile: Self-contained single executable (unpackaged)
-    - MultiFile: Multi-file deployment (unpackaged)
+    - SingleFile: Self-contained single executable (unpackaged, WinUI3)
+    - MultiFile: Multi-file deployment (unpackaged, WinUI3)
     - Store: MSIX package for Microsoft Store submission
     - SelfSigned: MSIX package with self-signed certificate for sideloading
+    - SkiaDesktopWin: Skia Desktop single-file for Windows (Experimental)
+    - SkiaDesktopLinux: Skia Desktop single-file for Linux (Experimental)
+    - SkiaDesktopWinMulti: Skia Desktop multi-file for Windows (Experimental)
+    - SkiaDesktopLinuxMulti: Skia Desktop multi-file for Linux (Experimental)
 
 .PARAMETER BuildType
-    The type of build to create. Valid values: SingleFile, MultiFile, Store, SelfSigned
+    The type of build to create. Valid values: SingleFile, MultiFile, Store, SelfSigned, SkiaDesktopWin, SkiaDesktopLinux, SkiaDesktopWinMulti, SkiaDesktopLinuxMulti
 
 .PARAMETER Configuration
     Build configuration. Valid values: Debug, Release (default: Release)
@@ -47,7 +51,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true, Position = 0)]
-    [ValidateSet('SingleFile', 'MultiFile', 'Store', 'SelfSigned')]
+    [ValidateSet('SingleFile', 'MultiFile', 'Store', 'SelfSigned', 'SkiaDesktopWin', 'SkiaDesktopLinux', 'SkiaDesktopWinMulti', 'SkiaDesktopLinuxMulti')]
     [string]$BuildType,
 
     [Parameter(Mandatory = $false)]
@@ -71,17 +75,26 @@ param(
 $ErrorActionPreference = 'Stop'
 
 # ═══════════════════════════════════════════════════════════════
+# Constants
+# ═══════════════════════════════════════════════════════════════
+
+$BORDER_LINE = "═══════════════════════════════════════════════════════════════"
+$DOTNET_COMMON_ARGS = @('--nologo', '-v', 'minimal')
+$FRAMEWORK_SKIA_DESKTOP = 'net10.0-desktop'
+$FRAMEWORK_WINDOWS = 'net10.0-windows10.0.19041'
+
+# ═══════════════════════════════════════════════════════════════
 # Platform Validation
 # ═══════════════════════════════════════════════════════════════
 
 # Verify running on Windows
 if (-not $IsWindows -and -not ($PSVersionTable.PSVersion.Major -le 5)) {
     Write-Host ""
-    Write-Host "  ═══════════════════════════════════════════════════════════════" -ForegroundColor Red
+    Write-Host "  $BORDER_LINE" -ForegroundColor Red
     Write-Host ""
     Write-Host "    ✗ PLATFORM NOT SUPPORTED" -ForegroundColor Red
     Write-Host ""
-    Write-Host "  ═══════════════════════════════════════════════════════════════" -ForegroundColor Red
+    Write-Host "  $BORDER_LINE" -ForegroundColor Red
     Write-Host ""
     Write-Host "  This script builds Windows applications (WinUI3/MSIX) and must run on Windows." -ForegroundColor Yellow
     Write-Host ""
@@ -102,7 +115,6 @@ if (-not $IsWindows -and -not ($PSVersionTable.PSVersion.Major -le 5)) {
 
 # Script paths
 $ProjectPath = Join-Path $PSScriptRoot 'src' 'MatroskaBatchFlow.Uno' 'MatroskaBatchFlow.Uno.csproj'
-$TargetFramework = 'net10.0-windows10.0.19041'
 
 # Verify project file exists
 if (-not (Test-Path $ProjectPath)) {
@@ -115,23 +127,29 @@ $BuildConfigs = @{
     SingleFile = @{
         DisplayName = 'Single-File Executable (Unpackaged)'
         PublishProfile = 'win-x64-singlefile'
+        TargetFramework = $FRAMEWORK_WINDOWS
         UsePublish = $true
         OutputPattern = '*.exe'
         OutputDescription = 'Single executable ready for distribution'
+        DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\publish\win-{Platform}-singlefile'
     }
     MultiFile = @{
         DisplayName = 'Multi-File Deployment (Unpackaged)'
         PublishProfile = 'win-x64'
+        TargetFramework = $FRAMEWORK_WINDOWS
         UsePublish = $true
         OutputPattern = 'MatroskaBatchFlow.exe'
         OutputDescription = 'Multi-file application with separate dependencies'
+        DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\publish\win-{Platform}-multifile'
     }
     Store = @{
         DisplayName = 'Microsoft Store MSIX Package'
+        TargetFramework = $FRAMEWORK_WINDOWS
         UsePublish = $false
         UseMSBuild = $true
         OutputPattern = '*.msix'
         OutputDescription = 'Unsigned MSIX package for Store upload'
+        DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\{Platform}\{Configuration}\{Framework}\win-{Platform}\AppPackages'
         MSBuildProperties = @{
             UapAppxPackageBuildMode = 'StoreUpload'
             AppxBundle = 'Never'
@@ -141,16 +159,58 @@ $BuildConfigs = @{
     }
     SelfSigned = @{
         DisplayName = 'Self-Signed MSIX Package'
+        TargetFramework = $FRAMEWORK_WINDOWS
         UsePublish = $false
         UseMSBuild = $true
         OutputPattern = '*.msix'
         OutputDescription = 'Self-signed MSIX package for sideloading'
+        DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\{Platform}\{Configuration}\{Framework}\win-{Platform}\AppPackages'
         MSBuildProperties = @{
             UapAppxPackageBuildMode = 'SideloadOnly'
             AppxBundle = 'Never'
             GenerateAppxPackageOnBuild = 'true'
             AppxPackageSigningEnabled = 'true'
         }
+    }
+    SkiaDesktopWin = @{
+        DisplayName = 'Skia Desktop Single-File (Windows) - EXPERIMENTAL'
+        PublishProfile = 'skia-desktop-win-x64'
+        TargetFramework = $FRAMEWORK_SKIA_DESKTOP
+        UsePublish = $true
+        OutputPattern = '*.exe'
+        OutputDescription = 'Experimental Skia Desktop build for Windows'
+        DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\publish\skia-win-{Platform}'
+        Experimental = $true
+    }
+    SkiaDesktopLinux = @{
+        DisplayName = 'Skia Desktop Single-File (Linux) - EXPERIMENTAL'
+        PublishProfile = 'skia-desktop-linux-x64'
+        TargetFramework = $FRAMEWORK_SKIA_DESKTOP
+        UsePublish = $true
+        OutputPattern = 'MatroskaBatchFlow'
+        OutputDescription = 'Experimental Skia Desktop build for Linux'
+        DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\publish\skia-linux-{Platform}'
+        Experimental = $true
+    }
+    SkiaDesktopWinMulti = @{
+        DisplayName = 'Skia Desktop Multi-File (Windows) - EXPERIMENTAL'
+        PublishProfile = 'skia-desktop-win-x64-multi'
+        TargetFramework = $FRAMEWORK_SKIA_DESKTOP
+        UsePublish = $true
+        OutputPattern = 'MatroskaBatchFlow.exe'
+        OutputDescription = 'Experimental Skia Desktop multi-file build for Windows'
+        DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\publish\skia-win-{Platform}-multi'
+        Experimental = $true
+    }
+    SkiaDesktopLinuxMulti = @{
+        DisplayName = 'Skia Desktop Multi-File (Linux) - EXPERIMENTAL'
+        PublishProfile = 'skia-desktop-linux-x64-multi'
+        TargetFramework = $FRAMEWORK_SKIA_DESKTOP
+        UsePublish = $true
+        OutputPattern = 'MatroskaBatchFlow'
+        OutputDescription = 'Experimental Skia Desktop multi-file build for Linux'
+        DefaultOutputPath = 'src\MatroskaBatchFlow.Uno\bin\publish\skia-linux-{Platform}-multi'
+        Experimental = $true
     }
 }
 
@@ -202,7 +262,7 @@ function Write-Header {
     )
     
     Write-Host ""
-    Write-Host "  ═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+    Write-Host "  $BORDER_LINE" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "    $Title" -ForegroundColor White
     Write-Host ""
@@ -216,7 +276,7 @@ function Write-Header {
     }
     
     Write-Host ""
-    Write-Host "  ═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+    Write-Host "  $BORDER_LINE" -ForegroundColor Cyan
     Write-Host ""
 }
 
@@ -267,21 +327,21 @@ function Write-BuildResult {
     Write-Host ""
     
     if ($Success) {
-        Write-Host "  ═══════════════════════════════════════════════════════════════" -ForegroundColor Green
+        Write-Host "  $BORDER_LINE" -ForegroundColor Green
         Write-Host ""
         Write-Host "    ✓ BUILD SUCCEEDED" -ForegroundColor Green
         Write-Host ""
-        Write-Host "  ═══════════════════════════════════════════════════════════════" -ForegroundColor Green
+        Write-Host "  $BORDER_LINE" -ForegroundColor Green
         Write-Host ""
         
         Show-BuildOutput -OutputLocation $OutputLocation -OutputPattern $OutputPattern `
                          -Description $Description -BuildType $BuildType
     } else {
-        Write-Host "  ═══════════════════════════════════════════════════════════════" -ForegroundColor Red
+        Write-Host "  $BORDER_LINE" -ForegroundColor Red
         Write-Host ""
         Write-Host "    ✗ BUILD FAILED" -ForegroundColor Red
         Write-Host ""
-        Write-Host "  ═══════════════════════════════════════════════════════════════" -ForegroundColor Red
+        Write-Host "  $BORDER_LINE" -ForegroundColor Red
         Write-Host ""
         Write-Host "  Check the build output above for errors" -ForegroundColor Yellow
         Write-Host ""
@@ -378,12 +438,101 @@ function Invoke-DotNetCommand {
     return ($process.ExitCode -eq 0)
 }
 
+function Remove-DebugSymbols {
+    <#
+    .SYNOPSIS
+        Removes debug symbol files (.pdb) from publish output.
+    .DESCRIPTION
+        Cleans up .pdb files from NuGet package dependencies that get copied to the publish directory.
+        These files are useful during development but not needed for distribution.
+    .PARAMETER OutputPath
+        The directory to search for .pdb files.
+    .EXAMPLE
+        Remove-DebugSymbols -OutputPath "bin\publish\win-x64"
+    #>
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$OutputPath
+    )
+    
+    if (-not (Test-Path $OutputPath)) {
+        return
+    }
+    
+    $pdbFiles = Get-ChildItem -Path $OutputPath -Filter "*.pdb" -Recurse -ErrorAction SilentlyContinue
+    
+    if ($pdbFiles) {
+        Write-Host ""
+        Write-StatusMessage "Removing debug symbol files..." -Type Info
+        $pdbFiles | Remove-Item -Force -ErrorAction SilentlyContinue
+        Write-Host ""
+    }
+}
+
+function Resolve-BuildOutputPath {
+    <#
+    .SYNOPSIS
+        Resolves the output path for build artifacts using template placeholders.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [hashtable]$Config,
+        
+        [Parameter(Mandatory)]
+        [string]$Platform,
+        
+        [string]$Configuration,
+        
+        [string]$Framework,
+        
+        [string]$CustomOutputPath
+    )
+    
+    if ($CustomOutputPath) {
+        return $CustomOutputPath
+    }
+    
+    $path = $Config.DefaultOutputPath -replace '\{Platform\}', $Platform
+    if ($Configuration) {
+        $path = $path -replace '\{Configuration\}', $Configuration
+    }
+    if ($Framework) {
+        $path = $path -replace '\{Framework\}', $Framework
+    }
+    
+    return Join-Path $PSScriptRoot $path
+}
+
+function Invoke-DotNetBuildStep {
+    <#
+    .SYNOPSIS
+        Executes a dotnet build step with error handling and consistent messaging.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [string]$StepName,
+        
+        [Parameter(Mandatory)]
+        [string[]]$Arguments
+    )
+    
+    Write-StatusMessage "$StepName..." -Type Info
+    
+    if (-not (Invoke-DotNetCommand -Arguments $Arguments -OperationName $StepName)) {
+        Write-StatusMessage "$StepName failed with exit code $LASTEXITCODE" -Type Error
+        exit $LASTEXITCODE
+    }
+    
+    Write-StatusMessage "$StepName completed" -Type Success
+}
+
 # ═══════════════════════════════════════════════════════════════
 # Main Execution
 # ═══════════════════════════════════════════════════════════════
 
 try {
     $config = $BuildConfigs[$BuildType]
+    $TargetFramework = $config.TargetFramework
     
     # Display build information
     Write-Header -Title $config.DisplayName -BuildInfo @{
@@ -392,32 +541,25 @@ try {
         Framework = $TargetFramework
     }
     
+    # Display experimental warning if applicable
+    if ($config.Experimental) {
+        Write-Host ""
+        Write-Host "  ⚠ WARNING: This is an EXPERIMENTAL build type" -ForegroundColor Yellow
+        Write-Host "  • Not officially supported" -ForegroundColor Gray
+        Write-Host "  • Expect bugs and compatibility issues" -ForegroundColor Gray
+        Write-Host ""
+    }
+    
     # Clean if requested
     if ($Clean) {
-        Write-StatusMessage "Cleaning previous build outputs..." -Type Info
-        
-        $cleanArgs = @('clean', $ProjectPath, '-c', $Configuration, '--nologo', '-v', 'minimal')
-        
-        if (-not (Invoke-DotNetCommand -Arguments $cleanArgs -OperationName 'Clean')) {
-            Write-StatusMessage "Clean failed with exit code $LASTEXITCODE" -Type Error
-            exit $LASTEXITCODE
-        }
-        
-        Write-StatusMessage "Clean completed" -Type Success
+        $cleanArgs = @('clean', $ProjectPath, '-c', $Configuration) + $DOTNET_COMMON_ARGS
+        Invoke-DotNetBuildStep -StepName 'Cleaning previous build outputs' -Arguments $cleanArgs
     }
     
     # Restore packages unless skipped
     if (-not $SkipRestore) {
-        Write-StatusMessage "Restoring NuGet packages..." -Type Info
-        
-        $restoreArgs = @('restore', $ProjectPath, '--nologo', '-v', 'minimal')
-        
-        if (-not (Invoke-DotNetCommand -Arguments $restoreArgs -OperationName 'Restore')) {
-            Write-StatusMessage "Restore failed with exit code $LASTEXITCODE" -Type Error
-            exit $LASTEXITCODE
-        }
-        
-        Write-StatusMessage "Restore completed" -Type Success
+        $restoreArgs = @('restore', $ProjectPath) + $DOTNET_COMMON_ARGS
+        Invoke-DotNetBuildStep -StepName 'Restoring NuGet packages' -Arguments $restoreArgs
     }
     
     # Build based on type
@@ -433,10 +575,8 @@ try {
             $ProjectPath,
             "-p:PublishProfile=$($config.PublishProfile)",
             "-c:$Configuration",
-            "-f:$TargetFramework",
-            '--nologo',
-            '-v', 'minimal'
-        )
+            "-f:$TargetFramework"
+        ) + $DOTNET_COMMON_ARGS
         
         if ($OutputPath) {
             $publishArgs += '-o', $OutputPath
@@ -445,12 +585,11 @@ try {
         $success = Invoke-DotNetCommand -Arguments $publishArgs -OperationName 'Publish'
         
         # Determine output location
-        $outputLocation = if ($OutputPath) {
-            $OutputPath
-        } elseif ($config.PublishProfile -like '*singlefile*') {
-            Join-Path $PSScriptRoot 'src' 'MatroskaBatchFlow.Uno' 'bin' 'publish-singlefile' "win-$Platform"
-        } else {
-            Join-Path $PSScriptRoot 'src' 'MatroskaBatchFlow.Uno' 'bin' 'publish' "win-$Platform"
+        $outputLocation = Resolve-BuildOutputPath -Config $config -Platform $Platform -CustomOutputPath $OutputPath
+        
+        # Clean up debug symbols from publish output
+        if ($success -and $outputLocation) {
+            Remove-DebugSymbols -OutputPath $outputLocation
         }
         
     } elseif ($config.UseMSBuild) {
@@ -480,11 +619,7 @@ try {
         $success = Invoke-DotNetCommand -Arguments $msbuildArgs -OperationName 'Build'
         
         # Determine output location
-        $outputLocation = if ($OutputPath) {
-            $OutputPath
-        } else {
-            Join-Path $PSScriptRoot 'src' 'MatroskaBatchFlow.Uno' 'bin' $Platform $Configuration $TargetFramework "win-$Platform" 'AppPackages'
-        }
+        $outputLocation = Resolve-BuildOutputPath -Config $config -Platform $Platform -Configuration $Configuration -Framework $TargetFramework -CustomOutputPath $OutputPath
     }
     
     # Display results
@@ -503,11 +638,11 @@ try {
     
 } catch {
     Write-Host ""
-    Write-Host "  ═══════════════════════════════════════════════════════════════" -ForegroundColor Red
+    Write-Host "  $BORDER_LINE" -ForegroundColor Red
     Write-Host ""
     Write-Host "    ✗ BUILD FAILED WITH EXCEPTION" -ForegroundColor Red
     Write-Host ""
-    Write-Host "  ═══════════════════════════════════════════════════════════════" -ForegroundColor Red
+    Write-Host "  $BORDER_LINE" -ForegroundColor Red
     Write-Host ""
     Write-Error $_.Exception.Message
     Write-Host ""
