@@ -138,109 +138,14 @@ git commit -m @"
 ```
 
 ### Commit Message Format
-Follow the **[Conventional Commits 1.0.0](https://www.conventionalcommits.org/)** specification.
 
-**Structure:**
-```
-<type>[optional scope]: <description>
+Follow **[Conventional Commits 1.0.0](https://www.conventionalcommits.org/)** specification.
 
-[optional body]
-
-[optional footer(s)]
-```
-
-**Required Elements:**
-- **type**: Noun describing the change (e.g., `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`)
-  - `feat`: New feature (correlates with MINOR in SemVer)
-  - `fix`: Bug fix (correlates with PATCH in SemVer)
-- **description**: Short summary immediately following `: ` (imperative mood, e.g., "add feature" not "adds feature")
-
-**Optional Elements:**
-- **scope**: Section of codebase in parentheses (e.g., `core`, `uno`, `cli`, `tests`)
-- **!**: Appended after type/scope to indicate breaking change
-- **body**: Additional context, begins one blank line after description, free-form
-  - *Project preference:* Use bullet points when listing multiple changes (not required, but preferred for clarity)
-- **footer(s)**: Metadata following git trailer format
-  - `Refs: #123` - References issue(s) without closing it
-  - `Closes: #123` (or `Fixes:`, `Resolves:`) - References and automatically closes issue(s) on GitHub
-  - Other footers: `See-also: #456`
-
-**Breaking Changes:**
-MUST be indicated by either (or both):
-- Appending `!` immediately before `:` (e.g., `feat!:` or `feat(api)!:`)
-- Footer with `BREAKING CHANGE: <description>` (MUST be uppercase)
-
-Breaking changes correlate with MAJOR in SemVer and can be part of any commit type.
-
-**Examples:**
-
-Commit with description only:
-```
-docs: correct spelling of CHANGELOG
-```
-
-Commit with scope:
-```
-feat(lang): add Polish language
-```
-
-Commit with body:
-```
-fix: prevent racing of requests
-
-Introduce a request id and a reference to latest request. Dismiss
-incoming responses other than from latest request.
-```
-
-Commit with bulleted body (project preference):
-```
-feat(cli): add recursive folder processing
-
-- Process nested folders in batch jobs
-- Preserve original file timestamps
-- Skip hidden/system files automatically
-```
-
-Breaking change with `!`:
-```
-feat(api)!: send an email to the customer when a product is shipped
-```
-
-Breaking change with footer:
-```
-feat: allow provided config object to extend other configs
-
-BREAKING CHANGE: `extends` key in config file is now used for extending other config files
-```
-
-Multiple footers:
-```
-fix: prevent racing of requests
-
-Introduce a request id and a reference to latest request. Dismiss
-incoming responses other than from latest request.
-
-Refs: #123
-```
-
-Closing an issue:
-```
-fix(core): handle empty MKV metadata gracefully
-
-- Return default values for missing track info
-- Log warning instead of throwing exception
-- Add unit tests for edge cases
-
-Refs: #38
-Closes: #42
-```
-
-Revert commit:
-```
-revert: let us never again speak of the noodle incident
-
-Refs: 676104e, a215868
-```
+See `.github/copilot-instructions.md` → **Commit Message Standards** section for:
+- Required and recommended types
+- Codebase-specific scopes
+- Breaking change conventions
+- Examples
 
 ## 8. Clean Up
 
