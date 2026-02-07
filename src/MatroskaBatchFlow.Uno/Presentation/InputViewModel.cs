@@ -55,6 +55,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     private readonly IWritableSettings<UserSettings> _userSettings;
     private readonly IValidationSettingsService _validationSettingsService;
     private readonly IPlatformService _platformService;
+    private readonly IScannedFileInfoPathComparer _pathComparer;
     private readonly ILogger<InputViewModel> _logger;
 
     public bool CanSelectAll => _batchConfig.FileList.Count > SelectedFiles.Count;
@@ -100,6 +101,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         IWritableSettings<UserSettings> userSettings,
         IValidationSettingsService validationSettingsService,
         IPlatformService platformService,
+        IScannedFileInfoPathComparer pathComparer,
         ILogger<InputViewModel> logger
         )
     {
@@ -113,6 +115,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         _userSettings = userSettings;
         _validationSettingsService = validationSettingsService;
         _platformService = platformService;
+        _pathComparer = pathComparer;
         _logger = logger;
 
         RemoveSelected = new RelayCommand(RemoveSelectedFiles);
@@ -295,9 +298,9 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     /// Re-scans all stale files in the batch configuration and updates them with fresh metadata.
     /// </summary>
     /// <remarks>
-    /// Stale files are files whose metadata may be outdated. This method rescans them,
-    /// removes the old entries, adds fresh scanned data, and clears the stale flag.
-    /// If a rescan fails for any file, the error is logged and processing continues with other files.
+    /// Stale files are files whose metadata may be outdated. This method rescans them in a single batch operation,
+    /// removes the old entries, adds fresh scanned data, and clears the stale flags.
+    /// If a rescan fails for any file, the error is logged and the stale flag is cleared to prevent repeated failures.
     /// </remarks>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     private async Task RescanStaleFilesAsync()
@@ -308,26 +311,42 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
 
         LogRescanningStaleFiles(staleFiles.Count);
 
-        foreach (var staleFile in staleFiles)
+        try
         {
-            try
+            // Batch re-scan all stale files in a single operation for better performance
+            var fileInfos = staleFiles.Select(f => new FileInfo(f.Path)).ToArray();
+            var freshScans = (await _fileScanner.ScanAsync(fileInfos)).ToList();
+
+            // Match fresh scans back to stale files by path
+            foreach (var staleFile in staleFiles)
             {
-                // Re-scan the file to get fresh metadata. We expect exactly one result since it's the same file path.
-                var freshScan = (await _fileScanner.ScanAsync([new FileInfo(staleFile.Path)])).ToList();
-                if (freshScan.Count == 1)
+                var freshScan = freshScans.FirstOrDefault(f => _pathComparer.PathEquals(f.Path, staleFile.Path));
+                
+                if (freshScan != null)
                 {
-                    // Replace in FileList (UniqueObservableCollection handles it)
+                    // Replace in FileList (UniqueObservableCollection handles uniqueness)
                     _batchConfig.FileList.Remove(staleFile);
-                    _batchConfig.FileList.Add(freshScan[0]);
+                    _batchConfig.FileList.Add(freshScan);
                     _batchConfig.ClearStaleFlag(staleFile.Id);
 
                     LogFileRescanned(staleFile.Path);
                 }
+                else
+                {
+                    // File couldn't be re-scanned (e.g., deleted, moved, or scanner failed)
+                    // Clear stale flag to prevent repeated attempts
+                    _batchConfig.ClearStaleFlag(staleFile.Id);
+                    LogRescanFailedNotFound(staleFile.Path);
+                }
             }
-            catch (Exception ex)
+        }
+        catch (Exception ex)
+        {
+            // Batch rescan failed entirely - clear all stale flags to prevent repeated failures
+            LogRescanBatchFailed(staleFiles.Count, ex);
+            foreach (var staleFile in staleFiles)
             {
-                LogRescanFailed(staleFile.Path, ex);
-                // Continue with other files
+                _batchConfig.ClearStaleFlag(staleFile.Id);
             }
         }
     }

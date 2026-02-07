@@ -23,6 +23,9 @@ public sealed partial class InputViewModel
     [LoggerMessage(Level = LogLevel.Debug, Message = "Re-scanned file: {FilePath}")]
     private partial void LogFileRescanned(string filePath);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to re-scan file {FilePath}")]
-    private partial void LogRescanFailed(string filePath, Exception ex);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "File not found during re-scan, removing stale flag: {FilePath}")]
+    private partial void LogRescanFailedNotFound(string filePath);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Batch re-scan of {Count} file(s) failed entirely")]
+    private partial void LogRescanBatchFailed(int count, Exception ex);
 }
