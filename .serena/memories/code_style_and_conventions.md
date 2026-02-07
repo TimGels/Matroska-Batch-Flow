@@ -153,3 +153,89 @@ var audioTrackInfo = new MediaInfoResultBuilder()
 ## Implicit Usings
 - **Enabled:** Yes (`<ImplicitUsings>enable</ImplicitUsings>`)
 - Common namespaces are automatically imported
+
+## Control Flow Patterns
+
+### Early Returns
+- **Prefer guard clauses** with early returns over nested conditionals
+- **Keep returns simple** - avoid complex expressions in return statements
+- **Extract complex values** to variables before returning
+
+**Example:**
+```csharp
+// ✅ Preferred: Early return with guard clause
+public void MarkFileAsStale(Guid fileId)
+{
+    if (!_staleFileIds.Add(fileId))
+        return;
+    
+    var file = _fileList.FirstOrDefault(f => f.Id == fileId);
+    if (file != null)
+    {
+        LogFileMarkedAsStale(file.Path);
+    }
+}
+
+// ❌ Avoid: Nested conditionals
+public void MarkFileAsStale(Guid fileId)
+{
+    if (_staleFileIds.Add(fileId))
+    {
+        var file = _fileList.FirstOrDefault(f => f.Id == fileId);
+        if (file != null)
+        {
+            LogFileMarkedAsStale(file.Path);
+        }
+    }
+}
+```
+
+### Exception Throwing
+- **Prefer built-in ThrowIf methods** when available (.NET 6+)
+- **Single-line throws** without braces under if statements for other cases
+- Use guard clauses for parameter validation
+
+**Example:**
+```csharp
+// ✅ Most preferred: Built-in ThrowIf methods (.NET 6+)
+ArgumentNullException.ThrowIfNull(value);
+ArgumentOutOfRangeException.ThrowIfNegative(count);
+ArgumentOutOfRangeException.ThrowIfZero(count);
+ArgumentException.ThrowIfNullOrEmpty(path);
+ArgumentException.ThrowIfNullOrWhiteSpace(input);
+
+// ✅ Acceptable: Single-line throw without braces (when ThrowIf not available)
+if (value == null)
+    throw new ArgumentNullException(nameof(value));
+
+// ❌ Avoid: Braces for single-line throw
+if (value == null)
+{
+    throw new ArgumentNullException(nameof(value));
+}
+```
+
+### Complex LINQ Queries
+- **Extract to variables** instead of inlining complex multi-line queries in control structures
+- Improves readability and debuggability
+
+**Example:**
+```csharp
+// ✅ Preferred: Extract query to variable
+var processedFileReports = report.FileReports
+    .Where(r => r.Status == ProcessingStatus.Succeeded || 
+                r.Status == ProcessingStatus.SucceededWithWarnings);
+
+foreach (var fileReport in processedFileReports)
+{
+    // ...
+}
+
+// ❌ Avoid: Inline multi-line query
+foreach (var fileReport in report.FileReports.Where(r => 
+    r.Status == ProcessingStatus.Succeeded || 
+    r.Status == ProcessingStatus.SucceededWithWarnings))
+{
+    // ...
+}
+```

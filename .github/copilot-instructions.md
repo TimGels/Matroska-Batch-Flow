@@ -103,6 +103,9 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 
 ## Key Conventions
 
+> **For detailed code style guidelines**, see `.serena/memories/code_style_and_conventions.md`  
+> This includes formatting rules, naming conventions, control flow patterns, and testing standards.
+
 ### Code Organization
 - **Never use #region/#endregion blocks** in C# or PowerShell code
   - Organize code with clear comments and whitespace instead
