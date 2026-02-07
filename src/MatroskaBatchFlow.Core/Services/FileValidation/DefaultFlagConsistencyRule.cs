@@ -31,6 +31,19 @@ public class DefaultFlagConsistencyRule : IFileValidationRule
 
         foreach (var type in trackTypes)
         {
+            // Check if validation is enabled for this track type before building the matrix
+            var trackSettings = type switch
+            {
+                TrackType.Audio => settings.CustomSettings.AudioTrackValidation,
+                TrackType.Video => settings.CustomSettings.VideoTrackValidation,
+                TrackType.Text => settings.CustomSettings.SubtitleTrackValidation,
+                _ => null
+            };
+
+            // Skip if validation is disabled for this track type
+            if (trackSettings?.DefaultFlag == ValidationSeverity.Off)
+                continue;
+
             // Build a matrix of default flags for the specified track type across all scanned files.
             var defaultFlagMatrix = BuildDefaultFlagMatrix(scannedFiles, type);
 
