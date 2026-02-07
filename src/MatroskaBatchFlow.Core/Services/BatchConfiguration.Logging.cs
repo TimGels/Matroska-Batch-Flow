@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MatroskaBatchFlow.Core.Services;
 
-public sealed partial class BatchConfiguration
+public partial class BatchConfiguration
 {
     [LoggerMessage(Level = LogLevel.Debug,
         Message = "File marked as stale (needs re-scanning): {FilePath}")]

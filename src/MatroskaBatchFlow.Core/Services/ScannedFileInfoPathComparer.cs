@@ -35,8 +35,12 @@ public sealed class ScannedFileInfoPathComparer(IPlatformService platformService
         if (x is null || y is null)
             return false;
 
-        return string.Equals(x.Path, y.Path, _pathComparison);
+        return PathEquals(x.Path, y.Path);
     }
+
+    /// <inheritdoc/>
+    public bool PathEquals(string? path1, string? path2)
+        => string.Equals(path1, path2, _pathComparison);
 
     /// <inheritdoc/>
     public int GetHashCode(ScannedFileInfo obj)
