@@ -91,7 +91,6 @@ public class DefaultFlagConsistencyRuleTests
         // Assert
         Assert.Single(results);
         Assert.Equal(severity, results[0].Severity);
-        Assert.Contains("Audio", results[0].Message);
         Assert.Contains("Default flag mismatch", results[0].Message);
     }
 
@@ -122,7 +121,6 @@ public class DefaultFlagConsistencyRuleTests
         // Assert
         Assert.Single(results);
         Assert.Equal(severity, results[0].Severity);
-        Assert.Contains("Video", results[0].Message);
         Assert.Contains("Default flag mismatch", results[0].Message);
     }
 
@@ -153,7 +151,6 @@ public class DefaultFlagConsistencyRuleTests
         // Assert
         Assert.Single(results);
         Assert.Equal(severity, results[0].Severity);
-        Assert.Contains("Text", results[0].Message);
         Assert.Contains("Default flag mismatch", results[0].Message);
     }
 

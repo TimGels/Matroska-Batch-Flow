@@ -40,12 +40,12 @@ public class DefaultFlagConsistencyRule : IFileValidationRule
     }
 
     /// <summary>
-    /// Compares the default flags of a tracktype across multiple files and identifies any mismatches.
+    /// Compares the default flags of a track type across multiple files and identifies any mismatches.
     /// </summary>
-    /// <remarks>This method compares the default flags of a specific tracktype of each file against the reference file (the
+    /// <remarks>This method compares the default flags of a specific track type of each file against the reference file (the
     /// first file in the list). A mismatch is identified if the default flag at a specific track position differs
     /// between the reference file and another file.</remarks>
-    /// <param name="defaultFlagMatrix">A list of lists (matrix), where each inner list represents the default flags of a file of a tracktype.</param>
+    /// <param name="defaultFlagMatrix">A list of lists (matrix), where each inner list represents the default flags of a file of a track type.</param>
     /// <param name="scannedFiles">A list of <see cref="ScannedFileInfo"/> objects representing the files being validated. The order of files in
     /// this list must correspond to the order of the <paramref name="defaultFlagMatrix"/>.</param>
     /// <param name="type">The type of track being compared.</param>
