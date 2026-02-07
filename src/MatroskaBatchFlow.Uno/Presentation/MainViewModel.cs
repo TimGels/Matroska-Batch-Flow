@@ -14,6 +14,7 @@ public partial class MainViewModel : ObservableObject
     private readonly IFileProcessingOrchestrator _orchestrator;
     private readonly IMkvPropeditArgumentsGenerator _mkvPropeditArgumentsBuilder;
     private readonly IUIPreferencesService _uiPreferences;
+    private readonly IScannedFileInfoPathComparer _pathComparer;
     private readonly ILogger<MainViewModel> _logger;
     private CancellationTokenSource _processingCts = new();
 
@@ -51,6 +52,7 @@ public partial class MainViewModel : ObservableObject
         IBatchReportStore batchResultStore,
         IMkvPropeditArgumentsGenerator argumentsService,
         IUIPreferencesService uiPreferences,
+        IScannedFileInfoPathComparer pathComparer,
         ILogger<MainViewModel> logger)
     {
         _batchConfiguration = batchConfiguration;
@@ -58,6 +60,7 @@ public partial class MainViewModel : ObservableObject
         _batchReportStore = batchResultStore;
         _mkvPropeditArgumentsBuilder = argumentsService;
         _uiPreferences = uiPreferences;
+        _pathComparer = pathComparer;
         _logger = logger;
 
         NavigationService = navigationService;
@@ -134,7 +137,7 @@ public partial class MainViewModel : ObservableObject
 
             foreach (var fileReport in processedFileReports)
             {
-                var file = _batchConfiguration.FileList.FirstOrDefault(f => f.Path == fileReport.Path);
+                var file = _batchConfiguration.FileList.FirstOrDefault(f => _pathComparer.PathEquals(f.Path, fileReport.Path));
                 if (file != null)
                 {
                     _batchConfiguration.MarkFileAsStale(file.Id);
