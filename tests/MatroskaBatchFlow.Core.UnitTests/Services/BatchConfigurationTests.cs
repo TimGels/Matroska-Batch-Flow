@@ -1,4 +1,5 @@
 using MatroskaBatchFlow.Core.Enums;
+using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
 using MatroskaBatchFlow.Core.Utilities;
@@ -114,5 +115,102 @@ public class BatchConfigurationTests
 
         // Assert
         Assert.Empty(result);
+    }
+
+    [Fact]
+    public void MarkFileAsStale_ShouldTrackStaleFile()
+    {
+        // Arrange
+        var config = new BatchConfiguration(_comparer, _logger);
+        var file = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .Build();
+        var scannedFile = new ScannedFileInfo(file, "file1.mkv");
+        config.FileList.Add(scannedFile);
+
+        // Act
+        config.MarkFileAsStale(scannedFile.Id);
+
+        // Assert
+        Assert.True(config.IsFileStale(scannedFile.Id));
+    }
+
+    [Fact]
+    public void ClearStaleFlag_ShouldRemoveStaleTracking()
+    {
+        // Arrange
+        var config = new BatchConfiguration(_comparer, _logger);
+        var file = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .Build();
+        var scannedFile = new ScannedFileInfo(file, "file1.mkv");
+        config.FileList.Add(scannedFile);
+        config.MarkFileAsStale(scannedFile.Id);
+
+        // Act
+        config.ClearStaleFlag(scannedFile.Id);
+
+        // Assert
+        Assert.False(config.IsFileStale(scannedFile.Id));
+    }
+
+    [Fact]
+    public void RemoveFile_ShouldClearStaleFlag()
+    {
+        // Arrange
+        var config = new BatchConfiguration(_comparer, _logger);
+        var file = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .Build();
+        var scannedFile = new ScannedFileInfo(file, "file1.mkv");
+        config.FileList.Add(scannedFile);
+        config.MarkFileAsStale(scannedFile.Id);
+
+        // Act
+        config.FileList.Remove(scannedFile);
+
+        // Assert
+        Assert.False(config.IsFileStale(scannedFile.Id));
+    }
+
+    [Fact]
+    public void GetStaleFiles_ShouldReturnOnlyStaleFiles()
+    {
+        // Arrange
+        var config = new BatchConfiguration(_comparer, _logger);
+        var file1 = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .Build();
+        var file2 = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .Build();
+        var scannedFile1 = new ScannedFileInfo(file1, "file1.mkv");
+        var scannedFile2 = new ScannedFileInfo(file2, "file2.mkv");
+        
+        config.FileList.Add(scannedFile1);
+        config.FileList.Add(scannedFile2);
+        config.MarkFileAsStale(scannedFile1.Id);
+
+        // Act
+        var staleFiles = config.GetStaleFiles().ToList();
+
+        // Assert
+        Assert.Single(staleFiles);
+        Assert.Equal(scannedFile1.Id, staleFiles[0].Id);
+    }
+
+    [Fact]
+    public void IsFileStale_WhenFileNotMarked_ReturnsFalse()
+    {
+        // Arrange
+        var config = new BatchConfiguration(_comparer, _logger);
+        var file = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .Build();
+        var scannedFile = new ScannedFileInfo(file, "file1.mkv");
+        config.FileList.Add(scannedFile);
+
+        // Act & Assert
+        Assert.False(config.IsFileStale(scannedFile.Id));
     }
 }
