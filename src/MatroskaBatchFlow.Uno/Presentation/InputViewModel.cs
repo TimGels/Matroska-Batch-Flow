@@ -324,7 +324,11 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
                 
                 if (freshScan != null)
                 {
-                    // Replace in FileList (UniqueObservableCollection handles uniqueness)
+                    // Migrate file configuration to preserve user's settings
+                    // The configuration itself represents user's intent caused and should not be reset 
+                    _batchConfig.MigrateFileConfiguration(staleFile.Id, freshScan.Id);
+                    
+                    // Replace file with fresh metadata while keeping configuration
                     _batchConfig.FileList.Remove(staleFile);
                     _batchConfig.FileList.Add(freshScan);
                     _batchConfig.ClearStaleFlag(staleFile.Id);
