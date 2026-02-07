@@ -259,6 +259,149 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 - **External tools**: mkvpropedit is executed with controlled arguments; validate user input before passing to command line
 - **File operations**: All file modifications require explicit user action (no automatic writes on scan)
 
+## Commit Message Standards
+
+**Copilot MUST follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification when generating commit messages.**
+
+### Format
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Required Types
+- `feat:` - A new feature (correlates with MINOR in SemVer)
+- `fix:` - A bug fix (correlates with PATCH in SemVer)
+
+### Recommended Types
+Additional types from @commitlint/config-conventional (Angular convention):
+- `build:` - Changes to build system or dependencies
+- `chore:` - Maintenance tasks
+- `ci:` - CI/CD configuration changes
+- `docs:` - Documentation changes
+- `style:` - Code style/formatting changes (no functional changes)
+- `refactor:` - Code refactoring without behavior change
+- `perf:` - Performance improvements
+- `test:` - Adding or updating tests
+- `revert:` - Reverting a previous commit
+
+### Scope (Optional)
+Scopes represent **what the change is about** (functional/logical areas), not just physical project locations.
+
+**Common scopes used in this codebase:**
+
+*Project layers:*
+- `core` - Core library logic (MatroskaBatchFlow.Core)
+- `ui` - Views, XAML, and presentation components
+- `vm` - ViewModels and MVVM patterns
+
+*Domain-specific:*
+- `validation` - Validation system (rules, engine, strictness modes)
+- `processing` - File processing pipeline and batch operations
+- `tracks` - Track configuration and track-level logic
+- `mkvtools` - mkvpropedit/MediaInfo integration
+
+*Infrastructure:*
+- `config` - Configuration and settings
+- `logging` - Logging system
+- `di` - Dependency injection and service registration
+- `nav` - Navigation system
+
+*Tooling:*
+- `deps` - Package dependencies
+- `dev` - Development tooling
+
+*Documentation:*
+- `instructions` - AI assistant instructions (copilot-instructions.md, Serena memories)
+
+*Release:*
+- `version` - Version management
+- `release` - Release and publishing
+
+> **Note:** `build`, `ci`, `docs`, and `test` are commit **types**, not scopes. Use them as types (e.g., `build: update project files`, `test: add validation tests`).
+
+**When to use a scope:**
+- Changes focus on a specific functional area or component
+- Examples: `feat(logging): add structured logging`, `fix(config): handle invalid JSON`, `refactor(ui): simplify navigation`
+
+**When to omit the scope:**
+- Changes are truly repository-wide or don't fit a single category
+- Examples: `chore: update all dependencies`, `docs: update README`
+
+**Multiple scopes:**
+- Use comma-separated scopes when changes span multiple areas: `refactor(core,ui): redesign batch processing`
+
+**Expanding scopes:**
+- The scopes above are common examples, not an exhaustive list
+- Create new scopes when needed for clarity (e.g., `feat(dialogs): add confirmation dialog`)
+
+### Breaking Changes
+- **Option 1**: Add `!` after type/scope: `feat(core)!: redesign batch processing API`
+- **Option 2**: Use footer: `BREAKING CHANGE: description` (MUST be uppercase)
+- Breaking changes correlate with MAJOR in SemVer
+
+### Body (Optional)
+- Provide additional context after a blank line
+- Free-form text, may contain multiple paragraphs
+- **Project preference**: Use bullet points for clarity
+
+### Footer(s) (Optional)
+Footers follow git trailer format (token: value or token #value):
+- `BREAKING CHANGE: <description>` - Breaking change details
+- `Refs: #123` - Reference issues
+- `Closes: #123` or `Fixes: #123` or `Resolves: #123` - Close issues
+- `Reviewed-by:`, `Acked-by:`, `See-also:` - Other standard git trailers
+
+### Examples
+
+**Simple feature:**
+```
+feat(core): add subtitle track reordering support
+```
+
+**Bug fix with body and footer:**
+```
+fix(ui): prevent UI freeze during large batch operations
+
+- Move batch processing to background thread
+- Add progress reporting with cancellation support
+- Update MainViewModel to marshal UI updates
+
+Closes: #89
+```
+
+**Breaking change with scope:**
+```
+feat(core)!: redesign track configuration API
+
+- Replace TrackConfiguration with immutable TrackInfo
+- Update all track ViewModels to use new API
+- Migration guide added to docs/migration.md
+
+BREAKING CHANGE: TrackConfiguration class removed, use TrackInfo instead
+Refs: #125
+```
+
+**Documentation update:**
+```
+docs: update README with mkvpropedit installation guide
+
+Refs: #42
+```
+
+### Important Rules
+- Type and description are REQUIRED
+- Description MUST immediately follow the colon and space
+- Scope MUST be a noun in parentheses if provided
+- BREAKING CHANGE footer MUST be uppercase
+- Breaking changes can use `!` in prefix OR footer (or both)
+- Tokens other than BREAKING CHANGE are case-insensitive
+
+> **Cross-reference**: Detailed Conventional Commits standards are also in Serena's memory (`.serena/memories/task_completion_checklist.md`). Keep both locations synchronized.
+
 ## **CRITICAL: Always Use Serena First (#serena MCP server)**
 
 **Serena is a semantic code analysis toolkit that provides IDE-like capabilities to AI assistants. It's designed for:**
@@ -361,7 +504,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 2. Update relevant sections in this file
 3. Update Serena memories to match
 4. Update "Last Updated" date at the top
-5. Commit both code changes and instruction updates together
+5. Commit both code changes and instruction updates together using Conventional Commits format
 
 **Review cadence:**
 - Minor updates: As needed when patterns change
