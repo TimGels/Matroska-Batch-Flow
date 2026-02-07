@@ -5,6 +5,7 @@ using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Utilities;
+using Microsoft.Extensions.Logging;
 using static MatroskaBatchFlow.Core.Models.MediaInfoResult.MediaInfo;
 
 namespace MatroskaBatchFlow.Core.Services;
@@ -12,8 +13,9 @@ namespace MatroskaBatchFlow.Core.Services;
 /// <summary>
 /// Represents the configuration for batch processing of media files.
 /// </summary>
-public class BatchConfiguration : IBatchConfiguration
+public partial class BatchConfiguration : IBatchConfiguration
 {
+    private readonly ILogger<BatchConfiguration> _logger;
     private string _directoryPath = string.Empty;
     private bool _shouldModifyTitle = false;
     private string _title = string.Empty;
@@ -27,6 +29,7 @@ public class BatchConfiguration : IBatchConfiguration
     /// <remarks>This collection uses the <see cref="IScannedFileInfoPathComparer"/> to prevent duplicate entries for the
     /// same physical file, avoiding redundant processing during batch operations.</remarks>
     private readonly UniqueObservableCollection<ScannedFileInfo> _fileList;
+    private readonly HashSet<Guid> _staleFileIds = [];
     private ObservableCollection<TrackConfiguration> _audioTracks = [];
     private ObservableCollection<TrackConfiguration> _videoTracks = [];
     private ObservableCollection<TrackConfiguration> _subtitleTracks = [];
@@ -41,8 +44,10 @@ public class BatchConfiguration : IBatchConfiguration
     /// Initializes a new instance of the <see cref="BatchConfiguration"/> class.
     /// </summary>
     /// <param name="fileComparer">The comparer to use for identifying unique files in the collection.</param>
-    public BatchConfiguration(IScannedFileInfoPathComparer fileComparer)
+    /// <param name="logger">The logger instance for logging stale file tracking operations.</param>
+    public BatchConfiguration(IScannedFileInfoPathComparer fileComparer, ILogger<BatchConfiguration> logger)
     {
+        _logger = logger;
         _fileList = new(fileComparer);
         
         FileList.CollectionChanged += (sender, e) =>
@@ -53,6 +58,14 @@ public class BatchConfiguration : IBatchConfiguration
                 return;
 
             OnFileRemoval(sender, e);
+            
+            // Clear stale flags for removed files
+            if (e.OldItems != null)
+            {
+                foreach (ScannedFileInfo file in e.OldItems)
+                    _staleFileIds.Remove(file.Id);
+            }
+            
             OnStateChanged();
         };
         AudioTracks.CollectionChanged += (s, e) => TrackCollectionChanged(AudioTracks, e);
@@ -282,7 +295,7 @@ public class BatchConfiguration : IBatchConfiguration
         }
     }
 
-    protected virtual void OnPropertyChanged(string propertyName)
+    private void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         OnStateChanged();
@@ -365,6 +378,48 @@ public class BatchConfiguration : IBatchConfiguration
     {
         StateChanged?.Invoke(this, EventArgs.Empty);
     }
+
+    /// <summary>
+    /// Marks a file's metadata as stale (needs re-scanning).
+    /// </summary>
+    /// <param name="fileId">The unique identifier of the file to mark as stale.</param>
+    public void MarkFileAsStale(Guid fileId)
+    {
+        if (_staleFileIds.Add(fileId))
+        {
+            var file = _fileList.FirstOrDefault(f => f.Id == fileId);
+            if (file != null)
+                LogFileMarkedAsStale(file.Path);
+        }
+    }
+
+    /// <summary>
+    /// Checks if a file's metadata is stale.
+    /// </summary>
+    /// <param name="fileId">The unique identifier of the file to check.</param>
+    /// <returns><see langword="true"/> if the file is stale; otherwise, <see langword="false"/>.</returns>
+    public bool IsFileStale(Guid fileId) => _staleFileIds.Contains(fileId);
+
+    /// <summary>
+    /// Clears the stale flag for a file after re-scanning.
+    /// </summary>
+    /// <param name="fileId">The unique identifier of the file to clear the stale flag for.</param>
+    public void ClearStaleFlag(Guid fileId)
+    {
+        if (_staleFileIds.Remove(fileId))
+        {
+            var file = _fileList.FirstOrDefault(f => f.Id == fileId);
+            if (file != null)
+                LogStaleFlagCleared(file.Path);
+        }
+    }
+
+    /// <summary>
+    /// Gets all files that have stale metadata.
+    /// </summary>
+    /// <returns>An enumerable collection of files with stale metadata.</returns>
+    public IEnumerable<ScannedFileInfo> GetStaleFiles()
+        => _fileList.Where(f => _staleFileIds.Contains(f.Id));
 }
 
 /// <summary>

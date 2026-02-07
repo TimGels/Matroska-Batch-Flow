@@ -5,6 +5,7 @@ using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Presentation;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 
 namespace MatroskaBatchFlow.Uno.IntegrationTests;
@@ -26,7 +27,8 @@ public class TrackModificationIntegrationTests
         // Arrange - create real components for integration testing
         var platformService = new PlatformService();
         var fileComparer = new ScannedFileInfoPathComparer(platformService);
-        var batchConfig = new BatchConfiguration(fileComparer);
+        var logger = Substitute.For<ILogger<BatchConfiguration>>();
+        var batchConfig = new BatchConfiguration(fileComparer, logger);
         
         // Mock only external dependencies (language data, UI preferences)
         var mockLanguageProvider = Substitute.For<ILanguageProvider>();
