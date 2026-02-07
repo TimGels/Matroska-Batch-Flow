@@ -346,7 +346,7 @@ Scopes represent **what the change is about** (functional/logical areas), not ju
 ### Body (Optional)
 - Provide additional context after a blank line
 - Free-form text, may contain multiple paragraphs
-- **Project preference**: Use bullet points for clarity
+- **Project preference**: Use bullet points for clarity, without blank lines between items
 
 ### Footer(s) (Optional)
 Footers follow git trailer format (token: value or token #value):
