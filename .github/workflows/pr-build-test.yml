@@ -38,7 +38,9 @@ jobs:
         filters: |
           src:
             - 'src/**'
+            - '!src/**/*.md'
             - 'tests/**'
+            - '!tests/**/*.md'
             - '*.sln'
             - '*.props'
             - 'global.json'
