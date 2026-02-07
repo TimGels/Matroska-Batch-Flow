@@ -193,6 +193,36 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
 
         LogFilesScanned(scannedFiles.Count);
 
+        // Re-scan any stale files before validation
+        var staleFiles = _batchConfig.GetStaleFiles().ToList();
+        if (staleFiles.Count > 0)
+        {
+            LogRescanningStaleFiles(staleFiles.Count);
+            
+            foreach (var staleFile in staleFiles)
+            {
+                try
+                {
+                    // Re-scan the file
+                    var freshScan = (await _fileScanner.ScanAsync([new FileInfo(staleFile.Path)])).ToList();
+                    if (freshScan.Count == 1)
+                    {
+                        // Replace in FileList (UniqueObservableCollection handles it)
+                        _batchConfig.FileList.Remove(staleFile);
+                        _batchConfig.FileList.Add(freshScan[0]);
+                        _batchConfig.ClearStaleFlag(staleFile.Id);
+                        
+                        LogFileRescanned(staleFile.Path);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogRescanFailed(staleFile.Path, ex);
+                    // Continue with other files
+                }
+            }
+        }
+
         // Combine existing files with new files.
         List<ScannedFileInfo> combinedFiles = [.. _batchConfig.FileList, .. scannedFiles];
         if (combinedFiles.Count == 0)
