@@ -49,7 +49,7 @@ public partial class BatchConfiguration : IBatchConfiguration
     {
         _logger = logger;
         _fileList = new(fileComparer);
-        
+
         FileList.CollectionChanged += (sender, e) =>
         {
             // We only care about removals, resets, and replacements for the purpose of clearing state.
@@ -58,14 +58,7 @@ public partial class BatchConfiguration : IBatchConfiguration
                 return;
 
             OnFileRemoval(sender, e);
-            
-            // Clear stale flags for removed files
-            if (e.OldItems != null)
-            {
-                foreach (ScannedFileInfo file in e.OldItems)
-                    _staleFileIds.Remove(file.Id);
-            }
-            
+
             OnStateChanged();
         };
         AudioTracks.CollectionChanged += (s, e) => TrackCollectionChanged(AudioTracks, e);
@@ -356,8 +349,19 @@ public partial class BatchConfiguration : IBatchConfiguration
     /// empty, it clears the application state.</remarks>
     /// <param name="sender">The source of the event. This parameter can be <see langword="null"/>.</param>
     /// <param name="eventArgs">The event data associated with the file removal.</param>
-    private void OnFileRemoval(object? sender, EventArgs eventArgs)
+    private void OnFileRemoval(object? sender, NotifyCollectionChangedEventArgs eventArgs)
     {
+        // Clear stale flags for removed files
+        if (eventArgs.OldItems != null)
+        {
+            foreach (ScannedFileInfo file in eventArgs.OldItems)
+            {
+                _staleFileIds.Remove(file.Id);
+            }
+        }
+
+        // If there are still files in the list after the removal,
+        // we don't want to clear the state since it may still be relevant to the remaining files.
         if (FileList.Count is not 0)
             return;
 
@@ -385,11 +389,13 @@ public partial class BatchConfiguration : IBatchConfiguration
     /// <param name="fileId">The unique identifier of the file to mark as stale.</param>
     public void MarkFileAsStale(Guid fileId)
     {
-        if (_staleFileIds.Add(fileId))
+        if (!_staleFileIds.Add(fileId))
+            return;
+
+        var file = _fileList.FirstOrDefault(f => f.Id == fileId);
+        if (file != null)
         {
-            var file = _fileList.FirstOrDefault(f => f.Id == fileId);
-            if (file != null)
-                LogFileMarkedAsStale(file.Path);
+            LogFileMarkedAsStale(file.Path);
         }
     }
 
@@ -406,11 +412,13 @@ public partial class BatchConfiguration : IBatchConfiguration
     /// <param name="fileId">The unique identifier of the file to clear the stale flag for.</param>
     public void ClearStaleFlag(Guid fileId)
     {
-        if (_staleFileIds.Remove(fileId))
+        if (!_staleFileIds.Remove(fileId))
+            return;
+
+        var file = _fileList.FirstOrDefault(f => f.Id == fileId);
+        if (file != null)
         {
-            var file = _fileList.FirstOrDefault(f => f.Id == fileId);
-            if (file != null)
-                LogStaleFlagCleared(file.Path);
+            LogStaleFlagCleared(file.Path);
         }
     }
 

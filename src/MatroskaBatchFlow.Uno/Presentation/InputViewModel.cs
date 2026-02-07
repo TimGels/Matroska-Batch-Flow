@@ -193,35 +193,8 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
 
         LogFilesScanned(scannedFiles.Count);
 
-        // Re-scan any stale files before validation
-        var staleFiles = _batchConfig.GetStaleFiles().ToList();
-        if (staleFiles.Count > 0)
-        {
-            LogRescanningStaleFiles(staleFiles.Count);
-            
-            foreach (var staleFile in staleFiles)
-            {
-                try
-                {
-                    // Re-scan the file
-                    var freshScan = (await _fileScanner.ScanAsync([new FileInfo(staleFile.Path)])).ToList();
-                    if (freshScan.Count == 1)
-                    {
-                        // Replace in FileList (UniqueObservableCollection handles it)
-                        _batchConfig.FileList.Remove(staleFile);
-                        _batchConfig.FileList.Add(freshScan[0]);
-                        _batchConfig.ClearStaleFlag(staleFile.Id);
-                        
-                        LogFileRescanned(staleFile.Path);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    LogRescanFailed(staleFile.Path, ex);
-                    // Continue with other files
-                }
-            }
-        }
+        // Re-scan any stale files before validation.
+        await RescanStaleFilesAsync();
 
         // Combine existing files with new files.
         List<ScannedFileInfo> combinedFiles = [.. _batchConfig.FileList, .. scannedFiles];
@@ -316,6 +289,47 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         }
 
         return uniqueFiles;
+    }
+
+    /// <summary>
+    /// Re-scans all stale files in the batch configuration and updates them with fresh metadata.
+    /// </summary>
+    /// <remarks>
+    /// Stale files are files whose metadata may be outdated. This method rescans them,
+    /// removes the old entries, adds fresh scanned data, and clears the stale flag.
+    /// If a rescan fails for any file, the error is logged and processing continues with other files.
+    /// </remarks>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    private async Task RescanStaleFilesAsync()
+    {
+        var staleFiles = _batchConfig.GetStaleFiles().ToList();
+        if (staleFiles.Count == 0)
+            return;
+
+        LogRescanningStaleFiles(staleFiles.Count);
+
+        foreach (var staleFile in staleFiles)
+        {
+            try
+            {
+                // Re-scan the file to get fresh metadata. We expect exactly one result since it's the same file path.
+                var freshScan = (await _fileScanner.ScanAsync([new FileInfo(staleFile.Path)])).ToList();
+                if (freshScan.Count == 1)
+                {
+                    // Replace in FileList (UniqueObservableCollection handles it)
+                    _batchConfig.FileList.Remove(staleFile);
+                    _batchConfig.FileList.Add(freshScan[0]);
+                    _batchConfig.ClearStaleFlag(staleFile.Id);
+
+                    LogFileRescanned(staleFile.Path);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogRescanFailed(staleFile.Path, ex);
+                // Continue with other files
+            }
+        }
     }
 
     /// <summary>
