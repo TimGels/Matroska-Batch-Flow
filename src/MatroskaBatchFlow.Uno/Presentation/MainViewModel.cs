@@ -128,6 +128,16 @@ public partial class MainViewModel : ObservableObject
 
             await _orchestrator.ProcessAllAsync(_batchConfiguration.FileList, _processingCts.Token);
 
+            // Mark successfully processed files as stale (needs re-scanning before next validation)
+            var report = _batchReportStore.ActiveBatch;
+            foreach (var fileReport in report.FileReports.Where(r => r.Status == ProcessingStatus.Succeeded || 
+                                                                      r.Status == ProcessingStatus.SucceededWithWarnings))
+            {
+                var file = _batchConfiguration.FileList.FirstOrDefault(f => f.Path == fileReport.Path);
+                if (file != null)
+                    _batchConfiguration.MarkFileAsStale(file.Id);
+            }
+
             SummarizeOutcome();
         }
         catch (OperationCanceledException)

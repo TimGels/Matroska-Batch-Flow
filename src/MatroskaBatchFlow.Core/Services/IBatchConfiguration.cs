@@ -58,4 +58,29 @@ public interface IBatchConfiguration : INotifyPropertyChanged
     /// <param name="trackType">Type of track to retrieve.</param>
     /// <returns>List of track configurations for the specified file and track type.</returns>
     public IList<TrackConfiguration> GetTrackListForFile(Guid fileId, TrackType trackType);
+
+    /// <summary>
+    /// Marks a file's metadata as stale (needs re-scanning).
+    /// </summary>
+    /// <param name="fileId">The unique identifier of the file to mark as stale.</param>
+    public void MarkFileAsStale(Guid fileId);
+
+    /// <summary>
+    /// Checks if a file's metadata is stale.
+    /// </summary>
+    /// <param name="fileId">The unique identifier of the file to check.</param>
+    /// <returns><see langword="true"/> if the file is stale; otherwise, <see langword="false"/>.</returns>
+    public bool IsFileStale(Guid fileId);
+
+    /// <summary>
+    /// Clears the stale flag for a file after re-scanning.
+    /// </summary>
+    /// <param name="fileId">The unique identifier of the file to clear the stale flag for.</param>
+    public void ClearStaleFlag(Guid fileId);
+
+    /// <summary>
+    /// Gets all files that have stale metadata.
+    /// </summary>
+    /// <returns>An enumerable collection of files with stale metadata.</returns>
+    public IEnumerable<ScannedFileInfo> GetStaleFiles();
 }
