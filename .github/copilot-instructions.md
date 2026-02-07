@@ -12,9 +12,9 @@
 
 ### Quick Reference
 ```powershell
-# Most common commands
-dotnet build                                    # Build entire solution
-dotnet test                                     # Run all tests
+# Most common commands (run from repository root)
+dotnet build MatroskaBatchFlow.sln         # Build entire solution
+dotnet test                                # Run all tests
 dotnet run --project src/MatroskaBatchFlow.Uno/MatroskaBatchFlow.Uno.csproj -f net10.0-windows10.0.19041
 ```
 
@@ -182,8 +182,8 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 
 ### Important Files and Paths
 - **appsettings.json**: Application configuration (validated on startup)
-  - `MkvPropeditPath`: Path to mkvpropedit executable (default: "mkvpropedit")
-  - `LanguageOptions.FilePath`: Path to languages.json (default: "Resources\\languages.json")
+  - `MkvPropeditPath`: Path to mkvpropedit executable (default: `"mkvpropedit"`)
+  - `LanguageOptions.FilePath`: Path to languages.json (default: `"Resources\\languages.json"` in config)
   - `ScanOptions`: Default scanning behavior
 - **Resources/languages.json**: ISO 639-2 language codes with display names
 - **Binaries/**: Native libraries (MediaInfo.dll, mkvpropedit.exe for Windows; libmediainfo.so for Linux)
@@ -237,7 +237,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 ### Runtime Issues
 - **Configuration validation fails**: Check appsettings.json against DataAnnotations in model classes
 - **mkvpropedit not found**: Set `MkvPropeditPath` in appsettings.json or Settings UI
-- **Languages not loading**: Verify `Resources\languages.json` exists and is valid JSON
+- **Languages not loading**: Verify `Resources/languages.json` exists and is valid JSON
 - **File scanning fails**: Check file permissions and ensure MediaInfo.dll is in Binaries folder
 
 ### Testing Issues
