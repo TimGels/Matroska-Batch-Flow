@@ -1,6 +1,8 @@
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
+using MatroskaBatchFlow.Core.Utilities;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 
 namespace MatroskaBatchFlow.Core.UnitTests.Services;
@@ -15,6 +17,7 @@ namespace MatroskaBatchFlow.Core.UnitTests.Services;
 public class BatchConfigurationTests
 {
     private readonly IScannedFileInfoPathComparer _comparer = Substitute.For<IScannedFileInfoPathComparer>();
+    private readonly ILogger<BatchConfiguration> _logger = Substitute.For<ILogger<BatchConfiguration>>();
 
     [Fact]
     public void Clear_WhenCalled_ResetsAllPropertiesAndTrackCollections()
@@ -38,7 +41,7 @@ public class BatchConfigurationTests
             .Build()
             .Media.Track.First(t => t.Type == TrackType.Text);
         
-        var config = new BatchConfiguration(_comparer)
+        var config = new BatchConfiguration(_comparer, _logger)
         {
             DirectoryPath = "C:\\media",
             Title = "TestTitle",
@@ -62,7 +65,7 @@ public class BatchConfigurationTests
     public void Clear_WhenCalledOnDefaultInstance_KeepsPropertiesAndCollectionsEmpty()
     {
         // Arrange
-        var config = new BatchConfiguration(_comparer);
+        var config = new BatchConfiguration(_comparer, _logger);
 
         // Act
         config.Clear();
@@ -82,7 +85,7 @@ public class BatchConfigurationTests
     public void GetTrackListForType_WhenCalledWithKnownType_ReturnsCorrectCollection(TrackType type)
     {
         // Arrange
-        var config = new BatchConfiguration(_comparer);
+        var config = new BatchConfiguration(_comparer, _logger);
         var audio = config.AudioTracks;
         var video = config.VideoTracks;
         var sub = config.SubtitleTracks;
@@ -103,7 +106,7 @@ public class BatchConfigurationTests
     public void GetTrackListForType_WhenCalledWithUnknownType_ReturnsEmptyList()
     {
         // Arrange
-        var config = new BatchConfiguration(_comparer);
+        var config = new BatchConfiguration(_comparer, _logger);
         var unknownType = (TrackType)999;
 
         // Act
