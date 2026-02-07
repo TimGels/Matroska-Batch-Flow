@@ -5,6 +5,7 @@ using MatroskaBatchFlow.Core.UnitTests.Builders;
 using MatroskaBatchFlow.Core.Utilities;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using static MatroskaBatchFlow.Core.Models.MediaInfoResult.MediaInfo;
 
 namespace MatroskaBatchFlow.Core.UnitTests.Services;
 
@@ -212,5 +213,126 @@ public class BatchConfigurationTests
 
         // Act & Assert
         Assert.False(config.IsFileStale(scannedFile.Id));
+    }
+
+    [Fact]
+    public void MigrateFileConfiguration_WhenConfigurationExists_TransfersToNewId()
+    {
+        // Arrange
+        var config = new BatchConfiguration(_comparer, _logger);
+        var oldFileId = Guid.NewGuid();
+        var newFileId = Guid.NewGuid();
+        
+        // Manually create a file configuration (simulating what initializer does)
+        var fileConfig = new FileTrackConfiguration
+        {
+            FilePath = "test.mkv"
+        };
+        config.FileConfigurations.Add(oldFileId, fileConfig);
+
+        // Act
+        config.MigrateFileConfiguration(oldFileId, newFileId);
+
+        // Assert - new ID should have configuration
+        Assert.True(config.FileConfigurations.ContainsKey(newFileId));
+        Assert.Same(fileConfig, config.FileConfigurations[newFileId]);
+        
+        // Assert - old ID should be removed
+        Assert.False(config.FileConfigurations.ContainsKey(oldFileId));
+    }
+
+    [Fact]
+    public void MigrateFileConfiguration_WhenOldConfigurationDoesNotExist_DoesNothing()
+    {
+        // Arrange
+        var config = new BatchConfiguration(_comparer, _logger);
+        var oldFileId = Guid.NewGuid();
+        var newFileId = Guid.NewGuid();
+
+        // Act - should not throw
+        config.MigrateFileConfiguration(oldFileId, newFileId);
+
+        // Assert - new ID should not have configuration
+        Assert.False(config.FileConfigurations.ContainsKey(newFileId));
+    }
+
+    [Fact]
+    public void MigrateFileConfiguration_PreservesAllTrackTypes()
+    {
+        // Arrange
+        var config = new BatchConfiguration(_comparer, _logger);
+        var oldFileId = Guid.NewGuid();
+        var newFileId = Guid.NewGuid();
+        
+        // Create file configuration with all track types
+        var audioTrack = new TrackConfiguration(new MediaInfoResultBuilder()
+            .AddTrackOfType(TrackType.Audio)
+            .Build().Media.Track.First(t => t.Type == TrackType.Audio));
+        var videoTrack = new TrackConfiguration(new MediaInfoResultBuilder()
+            .AddTrackOfType(TrackType.Video)
+            .Build().Media.Track.First(t => t.Type == TrackType.Video));
+        var subtitleTrack = new TrackConfiguration(new MediaInfoResultBuilder()
+            .AddTrackOfType(TrackType.Text)
+            .Build().Media.Track.First(t => t.Type == TrackType.Text));
+        
+        var fileConfig = new FileTrackConfiguration
+        {
+            FilePath = "test.mkv",
+            AudioTracks = [audioTrack],
+            VideoTracks = [videoTrack],
+            SubtitleTracks = [subtitleTrack]
+        };
+        config.FileConfigurations.Add(oldFileId, fileConfig);
+
+        // Act
+        config.MigrateFileConfiguration(oldFileId, newFileId);
+
+        // Assert - all track types should be preserved
+        var migratedConfig = config.FileConfigurations[newFileId];
+        Assert.Single(migratedConfig.AudioTracks);
+        Assert.Single(migratedConfig.VideoTracks);
+        Assert.Single(migratedConfig.SubtitleTracks);
+        Assert.Same(audioTrack, migratedConfig.AudioTracks[0]);
+        Assert.Same(videoTrack, migratedConfig.VideoTracks[0]);
+        Assert.Same(subtitleTrack, migratedConfig.SubtitleTracks[0]);
+    }
+
+    [Fact]
+    public void MigrateFileConfiguration_PreservesUserModifications()
+    {
+        // Arrange
+        var config = new BatchConfiguration(_comparer, _logger);
+        var oldFileId = Guid.NewGuid();
+        var newFileId = Guid.NewGuid();
+        
+        // Create audio track with user modifications
+        var audioTrack = new TrackConfiguration(new MediaInfoResultBuilder()
+            .AddTrackOfType(TrackType.Audio)
+            .Build().Media.Track.First(t => t.Type == TrackType.Audio))
+        {
+            Name = "Modified Track Name",
+            Default = true,
+            ShouldModifyName = true,
+            ShouldModifyDefaultFlag = true
+        };
+        
+        var fileConfig = new FileTrackConfiguration
+        {
+            FilePath = "test.mkv",
+            AudioTracks = [audioTrack]
+        };
+        config.FileConfigurations.Add(oldFileId, fileConfig);
+
+        // Act
+        config.MigrateFileConfiguration(oldFileId, newFileId);
+
+        // Assert - user modifications should be preserved
+        var migratedConfig = config.FileConfigurations[newFileId];
+        var migratedTrack = migratedConfig.AudioTracks[0];
+        
+        Assert.Equal("Modified Track Name", migratedTrack.Name);
+        Assert.True(migratedTrack.Default);
+        Assert.True(migratedTrack.ShouldModifyName);
+        Assert.True(migratedTrack.ShouldModifyDefaultFlag);
     }
 }

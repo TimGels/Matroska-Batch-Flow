@@ -384,6 +384,27 @@ public partial class BatchConfiguration : IBatchConfiguration
     }
 
     /// <summary>
+    /// Migrates file configuration from an old file ID to a new file ID.
+    /// Used when replacing a file with a re-scanned version that has a new Guid.
+    /// Preserves user's configuration while updating the file's metadata.
+    /// </summary>
+    /// <param name="oldFileId">The original file's unique identifier.</param>
+    /// <param name="newFileId">The new file's unique identifier.</param>
+    public void MigrateFileConfiguration(Guid oldFileId, Guid newFileId)
+    {
+        if (_fileConfigurations.TryGetValue(oldFileId, out var config))
+        {
+            _fileConfigurations.Remove(oldFileId);
+            _fileConfigurations[newFileId] = config;
+            LogFileConfigurationMigrated(oldFileId, newFileId);
+        }
+        else
+        {
+            LogMigrationSkippedNoConfiguration(oldFileId);
+        }
+    }
+
+    /// <summary>
     /// Marks a file's metadata as stale (needs re-scanning).
     /// </summary>
     /// <param name="fileId">The unique identifier of the file to mark as stale.</param>
