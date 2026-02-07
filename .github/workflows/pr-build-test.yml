@@ -3,23 +3,14 @@ name: PR Build and Test
 on:
   pull_request:
     branches: [ main ]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.github/ISSUE_TEMPLATE/**'
-      - '.github/FUNDING.yml'
-      - '.github/copilot-instructions.md'
-      - 'LICENSE'
-      - '.gitignore'
-      - '.gitattributes'
-      - '.editorconfig'
-      - '.vsconfig'
-      - '.filenesting.json'
-      - '.vscode/**'
-      - 'Assets/**'
-
-  # Allow manual trigger for testing
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-build-test-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 env:
   DOTNET_VERSION: '10.0.x'
@@ -27,8 +18,48 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      src: ${{ steps.filter.outputs.src }}
+      docs: ${{ steps.filter.outputs.docs }}
+    
+    steps:
+    - uses: actions/checkout@v6
+    
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          src:
+            - 'src/**'
+            - 'tests/**'
+            - '*.sln'
+            - '*.props'
+            - 'global.json'
+            - '.github/workflows/pr-build-test.yml'
+          docs:
+            - '**/*.md'
+            - 'docs/**'
+            - '.github/workflows/pr-build-test.yml'
+
+  docs:
+    name: Documentation Check
+    needs: changes
+    if: needs.changes.outputs.docs == 'true' && needs.changes.outputs.src == 'false'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+    
+    - name: Documentation Check Complete
+      run: echo "✅ Documentation-only changes, no build required"
+
   build:
     name: Build ${{ matrix.target.name }}
+    needs: changes
+    if: needs.changes.outputs.src == 'true'
     runs-on: windows-latest
     
     strategy:
@@ -106,8 +137,8 @@ jobs:
   test-summary:
     name: Test Summary
     runs-on: windows-latest
-    needs: test
-    if: always()
+    needs: [changes, test]
+    if: always() && needs.changes.outputs.src == 'true'
     
     steps:
     - name: Checkout code
