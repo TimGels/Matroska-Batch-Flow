@@ -40,14 +40,14 @@ public class DefaultFlagConsistencyRule : IFileValidationRule
                 _ => null
             };
 
-            // Skip if validation is disabled for this track type
-            if (trackSettings?.DefaultFlag == ValidationSeverity.Off)
+            // Skip if validation is disabled or settings are null for this track type
+            if (trackSettings == null || trackSettings.DefaultFlag == ValidationSeverity.Off)
                 continue;
 
             // Build a matrix of default flags for the specified track type across all scanned files.
             var defaultFlagMatrix = BuildDefaultFlagMatrix(scannedFiles, type);
 
-            foreach (var result in CompareDefaultFlags(defaultFlagMatrix, scannedFiles, type, settings))
+            foreach (var result in CompareDefaultFlags(defaultFlagMatrix, scannedFiles, type, trackSettings))
                 yield return result;
         }
     }
@@ -69,31 +69,19 @@ public class DefaultFlagConsistencyRule : IFileValidationRule
         List<List<bool>> defaultFlagMatrix,
         List<ScannedFileInfo> scannedFiles,
         TrackType type,
-        BatchValidationSettings settings)
+        TrackPropertyValidationSettings trackSettings)
     {
-        // Get the appropriate validation settings for this track type
-        var trackSettings = type switch
-        {
-            TrackType.Audio => settings.CustomSettings.AudioTrackValidation,
-            TrackType.Video => settings.CustomSettings.VideoTrackValidation,
-            TrackType.Text => settings.CustomSettings.SubtitleTrackValidation,
-            _ => null
-        };
-
-        // Skip validation if settings are null or default flag validation is disabled
-        if (trackSettings == null || trackSettings.DefaultFlag == ValidationSeverity.Off)
-            yield break;
 
         var referenceFileDefaultFlags = defaultFlagMatrix[0];
         // Check if the first file's (reference) default flags are consistent across the rest of the files.
         for (int i = 1; i < defaultFlagMatrix.Count; i++)
         {
-            if (referenceFileDefaultFlags.SequenceEqual(defaultFlagMatrix[i]))
-                continue;
-
             // Skip comparison if the track count is different.
             // Track count consistency validation falls outside the scope of this rule.
             if (referenceFileDefaultFlags.Count != defaultFlagMatrix[i].Count)
+                continue;
+
+            if (referenceFileDefaultFlags.SequenceEqual(defaultFlagMatrix[i]))
                 continue;
 
             for (int trackIndex = 0; trackIndex < referenceFileDefaultFlags.Count; trackIndex++)
