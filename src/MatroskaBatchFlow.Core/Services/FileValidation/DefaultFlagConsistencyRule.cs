@@ -88,12 +88,12 @@ public class DefaultFlagConsistencyRule : IFileValidationRule
         // Check if the first file's (reference) default flags are consistent across the rest of the files.
         for (int i = 1; i < defaultFlagMatrix.Count; i++)
         {
-            if (referenceFileDefaultFlags.SequenceEqual(defaultFlagMatrix[i]))
-                continue;
-
             // Skip comparison if the track count is different.
             // Track count consistency validation falls outside the scope of this rule.
             if (referenceFileDefaultFlags.Count != defaultFlagMatrix[i].Count)
+                continue;
+
+            if (referenceFileDefaultFlags.SequenceEqual(defaultFlagMatrix[i]))
                 continue;
 
             for (int trackIndex = 0; trackIndex < referenceFileDefaultFlags.Count; trackIndex++)

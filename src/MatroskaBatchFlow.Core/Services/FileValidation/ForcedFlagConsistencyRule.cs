@@ -86,12 +86,12 @@ public class ForcedFlagConsistencyRule : IFileValidationRule
         // Check if the first file's (reference) forced flags are consistent across the rest of the files.
         for (int i = 1; i < forcedFlagMatrix.Count; i++)
         {
-            if (referenceFileForcedFlags.SequenceEqual(forcedFlagMatrix[i]))
-                continue;
-
             // Skip comparison if the track count is different.
             // Track count consistency validation falls outside the scope of this rule.
             if (referenceFileForcedFlags.Count != forcedFlagMatrix[i].Count)
+                continue;
+
+            if (referenceFileForcedFlags.SequenceEqual(forcedFlagMatrix[i]))
                 continue;
 
             for (int trackIndex = 0; trackIndex < referenceFileForcedFlags.Count; trackIndex++)
