@@ -39,14 +39,14 @@ public class ForcedFlagConsistencyRule : IFileValidationRule
                 _ => null
             };
 
-            // Skip if validation is disabled for this track type
-            if (trackSettings?.ForcedFlag == ValidationSeverity.Off)
+            // Skip if validation is disabled or settings are null for this track type
+            if (trackSettings == null || trackSettings.ForcedFlag == ValidationSeverity.Off)
                 continue;
 
             // Build a matrix of forced flags for the specified track type across all scanned files.
             var forcedFlagMatrix = BuildForcedFlagMatrix(scannedFiles, type);
 
-            foreach (var result in CompareForcedFlags(forcedFlagMatrix, scannedFiles, type, settings))
+            foreach (var result in CompareForcedFlags(forcedFlagMatrix, scannedFiles, type, trackSettings))
                 yield return result;
         }
     }
@@ -68,19 +68,8 @@ public class ForcedFlagConsistencyRule : IFileValidationRule
         List<List<bool>> forcedFlagMatrix,
         List<ScannedFileInfo> scannedFiles,
         TrackType type,
-        BatchValidationSettings settings)
+        TrackPropertyValidationSettings trackSettings)
     {
-        // Get the appropriate validation settings for this track type
-        var trackSettings = type switch
-        {
-            TrackType.Audio => settings.CustomSettings.AudioTrackValidation,
-            TrackType.Text => settings.CustomSettings.SubtitleTrackValidation,
-            _ => null
-        };
-
-        // Skip validation if settings are null or forced flag validation is disabled
-        if (trackSettings == null || trackSettings.ForcedFlag == ValidationSeverity.Off)
-            yield break;
 
         var referenceFileForcedFlags = forcedFlagMatrix[0];
         // Check if the first file's (reference) forced flags are consistent across the rest of the files.
