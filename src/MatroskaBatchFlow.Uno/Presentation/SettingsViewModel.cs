@@ -232,21 +232,18 @@ public partial class SettingsViewModel : ObservableObject
 
     /// <summary>
     /// Common handler for all validation severity changes. Captures the previous value,
-    /// saves settings, and logs if the value actually changed.
+    /// saves the new value, triggers re-validation, and logs the change.
     /// </summary>
     private async Task HandleSeverityChangedAsync(string settingName, Func<ValidationSeverity> getPrevious, int newValue)
     {
+        if (_suppressValidationUpdates)
+        {
+            return;
+        }
+
         var previous = getPrevious();
         await SaveValidationSeverityAsync();
-        LogSeverityChangeIfDifferent(settingName, previous, (ValidationSeverity)newValue);
-    }
-
-    private void LogSeverityChangeIfDifferent(string settingName, ValidationSeverity previous, ValidationSeverity current)
-    {
-        if (previous != current)
-        {
-            LogValidationSeverityChanged(settingName, previous, current);
-        }
+        LogValidationSeverityChanged(settingName, previous, (ValidationSeverity)newValue);
     }
 
     /// <summary>
