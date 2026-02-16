@@ -51,6 +51,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<ITrackConfigurationFactory, TrackConfigurationFactory>();
             services.AddSingleton<IBatchTrackConfigurationInitializer, BatchTrackConfigurationInitializer>();
             services.AddSingleton<IValidationSettingsService, ValidationSettingsService>();
+            services.AddSingleton<IValidationStateService, ValidationStateService>();
             services.AddSingleton<IUIPreferencesService, UIPreferencesService>();
             services.AddSingleton<ILanguageProvider, LanguageProvider>();
             services.AddSingleton<IFileScanner, FileScanner>();

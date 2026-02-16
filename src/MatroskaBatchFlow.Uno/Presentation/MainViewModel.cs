@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Core.Services.Processing;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Messages;
@@ -13,6 +14,7 @@ public partial class MainViewModel : ObservableObject
     private readonly IBatchReportStore _batchReportStore;
     private readonly IFileProcessingOrchestrator _orchestrator;
     private readonly IMkvPropeditArgumentsGenerator _mkvPropeditArgumentsBuilder;
+    private readonly IValidationStateService _validationStateService;
     private readonly IUIPreferencesService _uiPreferences;
     private readonly IScannedFileInfoPathComparer _pathComparer;
     private readonly ILogger<MainViewModel> _logger;
@@ -25,7 +27,22 @@ public partial class MainViewModel : ObservableObject
     private object? selected;
 
     [ObservableProperty]
-    private bool canProcessBatch;
+    [NotifyPropertyChangedFor(nameof(CanProcessBatch))]
+    private bool hasFiles;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanProcessBatch))]
+    private bool hasConfiguredChanges;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanProcessBatch))]
+    private bool hasNoBlockingErrors = true;
+
+    /// <summary>
+    /// Gets whether the batch can be processed. Requires files to be present, at least one
+    /// configured change, and no blocking validation errors.
+    /// </summary>
+    public bool CanProcessBatch => HasFiles && HasConfiguredChanges && HasNoBlockingErrors;
 
     [ObservableProperty]
     private bool isProcessing;
@@ -51,6 +68,7 @@ public partial class MainViewModel : ObservableObject
         IFileProcessingOrchestrator orchestrator,
         IBatchReportStore batchResultStore,
         IMkvPropeditArgumentsGenerator argumentsService,
+        IValidationStateService validationStateService,
         IUIPreferencesService uiPreferences,
         IScannedFileInfoPathComparer pathComparer,
         ILogger<MainViewModel> logger)
@@ -59,6 +77,7 @@ public partial class MainViewModel : ObservableObject
         _orchestrator = orchestrator;
         _batchReportStore = batchResultStore;
         _mkvPropeditArgumentsBuilder = argumentsService;
+        _validationStateService = validationStateService;
         _uiPreferences = uiPreferences;
         _pathComparer = pathComparer;
         _logger = logger;
@@ -72,6 +91,7 @@ public partial class MainViewModel : ObservableObject
 
         NavigationService.Navigated += OnNavigated;
         _batchConfiguration.StateChanged += BatchConfigurationOnStateChangedHandler;
+        _validationStateService.StateChanged += OnValidationStateChanged;
         _uiPreferences.PropertyChanged += OnUIPreferencesChanged;
 
         BatchReport = _batchReportStore.ActiveBatch;
@@ -229,7 +249,17 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Handles the <see cref="IBatchConfiguration.StateChanged"/> event to update the ability to process the batch.
+    /// Handles validation state changes to update file presence and blocking error state.
+    /// </summary>
+    private void OnValidationStateChanged(object? sender, EventArgs e)
+    {
+        HasFiles = _batchConfiguration.FileList.Count > 0;
+        HasNoBlockingErrors = !_validationStateService.HasBlockingErrors;
+    }
+
+    /// <summary>
+    /// Handles the <see cref="IBatchConfiguration.StateChanged"/> event to update whether
+    /// any configured changes (mkvpropedit arguments) exist.
     /// </summary>
     /// <param name="sender">The source of the event. This can be <see langword="null"/>.</param>
     /// <param name="eventArgs">The event data associated with the state change.</param>
@@ -237,7 +267,7 @@ public partial class MainViewModel : ObservableObject
     {
         var commands = _mkvPropeditArgumentsBuilder.BuildBatchArguments(_batchConfiguration);
         (bool isValid, _) = ValidateMkvpropeditArguments(commands);
-        CanProcessBatch = isValid && _batchConfiguration.FileList.Count > 0;
+        HasConfiguredChanges = isValid;
     }
 
     /// <summary>
