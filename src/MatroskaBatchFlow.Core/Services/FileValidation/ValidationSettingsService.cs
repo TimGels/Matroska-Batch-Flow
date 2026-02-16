@@ -1,8 +1,8 @@
 using MatroskaBatchFlow.Core.Enums;
+using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Models.AppSettings;
-using MatroskaBatchFlow.Uno.Contracts.Services;
 
-namespace MatroskaBatchFlow.Uno.Services;
+namespace MatroskaBatchFlow.Core.Services.FileValidation;
 
 /// <summary>
 /// Service for managing validation settings mode changes and preserving custom settings.
@@ -25,13 +25,13 @@ public sealed class ValidationSettingsService : IValidationSettingsService
     public BatchValidationSettings GetEffectiveSettings(UserSettings userSettings)
     {
         var mode = userSettings.BatchValidation.Mode;
-        
+
         // For Custom mode, return a settings object with CustomSettings
         if (mode == StrictnessMode.Custom)
         {
             return userSettings.BatchValidation;
         }
-        
+
         // For Strict/Lenient mode, apply preset in-memory
         var effectiveSettings = new BatchValidationSettings { Mode = mode };
         ApplyPreset(effectiveSettings.CustomSettings, mode);
@@ -145,7 +145,7 @@ public sealed class ValidationSettingsService : IValidationSettingsService
 
         var backup = _customSettingsBackup.CustomSettings;
         var custom = current.CustomSettings;
-        
+
         custom.TrackCountParity = backup.TrackCountParity;
         custom.AudioTrackValidation.Language = backup.AudioTrackValidation.Language;
         custom.AudioTrackValidation.DefaultFlag = backup.AudioTrackValidation.DefaultFlag;

@@ -351,12 +351,14 @@ public partial class BatchConfiguration : IBatchConfiguration
     /// <param name="eventArgs">The event data associated with the file removal.</param>
     private void OnFileRemoval(object? sender, NotifyCollectionChangedEventArgs eventArgs)
     {
-        // Clear stale flags for removed files
+        // Clean up per-file state for removed files.
+        // OldItems is populated for Remove/Replace but null for Reset (Clear).
         if (eventArgs.OldItems != null)
         {
             foreach (ScannedFileInfo file in eventArgs.OldItems)
             {
-                _staleFileIds.Remove(file.Id);
+                _staleFileIds.Remove(file.Id); // Clear any stale tracking for the removed file.
+                _fileConfigurations.Remove(file.Id); // Remove per-file track configuration for the removed file.
             }
         }
 
@@ -372,6 +374,7 @@ public partial class BatchConfiguration : IBatchConfiguration
         DeleteTrackStatisticsTags = false;
         ShouldModifyTrackStatisticsTags = false;
         ShouldModifyTitle = false;
+        FileConfigurations.Clear();
         ClearTracks();
     }
 

@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 
 namespace MatroskaBatchFlow.Core.Utilities;
 
@@ -94,7 +95,45 @@ public class UniqueObservableCollection<T> : ObservableCollection<T>
         }
 
         // Fire single batch event
+        OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count))); // Notify that Count has changed
+        OnPropertyChanged(new PropertyChangedEventArgs("Item[]")); // Notify that the indexer has changed
         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, itemsToAdd, startIndex));
+    }
+
+    /// <summary>
+    /// Removes all items from the specified collection that are present in this collection.
+    /// </summary>
+    /// <param name="items">The items to remove.</param>
+    public void RemoveRange(IEnumerable<T> items)
+    {
+        var itemsToRemove = new List<T>();
+
+        foreach (var item in items)
+        {
+            if (_hashSet.Remove(item))
+            {
+                itemsToRemove.Add(item);
+            }
+        }
+
+        if (itemsToRemove.Count == 0)
+            return;
+
+        // Build a lookup set using the same comparer, then remove matching items
+        // by scanning the Items list once in reverse order for O(n + m) behavior.
+        var itemsToRemoveSet = new HashSet<T>(itemsToRemove, _hashSet.Comparer);
+
+        for (int i = Items.Count - 1; i >= 0; i--)
+        {
+            if (itemsToRemoveSet.Contains(Items[i]))
+            {
+                Items.RemoveAt(i);
+            }
+        }
+
+        OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count))); // Notify that Count has changed
+        OnPropertyChanged(new PropertyChangedEventArgs("Item[]")); // Notify that the indexer has changed
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, itemsToRemove));
     }
 
     /// <inheritdoc/>

@@ -59,5 +59,11 @@ public sealed record FileValidationResult(
     /// <summary>
     /// Gets whether this result blocks file addition.
     /// </summary>
+    /// <remarks>
+    /// Currently identical to <see cref="IsError"/>. Kept as a separate property to allow
+    /// future differentiation (e.g., if warnings become blocking in certain modes).
+    /// </remarks>
+    // TODO: Revisit during validation refactoring milestone or when implementing configurable
+    //       blocking severity modes; consolidate with IsError if blocking semantics remain tied solely to Error severity.
     public bool IsBlocking => Severity == ValidationSeverity.Error;
 }

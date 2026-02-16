@@ -1,7 +1,8 @@
 using MatroskaBatchFlow.Core.Enums;
+using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Models.AppSettings;
 
-namespace MatroskaBatchFlow.Uno.Contracts.Services;
+namespace MatroskaBatchFlow.Core.Services.FileValidation;
 
 /// <summary>
 /// Service for managing validation settings mode changes and preserving custom settings.

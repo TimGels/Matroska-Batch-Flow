@@ -11,6 +11,7 @@ public interface IFileListAdapter
     void AddFile(ScannedFileInfo file);
     void AddFiles(IEnumerable<ScannedFileInfo> files);
     void RemoveFile(ScannedFileInfo file);
+    void RemoveFiles(IEnumerable<ScannedFileInfo> files);
     void RemoveViewModel(ScannedFileViewModel vm);
     void Clear();
     void RebuildFromCore();

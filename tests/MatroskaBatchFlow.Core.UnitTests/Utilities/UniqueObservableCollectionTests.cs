@@ -218,6 +218,51 @@ public class UniqueObservableCollectionTests
         Assert.DoesNotContain(2, collection);
     }
 
+    // RemoveRange Tests
+
+    [Fact]
+    public void RemoveRange_RemovesMatchingItems()
+    {
+        var collection = new UniqueObservableCollection<int>([1, 2, 3, 4]);
+
+        collection.RemoveRange([2, 4, 5]);
+
+        Assert.Equal(2, collection.Count);
+        Assert.Contains(1, collection);
+        Assert.Contains(3, collection);
+        Assert.DoesNotContain(2, collection);
+        Assert.DoesNotContain(4, collection);
+    }
+
+    [Fact]
+    public void RemoveRange_WhenNoMatches_DoesNotRaiseCollectionChanged()
+    {
+        var collection = new UniqueObservableCollection<int>([1, 2, 3]);
+        var eventRaised = false;
+        collection.CollectionChanged += (_, _) => eventRaised = true;
+
+        collection.RemoveRange([4, 5]);
+
+        Assert.False(eventRaised);
+        Assert.Equal(3, collection.Count);
+    }
+
+    [Fact]
+    public void RemoveRange_RaisesCollectionChanged_OnlyOnce()
+    {
+        var collection = new UniqueObservableCollection<int>([1, 2, 3, 4]);
+        var eventRaisedCount = 0;
+        collection.CollectionChanged += (_, e) =>
+        {
+            eventRaisedCount++;
+            Assert.Equal(NotifyCollectionChangedAction.Remove, e.Action);
+        };
+
+        collection.RemoveRange([1, 3]);
+
+        Assert.Equal(1, eventRaisedCount);
+    }
+
     // Clear Tests
 
     [Fact]

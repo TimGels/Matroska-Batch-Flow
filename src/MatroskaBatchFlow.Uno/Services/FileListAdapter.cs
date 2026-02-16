@@ -155,8 +155,21 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
     public void RemoveFile(ScannedFileInfo file)
     {
         LogRemovingFile(file.Path);
-        _batchConfig.FileConfigurations.Remove(file.Id);
         _batchConfig.FileList.Remove(file);
+    }
+
+    /// <summary>
+    /// Removes a collection of files from the batch configuration's file list.
+    /// </summary>
+    /// <param name="files">The files to remove.</param>
+    public void RemoveFiles(IEnumerable<ScannedFileInfo> files)
+    {
+        var fileList = files.ToList();
+        if (fileList.Count == 0)
+            return;
+
+        LogRemovingFiles(fileList.Count);
+        _batchConfig.FileList.RemoveRange(fileList);
     }
 
     /// <summary>

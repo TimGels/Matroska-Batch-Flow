@@ -47,13 +47,12 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
 
     private readonly IFileListAdapter _fileListAdapter;
     private readonly IFileScanner _fileScanner;
-    private readonly IFileValidationEngine _fileValidator;
     private readonly IFileProcessingEngine _fileProcessingRuleEngine;
     private readonly IBatchConfiguration _batchConfig;
     private readonly IBatchTrackConfigurationInitializer _trackConfigInitializer;
     private readonly IFilePickerDialogService _filePickerDialogService;
     private readonly IWritableSettings<UserSettings> _userSettings;
-    private readonly IValidationSettingsService _validationSettingsService;
+    private readonly IValidationStateService _validationStateService;
     private readonly IPlatformService _platformService;
     private readonly IScannedFileInfoPathComparer _pathComparer;
     private readonly ILogger<InputViewModel> _logger;
@@ -93,13 +92,12 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     public InputViewModel(
         IFileListAdapter fileListAdapter,
         IFileScanner fileScanner,
-        IFileValidationEngine fileValidator,
         IFileProcessingEngine fileProcessingRuleEngine,
         IBatchConfiguration batchConfig,
         IBatchTrackConfigurationInitializer trackConfigInitializer,
         IFilePickerDialogService filePickerDialogService,
         IWritableSettings<UserSettings> userSettings,
-        IValidationSettingsService validationSettingsService,
+        IValidationStateService validationStateService,
         IPlatformService platformService,
         IScannedFileInfoPathComparer pathComparer,
         ILogger<InputViewModel> logger
@@ -107,13 +105,12 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     {
         _fileListAdapter = fileListAdapter;
         _fileScanner = fileScanner;
-        _fileValidator = fileValidator;
         _fileProcessingRuleEngine = fileProcessingRuleEngine;
         _batchConfig = batchConfig;
         _trackConfigInitializer = trackConfigInitializer;
         _filePickerDialogService = filePickerDialogService;
         _userSettings = userSettings;
-        _validationSettingsService = validationSettingsService;
+        _validationStateService = validationStateService;
         _platformService = platformService;
         _pathComparer = pathComparer;
         _logger = logger;
@@ -127,6 +124,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
 
         _batchConfig.FileList.CollectionChanged += BatchConfigFileList_CollectionChanged;
         SelectedFiles.CollectionChanged += SelectedFiles_CollectionChanged;
+        _validationStateService.StateChanged += OnValidationStateChanged;
 
         // Store the handler for later unsubscription.
         _validationNotificationsChangedHandler = (s, e) => NotifyValidationPropertiesChanged();
@@ -196,19 +194,8 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
 
         LogFilesScanned(scannedFiles.Count);
 
-        // Re-scan any stale files before validation.
+        // Re-scan any stale files so metadata is fresh for downstream validation.
         await RescanStaleFilesAsync();
-
-        // Combine existing files with new files.
-        List<ScannedFileInfo> combinedFiles = [.. _batchConfig.FileList, .. scannedFiles];
-        if (combinedFiles.Count == 0)
-            return;
-
-        // Validate the combined list of files using current validation settings from user preferences.
-        var currentValidationSettings = _validationSettingsService.GetEffectiveSettings(_userSettings.Value);
-        List<FileValidationResult> validationResults = [.. _fileValidator.Validate(combinedFiles, currentValidationSettings)];
-        if (HandleValidationResults(validationResults))
-            return;
 
         // Initialize per-file track configurations for all new files
         foreach (var file in scannedFiles)
@@ -363,25 +350,29 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     /// cref="SelectedFiles"/> collection.</remarks>
     private void RemoveSelectedFiles()
     {
-        // Convert SelectedFiles to an array to make a copy to avoid modifying the collection while iterating.
-        foreach (ScannedFileViewModel file in SelectedFiles.ToArray())
-        {
-            _fileListAdapter.RemoveFile(file.FileInfo);
-        }
+        var filesToRemove = SelectedFiles
+            .Select(file => file.FileInfo)
+            .ToList();
+
+        if (filesToRemove.Count == 0)
+            return;
+
+        _fileListAdapter.RemoveFiles(filesToRemove);
     }
 
     /// <summary>
     /// Removes all files from the internal file list.
     /// </summary>
-    /// <remarks>This method clears the file list by iterating over a copy of the current file collection
-    /// to avoid issues with modifying the collection during enumeration.</remarks>
     private void RemoveAllFiles()
     {
-        // Make array copy to prevent recursive clearing.
-        foreach (ScannedFileViewModel file in _fileListAdapter.ScannedFileViewModels.ToArray())
-        {
-            _fileListAdapter.RemoveFile(file.FileInfo);
-        }
+        var filesToRemove = _fileListAdapter.ScannedFileViewModels
+            .Select(file => file.FileInfo)
+            .ToList();
+
+        if (filesToRemove.Count == 0)
+            return;
+
+        _fileListAdapter.RemoveFiles(filesToRemove);
     }
 
     /// <summary>
@@ -421,41 +412,26 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     }
 
     /// <summary>
-    /// Processes validation results and handles display of notifications.
+    /// Handles validation state changes from the <see cref="IValidationStateService"/>.
+    /// Updates the UI notification state with the latest validation results.
     /// </summary>
-    /// <remarks>
-    /// This method processes all validation results (errors, warnings, info) and updates the validation notification state.
-    /// Only errors (ValidationSeverity.Error) will block file addition.
-    /// </remarks>
-    /// <param name="results">A collection of <see cref="FileValidationResult"/> objects representing the validation results to process.</param>
-    /// <returns><see langword="true"/> if one or more blocking errors were found; otherwise, <see langword="false"/>.</returns>
-    private bool HandleValidationResults(IEnumerable<FileValidationResult> results)
+    private void OnValidationStateChanged(object? sender, EventArgs e)
     {
-        // Clear previous notifications
         ValidationNotifications.Clear();
 
-        // Convert all results to notification items
-        var notifications = results.Select(r => new ValidationNotificationItem
+        if (_validationStateService.HasResults)
         {
-            Severity = r.Severity,
-            FilePath = r.ValidatedFilePath,
-            Message = r.Message
-        });
+            var notifications = _validationStateService.CurrentResults.Select(r => new ValidationNotificationItem
+            {
+                Severity = r.Severity,
+                FilePath = r.ValidatedFilePath,
+                Message = r.Message
+            });
 
-        // Add all notifications to state
-        ValidationNotifications.AddNotifications(notifications);
-
-        // Open InfoBar if there are notifications
-        IsValidationInfoBarOpen = ValidationNotifications.HasNotifications;
-
-        // Only errors block file addition
-        if (ValidationNotifications.HasErrors)
-        {
-            LogValidationBlocked(ValidationNotifications.Errors.Count());
-            return true;
+            ValidationNotifications.AddNotifications(notifications);
         }
 
-        return false;
+        IsValidationInfoBarOpen = _validationStateService.HasResults;
     }
 
     /// <summary>
@@ -519,6 +495,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     {
         _batchConfig.FileList.CollectionChanged -= BatchConfigFileList_CollectionChanged;
         SelectedFiles.CollectionChanged -= SelectedFiles_CollectionChanged;
+        _validationStateService.StateChanged -= OnValidationStateChanged;
         ValidationNotifications.AllNotifications.CollectionChanged -= _validationNotificationsChangedHandler;
 
         GC.SuppressFinalize(this);
