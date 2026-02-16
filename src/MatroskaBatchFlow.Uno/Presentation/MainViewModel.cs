@@ -95,6 +95,10 @@ public partial class MainViewModel : ObservableObject
         _uiPreferences.PropertyChanged += OnUIPreferencesChanged;
 
         BatchReport = _batchReportStore.ActiveBatch;
+
+        // Initialize state properties based on current batch/validation state
+        OnValidationStateChanged(this, EventArgs.Empty);
+        BatchConfigurationOnStateChangedHandler(this, EventArgs.Empty);
     }
 
     private void OnUIPreferencesChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
