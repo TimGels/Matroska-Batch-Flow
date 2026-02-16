@@ -54,7 +54,7 @@ public sealed partial class ValidationStateService : IValidationStateService
     }
 
     /// <inheritdoc/>
-    /// <exception cref="ObjectDisposedException">Thrown if the service has been disposed.</exception>"
+    /// <exception cref="ObjectDisposedException">Thrown if the service has been disposed.</exception>
     public void Revalidate()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
