@@ -25,30 +25,33 @@ public partial class FileValidationEngine(
     public IEnumerable<FileValidationResult> Validate(IEnumerable<ScannedFileInfo> files, BatchValidationSettings settings)
     {
         var fileList = files as IList<ScannedFileInfo> ?? files.ToList();
-        LogValidationStarted(fileList.Count, _rules.Count);
-
-        int errorCount = 0;
-        int warningCount = 0;
+        LogValidationStarted(fileList.Count, _rules.Count, settings.Mode.ToString());
 
         foreach (var rule in _rules)
         {
+            int ruleResultCount = 0;
+
             foreach (var result in rule.Validate(fileList, settings))
             {
+                ruleResultCount++;
+
                 if (result.Severity == ValidationSeverity.Error)
                 {
                     LogValidationError(result.ValidatedFilePath, result.Message);
-                    errorCount++;
                 }
                 else if (result.Severity == ValidationSeverity.Warning)
                 {
                     LogValidationWarning(result.ValidatedFilePath, result.Message);
-                    warningCount++;
+                }
+                else if (result.Severity == ValidationSeverity.Info)
+                {
+                    LogValidationInfo(result.ValidatedFilePath, result.Message);
                 }
 
                 yield return result;
             }
-        }
 
-        LogValidationCompleted(errorCount, warningCount);
+            LogRuleCompleted(rule.GetType().Name, ruleResultCount, fileList.Count);
+        }
     }
 }

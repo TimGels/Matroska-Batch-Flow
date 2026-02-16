@@ -1,6 +1,7 @@
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models.AppSettings;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Enums;
@@ -12,10 +13,12 @@ public partial class SettingsViewModel : ObservableObject
 {
     private readonly IWritableSettings<UserSettings> _userSettings;
     private readonly IValidationSettingsService _validationSettingsService;
+    private readonly IValidationStateService _validationStateService;
     private readonly IUIPreferencesService _uiPreferences;
     private readonly ILogger<SettingsViewModel> _logger;
     private readonly ILogLevelService _logLevelService;
     private readonly LoggingOptions _loggingOptions;
+    private bool _suppressValidationUpdates;
 
     [ObservableProperty]
     private string customMkvPropeditPath;
@@ -82,6 +85,7 @@ public partial class SettingsViewModel : ObservableObject
     public SettingsViewModel(
         IWritableSettings<UserSettings> userSettings,
         IValidationSettingsService validationSettingsService,
+        IValidationStateService validationStateService,
         IUIPreferencesService uiPreferences,
         ILogLevelService logLevelService,
         IOptions<LoggingOptions> loggingOptions,
@@ -89,6 +93,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         _userSettings = userSettings;
         _validationSettingsService = validationSettingsService;
+        _validationStateService = validationStateService;
         _uiPreferences = uiPreferences;
         _logLevelService = logLevelService;
         _loggingOptions = loggingOptions.Value;
@@ -104,7 +109,7 @@ public partial class SettingsViewModel : ObservableObject
         // Determine if log level control should be enabled
         // If appsettings.json has a non-empty log level configured, disable user control
         isLogLevelControlEnabled = string.IsNullOrWhiteSpace(_loggingOptions.MinimumLevel);
-        
+
         // Load log level - show appsettings value if configured, otherwise user setting
         var effectiveLogLevel = !string.IsNullOrWhiteSpace(_loggingOptions.MinimumLevel)
             ? _loggingOptions.MinimumLevel
@@ -163,8 +168,14 @@ public partial class SettingsViewModel : ObservableObject
     /// <param name="value">The new index value.</param>
     async partial void OnSelectedStrictnessModeIndexChanged(int value)
     {
+        if (_suppressValidationUpdates)
+        {
+            return;
+        }
+
+        var previousMode = _userSettings.Value.BatchValidation.Mode;
         var mode = (StrictnessMode)value;
-        
+
         try
         {
             // Delegate mode switching logic to the service
@@ -175,7 +186,15 @@ public partial class SettingsViewModel : ObservableObject
 
             // Reload from file to update UI
             LoadValidationSettings();
-            
+
+            if (previousMode != mode)
+            {
+                LogValidationStrictnessChanged(previousMode, mode);
+            }
+
+            // Trigger re-validation of the current batch
+            _validationStateService.Revalidate();
+
             // Notify UI of all changes
             NotifyAllValidationPropertiesChanged();
             OnPropertyChanged(nameof(IsCustomMode));
@@ -191,43 +210,46 @@ public partial class SettingsViewModel : ObservableObject
     /// Handles changes to validation severity settings in custom mode.
     /// </summary>
     async partial void OnTrackCountParitySeverityIndexChanged(int value)
-    {
-        await SaveValidationSeverityAsync();
-    }
+        => await HandleSeverityChangedAsync("TrackCountParity", () => _userSettings.Value.BatchValidation.CustomSettings.TrackCountParity, value);
 
     async partial void OnAudioLanguageSeverityIndexChanged(int value)
-    {
-        await SaveValidationSeverityAsync();
-    }
+        => await HandleSeverityChangedAsync("AudioLanguage", () => _userSettings.Value.BatchValidation.CustomSettings.AudioTrackValidation.Language, value);
 
     async partial void OnAudioDefaultFlagSeverityIndexChanged(int value)
-    {
-        await SaveValidationSeverityAsync();
-    }
+        => await HandleSeverityChangedAsync("AudioDefaultFlag", () => _userSettings.Value.BatchValidation.CustomSettings.AudioTrackValidation.DefaultFlag, value);
 
     async partial void OnAudioForcedFlagSeverityIndexChanged(int value)
-    {
-        await SaveValidationSeverityAsync();
-    }
+        => await HandleSeverityChangedAsync("AudioForcedFlag", () => _userSettings.Value.BatchValidation.CustomSettings.AudioTrackValidation.ForcedFlag, value);
 
     async partial void OnVideoLanguageSeverityIndexChanged(int value)
-    {
-        await SaveValidationSeverityAsync();
-    }
+        => await HandleSeverityChangedAsync("VideoLanguage", () => _userSettings.Value.BatchValidation.CustomSettings.VideoTrackValidation.Language, value);
 
     async partial void OnVideoDefaultFlagSeverityIndexChanged(int value)
-    {
-        await SaveValidationSeverityAsync();
-    }
+        => await HandleSeverityChangedAsync("VideoDefaultFlag", () => _userSettings.Value.BatchValidation.CustomSettings.VideoTrackValidation.DefaultFlag, value);
 
     async partial void OnSubtitleLanguageSeverityIndexChanged(int value)
-    {
-        await SaveValidationSeverityAsync();
-    }
+        => await HandleSeverityChangedAsync("SubtitleLanguage", () => _userSettings.Value.BatchValidation.CustomSettings.SubtitleTrackValidation.Language, value);
 
     async partial void OnSubtitleForcedFlagSeverityIndexChanged(int value)
+        => await HandleSeverityChangedAsync("SubtitleForcedFlag", () => _userSettings.Value.BatchValidation.CustomSettings.SubtitleTrackValidation.ForcedFlag, value);
+
+    /// <summary>
+    /// Common handler for all validation severity changes. Captures the previous value,
+    /// saves settings, and logs if the value actually changed.
+    /// </summary>
+    private async Task HandleSeverityChangedAsync(string settingName, Func<ValidationSeverity> getPrevious, int newValue)
     {
+        var previous = getPrevious();
         await SaveValidationSeverityAsync();
+        LogSeverityChangeIfDifferent(settingName, previous, (ValidationSeverity)newValue);
+    }
+
+    private void LogSeverityChangeIfDifferent(string settingName, ValidationSeverity previous, ValidationSeverity current)
+    {
+        if (previous != current)
+        {
+            LogValidationSeverityChanged(settingName, previous, current);
+        }
     }
 
     /// <summary>
@@ -252,7 +274,7 @@ public partial class SettingsViewModel : ObservableObject
         }
 
         var logLevelName = ConvertIndexToLogLevel(value);
-        
+
         try
         {
             // Update user settings
@@ -315,23 +337,32 @@ public partial class SettingsViewModel : ObservableObject
     /// </summary>
     private void LoadValidationSettings()
     {
-        var settings = _userSettings.Value.BatchValidation;
-        SelectedStrictnessModeIndex = (int)settings.Mode;
-        
-        // If mode is Strict or Lenient, display preset values (not saved custom values)
-        if (settings.Mode != StrictnessMode.Custom)
+        _suppressValidationUpdates = true;
+
+        try
         {
-            var tempSettings = new ValidationSeveritySettings();
-            _validationSettingsService.ApplyPreset(tempSettings, settings.Mode);
-            UpdateViewModelPropertiesFromSettings(tempSettings);
+            var settings = _userSettings.Value.BatchValidation;
+            SelectedStrictnessModeIndex = (int)settings.Mode;
+
+            // If mode is Strict or Lenient, display preset values (not saved custom values)
+            if (settings.Mode != StrictnessMode.Custom)
+            {
+                var tempSettings = new ValidationSeveritySettings();
+                _validationSettingsService.ApplyPreset(tempSettings, settings.Mode);
+                UpdateViewModelPropertiesFromSettings(tempSettings);
+            }
+            else
+            {
+                // Custom mode - load actual saved custom values
+                UpdateViewModelPropertiesFromSettings(settings.CustomSettings);
+            }
         }
-        else
+        finally
         {
-            // Custom mode - load actual saved custom values
-            UpdateViewModelPropertiesFromSettings(settings.CustomSettings);
+            _suppressValidationUpdates = false;
         }
     }
-    
+
     /// <summary>
     /// Updates all validation severity properties from a ValidationSeveritySettings object.
     /// </summary>
@@ -346,7 +377,7 @@ public partial class SettingsViewModel : ObservableObject
         SubtitleLanguageSeverityIndex = (int)settings.SubtitleTrackValidation.Language;
         SubtitleForcedFlagSeverityIndex = (int)settings.SubtitleTrackValidation.ForcedFlag;
     }
-    
+
     /// <summary>
     /// Notifies the UI that all validation severity properties have changed.
     /// </summary>
@@ -367,6 +398,11 @@ public partial class SettingsViewModel : ObservableObject
     /// </summary>
     private async Task SaveValidationSeverityAsync()
     {
+        if (_suppressValidationUpdates)
+        {
+            return;
+        }
+
         // Only save custom settings when in Custom mode
         if (SelectedStrictnessModeIndex != (int)StrictnessMode.Custom)
         {
@@ -387,6 +423,9 @@ public partial class SettingsViewModel : ObservableObject
                 custom.SubtitleTrackValidation.Language = (ValidationSeverity)SubtitleLanguageSeverityIndex;
                 custom.SubtitleTrackValidation.ForcedFlag = (ValidationSeverity)SubtitleForcedFlagSeverityIndex;
             });
+
+            // Trigger re-validation of the current batch
+            _validationStateService.Revalidate();
         }
         catch (Exception ex)
         {

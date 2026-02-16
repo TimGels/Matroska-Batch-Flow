@@ -19,6 +19,12 @@ public partial class SettingsViewModel
     [LoggerMessage(Level = LogLevel.Error, Message = "Failed to save custom validation severity settings")]
     private partial void LogSaveValidationSeverityFailed(Exception ex);
 
+    [LoggerMessage(Level = LogLevel.Information, Message = "Validation strictness mode changed from {PreviousMode} to {NewMode}")]
+    private partial void LogValidationStrictnessChanged(StrictnessMode previousMode, StrictnessMode newMode);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Validation setting {SettingName} changed from {PreviousValue} to {NewValue}")]
+    private partial void LogValidationSeverityChanged(string settingName, ValidationSeverity previousValue, ValidationSeverity newValue);
+
     [LoggerMessage(Level = LogLevel.Information, Message = "Log level changed to {LogLevel}")]
     private partial void LogLogLevelChanged(string logLevel);
 
