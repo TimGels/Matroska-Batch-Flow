@@ -126,7 +126,7 @@ public class ValidationStateServiceTests
     }
 
     [Fact]
-    public void Revalidate_WithEmptyFileList_DoesNotFireStateChanged_WhenAlreadyEmpty()
+    public void Revalidate_WithEmptyFileList_FiresStateChanged()
     {
         // Arrange — results are already empty (default state)
         var eventFired = false;
@@ -135,8 +135,8 @@ public class ValidationStateServiceTests
         // Act
         _sut.Revalidate();
 
-        // Assert
-        Assert.False(eventFired);
+        // Assert — StateChanged always fires to ensure consistent behavior for file-list changes
+        Assert.True(eventFired);
     }
 
     [Fact]
@@ -257,6 +257,34 @@ public class ValidationStateServiceTests
         Assert.True(_sut.HasBlockingErrors);
         Assert.True(_sut.HasWarnings);
         Assert.True(_sut.HasResults);
+    }
+
+    [Fact]
+    public void FileListCollectionChanged_RemovingLastFile_FiresStateChanged_WhenNoValidationResults()
+    {
+        // Arrange — add a file but ensure validation returns no results (all valid)
+        var file = CreateScannedFile("file1.mkv");
+        _fileList.Add(file);
+
+        _validationEngine.Validate(Arg.Any<IEnumerable<ScannedFileInfo>>(), Arg.Any<BatchValidationSettings>())
+            .Returns(new List<FileValidationResult>()); // No validation issues
+
+        // Trigger initial validation to ensure results are empty
+        _sut.Revalidate();
+        Assert.False(_sut.HasResults);
+
+        // Subscribe to StateChanged AFTER initial state is established
+        var eventFired = false;
+        _sut.StateChanged += (_, _) => eventFired = true;
+
+        // Act — remove the last file, transitioning to empty file list
+        _fileList.Remove(file);
+
+        // Assert — StateChanged should fire even though both old and new results are empty,
+        // because the file list state changed (subscribers like MainViewModel.HasFiles need notification)
+        Assert.True(eventFired);
+        Assert.Empty(_sut.CurrentResults);
+        Assert.False(_sut.HasResults);
     }
 
     [Fact]

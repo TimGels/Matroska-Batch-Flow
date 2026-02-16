@@ -64,12 +64,7 @@ public sealed partial class ValidationStateService : IValidationStateService
         if (files.Count == 0)
         {
             LogValidationSkipped();
-
-            if (_currentResults.Count > 0)
-            {
-                UpdateState([]);
-            }
-
+            UpdateState([]); // Always clear results when there are no files, to reset any previous state
             return;
         }
 
