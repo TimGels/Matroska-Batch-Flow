@@ -187,10 +187,7 @@ public partial class SettingsViewModel : ObservableObject
             // Reload from file to update UI
             LoadValidationSettings();
 
-            if (previousMode != mode)
-            {
-                LogValidationStrictnessChanged(previousMode, mode);
-            }
+            LogValidationStrictnessChanged(previousMode, mode);
 
             // Trigger re-validation of the current batch
             _validationStateService.Revalidate();
