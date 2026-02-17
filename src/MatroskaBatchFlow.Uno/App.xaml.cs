@@ -192,7 +192,7 @@ public partial class App : Application
         loggingViewService.SetDispatcherQueue(window.DispatcherQueue);
 
 #if DEBUG
-        //window.UseStudio();
+        window.UseStudio();
 #endif
 
 #if WINDOWS10_0_19041_0_OR_GREATER
