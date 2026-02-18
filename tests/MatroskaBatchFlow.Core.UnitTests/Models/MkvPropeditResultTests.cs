@@ -191,16 +191,17 @@ public class MkvPropeditResultTests
     }
 
     [Fact]
-    public void MkvPropeditResult_IsRecord_SupportsValueEquality()
+    public void MkvPropeditResult_IsRecord_WarningsUsesReferenceEquality()
     {
-        // Arrange
-        var warnings = new List<string> { "Warning 1" };
+        // IReadOnlyList<string> has no structural equality; record equality for Warnings
+        // falls back to reference equality. Two records that are identical in every way
+        // but use different list instances are therefore not equal.
         var result1 = new MkvPropeditResult
         {
             Status = MkvPropeditStatus.Success,
             StandardOutput = "Output",
             StandardError = "Error",
-            Warnings = warnings,
+            Warnings = ["Warning 1"],
             ResolvedExecutablePath = "path.exe",
             ExecutableArguments = "args"
         };
@@ -210,16 +211,22 @@ public class MkvPropeditResultTests
             Status = MkvPropeditStatus.Success,
             StandardOutput = "Output",
             StandardError = "Error",
-            Warnings = warnings,
+            Warnings = ["Warning 1"],   // same contents, different instance
             ResolvedExecutablePath = "path.exe",
             ExecutableArguments = "args"
         };
 
         // Act & Assert
-        Assert.Equal(result1, result2);
-        Assert.True(result1 == result2);
+        Assert.NotEqual(result1, result2);
+        Assert.False(result1 == result2);
     }
 
+    /// <summary>
+    /// Verifies that the with-expression produces a new record instance (non-destructive mutation),
+    /// and that unchanged members — including reference-type members like Warnings — are shallow-copied.
+    /// This means the new record gets a copy of the list <em>reference</em>, not a copy of the list itself.
+    /// Consumers must not assume that with provides full isolation for mutable reference-type members.
+    /// </summary>  
     [Fact]
     public void MkvPropeditResult_IsRecord_SupportsWith_ForImmutableUpdates()
     {
@@ -235,11 +242,17 @@ public class MkvPropeditResultTests
         // Act
         var updated = original with { Status = MkvPropeditStatus.Success };
 
-        // Assert
+        // Assert - with produces a new record instance
+        Assert.NotSame(original, updated);
+
+        // Unchanged members are copied to the new instance
         Assert.Equal(MkvPropeditStatus.Warning, original.Status);
         Assert.Equal(MkvPropeditStatus.Success, updated.Status);
         Assert.Equal("original.exe", updated.ResolvedExecutablePath);
-        Assert.Equal(originalWarnings, updated.Warnings);
+
+        // Warnings is a reference type; with performs a shallow copy, so both records
+        // reference the same underlying list instance.
+        Assert.Same(originalWarnings, updated.Warnings);
     }
 
     [Fact]
