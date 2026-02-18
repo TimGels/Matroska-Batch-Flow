@@ -13,9 +13,9 @@ public class LanguageConsistencyRule : IFileValidationRule
     /// Validates a collection of scanned files to ensure consistency in track languages across files.
     /// </summary>
     /// <remarks>This method checks the language consistency of tracks across the provided files. 
-    /// If fewer than two files are provided, no validation is performed. For each track type, the method compares
-    /// the languages of tracks in the first file against the corresponding tracks in subsequent files. If a mismatch is
-    /// detected, a warning is returned indicating the type of track and the files involved.</remarks>
+    /// If fewer than two files are provided, no validation is performed. For each track type, it uses rolling
+    /// reference comparison to detect language mismatches even when files have different track counts.
+    /// When files differ in track count, overlapping track positions are still validated.</remarks>
     /// <param name="files">A collection of <see cref="ScannedFileInfo"/> objects representing the files to validate.</param>
     /// <param name="settings">Validation settings controlling severity levels per track type and property.</param>
     /// <returns>An enumerable of <see cref="FileValidationResult"/> objects containing validation warnings for any detected
@@ -31,73 +31,25 @@ public class LanguageConsistencyRule : IFileValidationRule
 
         foreach (var type in trackTypes)
         {
+            // Check if validation is enabled for this track type before building the matrix
+            var trackSettings = type switch
+            {
+                TrackType.Audio => settings.CustomSettings.AudioTrackValidation,
+                TrackType.Video => settings.CustomSettings.VideoTrackValidation,
+                TrackType.Text => settings.CustomSettings.SubtitleTrackValidation,
+                _ => null
+            };
+
+            // Skip if validation is disabled or settings are null for this track type
+            if (trackSettings == null || trackSettings.Language == ValidationSeverity.Off)
+                continue;
+
             // Build a matrix of languages for the specified track type across all scanned files.
             var languageMatrix = BuildLanguageMatrix(scannedFiles, type);
 
-            foreach (var result in CompareLanguages(languageMatrix, scannedFiles, type, settings))
+            foreach (var result in RollingReferenceComparer.Compare(
+                languageMatrix, scannedFiles, type, trackSettings.Language, "Language"))
                 yield return result;
-        }
-    }
-
-    /// <summary>
-    /// Compares the languages of a tracktype across multiple files and identifies any mismatches.
-    /// </summary>
-    /// <remarks>This method compares the languages of a specific tracktype of each file against the reference file (the
-    /// first file in the list). A mismatch is identified if the language at a specific track position differs
-    /// between the reference file and another file.</remarks>
-    /// <param name="languageMatrix">A list of lists (matrix), where each inner list represents the languages of a file of a tracktype.</param>
-    /// <param name="scannedFiles">A list of <see cref="ScannedFileInfo"/> objects representing the files being validated. The order of files in
-    /// this list must correspond to the order of the <paramref name="languageMatrix"/>.</param>
-    /// <param name="type">The type of track being compared.</param>
-    /// <param name="settings">Validation settings controlling severity levels per track type and property.</param>
-    /// <returns>An enumerable collection of <see cref="FileValidationResult"/> objects. If no mismatches are found, 
-    /// the enumerable will be empty.</returns>
-    private static IEnumerable<FileValidationResult> CompareLanguages(
-        List<List<string>> languageMatrix,
-        List<ScannedFileInfo> scannedFiles,
-        TrackType type,
-        BatchValidationSettings settings)
-    {
-        // Get the appropriate validation settings for this track type
-        var trackSettings = type switch
-        {
-            TrackType.Audio => settings.CustomSettings.AudioTrackValidation,
-            TrackType.Video => settings.CustomSettings.VideoTrackValidation,
-            TrackType.Text => settings.CustomSettings.SubtitleTrackValidation,
-            _ => null
-        };
-
-        // Skip validation if settings are null or language validation is disabled
-        if (trackSettings == null || trackSettings.Language == ValidationSeverity.Off)
-            yield break;
-
-        var referenceFileLanguages = languageMatrix[0];
-        // Check if the first file's (reference) languages are consistent across the rest of the files.
-        for (int i = 1; i < languageMatrix.Count; i++)
-        {
-            if (referenceFileLanguages.SequenceEqual(languageMatrix[i]))
-                continue;
-
-            // TODO: Decide whether this rule should be able to still validate if the track count is different.
-            // Skip comparison if the track count is different.
-            // Track count consistency validation falls outside the scope of this rule.
-            if (referenceFileLanguages.Count != languageMatrix[i].Count)
-                continue;
-
-            for (int trackIndex = 0; trackIndex < referenceFileLanguages.Count; trackIndex++)
-            {
-                // Skip if the track languages match.
-                if (referenceFileLanguages[trackIndex] == languageMatrix[i][trackIndex])
-                    continue;
-
-                yield return new FileValidationResult(
-                    trackSettings.Language,
-                    scannedFiles[i].Path,
-                    $"Language mismatch in {type} tracks at position {trackIndex + 1}: " +
-                    $"'{referenceFileLanguages[trackIndex]}' (in '{scannedFiles[0].Path}') " +
-                    $"vs '{languageMatrix[i][trackIndex]}' (in '{scannedFiles[i].Path}')."
-                );
-            }
         }
     }
 
