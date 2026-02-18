@@ -13,9 +13,9 @@ public class DefaultFlagConsistencyRule : IFileValidationRule
     /// Validates a collection of scanned files to ensure consistency in default flags across files.
     /// </summary>
     /// <remarks>This method checks the default flag consistency of tracks across the provided files. 
-    /// If fewer than two files are provided, no validation is performed. For each track type, the method compares
-    /// the default flags of tracks in the first file against the corresponding tracks in subsequent files. If a mismatch is
-    /// detected, a validation result is returned based on the configured severity level.</remarks>
+    /// If fewer than two files are provided, no validation is performed. For each track type, it uses rolling
+    /// reference comparison to detect default flag mismatches even when files have different track counts.
+    /// When files differ in track count, overlapping track positions are still validated.</remarks>
     /// <param name="files">A collection of <see cref="ScannedFileInfo"/> objects representing the files to validate.</param>
     /// <param name="settings">Validation settings controlling severity levels per track type and property.</param>
     /// <returns>An enumerable of <see cref="FileValidationResult"/> objects containing validation results for any detected
@@ -47,57 +47,9 @@ public class DefaultFlagConsistencyRule : IFileValidationRule
             // Build a matrix of default flags for the specified track type across all scanned files.
             var defaultFlagMatrix = BuildDefaultFlagMatrix(scannedFiles, type);
 
-            foreach (var result in CompareDefaultFlags(defaultFlagMatrix, scannedFiles, type, trackSettings))
+            foreach (var result in RollingReferenceComparer.Compare(
+                defaultFlagMatrix, scannedFiles, type, trackSettings.DefaultFlag, "Default flag"))
                 yield return result;
-        }
-    }
-
-    /// <summary>
-    /// Compares the default flags of a track type across multiple files and identifies any mismatches.
-    /// </summary>
-    /// <remarks>This method compares the default flags of a specific track type of each file against the reference file (the
-    /// first file in the list). A mismatch is identified if the default flag at a specific track position differs
-    /// between the reference file and another file.</remarks>
-    /// <param name="defaultFlagMatrix">A list of lists (matrix), where each inner list represents the default flags of a file of a track type.</param>
-    /// <param name="scannedFiles">A list of <see cref="ScannedFileInfo"/> objects representing the files being validated. The order of files in
-    /// this list must correspond to the order of the <paramref name="defaultFlagMatrix"/>.</param>
-    /// <param name="type">The type of track being compared.</param>
-    /// <param name="settings">Validation settings controlling severity levels per track type and property.</param>
-    /// <returns>An enumerable collection of <see cref="FileValidationResult"/> objects. If no mismatches are found, 
-    /// the enumerable will be empty.</returns>
-    private static IEnumerable<FileValidationResult> CompareDefaultFlags(
-        List<List<bool>> defaultFlagMatrix,
-        List<ScannedFileInfo> scannedFiles,
-        TrackType type,
-        TrackPropertyValidationSettings trackSettings)
-    {
-
-        var referenceFileDefaultFlags = defaultFlagMatrix[0];
-        // Check if the first file's (reference) default flags are consistent across the rest of the files.
-        for (int i = 1; i < defaultFlagMatrix.Count; i++)
-        {
-            // Skip comparison if the track count is different.
-            // Track count consistency validation falls outside the scope of this rule.
-            if (referenceFileDefaultFlags.Count != defaultFlagMatrix[i].Count)
-                continue;
-
-            if (referenceFileDefaultFlags.SequenceEqual(defaultFlagMatrix[i]))
-                continue;
-
-            for (int trackIndex = 0; trackIndex < referenceFileDefaultFlags.Count; trackIndex++)
-            {
-                // Skip if the track default flags match.
-                if (referenceFileDefaultFlags[trackIndex] == defaultFlagMatrix[i][trackIndex])
-                    continue;
-
-                yield return new FileValidationResult(
-                    trackSettings.DefaultFlag,
-                    scannedFiles[i].Path,
-                    $"Default flag mismatch in {type} tracks at position {trackIndex + 1}: " +
-                    $"'{referenceFileDefaultFlags[trackIndex]}' (in '{scannedFiles[0].Path}') " +
-                    $"vs '{defaultFlagMatrix[i][trackIndex]}' (in '{scannedFiles[i].Path}')."
-                );
-            }
         }
     }
 

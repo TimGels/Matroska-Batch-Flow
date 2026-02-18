@@ -42,4 +42,8 @@
         <PackageReference Include="Microsoft.Extensions.Options" />
     </ItemGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="MatroskaBatchFlow.Core.UnitTests" />
+    </ItemGroup>
+
 </Project>

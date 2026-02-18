@@ -212,6 +212,89 @@ public class LanguageConsistencyRuleTests
         Assert.Empty(results);  // Audio matches, so no errors
     }
 
+    [Fact]
+    public void Validate_WhenTrackCountsDiffer_ValidatesOverlappingPositions()
+    {
+        // Arrange
+        var settings = new BatchValidationSettings
+        {
+            CustomSettings = new ValidationSeveritySettings
+            {
+                AudioTrackValidation = new TrackPropertyValidationSettings { Language = ValidationSeverity.Error }
+            }
+        };
+
+        var builder1 = new MediaInfoResultBuilder();
+        builder1.AddTrack(new TrackInfoBuilder()
+            .WithType(TrackType.Audio)
+            .WithLanguage("eng")
+            .Build());
+
+        var builder2 = new MediaInfoResultBuilder();
+        builder2.AddTrack(new TrackInfoBuilder()
+            .WithType(TrackType.Audio)
+            .WithLanguage("jpn")  // Differs from reference at overlapping position
+            .Build());
+        builder2.AddTrack(new TrackInfoBuilder()
+            .WithType(TrackType.Audio)
+            .WithLanguage("fra")
+            .Build());
+
+        var files = new List<ScannedFileInfo>
+        {
+            new(builder1.Build(), "file1.mkv"),  // 1 audio track
+            new(builder2.Build(), "file2.mkv")   // 2 audio tracks
+        };
+
+        // Act
+        var results = _rule.Validate(files, settings).ToList();
+
+        // Assert: Overlapping position validated, mismatch reported
+        Assert.Single(results);
+        Assert.Contains("position 1", results[0].Message);
+    }
+
+    [Fact]
+    public void Validate_WhenTrackCountsDifferButOverlappingMatch_ReturnsNoErrors()
+    {
+        // Arrange
+        var settings = new BatchValidationSettings
+        {
+            CustomSettings = new ValidationSeveritySettings
+            {
+                AudioTrackValidation = new TrackPropertyValidationSettings { Language = ValidationSeverity.Error }
+            }
+        };
+
+        var builder1 = new MediaInfoResultBuilder();
+        builder1.AddTrack(new TrackInfoBuilder()
+            .WithType(TrackType.Audio)
+            .WithLanguage("eng")
+            .Build());
+
+        var builder2 = new MediaInfoResultBuilder();
+        builder2.AddTrack(new TrackInfoBuilder()
+            .WithType(TrackType.Audio)
+            .WithLanguage("eng")  // Matches reference at overlapping position
+            .Build());
+        builder2.AddTrack(new TrackInfoBuilder()
+            .WithType(TrackType.Audio)
+            .WithLanguage("jpn")
+            .Build());
+
+        var files = new List<ScannedFileInfo>
+        {
+            new(builder1.Build(), "file1.mkv"),  // 1 audio track
+            new(builder2.Build(), "file2.mkv")   // 2 audio tracks
+        };
+
+        // Act
+        var results = _rule.Validate(files, settings).ToList();
+
+        // Assert: Overlapping position matches, no error
+        Assert.Empty(results);
+    }
+
     private static ScannedFileInfo CreateFileWithLanguages(string path, string audioLang, string videoLang, string subtitleLang)
     {
         var builder = new MediaInfoResultBuilder();

@@ -223,7 +223,7 @@ public class ForcedFlagConsistencyRuleTests
     }
 
     [Fact]
-    public void Validate_WhenTrackCountsDiffer_SkipsValidation()
+    public void Validate_WhenTrackCountsDiffer_ValidatesOverlappingPositions()
     {
         // Arrange
         var settings = new BatchValidationSettings
@@ -243,7 +243,7 @@ public class ForcedFlagConsistencyRuleTests
         var builder2 = new MediaInfoResultBuilder();
         builder2.AddTrack(new TrackInfoBuilder()
             .WithType(TrackType.Audio)
-            .WithForced(false)
+            .WithForced(false)  // Differs from reference at overlapping position
             .Build());
         builder2.AddTrack(new TrackInfoBuilder()
             .WithType(TrackType.Audio)
@@ -259,8 +259,50 @@ public class ForcedFlagConsistencyRuleTests
         // Act
         var results = _rule.Validate(files, settings).ToList();
 
-        // Assert
-        Assert.Empty(results);  // Different track counts, validation skipped
+        // Assert: Overlapping position validated, mismatch reported
+        Assert.Single(results);
+        Assert.Contains("position 1", results[0].Message);
+    }
+
+    [Fact]
+    public void Validate_WhenTrackCountsDifferButOverlappingMatch_ReturnsNoErrors()
+    {
+        // Arrange
+        var settings = new BatchValidationSettings
+        {
+            CustomSettings = new ValidationSeveritySettings
+            {
+                AudioTrackValidation = new TrackPropertyValidationSettings { ForcedFlag = ValidationSeverity.Error }
+            }
+        };
+
+        var builder1 = new MediaInfoResultBuilder();
+        builder1.AddTrack(new TrackInfoBuilder()
+            .WithType(TrackType.Audio)
+            .WithForced(true)
+            .Build());
+
+        var builder2 = new MediaInfoResultBuilder();
+        builder2.AddTrack(new TrackInfoBuilder()
+            .WithType(TrackType.Audio)
+            .WithForced(true)  // Matches reference at overlapping position
+            .Build());
+        builder2.AddTrack(new TrackInfoBuilder()
+            .WithType(TrackType.Audio)
+            .WithForced(false)
+            .Build());
+
+        var files = new List<ScannedFileInfo>
+        {
+            new(builder1.Build(), "file1.mkv"),  // 1 audio track
+            new(builder2.Build(), "file2.mkv")   // 2 audio tracks
+        };
+
+        // Act
+        var results = _rule.Validate(files, settings).ToList();
+
+        // Assert: Overlapping position matches, no error
+        Assert.Empty(results);
     }
 
     [Fact]
