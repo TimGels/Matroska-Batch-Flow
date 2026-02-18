@@ -3,7 +3,7 @@
 > **Audience**: These instructions are for AI coding assistants, not for human developers.  
 > **Human developers**: See [README.md](../README.md) for setup and contribution guidelines.
 
-> **Last Updated**: 2026-02-07  
+> **Last Updated**: 2026-02-19  
 > **Next Review**: When architecture changes, new patterns are introduced, or build commands change
 > 
 > **Maintenance**: When making significant code changes, update this file and Serena memories to keep them in sync with the codebase.
@@ -78,6 +78,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 - **Validation System**: Rule-based validation with three strictness modes (Strict, Lenient, Custom)
   - Rules implement `IFileValidationRule` (e.g., `TrackCountConsistencyRule`, `LanguageConsistencyRule`)
   - Results are severity-based: Error, Warning, Information
+  - Cross-file property comparison rules (e.g., `DefaultFlagConsistencyRule`, `ForcedFlagConsistencyRule`, `LanguageConsistencyRule`) use `RollingReferenceComparer` to handle batches where files have different track counts: for each track position, the first file that has that position serves as the rolling reference for all subsequent files
 
 - **Configuration Management**: `IBatchConfiguration` tracks file-level and track-level configurations
   - `IBatchTrackConfigurationInitializer`: Initializes track configurations from scanned files
@@ -205,8 +206,9 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 1. Create class implementing `IFileValidationRule` in `Core/Services/FileValidation/`
 2. Add rule-specific logic in `Validate()` method
 3. Return `FileValidationResult` with appropriate severity
-4. Register rule in `ServiceCollectionExtensions.AddFileValidationRules()` method
-5. Write unit tests in `tests/MatroskaBatchFlow.Core.UnitTests/Services/FileValidation/`
+4. If the rule compares a track property across files (e.g., a flag or tag), use `RollingReferenceComparer.Compare()`: build a `List<List<T>>` matrix (rows = files, columns = track values per position) and delegate comparison to the comparer — it handles unequal track counts automatically
+5. Register rule in `ServiceCollectionExtensions.AddFileValidationRules()` method
+6. Write unit tests in `tests/MatroskaBatchFlow.Core.UnitTests/Services/FileValidation/`
 
 ### Adding a New Page/ViewModel
 1. Create ViewModel inheriting `ObservableObject` in `Uno/Presentation/`

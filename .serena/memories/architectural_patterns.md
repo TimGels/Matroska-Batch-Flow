@@ -118,6 +118,31 @@ MatroskaBatchFlow.sln (root)
 - **Uno**: UI-specific presentation layer
 - Communication: Core services injected into Uno ViewModels
 
+## Validation System
+
+### Rolling Reference Strategy (`RollingReferenceComparer`)
+Consistency rules that compare track properties across files use the **rolling reference strategy** via the internal `RollingReferenceComparer` static class in `Core/Services/FileValidation/`.
+
+**Problem it solves**: Files in a batch may have different track counts (e.g., one file has 2 audio tracks, another has 3). A naive first-file-as-reference approach would skip positions that don't exist in the reference file, missing real inconsistencies.
+
+**How it works**:
+1. Rules build a **matrix** of track property values: rows = files, columns = track positions
+2. For each track position, the **first file that has that position** becomes the rolling reference
+3. All subsequent files with that position are compared against that reference
+4. Files lacking a given track position are skipped for that index (no false positives)
+
+**Rules that use this pattern** (all follow the same build-matrix → call-comparer structure):
+- `DefaultFlagConsistencyRule` — validates `DefaultFlag` consistency across track positions
+- `ForcedFlagConsistencyRule` — validates `ForcedFlag` consistency across track positions
+- `LanguageConsistencyRule` — validates language tag consistency across track positions
+
+**Adding a new property-comparison rule**:
+1. Build a `List<List<T>>` matrix using a private `Build*Matrix` helper
+2. Call `RollingReferenceComparer.Compare(matrix, files, trackType, severity, propertyName)`
+3. The comparer yields `FileValidationResult` for every mismatch found
+
+**Validation rule interface**: All rules implement `IFileValidationRule` and are registered in DI. No explicit orchestration needed — `FileValidationEngine` discovers and runs them all.
+
 ## Processing Pipeline
 
 ### File Processing Sequence
