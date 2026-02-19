@@ -10,7 +10,7 @@ namespace MatroskaBatchFlow.Core.UnitTests.Services;
 /// <summary>
 /// Contains unit tests for the LanguageProvider class.
 /// </summary>
-public class LanguageProviderTests
+public class LanguageProviderTests : IDisposable
 {
     private readonly ILogger<LanguageProvider> _logger = Substitute.For<ILogger<LanguageProvider>>();
     private readonly string _testFilesDirectory = Path.Combine(Path.GetTempPath(), "LanguageProviderTests");
@@ -18,6 +18,14 @@ public class LanguageProviderTests
     public LanguageProviderTests()
     {
         Directory.CreateDirectory(_testFilesDirectory);
+    }
+
+    public void Dispose()
+    {
+        if (Directory.Exists(_testFilesDirectory))
+        {
+            Directory.Delete(_testFilesDirectory, recursive: true);
+        }
     }
 
     [Fact]
@@ -99,17 +107,49 @@ public class LanguageProviderTests
     [Fact]
     public void LoadLanguages_HandlesLanguagesWithComments()
     {
-        // Arrange - Skip this test as comments in JSON might not be properly supported by System.Text.Json
-        // The JSON spec doesn't support comments, though JsonSerializerOptions allows them
-        Assert.True(true);
+        // Arrange
+        var testFile = Path.Combine(_testFilesDirectory, "comments.json");
+        var json = """
+            {
+                // Single-line comment
+                "languages": [
+                    /* Block comment */
+                    { "name": "English", "iso639_1": "en", "iso639_2_b": "eng", "iso639_2_t": "eng", "iso639_3": "eng" }
+                ]
+            }
+            """;
+        File.WriteAllText(testFile, json);
+        var options = CreateOptions(testFile);
+
+        // Act
+        var provider = new LanguageProvider(options, _logger);
+
+        // Assert
+        Assert.Single(provider.Languages);
+        Assert.Contains(provider.Languages, l => l.Iso639_2_b == "eng");
     }
 
     [Fact]
     public void LoadLanguages_HandlesTrailingCommas()
     {
-        // Arrange - Skip this test as trailing commas might not deserialize correctly  
-        // Even with AllowTrailingCommas option, complex cases may fail
-        Assert.True(true);
+        // Arrange
+        var testFile = Path.Combine(_testFilesDirectory, "trailing_commas.json");
+        var json = """
+            {
+                "languages": [
+                    { "name": "English", "iso639_1": "en", "iso639_2_b": "eng", "iso639_2_t": "eng", "iso639_3": "eng" },
+                ]
+            }
+            """;
+        File.WriteAllText(testFile, json);
+        var options = CreateOptions(testFile);
+
+        // Act
+        var provider = new LanguageProvider(options, _logger);
+
+        // Assert
+        Assert.Single(provider.Languages);
+        Assert.Contains(provider.Languages, l => l.Iso639_2_b == "eng");
     }
 
     [Fact]
