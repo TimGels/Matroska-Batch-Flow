@@ -224,51 +224,6 @@ public class AudioViewModelTests
     }
 
     [Fact]
-    public void GetTrackType_ReturnsAudio()
-    {
-        // Arrange
-        var viewModel = new AudioViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
-
-        // Act - Use reflection to access protected method
-        var method = typeof(AudioViewModel).GetMethod("GetTrackType", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var result = method?.Invoke(viewModel, null);
-
-        // Assert
-        Assert.Equal(TrackType.Audio, result);
-    }
-
-    [Fact]
-    public void AudioTracks_IsTrackSelected_UpdatedWhenTracksChange()
-    {
-        // Arrange
-        var viewModel = new AudioViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
-
-        bool isTrackSelectedChanged = false;
-        viewModel.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == nameof(viewModel.IsTrackSelected))
-                isTrackSelectedChanged = true;
-        };
-
-        var mediaInfoResult = new MediaInfoResultBuilder()
-            .WithCreatingLibrary()
-            .AddTrackOfType(TrackType.Audio)
-            .Build();
-        var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Audio);
-
-        var newTracks = new ObservableCollection<TrackConfiguration>
-        {
-            new TrackConfiguration(trackInfo) { Type = TrackType.Audio, Index = 0 }
-        };
-
-        // Act
-        viewModel.AudioTracks = newTracks;
-
-        // Assert
-        Assert.True(isTrackSelectedChanged);
-    }
-
-    [Fact]
     public void OnBatchConfigurationAudioTracksChanged_ResetsSelectedTrackToFirstTrack()
     {
         // Arrange

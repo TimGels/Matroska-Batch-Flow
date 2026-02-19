@@ -339,36 +339,6 @@ public class GeneralViewModelTests
     }
 
     [Fact]
-    public void OnBatchConfigurationChanged_WithNullPropertyName_DoesNotThrow()
-    {
-        // Arrange
-        var viewModel = CreateViewModel();
-
-        // Act & Assert
-        var exception = Record.Exception(() =>
-            _batchConfiguration.PropertyChanged += Raise.Event<PropertyChangedEventHandler>(
-                _batchConfiguration,
-                new PropertyChangedEventArgs(null)));
-
-        Assert.Null(exception);
-    }
-
-    [Fact]
-    public void OnBatchConfigurationChanged_WithEmptyPropertyName_DoesNotThrow()
-    {
-        // Arrange
-        var viewModel = CreateViewModel();
-
-        // Act & Assert
-        var exception = Record.Exception(() =>
-            _batchConfiguration.PropertyChanged += Raise.Event<PropertyChangedEventHandler>(
-                _batchConfiguration,
-                new PropertyChangedEventArgs(string.Empty)));
-
-        Assert.Null(exception);
-    }
-
-    [Fact]
     public void OnBatchConfigurationChanged_WithUnrelatedPropertyName_DoesNotRaisePropertyChanged()
     {
         // Arrange

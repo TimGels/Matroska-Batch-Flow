@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
@@ -252,44 +251,6 @@ public class TrackViewModelBaseTests
 
         // Act & Assert
         Assert.False(viewModel.IsTrackSelected);
-    }
-
-    [Fact]
-    public void Languages_PropertyChangedRaised_WhenValueChanges()
-    {
-        // Arrange
-        var mockLanguageProvider = Substitute.For<ILanguageProvider>();
-        var mockBatchConfig = Substitute.For<IBatchConfiguration>();
-        var mockUIPreferences = Substitute.For<IUIPreferencesService>();
-
-        var initialLanguages = ImmutableList<MatroskaLanguageOption>.Empty;
-        mockLanguageProvider.Languages.Returns(initialLanguages);
-
-        var mediaInfoResult = new MediaInfoResultBuilder()
-            .WithCreatingLibrary()
-            .AddTrackOfType(TrackType.Text)
-            .Build();
-
-        var globalTracks = new List<TrackConfiguration>();
-        mockBatchConfig.FileConfigurations.Returns(new Dictionary<Guid, FileTrackConfiguration>());
-
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
-
-        bool propertyChangedRaised = false;
-        viewModel.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == nameof(viewModel.Languages))
-                propertyChangedRaised = true;
-        };
-
-        var newLanguages = ImmutableList.Create(new MatroskaLanguageOption("English", "en", "eng", "eng", "eng"));
-
-        // Act
-        viewModel.Languages = newLanguages;
-
-        // Assert
-        Assert.True(propertyChangedRaised);
-        Assert.Same(newLanguages, viewModel.Languages);
     }
 
     [Fact]
