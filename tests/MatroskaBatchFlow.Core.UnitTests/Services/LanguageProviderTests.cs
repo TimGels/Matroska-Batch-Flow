@@ -154,10 +154,9 @@ public class LanguageProviderTests
         Assert.IsAssignableFrom<System.Collections.Immutable.ImmutableList<MatroskaLanguageOption>>(provider.Languages);
     }
 
-    private IOptions<LanguageOptions> CreateOptions(string filePath)
+    private static IOptions<LanguageOptions> CreateOptions(string filePath)
     {
-        var relativePath = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, filePath);
-        var options = Options.Create(new LanguageOptions { FilePath = relativePath });
+        var options = Options.Create(new LanguageOptions { FilePath = filePath });
         return options;
     }
 

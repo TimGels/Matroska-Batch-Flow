@@ -38,7 +38,7 @@ public partial class LanguageProvider : ILanguageProvider
     {
         try
         {
-            var userFile = AppDomain.CurrentDomain.BaseDirectory + _options.FilePath;
+            var userFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, _options.FilePath);
             if (File.Exists(userFile))
             {
                 Languages = LoadFromFile(userFile);
