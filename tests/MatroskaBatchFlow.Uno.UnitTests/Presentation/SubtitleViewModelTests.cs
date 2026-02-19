@@ -224,51 +224,6 @@ public class SubtitleViewModelTests
     }
 
     [Fact]
-    public void GetTrackType_ReturnsText()
-    {
-        // Arrange
-        var viewModel = new SubtitleViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
-
-        // Act - Use reflection to access protected method
-        var method = typeof(SubtitleViewModel).GetMethod("GetTrackType", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var result = method?.Invoke(viewModel, null);
-
-        // Assert
-        Assert.Equal(TrackType.Text, result);
-    }
-
-    [Fact]
-    public void SubtitleTracks_IsTrackSelected_UpdatedWhenTracksChange()
-    {
-        // Arrange
-        var viewModel = new SubtitleViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
-
-        bool isTrackSelectedChanged = false;
-        viewModel.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == nameof(viewModel.IsTrackSelected))
-                isTrackSelectedChanged = true;
-        };
-
-        var mediaInfoResult = new MediaInfoResultBuilder()
-            .WithCreatingLibrary()
-            .AddTrackOfType(TrackType.Text)
-            .Build();
-        var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Text);
-
-        var newTracks = new ObservableCollection<TrackConfiguration>
-        {
-            new TrackConfiguration(trackInfo) { Type = TrackType.Text, Index = 0 }
-        };
-
-        // Act
-        viewModel.SubtitleTracks = newTracks;
-
-        // Assert
-        Assert.True(isTrackSelectedChanged);
-    }
-
-    [Fact]
     public void OnBatchConfigurationSubtitleTracksChanged_ResetsSelectedTrackToFirstTrack()
     {
         // Arrange

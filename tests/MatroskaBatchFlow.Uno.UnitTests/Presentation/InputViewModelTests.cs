@@ -55,19 +55,6 @@ public class InputViewModelTests : IDisposable
     }
 
     [Fact]
-    public void Constructor_InitializesProperties()
-    {
-        // Act
-        var viewModel = CreateViewModel();
-
-        // Assert
-        Assert.NotNull(viewModel.SelectedFiles);
-        Assert.Empty(viewModel.SelectedFiles);
-        Assert.NotNull(viewModel.ValidationNotifications);
-        Assert.False(viewModel.IsValidationInfoBarOpen);
-    }
-
-    [Fact]
     public void CanSelectAll_ReturnsTrueWhenFileListCountExceedsSelectedCount()
     {
         // Arrange

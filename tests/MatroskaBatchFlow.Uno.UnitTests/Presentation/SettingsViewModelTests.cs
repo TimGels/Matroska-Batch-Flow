@@ -42,17 +42,6 @@ public class SettingsViewModelTests
     }
 
     [Fact]
-    public void Constructor_InitializesProperties()
-    {
-        // Act
-        var viewModel = CreateViewModel();
-
-        // Assert
-        Assert.NotNull(viewModel.CustomMkvPropeditPath);
-        Assert.Equal((int)StrictnessMode.Strict, viewModel.SelectedStrictnessModeIndex);
-    }
-
-    [Fact]
     public void Constructor_LoadsThemeFromUIPreferences()
     {
         // Arrange

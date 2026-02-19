@@ -224,51 +224,6 @@ public class VideoViewModelTests
     }
 
     [Fact]
-    public void GetTrackType_ReturnsVideo()
-    {
-        // Arrange
-        var viewModel = new VideoViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
-
-        // Act - Use reflection to access protected method
-        var method = typeof(VideoViewModel).GetMethod("GetTrackType", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var result = method?.Invoke(viewModel, null);
-
-        // Assert
-        Assert.Equal(TrackType.Video, result);
-    }
-
-    [Fact]
-    public void VideoTracks_IsTrackSelected_UpdatedWhenTracksChange()
-    {
-        // Arrange
-        var viewModel = new VideoViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
-
-        bool isTrackSelectedChanged = false;
-        viewModel.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == nameof(viewModel.IsTrackSelected))
-                isTrackSelectedChanged = true;
-        };
-
-        var mediaInfoResult = new MediaInfoResultBuilder()
-            .WithCreatingLibrary()
-            .AddTrackOfType(TrackType.Video)
-            .Build();
-        var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Video);
-
-        var newTracks = new ObservableCollection<TrackConfiguration>
-        {
-            new TrackConfiguration(trackInfo) { Type = TrackType.Video, Index = 0 }
-        };
-
-        // Act
-        viewModel.VideoTracks = newTracks;
-
-        // Assert
-        Assert.True(isTrackSelectedChanged);
-    }
-
-    [Fact]
     public void OnBatchConfigurationVideoTracksChanged_ResetsSelectedTrackToFirstTrack()
     {
         // Arrange

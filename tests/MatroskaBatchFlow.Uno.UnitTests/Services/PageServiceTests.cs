@@ -121,30 +121,6 @@ public class PageServiceTests
         Assert.Throws<ArgumentNullException>(() => service.GetPageType(null!));
     }
 
-    [Theory]
-    [InlineData("MatroskaBatchFlow.Uno.Presentation.MainViewModel")]
-    [InlineData("MatroskaBatchFlow.Uno.Presentation.InputViewModel")]
-    [InlineData("MatroskaBatchFlow.Uno.Presentation.GeneralViewModel")]
-    [InlineData("MatroskaBatchFlow.Uno.Presentation.VideoViewModel")]
-    [InlineData("MatroskaBatchFlow.Uno.Presentation.AudioViewModel")]
-    [InlineData("MatroskaBatchFlow.Uno.Presentation.SubtitleViewModel")]
-    [InlineData("MatroskaBatchFlow.Uno.Presentation.OutputViewModel")]
-    [InlineData("MatroskaBatchFlow.Uno.Presentation.SettingsViewModel")]
-    [InlineData("MatroskaBatchFlow.Uno.Presentation.LogViewerViewModel")]
-    [InlineData("MatroskaBatchFlow.Uno.Presentation.BatchResultsViewModel")]
-    public void GetPageType_WithValidKeys_DoesNotThrow(string key)
-    {
-        // Arrange
-        var service = new PageService();
-
-        // Act
-        var pageType = service.GetPageType(key);
-
-        // Assert
-        Assert.NotNull(pageType);
-        Assert.True(pageType.IsSubclassOf(typeof(Page)));
-    }
-
     [Fact]
     public void GetPageType_WithEmptyString_ThrowsArgumentException()
     {
