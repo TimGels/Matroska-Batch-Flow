@@ -24,14 +24,19 @@ public partial class LanguageProvider : ILanguageProvider
     private static ImmutableList<MatroskaLanguageOption> LoadFromFile(string path)
     {
         var json = File.ReadAllText(path);
-        var options = new JsonSerializerOptions
+        var documentOptions = new JsonDocumentOptions
+        {
+            CommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true
+        };
+        var serializerOptions = new JsonSerializerOptions
         {
             ReadCommentHandling = JsonCommentHandling.Skip,
             AllowTrailingCommas = true
         };
-        using var doc = JsonDocument.Parse(json);
+        using var doc = JsonDocument.Parse(json, documentOptions);
         var languagesElement = doc.RootElement.GetProperty("languages");
-        return JsonSerializer.Deserialize<ImmutableList<MatroskaLanguageOption>>(languagesElement.GetRawText(), options)!;
+        return JsonSerializer.Deserialize<ImmutableList<MatroskaLanguageOption>>(languagesElement.GetRawText(), serializerOptions)!;
     }
 
     public void LoadLanguages()
