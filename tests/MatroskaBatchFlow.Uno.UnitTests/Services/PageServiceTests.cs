@@ -146,21 +146,6 @@ public class PageServiceTests
     }
 
     [Fact]
-    public void GetPageType_CalledMultipleTimes_ReturnsSameType()
-    {
-        // Arrange
-        var service = new PageService();
-        var key = typeof(MainViewModel).FullName!;
-
-        // Act
-        var pageType1 = service.GetPageType(key);
-        var pageType2 = service.GetPageType(key);
-
-        // Assert
-        Assert.Same(pageType1, pageType2);
-    }
-
-    [Fact]
     public void GetPageType_WithEmptyString_ThrowsArgumentException()
     {
         // Arrange

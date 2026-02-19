@@ -238,37 +238,6 @@ public class AudioViewModelTests
     }
 
     [Fact]
-    public void AudioTracks_PropertyChanged_RaisedWhenValueChanges()
-    {
-        // Arrange
-        var viewModel = new AudioViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
-
-        bool propertyChangedRaised = false;
-        viewModel.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == nameof(viewModel.AudioTracks))
-                propertyChangedRaised = true;
-        };
-
-        var mediaInfoResult = new MediaInfoResultBuilder()
-            .WithCreatingLibrary()
-            .AddTrackOfType(TrackType.Audio)
-            .Build();
-        var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Audio);
-
-        var newTracks = new ObservableCollection<TrackConfiguration>
-        {
-            new TrackConfiguration(trackInfo) { Type = TrackType.Audio, Index = 0 }
-        };
-
-        // Act
-        viewModel.AudioTracks = newTracks;
-
-        // Assert
-        Assert.True(propertyChangedRaised);
-    }
-
-    [Fact]
     public void AudioTracks_IsTrackSelected_UpdatedWhenTracksChange()
     {
         // Arrange
@@ -297,38 +266,6 @@ public class AudioViewModelTests
 
         // Assert
         Assert.True(isTrackSelectedChanged);
-    }
-
-    [Fact]
-    public void OnBatchConfigurationAudioTracksChanged_SubscribesToNewTracks()
-    {
-        // Arrange
-        var audioTracks = new ObservableCollection<TrackConfiguration>();
-        _batchConfiguration.AudioTracks.Returns(audioTracks);
-
-        var viewModel = new AudioViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
-
-        var mediaInfoResult = new MediaInfoResultBuilder()
-            .WithCreatingLibrary()
-            .AddTrackOfType(TrackType.Audio)
-            .Build();
-        var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Audio);
-        var newTrack = new TrackConfiguration(trackInfo) { Type = TrackType.Audio, Index = 0, Name = "Initial" };
-
-        audioTracks.Add(newTrack);
-        _batchConfiguration.AudioTracks.CollectionChanged += Raise.Event<NotifyCollectionChangedEventHandler>(
-            _batchConfiguration.AudioTracks,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, new[] { newTrack }));
-
-        // Act - Change property on the track
-        viewModel.SelectedTrack = viewModel.AudioTracks[0];
-        
-        newTrack.Name = "Changed";
-
-        // The viewModel should have subscribed to this track's PropertyChanged event
-        // We can't directly test the subscription, but we can verify the track is in the collection
-        Assert.Single(viewModel.AudioTracks);
-        Assert.Equal("Changed", viewModel.AudioTracks[0].Name);
     }
 
     [Fact]

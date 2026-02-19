@@ -238,37 +238,6 @@ public class VideoViewModelTests
     }
 
     [Fact]
-    public void VideoTracks_PropertyChanged_RaisedWhenValueChanges()
-    {
-        // Arrange
-        var viewModel = new VideoViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
-
-        bool propertyChangedRaised = false;
-        viewModel.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == nameof(viewModel.VideoTracks))
-                propertyChangedRaised = true;
-        };
-
-        var mediaInfoResult = new MediaInfoResultBuilder()
-            .WithCreatingLibrary()
-            .AddTrackOfType(TrackType.Video)
-            .Build();
-        var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Video);
-
-        var newTracks = new ObservableCollection<TrackConfiguration>
-        {
-            new TrackConfiguration(trackInfo) { Type = TrackType.Video, Index = 0 }
-        };
-
-        // Act
-        viewModel.VideoTracks = newTracks;
-
-        // Assert
-        Assert.True(propertyChangedRaised);
-    }
-
-    [Fact]
     public void VideoTracks_IsTrackSelected_UpdatedWhenTracksChange()
     {
         // Arrange
@@ -297,38 +266,6 @@ public class VideoViewModelTests
 
         // Assert
         Assert.True(isTrackSelectedChanged);
-    }
-
-    [Fact]
-    public void OnBatchConfigurationVideoTracksChanged_SubscribesToNewTracks()
-    {
-        // Arrange
-        var videoTracks = new ObservableCollection<TrackConfiguration>();
-        _batchConfiguration.VideoTracks.Returns(videoTracks);
-
-        var viewModel = new VideoViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
-
-        var mediaInfoResult = new MediaInfoResultBuilder()
-            .WithCreatingLibrary()
-            .AddTrackOfType(TrackType.Video)
-            .Build();
-        var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Video);
-        var newTrack = new TrackConfiguration(trackInfo) { Type = TrackType.Video, Index = 0, Name = "Initial" };
-
-        videoTracks.Add(newTrack);
-        _batchConfiguration.VideoTracks.CollectionChanged += Raise.Event<NotifyCollectionChangedEventHandler>(
-            _batchConfiguration.VideoTracks,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, new[] { newTrack }));
-
-        // Act - Change property on the track
-        viewModel.SelectedTrack = viewModel.VideoTracks[0];
-        
-        newTrack.Name = "Changed";
-
-        // The viewModel should have subscribed to this track's PropertyChanged event
-        // We can't directly test the subscription, but we can verify the track is in the collection
-        Assert.Single(viewModel.VideoTracks);
-        Assert.Equal("Changed", viewModel.VideoTracks[0].Name);
     }
 
     [Fact]

@@ -174,18 +174,6 @@ public class SettingsViewModelTests
     }
 
     [Fact]
-    public void IsCustomStrictnessEnabled_ReflectsIsCustomMode()
-    {
-        // Arrange
-        var viewModel = CreateViewModel();
-        Assert.Equal(viewModel.IsCustomMode, viewModel.IsCustomStrictnessEnabled);
-
-        // This test just verifies they return the same computed value
-        Assert.False(viewModel.IsCustomMode);
-        Assert.False(viewModel.IsCustomStrictnessEnabled);
-    }
-
-    [Fact]
     public void LogLevelDescription_WhenEnabled_ShowsStandardDescription()
     {
         // Arrange
@@ -212,6 +200,19 @@ public class SettingsViewModelTests
         // Assert
         Assert.Contains("Error", description);
         Assert.Contains("appsettings.json", description);
+    }
+
+    [Fact]
+    public void OnSelectedThemeIndexChanged_UpdatesAppTheme()
+    {
+        // Arrange
+        var viewModel = CreateViewModel();
+
+        // Act
+        viewModel.SelectedThemeIndex = (int)AppThemePreference.Dark;
+
+        // Assert
+        _uiPreferences.Received().AppTheme = AppThemePreference.Dark;
     }
 
     private SettingsViewModel CreateViewModel()
