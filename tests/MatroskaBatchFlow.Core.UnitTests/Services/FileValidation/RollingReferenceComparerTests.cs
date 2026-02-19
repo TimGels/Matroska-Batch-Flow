@@ -180,11 +180,11 @@ public class RollingReferenceComparerTests
         };
 
         // Act
-        var results = RollingReferenceComparer.Compare(matrix, files, TrackType.Text, ValidationSeverity.Warning, "Language").ToList();
+        var results = RollingReferenceComparer.Compare(matrix, files, TrackType.Audio, ValidationSeverity.Warning, "Language").ToList();
 
         // Assert
         Assert.Single(results);
-        Assert.Contains("Text", results[0].Message);
+        Assert.Contains("Audio", results[0].Message);
     }
 
     // -- Different track counts: rolling reference behavior --
