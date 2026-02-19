@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
@@ -134,9 +133,6 @@ public class SubtitleViewModelTests
 
         // Act
         fileList.Add(new ScannedFileInfo(mediaInfoResult, "file1.mkv"));
-        _batchConfiguration.FileList.CollectionChanged += Raise.Event<NotifyCollectionChangedEventHandler>(
-            _batchConfiguration.FileList,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, new[] { fileList[0] }));
 
         // Assert
         Assert.True(propertyChangedRaised);
@@ -161,9 +157,6 @@ public class SubtitleViewModelTests
 
         // Act
         subtitleTracks.Add(newTrack);
-        _batchConfiguration.SubtitleTracks.CollectionChanged += Raise.Event<NotifyCollectionChangedEventHandler>(
-            _batchConfiguration.SubtitleTracks,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, new[] { newTrack }));
 
         // Assert
         Assert.Single(viewModel.SubtitleTracks);
@@ -244,11 +237,6 @@ public class SubtitleViewModelTests
 
         subtitleTracks.Add(track1);
         subtitleTracks.Add(track2);
-
-        // Simulate collection changed event
-        _batchConfiguration.SubtitleTracks.CollectionChanged += Raise.Event<NotifyCollectionChangedEventHandler>(
-            _batchConfiguration.SubtitleTracks,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
 
         // Assert
         Assert.NotNull(viewModel.SelectedTrack);
