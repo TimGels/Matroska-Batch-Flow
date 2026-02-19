@@ -134,9 +134,6 @@ public class VideoViewModelTests
 
         // Act
         fileList.Add(new ScannedFileInfo(mediaInfoResult, "file1.mkv"));
-        _batchConfiguration.FileList.CollectionChanged += Raise.Event<NotifyCollectionChangedEventHandler>(
-            _batchConfiguration.FileList,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, new[] { fileList[0] }));
 
         // Assert
         Assert.True(propertyChangedRaised);
