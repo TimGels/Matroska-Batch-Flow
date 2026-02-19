@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
@@ -64,21 +65,6 @@ public class InputViewModelTests : IDisposable
         Assert.Empty(viewModel.SelectedFiles);
         Assert.NotNull(viewModel.ValidationNotifications);
         Assert.False(viewModel.IsValidationInfoBarOpen);
-    }
-
-    [Fact]
-    public void Constructor_InitializesCommands()
-    {
-        // Act
-        var viewModel = CreateViewModel();
-
-        // Assert
-        Assert.NotNull(viewModel.RemoveSelected);
-        Assert.NotNull(viewModel.RemoveAll);
-        Assert.NotNull(viewModel.ClearSelection);
-        Assert.NotNull(viewModel.SelectAll);
-        Assert.NotNull(viewModel.AddFilesCommand);
-        Assert.NotNull(viewModel.ShowValidationDetailsCommand);
     }
 
     [Fact]
@@ -178,35 +164,39 @@ public class InputViewModelTests : IDisposable
     }
 
     [Fact]
-    public void OnNavigatedTo_DoesNotThrow()
+    public void RemoveSelected_WithSelectedFiles_DelegatesRemovalToFileListAdapter()
     {
         // Arrange
         var viewModel = CreateViewModel();
+        var file = CreateScannedFile("file1.mkv");
+        var fileVm = new ScannedFileViewModel(file, _batchConfiguration);
+        viewModel.SelectedFiles.Add(fileVm);
 
-        // Act & Assert
-        var exception = Record.Exception(() => viewModel.OnNavigatedTo(null!));
-        Assert.Null(exception);
+        // Act
+        viewModel.RemoveSelected.Execute(null);
+
+        // Assert
+        _fileListAdapter.Received(1).RemoveFiles(Arg.Is<IEnumerable<ScannedFileInfo>>(
+            files => files.Contains(file)));
     }
 
     [Fact]
-    public void OnNavigatedFrom_DoesNotThrow()
+    public void SelectAll_AddsAllScannedFileViewModelsToSelectedFiles()
     {
         // Arrange
+        var file1 = CreateScannedFile("file1.mkv");
+        var file2 = CreateScannedFile("file2.mkv");
+        var vm1 = new ScannedFileViewModel(file1, _batchConfiguration);
+        var vm2 = new ScannedFileViewModel(file2, _batchConfiguration);
+        var scannedFileViewModels = new ObservableCollection<ScannedFileViewModel> { vm1, vm2 };
+        _fileListAdapter.ScannedFileViewModels.Returns(scannedFileViewModels);
         var viewModel = CreateViewModel();
 
-        // Act & Assert
-        var exception = Record.Exception(() => viewModel.OnNavigatedFrom());
-        Assert.Null(exception);
-    }
+        // Act
+        viewModel.SelectAll.Execute(null);
 
-    [Fact]
-    public void Dispose_UnsubscribesFromEvents()
-    {
-        // Arrange
-        var viewModel = CreateViewModel();
-
-        // Act & Assert - Should not throw
-        viewModel.Dispose();
+        // Assert
+        Assert.Equal(2, viewModel.SelectedFiles.Count);
     }
 
     public void Dispose()

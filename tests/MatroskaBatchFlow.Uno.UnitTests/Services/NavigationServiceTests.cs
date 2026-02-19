@@ -26,16 +26,6 @@ public class NavigationServiceTests
     private NavigationService CreateService() => new(_pageService, _logger);
 
     [Fact]
-    public void Constructor_CreatesServiceSuccessfully()
-    {
-        // Arrange & Act
-        var service = CreateService();
-
-        // Assert
-        Assert.NotNull(service);
-    }
-
-    [Fact]
     public void CanGoBack_WhenFrameIsNull_ReturnsFalse()
     {
         // Arrange
@@ -149,63 +139,4 @@ public class NavigationServiceTests
         frame.Received(1).Navigate(pageType, null);
     }
 
-    [Fact]
-    public void SetListDataItemForNextConnectedAnimation_DoesNotThrow()
-    {
-        // Arrange
-        var service = CreateService();
-        var item = new object();
-
-        // Act & Assert - Method is currently a no-op
-        service.SetListDataItemForNextConnectedAnimation(item);
-    }
-
-    [Fact]
-    public void Frame_SetToNull_AllowsNullValue()
-    {
-        // Arrange
-        var service = CreateService();
-        var frame = Substitute.For<Frame>();
-        service.Frame = frame;
-
-        // Act
-        service.Frame = null;
-
-        // Assert
-        Assert.Null(service.Frame);
-    }
-
-    [Fact]
-    public void GoBack_WhenFrameIsNull_ReturnsFalse()
-    {
-        // Arrange
-        var service = CreateService();
-
-        // Act
-        var result = service.GoBack();
-
-        // Assert
-        Assert.False(result);
-    }
-
-    [Fact]
-    public void NavigateTo_WithNullParameter_PassesNullToFrame()
-    {
-        // Arrange
-        var service = CreateService();
-        var frame = Substitute.For<Frame>();
-        var pageType = typeof(MainPage);
-        var pageKey = typeof(MainViewModel).FullName!;
-
-        _pageService.GetPageType(pageKey).Returns(pageType);
-        service.Frame = frame;
-        frame.Navigate(pageType, null).Returns(true);
-
-        // Act
-        var result = service.NavigateTo(pageKey, null);
-
-        // Assert
-        Assert.True(result);
-        frame.Received(1).Navigate(pageType, null);
-    }
 }

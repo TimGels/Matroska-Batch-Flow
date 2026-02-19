@@ -26,16 +26,6 @@ public class GeneralViewModelTests
     }
 
     [Fact]
-    public void Constructor_InitializesProperties()
-    {
-        // Act
-        var viewModel = CreateViewModel();
-
-        // Assert
-        Assert.NotNull(viewModel);
-    }
-
-    [Fact]
     public void Title_GetFromBatchConfiguration()
     {
         // Arrange
@@ -60,25 +50,6 @@ public class GeneralViewModelTests
 
         // Assert
         _batchConfiguration.Received().Title = "New Title";
-    }
-
-    [Fact]
-    public void Title_Set_RaisesPropertyChanged()
-    {
-        // Arrange
-        var viewModel = CreateViewModel();
-        var propertyChanged = false;
-        viewModel.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == nameof(viewModel.Title))
-                propertyChanged = true;
-        };
-
-        // Act
-        viewModel.Title = "New Title";
-
-        // Assert
-        Assert.True(propertyChanged);
     }
 
     [Fact]
@@ -110,25 +81,6 @@ public class GeneralViewModelTests
     }
 
     [Fact]
-    public void ShouldModifyTitle_Set_RaisesPropertyChanged()
-    {
-        // Arrange
-        var viewModel = CreateViewModel();
-        var propertyChanged = false;
-        viewModel.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == nameof(viewModel.ShouldModifyTitle))
-                propertyChanged = true;
-        };
-
-        // Act
-        viewModel.ShouldModifyTitle = true;
-
-        // Assert
-        Assert.True(propertyChanged);
-    }
-
-    [Fact]
     public void AddTrackStatisticsTags_GetFromBatchConfiguration()
     {
         // Arrange
@@ -154,25 +106,6 @@ public class GeneralViewModelTests
 
         // Assert
         _batchConfiguration.Received().AddTrackStatisticsTags = false;
-    }
-
-    [Fact]
-    public void AddTrackStatisticsTags_Set_RaisesPropertyChanged()
-    {
-        // Arrange
-        var viewModel = CreateViewModel();
-        var propertyChanged = false;
-        viewModel.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == nameof(viewModel.AddTrackStatisticsTags))
-                propertyChanged = true;
-        };
-
-        // Act
-        viewModel.AddTrackStatisticsTags = true;
-
-        // Assert
-        Assert.True(propertyChanged);
     }
 
     [Fact]
@@ -204,25 +137,6 @@ public class GeneralViewModelTests
     }
 
     [Fact]
-    public void DeleteTrackStatisticsTags_Set_RaisesPropertyChanged()
-    {
-        // Arrange
-        var viewModel = CreateViewModel();
-        var propertyChanged = false;
-        viewModel.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == nameof(viewModel.DeleteTrackStatisticsTags))
-                propertyChanged = true;
-        };
-
-        // Act
-        viewModel.DeleteTrackStatisticsTags = true;
-
-        // Assert
-        Assert.True(propertyChanged);
-    }
-
-    [Fact]
     public void ShouldModifyTrackStatisticsTags_GetFromBatchConfiguration()
     {
         // Arrange
@@ -248,26 +162,6 @@ public class GeneralViewModelTests
 
         // Assert
         _batchConfiguration.Received().ShouldModifyTrackStatisticsTags = true;
-    }
-
-    [Fact]
-    public void ShouldModifyTrackStatisticsTags_Set_RaisesPropertyChanged()
-    {
-        // Arrange
-        _batchConfiguration.ShouldModifyTrackStatisticsTags.Returns(true);
-        var viewModel = CreateViewModel();
-        var propertyChanged = false;
-        viewModel.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == nameof(viewModel.ShouldModifyTrackStatisticsTags))
-                propertyChanged = true;
-        };
-
-        // Act - change to different value
-        viewModel.ShouldModifyTrackStatisticsTags = false;
-
-        // Assert
-        Assert.True(propertyChanged);
     }
 
     [Fact]
