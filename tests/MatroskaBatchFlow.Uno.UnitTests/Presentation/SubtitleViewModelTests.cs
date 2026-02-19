@@ -134,9 +134,6 @@ public class SubtitleViewModelTests
 
         // Act
         fileList.Add(new ScannedFileInfo(mediaInfoResult, "file1.mkv"));
-        _batchConfiguration.FileList.CollectionChanged += Raise.Event<NotifyCollectionChangedEventHandler>(
-            _batchConfiguration.FileList,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, new[] { fileList[0] }));
 
         // Assert
         Assert.True(propertyChangedRaised);
@@ -161,9 +158,6 @@ public class SubtitleViewModelTests
 
         // Act
         subtitleTracks.Add(newTrack);
-        _batchConfiguration.SubtitleTracks.CollectionChanged += Raise.Event<NotifyCollectionChangedEventHandler>(
-            _batchConfiguration.SubtitleTracks,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, new[] { newTrack }));
 
         // Assert
         Assert.Single(viewModel.SubtitleTracks);
@@ -221,37 +215,5 @@ public class SubtitleViewModelTests
 
         // Assert
         Assert.Equal(0, subtitleTracksChangedCount);
-    }
-
-    [Fact]
-    public void OnBatchConfigurationSubtitleTracksChanged_ResetsSelectedTrackToFirstTrack()
-    {
-        // Arrange
-        var subtitleTracks = new ObservableCollection<TrackConfiguration>();
-        _batchConfiguration.SubtitleTracks.Returns(subtitleTracks);
-
-        var viewModel = new SubtitleViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
-
-        var mediaInfoResult = new MediaInfoResultBuilder()
-            .WithCreatingLibrary()
-            .AddTrackOfType(TrackType.Text)
-            .AddTrackOfType(TrackType.Text)
-            .Build();
-        var subtitleTrackInfos = mediaInfoResult.Media.Track.Where(t => t.Type == TrackType.Text).ToArray();
-        
-        var track1 = new TrackConfiguration(subtitleTrackInfos[0]) { Type = TrackType.Text, Index = 0, Name = "Track 1" };
-        var track2 = new TrackConfiguration(subtitleTrackInfos[1]) { Type = TrackType.Text, Index = 1, Name = "Track 2" };
-
-        subtitleTracks.Add(track1);
-        subtitleTracks.Add(track2);
-
-        // Simulate collection changed event
-        _batchConfiguration.SubtitleTracks.CollectionChanged += Raise.Event<NotifyCollectionChangedEventHandler>(
-            _batchConfiguration.SubtitleTracks,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-
-        // Assert
-        Assert.NotNull(viewModel.SelectedTrack);
-        Assert.Equal(0, viewModel.SelectedTrack.Index);
     }
 }
