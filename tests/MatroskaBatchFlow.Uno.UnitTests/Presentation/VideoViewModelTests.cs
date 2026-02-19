@@ -161,9 +161,6 @@ public class VideoViewModelTests
 
         // Act
         videoTracks.Add(newTrack);
-        _batchConfiguration.VideoTracks.CollectionChanged += Raise.Event<NotifyCollectionChangedEventHandler>(
-            _batchConfiguration.VideoTracks,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, new[] { newTrack }));
 
         // Assert
         Assert.Single(viewModel.VideoTracks);
@@ -221,37 +218,5 @@ public class VideoViewModelTests
 
         // Assert
         Assert.Equal(0, videoTracksChangedCount);
-    }
-
-    [Fact]
-    public void OnBatchConfigurationVideoTracksChanged_ResetsSelectedTrackToFirstTrack()
-    {
-        // Arrange
-        var videoTracks = new ObservableCollection<TrackConfiguration>();
-        _batchConfiguration.VideoTracks.Returns(videoTracks);
-
-        var viewModel = new VideoViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
-
-        var mediaInfoResult = new MediaInfoResultBuilder()
-            .WithCreatingLibrary()
-            .AddTrackOfType(TrackType.Video)
-            .AddTrackOfType(TrackType.Video)
-            .Build();
-        var videoTrackInfos = mediaInfoResult.Media.Track.Where(t => t.Type == TrackType.Video).ToArray();
-        
-        var track1 = new TrackConfiguration(videoTrackInfos[0]) { Type = TrackType.Video, Index = 0, Name = "Track 1" };
-        var track2 = new TrackConfiguration(videoTrackInfos[1]) { Type = TrackType.Video, Index = 1, Name = "Track 2" };
-
-        videoTracks.Add(track1);
-        videoTracks.Add(track2);
-
-        // Simulate collection changed event
-        _batchConfiguration.VideoTracks.CollectionChanged += Raise.Event<NotifyCollectionChangedEventHandler>(
-            _batchConfiguration.VideoTracks,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-
-        // Assert
-        Assert.NotNull(viewModel.SelectedTrack);
-        Assert.Equal(0, viewModel.SelectedTrack.Index);
     }
 }

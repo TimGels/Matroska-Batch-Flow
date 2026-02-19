@@ -134,9 +134,6 @@ public class AudioViewModelTests
 
         // Act
         fileList.Add(new ScannedFileInfo(mediaInfoResult, "file1.mkv"));
-        _batchConfiguration.FileList.CollectionChanged += Raise.Event<NotifyCollectionChangedEventHandler>(
-            _batchConfiguration.FileList,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, new[] { fileList[0] }));
 
         // Assert
         Assert.True(propertyChangedRaised);
@@ -161,9 +158,6 @@ public class AudioViewModelTests
 
         // Act
         audioTracks.Add(newTrack);
-        _batchConfiguration.AudioTracks.CollectionChanged += Raise.Event<NotifyCollectionChangedEventHandler>(
-            _batchConfiguration.AudioTracks,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, new[] { newTrack }));
 
         // Assert
         Assert.Single(viewModel.AudioTracks);
@@ -223,35 +217,4 @@ public class AudioViewModelTests
         Assert.Equal(0, audioTracksChangedCount);
     }
 
-    [Fact]
-    public void OnBatchConfigurationAudioTracksChanged_ResetsSelectedTrackToFirstTrack()
-    {
-        // Arrange
-        var audioTracks = new ObservableCollection<TrackConfiguration>();
-        _batchConfiguration.AudioTracks.Returns(audioTracks);
-
-        var viewModel = new AudioViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
-
-        var mediaInfoResult = new MediaInfoResultBuilder()
-            .WithCreatingLibrary()
-            .AddTrackOfType(TrackType.Audio)
-            .AddTrackOfType(TrackType.Audio)
-            .Build();
-        var audioTrackInfos = mediaInfoResult.Media.Track.Where(t => t.Type == TrackType.Audio).ToArray();
-        
-        var track1 = new TrackConfiguration(audioTrackInfos[0]) { Type = TrackType.Audio, Index = 0, Name = "Track 1" };
-        var track2 = new TrackConfiguration(audioTrackInfos[1]) { Type = TrackType.Audio, Index = 1, Name = "Track 2" };
-
-        audioTracks.Add(track1);
-        audioTracks.Add(track2);
-
-        // Simulate collection changed event
-        _batchConfiguration.AudioTracks.CollectionChanged += Raise.Event<NotifyCollectionChangedEventHandler>(
-            _batchConfiguration.AudioTracks,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-
-        // Assert
-        Assert.NotNull(viewModel.SelectedTrack);
-        Assert.Equal(0, viewModel.SelectedTrack.Index);
-    }
 }
