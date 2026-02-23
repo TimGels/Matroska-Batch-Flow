@@ -73,6 +73,25 @@ public class FileScannerTests
     }
 
     [Fact]
+    public async Task ScanAsync_ReportsDeterministicProgress()
+    {
+        // Arrange
+        var file1 = CreateTestMkvFile("test1.mkv");
+        var file2 = CreateTestMkvFile("test2.mkv");
+        var scanner = CreateScanner();
+        var files = new[] { new FileInfo(file1), new FileInfo(file2) };
+        var reports = new List<(int current, int total)>();
+        var progress = new Progress<(int current, int total)>(value => reports.Add(value));
+
+        // Act
+        await scanner.ScanAsync(files, progress);
+
+        // Assert
+        Assert.NotEmpty(reports);
+        Assert.Equal((2, 2), reports[^1]);
+    }
+
+    [Fact]
     public async Task ScanAsync_UpdatesInternalScannedFilesList()
     {
         // Arrange

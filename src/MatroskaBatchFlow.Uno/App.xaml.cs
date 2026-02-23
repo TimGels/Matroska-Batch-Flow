@@ -155,6 +155,7 @@ public partial class App : Application
                     services.AddCoreServices(levelSwitch, loggingViewService);
                     services.AddFileValidationRules();
                     services.AddFileProcessingRules();
+                    services.AddPipelineServices();
                     services.AddViewModels();
                     services.AddPages();
                     services.AddUserSettings();

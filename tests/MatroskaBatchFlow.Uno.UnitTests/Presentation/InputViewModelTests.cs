@@ -1,13 +1,12 @@
 using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.Input;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
-using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
 using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
-using MatroskaBatchFlow.Uno.Messages;
 using MatroskaBatchFlow.Uno.Models;
 using MatroskaBatchFlow.Uno.Presentation;
 using Microsoft.Extensions.Logging;
@@ -21,37 +20,30 @@ namespace MatroskaBatchFlow.Uno.UnitTests.Presentation;
 public class InputViewModelTests : IDisposable
 {
     private readonly IFileListAdapter _fileListAdapter;
-    private readonly IFileScanner _fileScanner;
-    private readonly IFileProcessingEngine _fileProcessingEngine;
     private readonly IBatchConfiguration _batchConfiguration;
-    private readonly IBatchTrackConfigurationInitializer _trackConfigInitializer;
     private readonly IFilePickerDialogService _filePickerDialogService;
     private readonly IWritableSettings<UserSettings> _userSettings;
     private readonly IValidationStateService _validationStateService;
-    private readonly IPlatformService _platformService;
-    private readonly IScannedFileInfoPathComparer _pathComparer;
+    private readonly IInputOperationFeedbackService _inputOperationFeedbackService;
+    private readonly IBatchOperationOrchestrator _orchestrator;
     private readonly ILogger<InputViewModel> _logger;
     private readonly UniqueObservableCollection<ScannedFileInfo> _fileList;
 
     public InputViewModelTests()
     {
         _fileListAdapter = Substitute.For<IFileListAdapter>();
-        _fileScanner = Substitute.For<IFileScanner>();
-        _fileProcessingEngine = Substitute.For<IFileProcessingEngine>();
         _batchConfiguration = Substitute.For<IBatchConfiguration>();
-        _trackConfigInitializer = Substitute.For<IBatchTrackConfigurationInitializer>();
         _filePickerDialogService = Substitute.For<IFilePickerDialogService>();
         _userSettings = Substitute.For<IWritableSettings<UserSettings>>();
         _validationStateService = Substitute.For<IValidationStateService>();
-        _platformService = Substitute.For<IPlatformService>();
-        _pathComparer = Substitute.For<IScannedFileInfoPathComparer>();
+        _inputOperationFeedbackService = Substitute.For<IInputOperationFeedbackService>();
+        _orchestrator = Substitute.For<IBatchOperationOrchestrator>();
         _logger = Substitute.For<ILogger<InputViewModel>>();
 
         _fileList = [];
 
         _batchConfiguration.FileList.Returns(_fileList);
         _userSettings.Value.Returns(new UserSettings());
-        _platformService.IsWindows().Returns(true);
     }
 
     [Fact]
@@ -151,7 +143,7 @@ public class InputViewModelTests : IDisposable
     }
 
     [Fact]
-    public void RemoveSelected_WithSelectedFiles_DelegatesRemovalToFileListAdapter()
+    public async Task RemoveSelected_WithSelectedFiles_DelegatesToOrchestrator()
     {
         // Arrange
         var viewModel = CreateViewModel();
@@ -160,10 +152,10 @@ public class InputViewModelTests : IDisposable
         viewModel.SelectedFiles.Add(fileVm);
 
         // Act
-        viewModel.RemoveSelected.Execute(null);
+        await ((IAsyncRelayCommand)viewModel.RemoveSelected).ExecuteAsync(null);
 
         // Assert
-        _fileListAdapter.Received(1).RemoveFiles(Arg.Is<IEnumerable<ScannedFileInfo>>(
+        await _orchestrator.Received(1).RemoveFilesAsync(Arg.Is<IEnumerable<ScannedFileInfo>>(
             files => files.Contains(file)));
     }
 
@@ -195,15 +187,12 @@ public class InputViewModelTests : IDisposable
     {
         return new InputViewModel(
             _fileListAdapter,
-            _fileScanner,
-            _fileProcessingEngine,
             _batchConfiguration,
-            _trackConfigInitializer,
             _filePickerDialogService,
             _userSettings,
             _validationStateService,
-            _platformService,
-            _pathComparer,
+            _inputOperationFeedbackService,
+            _orchestrator,
             _logger);
     }
 

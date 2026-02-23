@@ -14,6 +14,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IWritableSettings<UserSettings> _userSettings;
     private readonly IValidationSettingsService _validationSettingsService;
     private readonly IValidationStateService _validationStateService;
+    private readonly IBatchOperationOrchestrator _orchestrator;
     private readonly IUIPreferencesService _uiPreferences;
     private readonly ILogger<SettingsViewModel> _logger;
     private readonly ILogLevelService _logLevelService;
@@ -86,6 +87,7 @@ public partial class SettingsViewModel : ObservableObject
         IWritableSettings<UserSettings> userSettings,
         IValidationSettingsService validationSettingsService,
         IValidationStateService validationStateService,
+        IBatchOperationOrchestrator orchestrator,
         IUIPreferencesService uiPreferences,
         ILogLevelService logLevelService,
         IOptions<LoggingOptions> loggingOptions,
@@ -94,6 +96,7 @@ public partial class SettingsViewModel : ObservableObject
         _userSettings = userSettings;
         _validationSettingsService = validationSettingsService;
         _validationStateService = validationStateService;
+        _orchestrator = orchestrator;
         _uiPreferences = uiPreferences;
         _logLevelService = logLevelService;
         _loggingOptions = loggingOptions.Value;
@@ -190,7 +193,7 @@ public partial class SettingsViewModel : ObservableObject
             LogValidationStrictnessChanged(previousMode, mode);
 
             // Trigger re-validation of the current batch
-            _validationStateService.Revalidate();
+            await _orchestrator.RevalidateAsync();
 
             // Notify UI of all changes
             NotifyAllValidationPropertiesChanged();
@@ -419,7 +422,7 @@ public partial class SettingsViewModel : ObservableObject
             });
 
             // Trigger re-validation of the current batch
-            _validationStateService.Revalidate();
+            await _orchestrator.RevalidateAsync();
         }
         catch (Exception ex)
         {

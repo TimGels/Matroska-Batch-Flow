@@ -4,11 +4,13 @@ using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Core.Services.FileProcessing.Track;
 using MatroskaBatchFlow.Core.Services.FileProcessing.Track.Name;
 using MatroskaBatchFlow.Core.Services.FileValidation;
+using MatroskaBatchFlow.Core.Services.Pipeline;
 using MatroskaBatchFlow.Core.Services.Processing;
 using MatroskaBatchFlow.Uno.Activation;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Presentation.Dialogs;
 using MatroskaBatchFlow.Uno.Services;
+using MatroskaBatchFlow.Uno.Services.Pipeline;
 using Serilog.Core;
 
 namespace MatroskaBatchFlow.Uno.Extensions;
@@ -52,6 +54,8 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IBatchTrackConfigurationInitializer, BatchTrackConfigurationInitializer>();
             services.AddSingleton<IValidationSettingsService, ValidationSettingsService>();
             services.AddSingleton<IValidationStateService, ValidationStateService>();
+            services.AddSingleton<IInputOperationFeedbackService, InputOperationFeedbackService>();
+            services.AddSingleton<IBatchOperationOrchestrator, BatchOperationOrchestrator>();
             services.AddSingleton<IUIPreferencesService, UIPreferencesService>();
             services.AddSingleton<ILanguageProvider, LanguageProvider>();
             services.AddSingleton<IFileScanner, FileScanner>();
@@ -100,6 +104,29 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IFileProcessingRule, TrackDefaultRule>();
             services.AddSingleton<IFileProcessingRule, TrackForcedRule>();
             services.AddSingleton<IFileProcessingRule, FileTitleNamingRule>();
+
+            return services;
+        }
+
+        /// <summary>
+        /// Registers pipeline stages and the pipeline runner with the dependency injection container.
+        /// </summary>
+        /// <returns>The service collection for chaining.</returns>
+        public IServiceCollection AddPipelineServices()
+        {
+            // Core pipeline stages
+            services.AddSingleton<ScanFilesStage>();
+            services.AddSingleton<RefreshStaleMetadataStage>();
+            services.AddSingleton<InitializeTrackConfigStage>();
+            services.AddSingleton<ValidateStage>();
+
+            // Uno pipeline stages
+            services.AddSingleton<FilterDuplicateFilesStage>();
+            services.AddSingleton<AddFilesToBatchStage>();
+            services.AddSingleton<RemoveFilesFromBatchStage>();
+
+            // Pipeline runner
+            services.AddSingleton<IPipelineRunner, PipelineRunner>();
 
             return services;
         }

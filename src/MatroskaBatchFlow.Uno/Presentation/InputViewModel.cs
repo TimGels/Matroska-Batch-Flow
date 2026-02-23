@@ -1,9 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.Messaging;
-using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Services;
-using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Uno.Behavior;
 using MatroskaBatchFlow.Uno.Contracts.Services;
@@ -21,6 +19,9 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
 
     [ObservableProperty]
     private ValidationNotificationState validationNotifications = new();
+
+    [ObservableProperty]
+    private InputOperationOverlayState overlayState = InputOperationOverlayState.Inactive;
 
     private bool _isValidationInfoBarOpen;
 
@@ -46,15 +47,12 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     }
 
     private readonly IFileListAdapter _fileListAdapter;
-    private readonly IFileScanner _fileScanner;
-    private readonly IFileProcessingEngine _fileProcessingRuleEngine;
     private readonly IBatchConfiguration _batchConfig;
-    private readonly IBatchTrackConfigurationInitializer _trackConfigInitializer;
     private readonly IFilePickerDialogService _filePickerDialogService;
     private readonly IWritableSettings<UserSettings> _userSettings;
     private readonly IValidationStateService _validationStateService;
-    private readonly IPlatformService _platformService;
-    private readonly IScannedFileInfoPathComparer _pathComparer;
+    private readonly IInputOperationFeedbackService _inputOperationFeedbackService;
+    private readonly IBatchOperationOrchestrator _orchestrator;
     private readonly ILogger<InputViewModel> _logger;
 
     public bool CanSelectAll => _batchConfig.FileList.Count > SelectedFiles.Count;
@@ -91,32 +89,26 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
 
     public InputViewModel(
         IFileListAdapter fileListAdapter,
-        IFileScanner fileScanner,
-        IFileProcessingEngine fileProcessingRuleEngine,
         IBatchConfiguration batchConfig,
-        IBatchTrackConfigurationInitializer trackConfigInitializer,
         IFilePickerDialogService filePickerDialogService,
         IWritableSettings<UserSettings> userSettings,
         IValidationStateService validationStateService,
-        IPlatformService platformService,
-        IScannedFileInfoPathComparer pathComparer,
+        IInputOperationFeedbackService inputOperationFeedbackService,
+        IBatchOperationOrchestrator orchestrator,
         ILogger<InputViewModel> logger
         )
     {
         _fileListAdapter = fileListAdapter;
-        _fileScanner = fileScanner;
-        _fileProcessingRuleEngine = fileProcessingRuleEngine;
         _batchConfig = batchConfig;
-        _trackConfigInitializer = trackConfigInitializer;
         _filePickerDialogService = filePickerDialogService;
         _userSettings = userSettings;
         _validationStateService = validationStateService;
-        _platformService = platformService;
-        _pathComparer = pathComparer;
+        _inputOperationFeedbackService = inputOperationFeedbackService;
+        _orchestrator = orchestrator;
         _logger = logger;
 
-        RemoveSelected = new RelayCommand(RemoveSelectedFiles);
-        RemoveAll = new RelayCommand(RemoveAllFiles);
+        RemoveSelected = new AsyncRelayCommand(RemoveSelectedFilesAsync);
+        RemoveAll = new AsyncRelayCommand(RemoveAllFilesAsync);
         ClearSelection = new RelayCommand(ClearFileSelection);
         SelectAll = new RelayCommand(SelectAllFiles);
         AddFilesCommand = new AsyncRelayCommand(AddFilesAsync);
@@ -125,10 +117,13 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         _batchConfig.FileList.CollectionChanged += BatchConfigFileList_CollectionChanged;
         SelectedFiles.CollectionChanged += SelectedFiles_CollectionChanged;
         _validationStateService.StateChanged += OnValidationStateChanged;
+        _inputOperationFeedbackService.StateChanged += OnInputOperationFeedbackStateChanged;
 
         // Store the handler for later unsubscription.
         _validationNotificationsChangedHandler = (s, e) => NotifyValidationPropertiesChanged();
         ValidationNotifications.AllNotifications.CollectionChanged += _validationNotificationsChangedHandler;
+
+        OverlayState = _inputOperationFeedbackService.CurrentState ?? InputOperationOverlayState.Inactive;
     }
 
     /// <summary>
@@ -159,188 +154,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         }
 
         // Import the files for further processing and validation.
-        await ImportStorageFilesAsync(storageFiles);
-    }
-
-    /// <summary>
-    /// Asynchronously imports a collection of <see cref="StorageFile"/> objects into the batch configuration.
-    /// Scans, validates, synchronizes track counts, applies processing rules, and adds valid files to the file list.
-    /// </summary>
-    /// <param name="files">
-    /// A read-only list of <see cref="StorageFile"/> objects to import. 
-    /// Must not be <see langword="null"/>. If empty, the method returns immediately.
-    /// </param>
-    /// <returns>
-    /// A <see cref="Task"/> representing the asynchronous operation.
-    /// </returns>
-    private async Task ImportStorageFilesAsync(IReadOnlyList<StorageFile> files)
-    {
-        if (files is null or not { Count: > 0 })
-            return;
-
-        LogImportingFiles(files.Count);
-
-        // Check for duplicates and filter to unique files only
-        var uniqueFiles = FilterDuplicateFiles(files);
-
-        if (uniqueFiles.Count == 0)
-            return;
-
-        // Scan the files to get their information.
-        IEnumerable<ScannedFileInfo> newFiles = await _fileScanner.ScanAsync(uniqueFiles.ToFileInfo());
-        var scannedFiles = newFiles.ToList();
-        if (scannedFiles.Count == 0)
-            return;
-
-        LogFilesScanned(scannedFiles.Count);
-
-        // Re-scan any stale files so metadata is fresh for downstream validation.
-        await RescanStaleFilesAsync();
-
-        // Initialize per-file track configurations for all new files
-        foreach (var file in scannedFiles)
-        {
-            _trackConfigInitializer.Initialize(
-                file,
-                TrackType.Audio,
-                TrackType.Video,
-                TrackType.Text
-            );
-        }
-
-        // Apply processing rules to the new files.
-        foreach (var file in scannedFiles)
-        {
-            _fileProcessingRuleEngine.Apply(file, _batchConfig);
-        }
-
-        // Add files via the adapter to keep everything in sync.
-        _fileListAdapter.AddFiles(scannedFiles);
-    }
-
-
-    /// <summary>
-    /// Filters out duplicate files from the provided list and notifies the user if any duplicates are found.
-    /// </summary>
-    /// <param name="files">The list of files to check for duplicates.</param>
-    /// <returns>A list containing only unique files that are not already in the batch configuration.</returns>
-    private List<StorageFile> FilterDuplicateFiles(IReadOnlyList<StorageFile> files)
-    {
-        // Platform-aware comparison. Not perfect, but should be good enough for our purposes.
-        var comparer = _platformService.IsWindows()
-            ? StringComparer.OrdinalIgnoreCase
-            : StringComparer.Ordinal;
-
-        // Build lookup of existing paths with appropriate comparer for O(1) lookups.
-        // Paths in _batchConfig are assumed to be normalized already.
-        var existingPaths = new HashSet<string>(
-            _batchConfig.FileList.Select(f => f.Path),
-            comparer);
-
-        // Track seen paths in this batch to detect duplicates within the input
-        var seenPaths = new HashSet<string>(comparer);
-        var duplicates = new List<string>();
-        var uniqueFiles = new List<StorageFile>();
-
-        foreach (var file in files)
-        {
-            var normalizedPath = Path.GetFullPath(file.Path);
-
-            // If the file is already in the existing batch configuration, treat as duplicate.
-            if (existingPaths.Contains(normalizedPath))
-            {
-                duplicates.Add(normalizedPath);
-                continue;
-            }
-
-            // Track duplicates within the current set of input files.
-            var isNewPathInBatch = seenPaths.Add(normalizedPath);
-            if (!isNewPathInBatch)
-            {
-                duplicates.Add(normalizedPath);
-            }
-            else
-            {
-                uniqueFiles.Add(file);
-            }
-        }
-
-        // Show duplicate message if any were found
-        if (duplicates.Count > 0)
-        {
-            LogDuplicatesSkipped(duplicates.Count);
-
-            var duplicateFileNames = string.Join(Environment.NewLine, duplicates.Select(p => Path.GetFileName(p) ?? p));
-            var message = duplicates.Count == 1
-                ? $"This file is already in the list:{Environment.NewLine}{duplicateFileNames}"
-                : $"These {duplicates.Count} files are already in the list:{Environment.NewLine}{duplicateFileNames}";
-
-            WeakReferenceMessenger.Default.Send(new DialogMessage("Duplicate Files", message));
-        }
-
-        return uniqueFiles;
-    }
-
-    /// <summary>
-    /// Re-scans all stale files in the batch configuration and updates them with fresh metadata.
-    /// </summary>
-    /// <remarks>
-    /// Stale files are files whose metadata may be outdated. This method rescans them in a single batch operation,
-    /// removes the old entries, adds fresh scanned data, and clears the stale flags.
-    /// If a rescan fails for any file, the error is logged and the stale flag is cleared to prevent repeated failures.
-    /// </remarks>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    private async Task RescanStaleFilesAsync()
-    {
-        var staleFiles = _batchConfig.GetStaleFiles().ToList();
-        if (staleFiles.Count == 0)
-            return;
-
-        LogRescanningStaleFiles(staleFiles.Count);
-
-        try
-        {
-            // Batch re-scan all stale files in a single operation for better performance
-            var fileInfos = staleFiles.Select(f => new FileInfo(f.Path)).ToArray();
-            var freshScans = (await _fileScanner.ScanAsync(fileInfos)).ToList();
-
-            // Match fresh scans back to stale files by path
-            foreach (var staleFile in staleFiles)
-            {
-                var freshScan = freshScans.FirstOrDefault(f => _pathComparer.PathEquals(f.Path, staleFile.Path));
-                
-                if (freshScan != null)
-                {
-                    // Migrate file configuration to preserve user's settings
-                    // The configuration represents user's intent and should not be reset
-                    _batchConfig.MigrateFileConfiguration(staleFile.Id, freshScan.Id);
-                    
-                    // Replace file with fresh metadata while keeping configuration
-                    // Note: This causes UI re-render but ensures object identity is properly updated
-                    _batchConfig.FileList.Remove(staleFile);
-                    _batchConfig.FileList.Add(freshScan);
-                    _batchConfig.ClearStaleFlag(staleFile.Id);
-
-                    LogFileRescanned(staleFile.Path);
-                }
-                else
-                {
-                    // File couldn't be re-scanned (e.g., deleted, moved, or scanner failed)
-                    // Clear stale flag to prevent repeated attempts
-                    _batchConfig.ClearStaleFlag(staleFile.Id);
-                    LogRescanFailedNotFound(staleFile.Path);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            // Batch rescan failed entirely - clear all stale flags to prevent repeated failures
-            LogRescanBatchFailed(staleFiles.Count, ex);
-            foreach (var staleFile in staleFiles)
-            {
-                _batchConfig.ClearStaleFlag(staleFile.Id);
-            }
-        }
+        await _orchestrator.ImportFilesAsync(storageFiles.ToFileInfo());
     }
 
     /// <summary>
@@ -348,7 +162,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     /// </summary>
     /// <remarks>This method processes the removal of selected files by iterating over a copy of the <see
     /// cref="SelectedFiles"/> collection.</remarks>
-    private void RemoveSelectedFiles()
+    private async Task RemoveSelectedFilesAsync()
     {
         var filesToRemove = SelectedFiles
             .Select(file => file.FileInfo)
@@ -357,13 +171,13 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         if (filesToRemove.Count == 0)
             return;
 
-        _fileListAdapter.RemoveFiles(filesToRemove);
+        await _orchestrator.RemoveFilesAsync(filesToRemove);
     }
 
     /// <summary>
     /// Removes all files from the internal file list.
     /// </summary>
-    private void RemoveAllFiles()
+    private async Task RemoveAllFilesAsync()
     {
         var filesToRemove = _fileListAdapter.ScannedFileViewModels
             .Select(file => file.FileInfo)
@@ -372,7 +186,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         if (filesToRemove.Count == 0)
             return;
 
-        _fileListAdapter.RemoveFiles(filesToRemove);
+        await _orchestrator.RemoveFilesAsync(filesToRemove);
     }
 
     /// <summary>
@@ -408,7 +222,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         if (files.Count == 0)
             return;
 
-        await ImportStorageFilesAsync(files);
+        await _orchestrator.ImportFilesAsync(files.ToFileInfo());
     }
 
     /// <summary>
@@ -432,6 +246,11 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         }
 
         IsValidationInfoBarOpen = _validationStateService.HasResults;
+    }
+
+    private void OnInputOperationFeedbackStateChanged(object? sender, EventArgs e)
+    {
+        OverlayState = _inputOperationFeedbackService.CurrentState ?? InputOperationOverlayState.Inactive;
     }
 
     /// <summary>
@@ -496,6 +315,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         _batchConfig.FileList.CollectionChanged -= BatchConfigFileList_CollectionChanged;
         SelectedFiles.CollectionChanged -= SelectedFiles_CollectionChanged;
         _validationStateService.StateChanged -= OnValidationStateChanged;
+        _inputOperationFeedbackService.StateChanged -= OnInputOperationFeedbackStateChanged;
         ValidationNotifications.AllNotifications.CollectionChanged -= _validationNotificationsChangedHandler;
 
         GC.SuppressFinalize(this);

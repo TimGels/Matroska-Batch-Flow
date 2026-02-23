@@ -1,4 +1,3 @@
-using System.Collections.Specialized;
 using MatroskaBatchFlow.Core.Models;
 using Microsoft.Extensions.Logging;
 
@@ -49,8 +48,6 @@ public sealed partial class ValidationStateService : IValidationStateService
         _validationSettingsService = validationSettingsService;
         _userSettings = userSettings;
         _logger = logger;
-
-        _batchConfiguration.FileList.CollectionChanged += OnFileListChanged;
     }
 
     /// <inheritdoc/>
@@ -72,12 +69,6 @@ public sealed partial class ValidationStateService : IValidationStateService
         List<FileValidationResult> results = [.. _validationEngine.Validate(files, settings)];
 
         UpdateState(results);
-    }
-
-    private void OnFileListChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        LogFileListChangeTriggered(e.Action.ToString());
-        Revalidate();
     }
 
     /// <summary>
@@ -132,6 +123,5 @@ public sealed partial class ValidationStateService : IValidationStateService
     public void Dispose()
     {
         _disposed = true;
-        _batchConfiguration.FileList.CollectionChanged -= OnFileListChanged;
     }
 }
