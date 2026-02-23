@@ -1,19 +1,12 @@
-namespace MatroskaBatchFlow.Uno.Presentation;
+using Microsoft.Extensions.Logging;
+
+namespace MatroskaBatchFlow.Core.Services.Pipeline;
 
 /// <summary>
-/// LoggerMessage definitions for <see cref="InputViewModel"/>.
+/// LoggerMessage definitions for <see cref="RefreshStaleMetadataStage"/>.
 /// </summary>
-public sealed partial class InputViewModel
+public sealed partial class RefreshStaleMetadataStage
 {
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Importing {FileCount} file(s)")]
-    private partial void LogImportingFiles(int fileCount);
-
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Skipped {DuplicateCount} duplicate file(s)")]
-    private partial void LogDuplicatesSkipped(int duplicateCount);
-
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Scanned {ScannedCount} file(s)")]
-    private partial void LogFilesScanned(int scannedCount);
-
     [LoggerMessage(Level = LogLevel.Information, Message = "Re-scanning {Count} file(s) with stale metadata before validation")]
     private partial void LogRescanningStaleFiles(int count);
 

@@ -33,13 +33,14 @@ public partial class FileScanner(IOptionsMonitor<ScanOptions> optionsMonitor, IL
     /// <param name="files">An array of <see cref="FileInfo"/> objects representing the files to scan.</param>
     /// <returns>A collection of <see cref="ScannedFileInfo"/>.</returns>
     /// <exception cref="ArgumentException">Thrown when no files are provided for scanning.</exception>
-    public async Task<IEnumerable<ScannedFileInfo>> ScanAsync(FileInfo[] files)
+    public async Task<IEnumerable<ScannedFileInfo>> ScanAsync(FileInfo[] files, IProgress<(int current, int total)>? progress = null)
     {
         if (files == null || files.Length == 0)
             throw new ArgumentException("No files provided for scanning.", nameof(files));
 
         LogScanningFiles(files.Length);
-        var scannedFiles = await AnalyzeFilesWithMediaInfoAsync(files.Select(f => f.FullName));
+        var filePaths = files.Select(f => f.FullName).ToList();
+        var scannedFiles = await AnalyzeFilesWithMediaInfoAsync(filePaths, progress);
 
         _scannedFiles.Clear();
         _scannedFiles.AddRange(scannedFiles);
@@ -55,8 +56,8 @@ public partial class FileScanner(IOptionsMonitor<ScanOptions> optionsMonitor, IL
     {
         EnsureDirectoryExists();
         LogScanningDirectory(_options.DirectoryPath, _options.Recursive);
-        var files = await Task.Run(() => GetFilteredFiles());
-        LogFilesFound(files.Count());
+        var files = (await Task.Run(() => GetFilteredFiles().ToList())).ToList();
+        LogFilesFound(files.Count);
         var scannedFiles = await AnalyzeFilesWithMediaInfoAsync(files);
 
         _scannedFiles.Clear();
@@ -125,15 +126,19 @@ public partial class FileScanner(IOptionsMonitor<ScanOptions> optionsMonitor, IL
     /// </summary>
     /// <param name="files"> The collection of file paths to analyze.</param>
     /// <returns> A collection of <see cref="ScannedFileInfo"/>.</returns>
-    private static async Task<IEnumerable<ScannedFileInfo>> AnalyzeFilesWithMediaInfoAsync(IEnumerable<string> files)
+    private static async Task<IEnumerable<ScannedFileInfo>> AnalyzeFilesWithMediaInfoAsync(
+        IReadOnlyList<string> files,
+        IProgress<(int current, int total)>? progress = null)
     {
         return await Task.Run(() =>
         {
             var scannedFiles = new List<ScannedFileInfo>();
             var mediaInfo = new MediaInfo();
+            var total = files.Count;
 
-            foreach (var file in files)
+            for (var index = 0; index < total; index++)
             {
+                var file = files[index];
                 mediaInfo.Open(file);
                 mediaInfo.Option("Complete", "1");
                 mediaInfo.Option("Output", "JSON");
@@ -142,6 +147,7 @@ public partial class FileScanner(IOptionsMonitor<ScanOptions> optionsMonitor, IL
                 // Parse the JSON into a ScannedFileInfo object
                 var scannedFile = ParseMediaInfoJson(info, file);
                 scannedFiles.Add(scannedFile);
+                progress?.Report((index + 1, total));
             }
 
             return scannedFiles;

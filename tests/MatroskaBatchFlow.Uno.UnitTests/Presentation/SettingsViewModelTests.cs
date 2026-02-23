@@ -20,6 +20,7 @@ public class SettingsViewModelTests
     private readonly IWritableSettings<UserSettings> _userSettings;
     private readonly IValidationSettingsService _validationSettingsService;
     private readonly IValidationStateService _validationStateService;
+    private readonly IBatchOperationOrchestrator _orchestrator;
     private readonly IUIPreferencesService _uiPreferences;
     private readonly ILogLevelService _logLevelService;
     private readonly IOptions<LoggingOptions> _loggingOptions;
@@ -31,6 +32,7 @@ public class SettingsViewModelTests
         _userSettings = Substitute.For<IWritableSettings<UserSettings>>();
         _validationSettingsService = Substitute.For<IValidationSettingsService>();
         _validationStateService = Substitute.For<IValidationStateService>();
+        _orchestrator = Substitute.For<IBatchOperationOrchestrator>();
         _uiPreferences = Substitute.For<IUIPreferencesService>();
         _logLevelService = Substitute.For<ILogLevelService>();
         _loggingOptions = Substitute.For<IOptions<LoggingOptions>>();
@@ -204,12 +206,27 @@ public class SettingsViewModelTests
         _uiPreferences.Received().AppTheme = AppThemePreference.Dark;
     }
 
+    [Fact]
+    public void ChangingStrictnessMode_DelegatesToOrchestrator()
+    {
+        _userSettings.UpdateAsync(Arg.Any<Action<UserSettings>>()).Returns(Task.CompletedTask);
+        _orchestrator.RevalidateAsync().Returns(Task.CompletedTask);
+
+        _userSettingsValue.BatchValidation.Mode = StrictnessMode.Custom;
+        var viewModel = CreateViewModel();
+
+        viewModel.SelectedStrictnessModeIndex = (int)StrictnessMode.Strict;
+
+        _orchestrator.Received(1).RevalidateAsync();
+    }
+
     private SettingsViewModel CreateViewModel()
     {
         return new SettingsViewModel(
             _userSettings,
             _validationSettingsService,
             _validationStateService,
+            _orchestrator,
             _uiPreferences,
             _logLevelService,
             _loggingOptions,
