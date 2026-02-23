@@ -10,4 +10,7 @@ public sealed partial class PipelineRunner
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Pipeline stage '{StageName}' completed")]
     private partial void LogStageCompleted(string stageName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Pipeline aborted after stage '{StageName}' — no further stages will run")]
+    private partial void LogPipelineAborted(string stageName);
 }
