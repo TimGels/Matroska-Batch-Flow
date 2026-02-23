@@ -16,6 +16,13 @@ public sealed class PipelineContext
     private readonly Dictionary<string, object> _data = [];
 
     /// <summary>
+    /// When set to <see langword="true"/>, signals the <see cref="IPipelineRunner"/>
+    /// to stop executing subsequent stages. A stage sets this when continuing
+    /// the pipeline would be pointless (e.g., all input was filtered out).
+    /// </summary>
+    public bool IsAborted { get; set; }
+
+    /// <summary>
     /// Stores a value in the context under the specified key.
     /// </summary>
     /// <typeparam name="T">The type of the value.</typeparam>

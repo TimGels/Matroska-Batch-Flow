@@ -73,8 +73,14 @@ public sealed partial class FilterDuplicateFilesStage(
             WeakReferenceMessenger.Default.Send(new DialogMessage("Duplicate Files", message));
         }
 
-        // Overwrite context with filtered files
+        // Overwrite context with filtered files.
         context.Set(PipelineContextKeys.InputFiles, uniqueFiles.ToArray());
+
+        // If every file was a duplicate, abort the pipeline — no work remains.
+        if (uniqueFiles.Count == 0)
+        {
+            context.IsAborted = true;
+        }
 
         return Task.CompletedTask;
     }

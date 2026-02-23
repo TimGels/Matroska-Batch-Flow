@@ -69,6 +69,12 @@ public sealed partial class PipelineRunner(
                 }
 
                 LogStageCompleted(stage.DisplayName);
+
+                if (context.IsAborted)
+                {
+                    LogPipelineAborted(stage.DisplayName);
+                    break;
+                }
             }
         }
         finally
