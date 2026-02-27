@@ -5,8 +5,8 @@ namespace MatroskaBatchFlow.Core.Services.FileValidation;
 
 /// <summary>
 /// Manages ongoing validation state for the current batch of files.
-/// Automatically re-validates when the file list changes, and exposes a <see cref="Revalidate"/>
-/// method for explicit triggers (e.g., after validation settings change).
+/// Exposes <see cref="Revalidate"/> and <see cref="RevalidateAsync"/> for explicit triggers
+/// (e.g., after the file list or validation settings change).
 /// </summary>
 public sealed partial class ValidationStateService : IValidationStateService
 {
