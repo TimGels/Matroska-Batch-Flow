@@ -18,10 +18,9 @@ public sealed class ValidateStage(IValidationStateService validationStateService
     public bool ShowsOverlay => true;
 
     /// <inheritdoc />
-    public Task ExecuteAsync(PipelineContext context, IProgress<(int current, int total)>? progress, CancellationToken ct)
+    public async Task ExecuteAsync(PipelineContext context, IProgress<(int current, int total)>? progress, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        validationStateService.Revalidate();
-        return Task.CompletedTask;
+        await validationStateService.RevalidateAsync();
     }
 }

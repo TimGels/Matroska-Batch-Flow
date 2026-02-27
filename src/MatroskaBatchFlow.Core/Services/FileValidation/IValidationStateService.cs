@@ -35,4 +35,11 @@ public interface IValidationStateService : IDisposable
     /// Forces a re-validation of all files in the current batch against the current validation settings.
     /// </summary>
     void Revalidate();
+
+    /// <summary>
+    /// Asynchronously forces a re-validation of all files in the current batch.
+    /// The expensive validation work runs on a background thread; state is updated
+    /// on the calling synchronization context so UI-bound subscribers remain safe.
+    /// </summary>
+    Task RevalidateAsync();
 }
