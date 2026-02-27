@@ -7,5 +7,8 @@ public sealed record InputOperationOverlayState(string Message, bool IsIndetermi
     /// </summary>
     public bool IsActive => !string.IsNullOrEmpty(Message);
 
+    /// <summary>
+    /// A sentinel value representing an inactive (hidden) overlay with no message or progress.
+    /// </summary>
     public static InputOperationOverlayState Inactive { get; } = new(string.Empty, true, 0, 0, false);
 }
