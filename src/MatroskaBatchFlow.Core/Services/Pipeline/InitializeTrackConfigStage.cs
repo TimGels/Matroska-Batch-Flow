@@ -28,10 +28,10 @@ public sealed class InitializeTrackConfigStage(
     public bool ShowsOverlay => true;
 
     /// <inheritdoc />
-    public Task ExecuteAsync(PipelineContext context, IProgress<(int current, int total)>? progress, CancellationToken ct)
+    public async Task ExecuteAsync(PipelineContext context, IProgress<(int current, int total)>? progress, CancellationToken ct)
     {
         if (!context.TryGet<List<ScannedFileInfo>>(PipelineContextKeys.ScannedFiles, out var scannedFiles) || scannedFiles.Count == 0)
-            return Task.CompletedTask;
+            return;
 
         var totalFiles = scannedFiles.Count;
 
@@ -44,8 +44,11 @@ public sealed class InitializeTrackConfigStage(
             fileProcessingRuleEngine.Apply(file, batchConfig);
 
             progress?.Report((index + 1, totalFiles));
-        }
 
-        return Task.CompletedTask;
+            // Yield to the UI thread's message loop after each file so that progress
+            // callbacks and overlay repaints can render between iterations, preventing
+            // the UI from freezing during a large batch.
+            await Task.Yield();
+        }
     }
 }
