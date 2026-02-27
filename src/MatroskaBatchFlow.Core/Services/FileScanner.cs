@@ -56,7 +56,7 @@ public partial class FileScanner(IOptionsMonitor<ScanOptions> optionsMonitor, IL
     {
         EnsureDirectoryExists();
         LogScanningDirectory(_options.DirectoryPath, _options.Recursive);
-        var files = (await Task.Run(() => GetFilteredFiles().ToList())).ToList();
+        var files = await Task.Run(() => GetFilteredFiles().ToList());
         LogFilesFound(files.Count);
         var scannedFiles = await AnalyzeFilesWithMediaInfoAsync(files);
 
