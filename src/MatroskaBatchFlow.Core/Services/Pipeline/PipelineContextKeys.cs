@@ -1,4 +1,4 @@
-namespace MatroskaBatchFlow.Core.Abstractions.Pipeline;
+namespace MatroskaBatchFlow.Core.Services.Pipeline;
 
 /// <summary>
 /// Well-known keys for values stored in <see cref="PipelineContext"/>.

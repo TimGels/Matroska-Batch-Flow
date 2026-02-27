@@ -1,4 +1,4 @@
-using MatroskaBatchFlow.Core.Abstractions.Pipeline;
+using MatroskaBatchFlow.Core.Services.Pipeline;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 
 namespace MatroskaBatchFlow.Uno.Services.Pipeline;

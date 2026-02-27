@@ -1,5 +1,5 @@
 using CommunityToolkit.Mvvm.Messaging;
-using MatroskaBatchFlow.Core.Abstractions.Pipeline;
+using MatroskaBatchFlow.Core.Services.Pipeline;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Uno.Messages;
 

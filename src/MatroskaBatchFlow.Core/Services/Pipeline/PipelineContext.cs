@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace MatroskaBatchFlow.Core.Abstractions.Pipeline;
+namespace MatroskaBatchFlow.Core.Services.Pipeline;
 
 /// <summary>
 /// Shared data bag passed between pipeline stages.

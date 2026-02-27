@@ -1,4 +1,3 @@
-using MatroskaBatchFlow.Core.Abstractions.Pipeline;
 using Microsoft.Extensions.Logging;
 
 namespace MatroskaBatchFlow.Core.Services.Pipeline;

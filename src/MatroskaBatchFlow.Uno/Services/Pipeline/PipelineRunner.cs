@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using MatroskaBatchFlow.Core.Abstractions.Pipeline;
+using MatroskaBatchFlow.Core.Services.Pipeline;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Models;
 
