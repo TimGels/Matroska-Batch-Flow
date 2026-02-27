@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace MatroskaBatchFlow.Core.Abstractions.Pipeline;
+namespace MatroskaBatchFlow.Core.Services.Pipeline;
 
 /// <summary>
 /// Represents a single stage in a composable pipeline.
