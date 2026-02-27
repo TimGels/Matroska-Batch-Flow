@@ -14,14 +14,17 @@ namespace MatroskaBatchFlow.Uno.Services.Pipeline;
 /// on shared state (batch configuration, validation) and avoids one run clearing the overlay
 /// while another is still in progress.
 /// </remarks>
-public sealed partial class PipelineRunner(
-    IInputOperationFeedbackService feedbackService,
-    ILogger<PipelineRunner> logger) : IPipelineRunner
+public sealed partial class PipelineRunner(IInputOperationFeedbackService feedbackService, ILogger<PipelineRunner> logger) : IPipelineRunner
 {
+    /// <summary>
+    /// Minimum overlay visibility duration in milliseconds.
+    /// </summary>
+    private const int MinOverlayDurationMs = 500;
+
     /// <summary>
     /// Minimum time an overlay-enabled stage stays visible, preventing sub-perceptual flicker.
     /// </summary>
-    private static readonly TimeSpan MinOverlayDuration = TimeSpan.FromMilliseconds(500);
+    private static readonly TimeSpan MinOverlayDuration = TimeSpan.FromMilliseconds(MinOverlayDurationMs);
 
     /// <summary>
     /// Ensures that at most one pipeline run executes at a time.
