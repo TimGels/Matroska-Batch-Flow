@@ -71,6 +71,34 @@ public sealed partial class ValidationStateService : IValidationStateService
         UpdateState(results);
     }
 
+    /// <inheritdoc/>
+    /// <exception cref="ObjectDisposedException">Thrown if the service has been disposed.</exception>
+    public async Task RevalidateAsync()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        // Snapshot both collections on the calling (UI) thread before going off-thread,
+        // since ObservableCollection and the settings graph are not thread-safe.
+        List<ScannedFileInfo> fileSnapshot = [.. _batchConfiguration.FileList];
+
+        if (fileSnapshot.Count == 0)
+        {
+            LogValidationSkipped();
+            UpdateState([]); // Always clear results when there are no files, to reset any previous state
+            return;
+        }
+
+        var settings = _validationSettingsService.GetEffectiveSettings(_userSettings.Value);
+
+        // Run the CPU-bound validation work off the UI thread.
+        // The continuation (and therefore UpdateState + StateChanged) resumes on the
+        // original synchronization context, keeping UI-bound subscribers safe.
+        List<FileValidationResult> results = await Task.Run(
+            () => _validationEngine.Validate(fileSnapshot, settings).ToList());
+
+        UpdateState(results);
+    }
+
     /// <summary>
     /// Updates the internal validation state based on the specified collection of file validation results.
     /// </summary>
