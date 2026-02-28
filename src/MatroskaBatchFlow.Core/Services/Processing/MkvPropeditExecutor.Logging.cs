@@ -1,4 +1,3 @@
-using MatroskaBatchFlow.Core.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace MatroskaBatchFlow.Core.Services.Processing;

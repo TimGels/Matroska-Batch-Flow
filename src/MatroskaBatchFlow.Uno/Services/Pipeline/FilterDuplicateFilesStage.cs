@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
-using MatroskaBatchFlow.Core.Services.Pipeline;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Services.Pipeline;
 using MatroskaBatchFlow.Uno.Messages;
 
 namespace MatroskaBatchFlow.Uno.Services.Pipeline;
