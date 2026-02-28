@@ -2,10 +2,8 @@ using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
-using MatroskaBatchFlow.Core.Utilities;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using static MatroskaBatchFlow.Core.Models.MediaInfoResult.MediaInfo;
 
 namespace MatroskaBatchFlow.Core.UnitTests.Services;
 

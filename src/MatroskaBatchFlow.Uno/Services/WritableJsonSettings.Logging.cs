@@ -1,5 +1,3 @@
-using MatroskaBatchFlow.Uno.Logging;
-
 namespace MatroskaBatchFlow.Uno.Services;
 
 /// <summary>

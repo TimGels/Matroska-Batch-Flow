@@ -1,6 +1,5 @@
 using MatroskaBatchFlow.Uno.Presentation;
 using MatroskaBatchFlow.Uno.Services;
-using Microsoft.UI.Xaml.Controls;
 
 namespace MatroskaBatchFlow.Uno.UnitTests.Services;
 
