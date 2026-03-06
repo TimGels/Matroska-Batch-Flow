@@ -28,8 +28,8 @@ public partial class SubtitleViewModel : TrackViewModelBase
     /// </summary>
     public bool IsFileListPopulated => _batchConfiguration.FileList.Count > 0;
 
-    public SubtitleViewModel(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences)
-        : base(languageProvider, batchConfiguration, uiPreferences)
+    public SubtitleViewModel(ILogger<SubtitleViewModel> logger, ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences)
+        : base(logger, languageProvider, batchConfiguration, uiPreferences)
     {
         SubtitleTracks = [.. _batchConfiguration.SubtitleTracks];
 

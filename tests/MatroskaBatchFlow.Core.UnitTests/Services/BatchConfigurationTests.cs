@@ -263,15 +263,39 @@ public class BatchConfigurationTests
         var newFileId = Guid.NewGuid();
         
         // Create file configuration with all track types
-        var audioTrack = new TrackConfiguration(new MediaInfoResultBuilder()
-            .AddTrackOfType(TrackType.Audio)
-            .Build().Media.Track.First(t => t.Type == TrackType.Audio));
-        var videoTrack = new TrackConfiguration(new MediaInfoResultBuilder()
-            .AddTrackOfType(TrackType.Video)
-            .Build().Media.Track.First(t => t.Type == TrackType.Video));
-        var subtitleTrack = new TrackConfiguration(new MediaInfoResultBuilder()
-            .AddTrackOfType(TrackType.Text)
-            .Build().Media.Track.First(t => t.Type == TrackType.Text));
+        var audioTrack = new FileTrackValues
+        {
+            ScannedTrackInfo = new MediaInfoResultBuilder()
+                .AddTrackOfType(TrackType.Audio)
+                .Build().Media.Track.First(t => t.Type == TrackType.Audio),
+            Type = TrackType.Audio,
+            Index = 0,
+            Default = false,
+            Forced = false,
+            Enabled = false
+        };
+        var videoTrack = new FileTrackValues
+        {
+            ScannedTrackInfo = new MediaInfoResultBuilder()
+                .AddTrackOfType(TrackType.Video)
+                .Build().Media.Track.First(t => t.Type == TrackType.Video),
+            Type = TrackType.Video,
+            Index = 0,
+            Default = false,
+            Forced = false,
+            Enabled = false
+        };
+        var subtitleTrack = new FileTrackValues
+        {
+            ScannedTrackInfo = new MediaInfoResultBuilder()
+                .AddTrackOfType(TrackType.Text)
+                .Build().Media.Track.First(t => t.Type == TrackType.Text),
+            Type = TrackType.Text,
+            Index = 0,
+            Default = false,
+            Forced = false,
+            Enabled = false
+        };
         
         var fileConfig = new FileTrackConfiguration
         {
@@ -303,15 +327,18 @@ public class BatchConfigurationTests
         var oldFileId = Guid.NewGuid();
         var newFileId = Guid.NewGuid();
         
-        // Create audio track with user modifications
-        var audioTrack = new TrackConfiguration(new MediaInfoResultBuilder()
-            .AddTrackOfType(TrackType.Audio)
-            .Build().Media.Track.First(t => t.Type == TrackType.Audio))
+        // Create audio track with user-modified values
+        var audioTrack = new FileTrackValues
         {
+            ScannedTrackInfo = new MediaInfoResultBuilder()
+                .AddTrackOfType(TrackType.Audio)
+                .Build().Media.Track.First(t => t.Type == TrackType.Audio),
+            Type = TrackType.Audio,
+            Index = 0,
             Name = "Modified Track Name",
             Default = true,
-            ShouldModifyName = true,
-            ShouldModifyDefaultFlag = true
+            Forced = false,
+            Enabled = false
         };
         
         var fileConfig = new FileTrackConfiguration
@@ -324,13 +351,11 @@ public class BatchConfigurationTests
         // Act
         config.MigrateFileConfiguration(oldFileId, newFileId);
 
-        // Assert - user modifications should be preserved
+        // Assert - user-modified values should be preserved after migration
         var migratedConfig = config.FileConfigurations[newFileId];
         var migratedTrack = migratedConfig.AudioTracks[0];
         
         Assert.Equal("Modified Track Name", migratedTrack.Name);
         Assert.True(migratedTrack.Default);
-        Assert.True(migratedTrack.ShouldModifyName);
-        Assert.True(migratedTrack.ShouldModifyDefaultFlag);
     }
 }

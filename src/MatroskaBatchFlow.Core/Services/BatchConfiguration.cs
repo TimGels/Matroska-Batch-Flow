@@ -321,7 +321,7 @@ public partial class BatchConfiguration : IBatchConfiguration
 
     /// <inheritdoc />
     /// <exception cref="InvalidOperationException">Thrown if no per-file track configuration exists for the specified file ID.</exception>
-    public IList<TrackConfiguration> GetTrackListForFile(Guid fileId, TrackType trackType)
+    public IList<FileTrackValues> GetTrackListForFile(Guid fileId, TrackType trackType)
     {
         // Prefer per-file configuration. If none exists, fail fast by throwing an exception.
         if (FileConfigurations.TryGetValue(fileId, out var fileConfig))
@@ -656,7 +656,7 @@ public sealed class TrackConfiguration(TrackInfo trackInfo) : INotifyPropertyCha
         }
     }
 
-    protected void OnPropertyChanged(string propertyName)
+    private void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

@@ -1,13 +1,14 @@
 using MatroskaBatchFlow.Core.Builders.MkvPropeditArguments;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
+using Microsoft.Extensions.Logging;
 
 namespace MatroskaBatchFlow.Core.Services;
 
 /// <summary>
 /// Provides reusable logic for generating <c>mkvpropedit</c> command-line arguments from an <see cref="IBatchConfiguration"/>.
 /// </summary>
-public sealed class MkvPropeditArgumentsGenerator : IMkvPropeditArgumentsGenerator
+public sealed partial class MkvPropeditArgumentsGenerator(ILogger<MkvPropeditArgumentsGenerator> logger) : IMkvPropeditArgumentsGenerator
 {
     /// <inheritdoc />
     public string[] BuildBatchArguments(IBatchConfiguration batchConfiguration)
@@ -42,7 +43,7 @@ public sealed class MkvPropeditArgumentsGenerator : IMkvPropeditArgumentsGenerat
     /// <param name="batchConfiguration">Contains global title settings and per-file track configurations.</param>
     /// <returns> Token array suitable for joining. Returns an empty array if no modifications are requested 
     /// (to signal "no-op").</returns>
-    private static string[] BuildFileArgumentTokens(ScannedFileInfo file, IBatchConfiguration batchConfiguration)
+    private string[] BuildFileArgumentTokens(ScannedFileInfo file, IBatchConfiguration batchConfiguration)
     {
         var builder = new MkvPropeditArgumentsBuilder();
 
@@ -84,11 +85,17 @@ public sealed class MkvPropeditArgumentsGenerator : IMkvPropeditArgumentsGenerat
     /// Adds track-specific modifications to the builder for a specific file, filtering out tracks that have
     /// no requested changes or don't exist in the file.
     /// </summary>
+    /// <remarks>
+    /// Modification intent (<c>ShouldModify*</c>) is read from the global <see cref="TrackConfiguration"/> at
+    /// the matching index. The actual values to write (Name, Language, flags) are read from the per-file
+    /// <see cref="FileTrackValues"/>, which are initially populated from the MediaInfo scan and subsequently
+    /// updated when the user changes settings in the UI.
+    /// </remarks>
     /// <param name="builder">The accumulating mkvpropedit argument builder.</param>
     /// <param name="file">The file being processed.</param>
     /// <param name="type">The track type (must map to a Matroska track element).</param>
     /// <param name="batchConfig">The batch configuration containing track availability data.</param>
-    private static void AddTracksForFile(
+    private void AddTracksForFile(
         MkvPropeditArgumentsBuilder builder,
         ScannedFileInfo file,
         TrackType type,
@@ -99,17 +106,30 @@ public sealed class MkvPropeditArgumentsGenerator : IMkvPropeditArgumentsGenerat
             return;
         }
 
-        // Get file-specific track configuration.
-        var tracks = batchConfig.GetTrackListForFile(file.Id, type);
+        // Per-file values (Name, Language, flags as scanned from this file).
+        var perFileTracks = batchConfig.GetTrackListForFile(file.Id, type);
 
-        foreach (var track in tracks)
+        // Global tracks carry the modification intent (ShouldModify* flags).
+        var globalTracks = batchConfig.GetTrackListForType(type);
+
+        foreach (var track in perFileTracks)
         {
+            // Defensive: the initializer always expands global tracks to the maximum
+            // count, so this should not be true under normal operation.
+            if (track.Index >= globalTracks.Count)
+            {
+                LogPerFileTrackExceedsGlobalCount(file.Path, type, track.Index, globalTracks.Count);
+                continue;
+            }
+
+            var globalTrack = globalTracks[track.Index];
+
             // Skip inert tracks (no requested modifications).
-            if (!(track.ShouldModifyLanguage ||
-                  track.ShouldModifyName ||
-                  track.ShouldModifyDefaultFlag ||
-                  track.ShouldModifyForcedFlag ||
-                  track.ShouldModifyEnabledFlag))
+            if (!(globalTrack.ShouldModifyLanguage ||
+                  globalTrack.ShouldModifyName ||
+                  globalTrack.ShouldModifyDefaultFlag ||
+                  globalTrack.ShouldModifyForcedFlag ||
+                  globalTrack.ShouldModifyEnabledFlag))
             {
                 continue;
             }
@@ -126,27 +146,27 @@ public sealed class MkvPropeditArgumentsGenerator : IMkvPropeditArgumentsGenerat
                 // Track ID converted to 1-based indexing for mkvpropedit conventions.
                 tb.SetTrackId(track.Index + 1).SetTrackType(type);
 
-                if (track.ShouldModifyLanguage)
+                if (globalTrack.ShouldModifyLanguage)
                 {
                     tb.WithLanguage(track.Language.Code);
                 }
 
-                if (track.ShouldModifyName)
+                if (globalTrack.ShouldModifyName)
                 {
                     tb.WithName(track.Name);
                 }
 
-                if (track.ShouldModifyDefaultFlag)
+                if (globalTrack.ShouldModifyDefaultFlag)
                 {
                     tb.WithIsDefault(track.Default);
                 }
 
-                if (track.ShouldModifyForcedFlag)
+                if (globalTrack.ShouldModifyForcedFlag)
                 {
                     tb.WithIsForced(track.Forced);
                 }
 
-                if (track.ShouldModifyEnabledFlag)
+                if (globalTrack.ShouldModifyEnabledFlag)
                 {
                     tb.WithIsEnabled(track.Enabled);
                 }

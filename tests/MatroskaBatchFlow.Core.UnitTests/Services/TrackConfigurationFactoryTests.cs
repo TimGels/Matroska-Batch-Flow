@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
@@ -13,18 +12,19 @@ namespace MatroskaBatchFlow.Core.UnitTests.Services;
 /// </summary>
 public class TrackConfigurationFactoryTests
 {
-    private static ILanguageProvider CreateMockLanguageProvider(IEnumerable<MatroskaLanguageOption>? languages = null)
+    private readonly ILanguageProvider _mockLanguageProvider = Substitute.For<ILanguageProvider>();
+
+    public TrackConfigurationFactoryTests()
     {
-        var mockLanguageProvider = Substitute.For<ILanguageProvider>();
-        mockLanguageProvider.Languages.Returns(languages?.ToImmutableList() ?? ImmutableList<MatroskaLanguageOption>.Empty);
-        return mockLanguageProvider;
+        // Default: any unmatched code resolves to Undetermined.
+        _mockLanguageProvider.Resolve(Arg.Any<string?>()).Returns(MatroskaLanguageOption.Undetermined);
     }
 
     [Fact]
     public void Create_SetsBasicProperties()
     {
         // Arrange
-        var factory = new TrackConfigurationFactory(CreateMockLanguageProvider());
+        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
         var trackInfo = new TrackInfoBuilder()
             .WithType(TrackType.Audio)
             .WithTitle("English Commentary")
@@ -49,7 +49,7 @@ public class TrackConfigurationFactoryTests
     public void Create_SetsEmptyNameWhenTitleIsNull()
     {
         // Arrange
-        var factory = new TrackConfigurationFactory(CreateMockLanguageProvider());
+        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
         var trackInfo = new TrackInfoBuilder()
             .WithType(TrackType.Video)
             .WithStreamKindID(0)
@@ -63,7 +63,7 @@ public class TrackConfigurationFactoryTests
     }
 
     [Fact]
-    public void Create_ResolvesLanguageFromIso639_2_b()
+    public void Create_DelegatesToResolveAndUsesResult()
     {
         // Arrange
         var englishLanguage = new MatroskaLanguageOption(
@@ -72,7 +72,8 @@ public class TrackConfigurationFactoryTests
             iso639_2_b: "eng",
             iso639_2_t: "eng",
             iso639_3: "eng");
-        var factory = new TrackConfigurationFactory(CreateMockLanguageProvider([englishLanguage]));
+        _mockLanguageProvider.Resolve("eng").Returns(englishLanguage);
+        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
         var trackInfo = new TrackInfoBuilder()
             .WithType(TrackType.Audio)
             .WithLanguage("eng")
@@ -87,7 +88,7 @@ public class TrackConfigurationFactoryTests
     }
 
     [Fact]
-    public void Create_ResolvesLanguageFromIso639_1()
+    public void Create_PassesLanguageCodeToResolve()
     {
         // Arrange
         var japaneseLanguage = new MatroskaLanguageOption(
@@ -96,7 +97,8 @@ public class TrackConfigurationFactoryTests
             iso639_2_b: "jpn",
             iso639_2_t: "jpn",
             iso639_3: "jpn");
-        var factory = new TrackConfigurationFactory(CreateMockLanguageProvider([japaneseLanguage]));
+        _mockLanguageProvider.Resolve("ja").Returns(japaneseLanguage);
+        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
         var trackInfo = new TrackInfoBuilder()
             .WithType(TrackType.Audio)
             .WithLanguage("ja")
@@ -114,7 +116,7 @@ public class TrackConfigurationFactoryTests
     public void Create_ReturnsUndeterminedForUnknownLanguage()
     {
         // Arrange
-        var factory = new TrackConfigurationFactory(CreateMockLanguageProvider());
+        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
         var trackInfo = new TrackInfoBuilder()
             .WithType(TrackType.Audio)
             .WithLanguage("xyz")
@@ -132,7 +134,7 @@ public class TrackConfigurationFactoryTests
     public void Create_ReturnsUndeterminedForEmptyLanguage()
     {
         // Arrange
-        var factory = new TrackConfigurationFactory(CreateMockLanguageProvider());
+        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
         var trackInfo = new TrackInfoBuilder()
             .WithType(TrackType.Audio)
             .WithLanguage(string.Empty)
@@ -150,7 +152,7 @@ public class TrackConfigurationFactoryTests
     public void Create_ReturnsUndeterminedForWhitespaceLanguage()
     {
         // Arrange
-        var factory = new TrackConfigurationFactory(CreateMockLanguageProvider());
+        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
         var trackInfo = new TrackInfoBuilder()
             .WithType(TrackType.Audio)
             .WithLanguage("   ")
@@ -168,7 +170,7 @@ public class TrackConfigurationFactoryTests
     public void Create_ThrowsForNullTrackInfo()
     {
         // Arrange
-        var factory = new TrackConfigurationFactory(CreateMockLanguageProvider());
+        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => factory.Create(null!, TrackType.Audio, 0));

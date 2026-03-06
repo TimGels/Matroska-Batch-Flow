@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using MatroskaBatchFlow.Core.Enums;
-using MatroskaBatchFlow.Core.Services;
 
 namespace MatroskaBatchFlow.Core.Models;
 
@@ -15,26 +14,26 @@ public sealed class FileTrackConfiguration
     public string FilePath { get; set; } = string.Empty;
 
     /// <summary>
-    /// Audio track configurations for this file.
+    /// Audio track values for this file.
     /// </summary>
-    public ObservableCollection<TrackConfiguration> AudioTracks { get; set; } = [];
+    public ObservableCollection<FileTrackValues> AudioTracks { get; set; } = [];
 
     /// <summary>
-    /// Video track configurations for this file.
+    /// Video track values for this file.
     /// </summary>
-    public ObservableCollection<TrackConfiguration> VideoTracks { get; set; } = [];
+    public ObservableCollection<FileTrackValues> VideoTracks { get; set; } = [];
 
     /// <summary>
-    /// Subtitle track configurations for this file.
+    /// Subtitle track values for this file.
     /// </summary>
-    public ObservableCollection<TrackConfiguration> SubtitleTracks { get; set; } = [];
+    public ObservableCollection<FileTrackValues> SubtitleTracks { get; set; } = [];
 
     /// <summary>
     /// Gets the track list for a specific track type.
     /// </summary>
     /// <param name="trackType">The track type to retrieve.</param>
-    /// <returns>Observable collection of track configurations for the specified type.</returns>
-    public ObservableCollection<TrackConfiguration> GetTrackListForType(TrackType trackType)
+    /// <returns>Observable collection of track values for the specified type.</returns>
+    public ObservableCollection<FileTrackValues> GetTrackListForType(TrackType trackType)
     {
         return trackType switch
         {

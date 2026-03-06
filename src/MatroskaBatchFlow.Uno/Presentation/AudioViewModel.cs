@@ -28,8 +28,8 @@ public partial class AudioViewModel : TrackViewModelBase
     /// </summary>
     public bool IsFileListPopulated => _batchConfiguration.FileList.Count > 0;
 
-    public AudioViewModel(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences)
-        : base(languageProvider, batchConfiguration, uiPreferences)
+    public AudioViewModel(ILogger<AudioViewModel> logger, ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences)
+        : base(logger, languageProvider, batchConfiguration, uiPreferences)
     {
         AudioTracks = [.. _batchConfiguration.AudioTracks];
 

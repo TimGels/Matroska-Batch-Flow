@@ -16,9 +16,11 @@ namespace MatroskaBatchFlow.Core.Services;
 /// </remarks>
 /// <param name="batchConfig">The batch configuration to be modified.</param>
 /// <param name="trackConfigFactory">The factory for creating track configurations.</param>
+/// <param name="languageProvider">The language provider for resolving track language codes.</param>
 public class BatchTrackConfigurationInitializer(
     IBatchConfiguration batchConfig,
-    ITrackConfigurationFactory trackConfigFactory) : IBatchTrackConfigurationInitializer
+    ITrackConfigurationFactory trackConfigFactory,
+    ILanguageProvider languageProvider) : IBatchTrackConfigurationInitializer
 {
     /// <inheritdoc/>
     public void Initialize(ScannedFileInfo scannedFile, params TrackType[] trackTypes)
@@ -36,7 +38,7 @@ public class BatchTrackConfigurationInitializer(
             batchConfig.FileConfigurations.Add(scannedFile.Id, fileConfig);
         }
 
-        // Populate file-specific track configurations based on what this file has
+        // Populate file-specific track values based on what this file has
         foreach (var trackType in trackTypes)
         {
             // Ordering tracks by StreamKindID as it represents the track order in the file
@@ -52,7 +54,17 @@ public class BatchTrackConfigurationInitializer(
 
             for (int i = existingCount; i < scannedCount; i++)
             {
-                fileTracks.Add(trackConfigFactory.Create(scannedTracks[i], trackType, i));
+                var scannedTrack = scannedTracks[i];
+                fileTracks.Add(new FileTrackValues
+                {
+                    ScannedTrackInfo = scannedTrack,
+                    Type = trackType,
+                    Index = i,
+                    Name = scannedTrack.Title ?? string.Empty,
+                    Language = languageProvider.Resolve(scannedTrack.Language),
+                    Default = scannedTrack.Default,
+                    Forced = scannedTrack.Forced,
+                });
             }
         }
 

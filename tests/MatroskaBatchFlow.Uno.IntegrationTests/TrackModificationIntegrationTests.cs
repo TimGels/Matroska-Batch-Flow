@@ -61,7 +61,7 @@ public class TrackModificationIntegrationTests
 
         // Initialize per-file configurations
         var trackConfigFactory = new TrackConfigurationFactory(mockLanguageProvider);
-        var initializer = new BatchTrackConfigurationInitializer(batchConfig, trackConfigFactory);
+        var initializer = new BatchTrackConfigurationInitializer(batchConfig, trackConfigFactory, mockLanguageProvider);
         initializer.Initialize(file1, TrackType.Text);
         initializer.Initialize(file2, TrackType.Text);
 
@@ -70,7 +70,7 @@ public class TrackModificationIntegrationTests
         batchConfig.StateChanged += (_, __) => tcs.TrySetResult(true);
 
         // Create SubtitleViewModel using real BatchConfiguration
-        var subtitleViewModel = new SubtitleViewModel(mockLanguageProvider, batchConfig, mockUIPreferences);
+        var subtitleViewModel = new SubtitleViewModel(Substitute.For<ILogger<SubtitleViewModel>>(), mockLanguageProvider, batchConfig, mockUIPreferences);
 
         // Select track 17 (index 16) - only exists in file2
         Assert.Equal(17, batchConfig.SubtitleTracks.Count);
@@ -104,10 +104,9 @@ public class TrackModificationIntegrationTests
         var file2Config = batchConfig.FileConfigurations[file2.Id];
         Assert.Equal(17, file2Config.SubtitleTracks.Count);
         Assert.Equal("Track17Modified", file2Config.SubtitleTracks[16].Name);
-        Assert.True(file2Config.SubtitleTracks[16].ShouldModifyName);
 
         // Verify command generation works correctly
-        var argumentsGenerator = new MkvPropeditArgumentsGenerator();
+        var argumentsGenerator = new MkvPropeditArgumentsGenerator(Substitute.For<ILogger<MkvPropeditArgumentsGenerator>>());
         var commands = argumentsGenerator.BuildBatchArguments(batchConfig);
 
         Assert.Single(commands);
