@@ -5,6 +5,6 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 /// </summary>
 public abstract partial class TrackViewModelBase
 {
-    [LoggerMessage(Level = LogLevel.Warning, Message = "SelectedLanguage was set to null; falling back to Undetermined. This is unexpected during normal UI operation.")]
-    private partial void LogSelectedLanguageNullFallback();
+    [LoggerMessage(Level = LogLevel.Warning, Message = "SelectedLanguage was set to null; falling back to Undetermined.")]
+    private partial void LogSelectedLanguageReceivedNull();
 }

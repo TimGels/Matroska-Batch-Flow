@@ -187,7 +187,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
                 // During internal resets (ApplyTrackProperties), _suppressBatchConfigUpdate is true and null is expected.
                 if (value is null && !_suppressBatchConfigUpdate)
                 {
-                    LogSelectedLanguageNullFallback();
+                    LogSelectedLanguageReceivedNull();
                 }
 
                 MatroskaLanguageOption language = value ?? MatroskaLanguageOption.Undetermined;
