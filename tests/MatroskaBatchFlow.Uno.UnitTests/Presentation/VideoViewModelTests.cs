@@ -7,6 +7,7 @@ using MatroskaBatchFlow.Core.UnitTests.Builders;
 using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Presentation;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 
 namespace MatroskaBatchFlow.Uno.UnitTests.Presentation;
@@ -16,12 +17,14 @@ public class VideoViewModelTests
     private readonly ILanguageProvider _languageProvider;
     private readonly IBatchConfiguration _batchConfiguration;
     private readonly IUIPreferencesService _uiPreferences;
+    private readonly ILogger<VideoViewModel> _logger;
 
     public VideoViewModelTests()
     {
         _languageProvider = Substitute.For<ILanguageProvider>();
         _batchConfiguration = Substitute.For<IBatchConfiguration>();
         _uiPreferences = Substitute.For<IUIPreferencesService>();
+        _logger = Substitute.For<ILogger<VideoViewModel>>();
 
         _languageProvider.Languages.Returns([]);
         _batchConfiguration.VideoTracks.Returns(new ObservableCollection<TrackConfiguration>());
@@ -46,7 +49,7 @@ public class VideoViewModelTests
         _batchConfiguration.VideoTracks.Returns(videoTracks);
 
         // Act
-        var viewModel = new VideoViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
 
         // Assert
         Assert.Single(viewModel.VideoTracks);
@@ -70,7 +73,7 @@ public class VideoViewModelTests
         _batchConfiguration.VideoTracks.Returns(videoTracks);
 
         // Act
-        var viewModel = new VideoViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
 
         // Assert
         Assert.NotNull(viewModel.SelectedTrack);
@@ -91,7 +94,7 @@ public class VideoViewModelTests
         _batchConfiguration.FileList.Returns(fileList);
 
         // Act
-        var viewModel = new VideoViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
 
         // Assert
         Assert.True(viewModel.IsFileListPopulated);
@@ -103,7 +106,7 @@ public class VideoViewModelTests
         // Arrange - fileList is empty by default
 
         // Act
-        var viewModel = new VideoViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
 
         // Assert
         Assert.False(viewModel.IsFileListPopulated);
@@ -116,7 +119,7 @@ public class VideoViewModelTests
         var fileList = new UniqueObservableCollection<ScannedFileInfo>(Substitute.For<IScannedFileInfoPathComparer>());
         _batchConfiguration.FileList.Returns(fileList);
 
-        var viewModel = new VideoViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
         Assert.False(viewModel.IsFileListPopulated);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
@@ -145,7 +148,7 @@ public class VideoViewModelTests
         var videoTracks = new ObservableCollection<TrackConfiguration>();
         _batchConfiguration.VideoTracks.Returns(videoTracks);
 
-        var viewModel = new VideoViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
         Assert.Empty(viewModel.VideoTracks);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
@@ -169,7 +172,7 @@ public class VideoViewModelTests
         var initialTracks = new ObservableCollection<TrackConfiguration>();
         _batchConfiguration.VideoTracks.Returns(initialTracks);
 
-        var viewModel = new VideoViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
             .WithCreatingLibrary()
@@ -199,7 +202,7 @@ public class VideoViewModelTests
         var videoTracks = new ObservableCollection<TrackConfiguration>();
         _batchConfiguration.VideoTracks.Returns(videoTracks);
 
-        var viewModel = new VideoViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
         int videoTracksChangedCount = 0;
         viewModel.PropertyChanged += (s, e) =>
         {

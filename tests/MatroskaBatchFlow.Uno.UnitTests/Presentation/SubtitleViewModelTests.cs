@@ -7,6 +7,7 @@ using MatroskaBatchFlow.Core.UnitTests.Builders;
 using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Presentation;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 
 namespace MatroskaBatchFlow.Uno.UnitTests.Presentation;
@@ -16,12 +17,14 @@ public class SubtitleViewModelTests
     private readonly ILanguageProvider _languageProvider;
     private readonly IBatchConfiguration _batchConfiguration;
     private readonly IUIPreferencesService _uiPreferences;
+    private readonly ILogger<SubtitleViewModel> _logger;
 
     public SubtitleViewModelTests()
     {
         _languageProvider = Substitute.For<ILanguageProvider>();
         _batchConfiguration = Substitute.For<IBatchConfiguration>();
         _uiPreferences = Substitute.For<IUIPreferencesService>();
+        _logger = Substitute.For<ILogger<SubtitleViewModel>>();
 
         _languageProvider.Languages.Returns([]);
         _batchConfiguration.SubtitleTracks.Returns(new ObservableCollection<TrackConfiguration>());
@@ -46,7 +49,7 @@ public class SubtitleViewModelTests
         _batchConfiguration.SubtitleTracks.Returns(subtitleTracks);
 
         // Act
-        var viewModel = new SubtitleViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new SubtitleViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
 
         // Assert
         Assert.Single(viewModel.SubtitleTracks);
@@ -70,7 +73,7 @@ public class SubtitleViewModelTests
         _batchConfiguration.SubtitleTracks.Returns(subtitleTracks);
 
         // Act
-        var viewModel = new SubtitleViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new SubtitleViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
 
         // Assert
         Assert.NotNull(viewModel.SelectedTrack);
@@ -91,7 +94,7 @@ public class SubtitleViewModelTests
         _batchConfiguration.FileList.Returns(fileList);
 
         // Act
-        var viewModel = new SubtitleViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new SubtitleViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
 
         // Assert
         Assert.True(viewModel.IsFileListPopulated);
@@ -103,7 +106,7 @@ public class SubtitleViewModelTests
         // Arrange - fileList is empty by default
 
         // Act
-        var viewModel = new SubtitleViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new SubtitleViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
 
         // Assert
         Assert.False(viewModel.IsFileListPopulated);
@@ -116,7 +119,7 @@ public class SubtitleViewModelTests
         var fileList = new UniqueObservableCollection<ScannedFileInfo>(Substitute.For<IScannedFileInfoPathComparer>());
         _batchConfiguration.FileList.Returns(fileList);
 
-        var viewModel = new SubtitleViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new SubtitleViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
         Assert.False(viewModel.IsFileListPopulated);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
@@ -145,7 +148,7 @@ public class SubtitleViewModelTests
         var subtitleTracks = new ObservableCollection<TrackConfiguration>();
         _batchConfiguration.SubtitleTracks.Returns(subtitleTracks);
 
-        var viewModel = new SubtitleViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new SubtitleViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
         Assert.Empty(viewModel.SubtitleTracks);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
@@ -169,7 +172,7 @@ public class SubtitleViewModelTests
         var initialTracks = new ObservableCollection<TrackConfiguration>();
         _batchConfiguration.SubtitleTracks.Returns(initialTracks);
 
-        var viewModel = new SubtitleViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new SubtitleViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
             .WithCreatingLibrary()
@@ -199,7 +202,7 @@ public class SubtitleViewModelTests
         var subtitleTracks = new ObservableCollection<TrackConfiguration>();
         _batchConfiguration.SubtitleTracks.Returns(subtitleTracks);
 
-        var viewModel = new SubtitleViewModel(_languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new SubtitleViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
         int subtitleTracksChangedCount = 0;
         viewModel.PropertyChanged += (s, e) =>
         {

@@ -8,6 +8,7 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 
 public abstract partial class TrackViewModelBase : ObservableObject
 {
+    private readonly ILogger _logger;
     protected bool _suppressBatchConfigUpdate = false;
     protected ObservableCollection<TrackConfiguration> _tracks = [];
 
@@ -53,7 +54,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isDefaultTrack = value;
                 OnPropertyChanged(nameof(IsDefaultTrack));
-                UpdateBatchConfigTrackProperty(tc => tc.Default = value);
+                UpdateBatchConfigTrackProperty(tc => tc.Default = value, ftv => ftv.Default = value);
             }
         }
     }
@@ -69,7 +70,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isDefaultFlagModificationEnabled = value;
                 OnPropertyChanged(nameof(IsDefaultFlagModificationEnabled));
-                UpdateBatchConfigTrackProperty(tc => tc.ShouldModifyDefaultFlag = value);
+                UpdateGlobalModificationFlag(tc => tc.ShouldModifyDefaultFlag = value);
             }
         }
     }
@@ -85,7 +86,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isEnabledTrack = value;
                 OnPropertyChanged(nameof(IsEnabledTrack));
-                UpdateBatchConfigTrackProperty(tc => tc.Enabled = value);
+                UpdateBatchConfigTrackProperty(tc => tc.Enabled = value, ftv => ftv.Enabled = value);
             }
         }
     }
@@ -101,7 +102,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isEnabledFlagModificationEnabled = value;
                 OnPropertyChanged(nameof(IsEnabledFlagModificationEnabled));
-                UpdateBatchConfigTrackProperty(tc => tc.ShouldModifyEnabledFlag = value);
+                UpdateGlobalModificationFlag(tc => tc.ShouldModifyEnabledFlag = value);
             }
         }
     }
@@ -117,7 +118,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isForcedTrack = value;
                 OnPropertyChanged(nameof(IsForcedTrack));
-                UpdateBatchConfigTrackProperty(tc => tc.Forced = value);
+                UpdateBatchConfigTrackProperty(tc => tc.Forced = value, ftv => ftv.Forced = value);
             }
         }
     }
@@ -133,7 +134,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isForcedFlagModificationEnabled = value;
                 OnPropertyChanged(nameof(IsForcedFlagModificationEnabled));
-                UpdateBatchConfigTrackProperty(tc => tc.ShouldModifyForcedFlag = value);
+                UpdateGlobalModificationFlag(tc => tc.ShouldModifyForcedFlag = value);
             }
         }
     }
@@ -149,7 +150,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _trackName = value;
                 OnPropertyChanged(nameof(TrackName));
-                UpdateBatchConfigTrackProperty(tc => tc.Name = value);
+                UpdateBatchConfigTrackProperty(tc => tc.Name = value, ftv => ftv.Name = value);
             }
         }
     }
@@ -165,7 +166,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isTrackNameModificationEnabled = value;
                 OnPropertyChanged(nameof(IsTrackNameModificationEnabled));
-                UpdateBatchConfigTrackProperty(tc => tc.ShouldModifyName = value);
+                UpdateGlobalModificationFlag(tc => tc.ShouldModifyName = value);
             }
         }
     }
@@ -181,7 +182,16 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _selectedLanguage = value;
                 OnPropertyChanged(nameof(SelectedLanguage));
-                UpdateBatchConfigTrackProperty(tc => tc.Language = value);
+
+                // Only warn when null comes from outside the internal sync path (e.g., ComboBox clearing its selection).
+                // During internal resets (ApplyTrackProperties), _suppressBatchConfigUpdate is true and null is expected.
+                if (value is null && !_suppressBatchConfigUpdate)
+                {
+                    LogSelectedLanguageNullFallback();
+                }
+
+                MatroskaLanguageOption language = value ?? MatroskaLanguageOption.Undetermined;
+                UpdateBatchConfigTrackProperty(tc => tc.Language = language, ftv => ftv.Language = language);
             }
         }
     }
@@ -197,7 +207,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isSelectedLanguageModificationEnabled = value;
                 OnPropertyChanged(nameof(IsSelectedLanguageModificationEnabled));
-                UpdateBatchConfigTrackProperty(tc => tc.ShouldModifyLanguage = value);
+                UpdateGlobalModificationFlag(tc => tc.ShouldModifyLanguage = value);
             }
         }
     }
@@ -209,12 +219,13 @@ public abstract partial class TrackViewModelBase : ObservableObject
 
     public bool ShowTrackAvailabilityText => _uiPreferences.ShowTrackAvailabilityText;
 
-    protected TrackViewModelBase(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences)
+    protected TrackViewModelBase(ILogger logger, ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences)
     {
+        _logger = logger;
         _batchConfiguration = batchConfiguration;
         _uiPreferences = uiPreferences;
         _languages = languageProvider.Languages;
-        
+
         // Subscribe to property changes on the service
         _uiPreferences.PropertyChanged += OnUIPreferencesChanged;
     }
@@ -270,10 +281,10 @@ public abstract partial class TrackViewModelBase : ObservableObject
     {
         int available = GetTrackAvailabilityCount(trackIndex);
         int total = TotalFileCount;
-        
+
         if (total == 0)
             return "0/0";
-        
+
         return $"{available}/{total}";
     }
 
@@ -358,18 +369,20 @@ public abstract partial class TrackViewModelBase : ObservableObject
     /// Updates the properties of the currently selected track in the batch configuration using the provided update action.
     /// </summary>
     /// <remarks>
-    /// This method applies the provided update action to both:
+    /// This method applies the provided update actions to both:
     /// <list type="bullet">
     /// <item>The global track collection (used for UI display) - triggers PropertyChanged which fires StateChanged</item>
-    /// <item>All per-file track configurations (used for command generation) - updated silently</item>
+    /// <item>All per-file track value collections (used for command generation) - updated silently</item>
     /// </list>
     /// The global track update will trigger the StateChanged event through its PropertyChanged handler,
     /// ensuring the UI and command generation stay synchronized.
     /// If updates are suppressed or no track is selected, the method performs no operation.
     /// </remarks>
-    /// <param name="updateAction">An <see cref="Action{TrackConfiguration}"/> delegate that defines the update to apply to the selected track's
-    /// configuration.</param>
-    protected virtual void UpdateBatchConfigTrackProperty(Action<TrackConfiguration> updateAction)
+    /// <param name="globalUpdateAction">An <see cref="Action{TrackConfiguration}"/> delegate that defines the update to apply to the global track configuration.</param>
+    /// <param name="perFileUpdateAction">An <see cref="Action{FileTrackValues}"/> delegate that defines the update to apply to each per-file track value.</param>
+    protected virtual void UpdateBatchConfigTrackProperty(
+        Action<TrackConfiguration> globalUpdateAction,
+        Action<FileTrackValues> perFileUpdateAction)
     {
         // If suppressing updates, do nothing to avoid (potential) recursion.
         if (_suppressBatchConfigUpdate)
@@ -382,24 +395,50 @@ public abstract partial class TrackViewModelBase : ObservableObject
         if (index < 0 || index >= tracks.Count)
             return;
 
-        // First, update all per-file configurations silently (without triggering events)
+        // First, update all per-file value collections silently (without triggering events)
         // This ensures command generation uses the updated values
         var trackType = SelectedTrack.Type;
         foreach (var kvp in _batchConfiguration.FileConfigurations)
         {
             var fileConfig = kvp.Value;
             var fileTracks = fileConfig.GetTrackListForType(trackType);
-            
+
             // Only update if this file actually has this track
             if (index >= 0 && index < fileTracks.Count)
             {
-                updateAction(fileTracks[index]);
+                perFileUpdateAction(fileTracks[index]);
             }
         }
 
         // Finally, apply the update action to the global track configuration
         // This will trigger PropertyChanged -> TrackConfiguration_PropertyChanged -> StateChanged
         // which updates CanProcessBatch and regenerates commands
+        globalUpdateAction(tracks[index]);
+    }
+
+    /// <summary>
+    /// Updates only the global <see cref="TrackConfiguration"/> for a modification flag (e.g. <c>ShouldModify*</c>).
+    /// Per-file track values do not carry modification flags, so only the global track is updated.
+    /// </summary>
+    /// <remarks>
+    /// If updates are suppressed or no track is selected, the method performs no operation.
+    /// </remarks>
+    /// <param name="updateAction">An <see cref="Action{TrackConfiguration}"/> delegate that sets the modification flag on the global track configuration.</param>
+    protected virtual void UpdateGlobalModificationFlag(Action<TrackConfiguration> updateAction)
+    {
+        // If suppressing updates, do nothing to avoid (potential) recursion.
+        if (_suppressBatchConfigUpdate)
+            return;
+        if (SelectedTrack == null || GetTracks() == null)
+            return;
+
+        int index = SelectedTrack.Index;
+        var tracks = GetTracks();
+        if (index < 0 || index >= tracks.Count)
+            return;
+
+        // Apply the update action to the global track configuration only
+        // This will trigger PropertyChanged -> TrackConfiguration_PropertyChanged -> StateChanged
         updateAction(tracks[index]);
     }
 
@@ -422,38 +461,43 @@ public abstract partial class TrackViewModelBase : ObservableObject
     /// name="track"/> is <see langword="null"/>, all track-related properties are reset to default values.</param>
     private void ApplyTrackProperties(TrackConfiguration? track)
     {
-        // If suppressing updates, do nothing to avoid (potential) recursion.
+        // Suppress batch config updates while synchronizing properties to avoid (potential) recursion.
         _suppressBatchConfigUpdate = true;
 
-        // TODO: Need a better way to reset properties when no track is provided.
-        if (track is null)
+        try
         {
-            IsDefaultTrack = false;
-            IsEnabledTrack = true;
-            IsForcedTrack = false;
-            TrackName = string.Empty;
-            SelectedLanguage = null;
-            IsDefaultFlagModificationEnabled = false;
-            IsEnabledFlagModificationEnabled = false;
-            IsForcedFlagModificationEnabled = false;
-            IsTrackNameModificationEnabled = false;
-            IsSelectedLanguageModificationEnabled = false;
+            // TODO: Need a better way to reset properties when no track is provided.
+            if (track is null)
+            {
+                IsDefaultTrack = false;
+                IsEnabledTrack = true;
+                IsForcedTrack = false;
+                TrackName = string.Empty;
+                SelectedLanguage = null;
+                IsDefaultFlagModificationEnabled = false;
+                IsEnabledFlagModificationEnabled = false;
+                IsForcedFlagModificationEnabled = false;
+                IsTrackNameModificationEnabled = false;
+                IsSelectedLanguageModificationEnabled = false;
 
-            return;
+                return;
+            }
+
+            // Synchronize properties with the selected track.
+            IsDefaultTrack = track.Default;
+            IsEnabledTrack = track.Enabled;
+            IsForcedTrack = track.Forced;
+            TrackName = track.Name;
+            SelectedLanguage = track.Language;
+            IsDefaultFlagModificationEnabled = track.ShouldModifyDefaultFlag;
+            IsEnabledFlagModificationEnabled = track.ShouldModifyEnabledFlag;
+            IsForcedFlagModificationEnabled = track.ShouldModifyForcedFlag;
+            IsTrackNameModificationEnabled = track.ShouldModifyName;
+            IsSelectedLanguageModificationEnabled = track.ShouldModifyLanguage;
         }
-
-        // Synchronize properties with the selected track.
-        IsDefaultTrack = track.Default;
-        IsEnabledTrack = track.Enabled;
-        IsForcedTrack = track.Forced;
-        TrackName = track.Name;
-        SelectedLanguage = track.Language;
-        IsDefaultFlagModificationEnabled = track.ShouldModifyDefaultFlag;
-        IsEnabledFlagModificationEnabled = track.ShouldModifyEnabledFlag;
-        IsForcedFlagModificationEnabled = track.ShouldModifyForcedFlag;
-        IsTrackNameModificationEnabled = track.ShouldModifyName;
-        IsSelectedLanguageModificationEnabled = track.ShouldModifyLanguage;
-
-        _suppressBatchConfigUpdate = false;
+        finally
+        {
+            _suppressBatchConfigUpdate = false;
+        }
     }
 }

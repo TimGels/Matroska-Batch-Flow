@@ -6,6 +6,7 @@ using MatroskaBatchFlow.Core.UnitTests.Builders;
 using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Presentation;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 
 namespace MatroskaBatchFlow.Uno.UnitTests.Presentation;
@@ -19,6 +20,8 @@ namespace MatroskaBatchFlow.Uno.UnitTests.Presentation;
 /// facilitate testing scenarios.</remarks>
 public class TrackViewModelBaseTests
 {
+    private readonly ILogger _mockLogger = Substitute.For<ILogger>();
+
     /// <summary>
     /// Test implementation of TrackViewModelBase for testing purposes
     /// </summary>
@@ -26,8 +29,8 @@ public class TrackViewModelBaseTests
     {
         private readonly IList<TrackConfiguration> _testTracks;
 
-        public TestTrackViewModel(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences, IList<TrackConfiguration> tracks)
-            : base(languageProvider, batchConfiguration, uiPreferences)
+        public TestTrackViewModel(ILogger logger, ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences, IList<TrackConfiguration> tracks)
+            : base(logger, languageProvider, batchConfiguration, uiPreferences)
         {
             _testTracks = tracks;
             SetupEventHandlers();
@@ -74,10 +77,10 @@ public class TrackViewModelBaseTests
         var file2 = new ScannedFileInfo(mediaInfoResult, "file2.mkv");
 
         var file1Config = new FileTrackConfiguration { FilePath = file1.Path };
-        file1Config.SubtitleTracks.Add(new TrackConfiguration(trackInfo) { Type = TrackType.Text, Index = 0, Name = "Original" });
+        file1Config.SubtitleTracks.Add(new FileTrackValues { ScannedTrackInfo = trackInfo, Type = TrackType.Text, Index = 0, Name = "Original", Default = false, Forced = false, Enabled = false });
 
         var file2Config = new FileTrackConfiguration { FilePath = file2.Path };
-        file2Config.SubtitleTracks.Add(new TrackConfiguration(trackInfo) { Type = TrackType.Text, Index = 0, Name = "Original" });
+        file2Config.SubtitleTracks.Add(new FileTrackValues { ScannedTrackInfo = trackInfo, Type = TrackType.Text, Index = 0, Name = "Original", Default = false, Forced = false, Enabled = false });
 
         var fileConfigurations = new Dictionary<Guid, FileTrackConfiguration>
         {
@@ -88,7 +91,7 @@ public class TrackViewModelBaseTests
         mockBatchConfig.FileConfigurations.Returns(fileConfigurations);
 
         // Create view model
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
 
         // Set the selected track
         viewModel.SelectedTrack = globalTracks[0];
@@ -103,10 +106,8 @@ public class TrackViewModelBaseTests
 
         // Assert - verify per-file configurations were also updated
         Assert.Equal("Updated Name", file1Config.SubtitleTracks[0].Name);
-        Assert.True(file1Config.SubtitleTracks[0].ShouldModifyName);
 
         Assert.Equal("Updated Name", file2Config.SubtitleTracks[0].Name);
-        Assert.True(file2Config.SubtitleTracks[0].ShouldModifyName);
     }
 
     [Fact]
@@ -132,7 +133,7 @@ public class TrackViewModelBaseTests
         // File1 has track 0
         var file1 = new ScannedFileInfo(mediaInfoResult, "file1.mkv");
         var file1Config = new FileTrackConfiguration { FilePath = file1.Path };
-        file1Config.SubtitleTracks.Add(new TrackConfiguration(trackInfo) { Type = TrackType.Text, Index = 0, Name = "Original" });
+        file1Config.SubtitleTracks.Add(new FileTrackValues { ScannedTrackInfo = trackInfo, Type = TrackType.Text, Index = 0, Name = "Original", Default = false, Forced = false, Enabled = false });
 
         // File2 has NO tracks (different track count)
         var file2 = new ScannedFileInfo(mediaInfoResult, "file2.mkv");
@@ -147,7 +148,7 @@ public class TrackViewModelBaseTests
 
         mockBatchConfig.FileConfigurations.Returns(fileConfigurations);
 
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
         viewModel.SelectedTrack = globalTracks[0];
 
         // Act - enable modification and update track name
@@ -182,7 +183,7 @@ public class TrackViewModelBaseTests
 
         mockBatchConfig.FileConfigurations.Returns(new Dictionary<Guid, FileTrackConfiguration>());
 
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
         viewModel.SelectedTrack = globalTracks[0];
 
         // Act - Set selected track to null
@@ -222,7 +223,7 @@ public class TrackViewModelBaseTests
 
         mockBatchConfig.FileConfigurations.Returns(new Dictionary<Guid, FileTrackConfiguration>());
 
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
 
         // Act
         viewModel.SelectedTrack = globalTracks[0];
@@ -247,7 +248,7 @@ public class TrackViewModelBaseTests
         var globalTracks = new List<TrackConfiguration>();
         mockBatchConfig.FileConfigurations.Returns(new Dictionary<Guid, FileTrackConfiguration>());
 
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
 
         // Act & Assert
         Assert.False(viewModel.IsTrackSelected);
@@ -274,7 +275,7 @@ public class TrackViewModelBaseTests
 
         var file1 = new ScannedFileInfo(mediaInfoResult, "file1.mkv");
         var file1Config = new FileTrackConfiguration { FilePath = file1.Path };
-        file1Config.SubtitleTracks.Add(new TrackConfiguration(trackInfo) { Type = TrackType.Text, Index = 0, Default = false });
+        file1Config.SubtitleTracks.Add(new FileTrackValues { ScannedTrackInfo = trackInfo, Type = TrackType.Text, Index = 0, Default = false, Forced = false, Enabled = false });
 
         var fileConfigurations = new Dictionary<Guid, FileTrackConfiguration>
         {
@@ -283,7 +284,7 @@ public class TrackViewModelBaseTests
 
         mockBatchConfig.FileConfigurations.Returns(fileConfigurations);
 
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
         viewModel.SelectedTrack = globalTracks[0];
 
         // Act
@@ -315,7 +316,7 @@ public class TrackViewModelBaseTests
 
         var file1 = new ScannedFileInfo(mediaInfoResult, "file1.mkv");
         var file1Config = new FileTrackConfiguration { FilePath = file1.Path };
-        file1Config.SubtitleTracks.Add(new TrackConfiguration(trackInfo) { Type = TrackType.Text, Index = 0, Forced = false });
+        file1Config.SubtitleTracks.Add(new FileTrackValues { ScannedTrackInfo = trackInfo, Type = TrackType.Text, Index = 0, Default = false, Forced = false, Enabled = false });
 
         var fileConfigurations = new Dictionary<Guid, FileTrackConfiguration>
         {
@@ -324,7 +325,7 @@ public class TrackViewModelBaseTests
 
         mockBatchConfig.FileConfigurations.Returns(fileConfigurations);
 
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
         viewModel.SelectedTrack = globalTracks[0];
 
         // Act
@@ -356,7 +357,7 @@ public class TrackViewModelBaseTests
 
         var file1 = new ScannedFileInfo(mediaInfoResult, "file1.mkv");
         var file1Config = new FileTrackConfiguration { FilePath = file1.Path };
-        file1Config.SubtitleTracks.Add(new TrackConfiguration(trackInfo) { Type = TrackType.Text, Index = 0, Language = MatroskaLanguageOption.Undetermined });
+        file1Config.SubtitleTracks.Add(new FileTrackValues { ScannedTrackInfo = trackInfo, Type = TrackType.Text, Index = 0, Language = MatroskaLanguageOption.Undetermined, Default = false, Forced = false, Enabled = false });
 
         var fileConfigurations = new Dictionary<Guid, FileTrackConfiguration>
         {
@@ -365,7 +366,7 @@ public class TrackViewModelBaseTests
 
         mockBatchConfig.FileConfigurations.Returns(fileConfigurations);
 
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
         viewModel.SelectedTrack = globalTracks[0];
 
         var newLanguage = new MatroskaLanguageOption("English", "en", "eng", "eng", "eng");
@@ -407,7 +408,7 @@ public class TrackViewModelBaseTests
         mockBatchConfig.FileList.Returns(fileList);
         mockBatchConfig.FileConfigurations.Returns(new Dictionary<Guid, FileTrackConfiguration>());
 
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, new List<TrackConfiguration>());
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, new List<TrackConfiguration>());
 
         // Act
         int count0 = viewModel.GetTrackAvailabilityCount(0);
@@ -439,7 +440,7 @@ public class TrackViewModelBaseTests
         mockBatchConfig.FileList.Returns(fileList);
         mockBatchConfig.FileConfigurations.Returns(new Dictionary<Guid, FileTrackConfiguration>());
 
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, new List<TrackConfiguration>());
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, new List<TrackConfiguration>());
 
         // Act
         string result = viewModel.GetTrackAvailabilityText(0);
@@ -460,7 +461,7 @@ public class TrackViewModelBaseTests
         mockBatchConfig.FileList.Returns(fileList);
         mockBatchConfig.FileConfigurations.Returns(new Dictionary<Guid, FileTrackConfiguration>());
 
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, new List<TrackConfiguration>());
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, new List<TrackConfiguration>());
 
         // Act & Assert
         Assert.Equal(0, viewModel.TotalFileCount);
@@ -478,7 +479,7 @@ public class TrackViewModelBaseTests
         mockBatchConfig.FileConfigurations.Returns(new Dictionary<Guid, FileTrackConfiguration>());
 
         // Act
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, new List<TrackConfiguration>());
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, new List<TrackConfiguration>());
 
         // Assert
         Assert.True(viewModel.ShowTrackAvailabilityText);
@@ -495,7 +496,7 @@ public class TrackViewModelBaseTests
         mockUIPreferences.ShowTrackAvailabilityText.Returns(false);
         mockBatchConfig.FileConfigurations.Returns(new Dictionary<Guid, FileTrackConfiguration>());
 
-        var viewModel = new TestTrackViewModel(mockLanguageProvider, mockBatchConfig, mockUIPreferences, new List<TrackConfiguration>());
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, new List<TrackConfiguration>());
         Assert.False(viewModel.ShowTrackAvailabilityText);
 
         // Act

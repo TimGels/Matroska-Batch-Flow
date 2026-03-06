@@ -28,8 +28,8 @@ public partial class VideoViewModel : TrackViewModelBase
     /// </summary>
     public bool IsFileListPopulated => _batchConfiguration.FileList.Count > 0;
 
-    public VideoViewModel(ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences)
-        : base(languageProvider, batchConfiguration, uiPreferences)
+    public VideoViewModel(ILogger<VideoViewModel> logger, ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences)
+        : base(logger, languageProvider, batchConfiguration, uiPreferences)
     {
         VideoTracks = [.. _batchConfiguration.VideoTracks];
 

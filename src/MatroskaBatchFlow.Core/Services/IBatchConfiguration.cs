@@ -9,8 +9,9 @@ namespace MatroskaBatchFlow.Core.Services;
 /// <summary>
 /// Defines the contract for batch configuration of media files.
 /// <br />
-/// Note: The TrackConfiguration items in the collections also implement INotifyPropertyChanged,
-/// so property changes within tracks can be observed.
+/// Note: The TrackConfiguration items in the global collections implement INotifyPropertyChanged,
+/// so property changes within global tracks can be observed.
+/// Per-file track values are stored as <see cref="FileTrackValues"/> which carry no modification intent.
 /// </summary>
 public interface IBatchConfiguration : INotifyPropertyChanged
 {
@@ -51,13 +52,14 @@ public interface IBatchConfiguration : INotifyPropertyChanged
     public IList<TrackConfiguration> GetTrackListForType(TrackType trackType);
 
     /// <summary>
-    /// Gets track configuration for a specific file and track type.
-    /// Always uses per-file configurations. Falls back to global if file config not found.
+    /// Gets the per-file track values for a specific file and track type.
+    /// These carry only scanned values (Name, Language, flags) — no modification intent.
+    /// Modification flags (<c>ShouldModify*</c>) live on the global <see cref="TrackConfiguration"/> objects returned by <see cref="GetTrackListForType"/>.
     /// </summary>
     /// <param name="fileId">The ScannedFileInfo.Id (Guid) of the file.</param>
     /// <param name="trackType">Type of track to retrieve.</param>
-    /// <returns>List of track configurations for the specified file and track type.</returns>
-    public IList<TrackConfiguration> GetTrackListForFile(Guid fileId, TrackType trackType);
+    /// <returns>List of per-file track values for the specified file and track type.</returns>
+    public IList<FileTrackValues> GetTrackListForFile(Guid fileId, TrackType trackType);
 
     /// <summary>
     /// Migrates file configuration from an old file ID to a new file ID.

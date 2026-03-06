@@ -54,7 +54,7 @@ public class BatchTrackConfigurationInitializerTests
     {
         languageProvider ??= CreateMockLanguageProvider();
         var trackConfigFactory = new TrackConfigurationFactory(languageProvider);
-        return new BatchTrackConfigurationInitializer(batchConfig, trackConfigFactory);
+        return new BatchTrackConfigurationInitializer(batchConfig, trackConfigFactory, languageProvider);
     }
 
     [Fact]
@@ -232,5 +232,86 @@ public class BatchTrackConfigurationInitializerTests
         // FileConfiguration should be created even with no tracks
         Assert.True(fileConfigs.ContainsKey(scannedFile.Id));
         Assert.Empty(fileConfigs[scannedFile.Id].AudioTracks);
+    }
+
+    [Fact]
+    public void Initialize_PerFileTracksAreFileTrackValuesWithScannedData()
+    {
+        // Arrange
+        var (mockConfig, fileConfigs, _, _, _) = CreateMockConfig();
+        var initializer = CreateInitializer(mockConfig);
+
+        var mediaInfoResult = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .AddTrackOfType(TrackType.Audio)
+            .AddTrackOfType(TrackType.Audio)
+            .Build();
+        var scannedFile = new ScannedFileInfo(mediaInfoResult, "file.mkv");
+        mockConfig.FileList.Add(scannedFile);
+
+        // Act
+        initializer.Initialize(scannedFile, TrackType.Audio);
+
+        // Assert - per-file tracks are FileTrackValues initialized from the scan
+        var fileConfig = fileConfigs[scannedFile.Id];
+        Assert.Equal(2, fileConfig.AudioTracks.Count);
+
+        Assert.Equal(TrackType.Audio, fileConfig.AudioTracks[0].Type);
+        Assert.Equal(0, fileConfig.AudioTracks[0].Index);
+        Assert.NotNull(fileConfig.AudioTracks[0].ScannedTrackInfo);
+
+        Assert.Equal(TrackType.Audio, fileConfig.AudioTracks[1].Type);
+        Assert.Equal(1, fileConfig.AudioTracks[1].Index);
+        Assert.NotNull(fileConfig.AudioTracks[1].ScannedTrackInfo);
+    }
+
+    [Fact]
+    public void Initialize_FilesAddedAfterUserConfigure_ReceiveFileTrackValues()
+    {
+        // Regression test for issue #85: files added after processing were skipped because
+        // per-file TrackConfiguration objects always had ShouldModify* = false.
+        // Now per-file tracks are FileTrackValues with no ShouldModify* fields,
+        // so the argument generator reads ShouldModify* from global tracks for every file.
+        // Arrange
+        var (mockConfig, fileConfigs, audioTracks, _, _) = CreateMockConfig();
+        var initializer = CreateInitializer(mockConfig);
+
+        var firstFile = new ScannedFileInfo(
+            new MediaInfoResultBuilder()
+                .WithCreatingLibrary()
+                .AddTrackOfType(TrackType.Audio)
+                .Build(),
+            "file1.mkv"
+        );
+        mockConfig.FileList.Add(firstFile);
+        initializer.Initialize(firstFile, TrackType.Audio);
+
+        // Simulate user enabling modifications on the global track
+        audioTracks[0].ShouldModifyLanguage = true;
+        audioTracks[0].ShouldModifyName = true;
+
+        // Add a second file after modifications were configured (this was the bug scenario)
+        var secondFile = new ScannedFileInfo(
+            new MediaInfoResultBuilder()
+                .WithCreatingLibrary()
+                .AddTrackOfType(TrackType.Audio)
+                .Build(),
+            "file2.mkv"
+        );
+        mockConfig.FileList.Add(secondFile);
+
+        // Act
+        initializer.Initialize(secondFile, TrackType.Audio);
+
+        // Assert - second file receives FileTrackValues (not TrackConfiguration with ShouldModify* = false)
+        Assert.True(fileConfigs.ContainsKey(secondFile.Id));
+        var secondFileConfig = fileConfigs[secondFile.Id];
+        Assert.Single(secondFileConfig.AudioTracks);
+        Assert.Equal(TrackType.Audio, secondFileConfig.AudioTracks[0].Type);
+        Assert.Equal(0, secondFileConfig.AudioTracks[0].Index);
+
+        // Global tracks still hold the ShouldModify* flags set by the user
+        Assert.True(audioTracks[0].ShouldModifyLanguage);
+        Assert.True(audioTracks[0].ShouldModifyName);
     }
 }

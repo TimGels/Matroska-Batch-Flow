@@ -66,4 +66,21 @@ public partial class LanguageProvider : ILanguageProvider
             Languages = [];
         }
     }
+
+    /// <inheritdoc/>
+    public MatroskaLanguageOption Resolve(string? languageCode)
+    {
+        if (string.IsNullOrWhiteSpace(languageCode))
+            return MatroskaLanguageOption.Undetermined;
+
+        var matchedLanguage = Languages.FirstOrDefault(lang =>
+            string.Equals(lang.Iso639_2_b, languageCode, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(lang.Iso639_2_t, languageCode, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(lang.Iso639_1, languageCode, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(lang.Iso639_3, languageCode, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(lang.Name, languageCode, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(lang.Code, languageCode, StringComparison.OrdinalIgnoreCase));
+
+        return matchedLanguage ?? MatroskaLanguageOption.Undetermined;
+    }
 }

@@ -194,6 +194,150 @@ public class LanguageProviderTests : IDisposable
         Assert.IsAssignableFrom<System.Collections.Immutable.ImmutableList<MatroskaLanguageOption>>(provider.Languages);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Resolve_ReturnsUndetermined_WhenLanguageCodeIsNullOrWhitespace(string? languageCode)
+    {
+        // Arrange
+        var provider = CreateProviderWithTestLanguages();
+
+        // Act
+        var result = provider.Resolve(languageCode);
+
+        // Assert
+        Assert.Equal(MatroskaLanguageOption.Undetermined, result);
+    }
+
+    [Fact]
+    public void Resolve_ReturnsUndetermined_WhenNoMatchFound()
+    {
+        // Arrange
+        var provider = CreateProviderWithTestLanguages();
+
+        // Act
+        var result = provider.Resolve("nonexistent");
+
+        // Assert
+        Assert.Equal(MatroskaLanguageOption.Undetermined, result);
+    }
+
+    [Fact]
+    public void Resolve_MatchesByIso639_2_b()
+    {
+        // Arrange — French has iso639_2_b "fre" (distinct from iso639_2_t "fra")
+        var provider = CreateProviderWithTestLanguages();
+
+        // Act
+        var result = provider.Resolve("fre");
+
+        // Assert
+        Assert.Equal("French", result.Name);
+    }
+
+    [Fact]
+    public void Resolve_MatchesByIso639_2_t()
+    {
+        // Arrange — French has iso639_2_t "fra" (distinct from iso639_2_b "fre")
+        var provider = CreateProviderWithTestLanguages();
+
+        // Act
+        var result = provider.Resolve("fra");
+
+        // Assert
+        Assert.Equal("French", result.Name);
+    }
+
+    [Fact]
+    public void Resolve_MatchesByIso639_1()
+    {
+        // Arrange
+        var provider = CreateProviderWithTestLanguages();
+
+        // Act
+        var result = provider.Resolve("en");
+
+        // Assert
+        Assert.Equal("English", result.Name);
+    }
+
+    [Fact]
+    public void Resolve_MatchesByIso639_3()
+    {
+        // Arrange — "cmn" only appears in the ISO 639-3 field, so this isolates that match path.
+        var provider = CreateProviderWithLanguageWithoutIso639_1();
+
+        // Act
+        var result = provider.Resolve("cmn");
+
+        // Assert
+        Assert.Equal("Chinese", result.Name);
+    }
+
+    [Fact]
+    public void Resolve_MatchesByName()
+    {
+        // Arrange
+        var provider = CreateProviderWithTestLanguages();
+
+        // Act
+        var result = provider.Resolve("French");
+
+        // Assert
+        Assert.Equal("French", result.Name);
+    }
+
+    [Fact]
+    public void Resolve_MatchesByCode()
+    {
+        // Arrange — Code is derived: iso639_1 ?? iso639_2_b, so "fr" for French.
+        // "fr" also matches iso639_1 directly. Use a language with null iso639_1
+        // to isolate the Code path.
+        var provider = CreateProviderWithLanguageWithoutIso639_1();
+
+        // Act — Code falls back to iso639_2_b "zho" when iso639_1 is null
+        var result = provider.Resolve("zho");
+
+        // Assert
+        Assert.Equal("Chinese", result.Name);
+    }
+
+    [Fact]
+    public void Resolve_IsCaseInsensitive()
+    {
+        // Arrange
+        var provider = CreateProviderWithTestLanguages();
+
+        // Act
+        var result = provider.Resolve("ENG");
+
+        // Assert
+        Assert.Equal("English", result.Name);
+    }
+
+    private LanguageProvider CreateProviderWithTestLanguages()
+    {
+        var testFile = CreateTestLanguageFile("resolve_test.json");
+        var options = CreateOptions(testFile);
+        return new LanguageProvider(options, _logger);
+    }
+
+    private LanguageProvider CreateProviderWithLanguageWithoutIso639_1()
+    {
+        var testFile = Path.Combine(_testFilesDirectory, "resolve_no_iso1.json");
+        var json = """
+            {
+                "languages": [
+                    { "name": "Chinese", "iso639_1": null, "iso639_2_b": "zho", "iso639_2_t": "chi", "iso639_3": "cmn" }
+                ]
+            }
+            """;
+        File.WriteAllText(testFile, json);
+        var options = CreateOptions(testFile);
+        return new LanguageProvider(options, _logger);
+    }
+
     private static IOptions<LanguageOptions> CreateOptions(string filePath)
     {
         var options = Options.Create(new LanguageOptions { FilePath = filePath });
