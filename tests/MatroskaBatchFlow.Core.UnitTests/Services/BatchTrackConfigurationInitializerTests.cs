@@ -19,6 +19,7 @@ public class BatchTrackConfigurationInitializerTests
     {
         var mockLanguageProvider = Substitute.For<ILanguageProvider>();
         mockLanguageProvider.Languages.Returns(ImmutableList<MatroskaLanguageOption>.Empty);
+        mockLanguageProvider.Resolve(Arg.Any<string?>()).Returns(MatroskaLanguageOption.Undetermined);
         return mockLanguageProvider;
     }
 

@@ -33,6 +33,7 @@ public class TrackModificationIntegrationTests
         // Mock only external dependencies (language data, UI preferences)
         var mockLanguageProvider = Substitute.For<ILanguageProvider>();
         mockLanguageProvider.Languages.Returns(ImmutableList<MatroskaLanguageOption>.Empty);
+        mockLanguageProvider.Resolve(Arg.Any<string?>()).Returns(MatroskaLanguageOption.Undetermined);
         var mockUIPreferences = Substitute.For<IUIPreferencesService>();
 
         var file1Path = "file1.mkv";

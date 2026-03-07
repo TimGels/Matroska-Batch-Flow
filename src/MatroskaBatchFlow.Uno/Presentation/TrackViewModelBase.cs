@@ -396,7 +396,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             return;
 
         // First, update all per-file value collections silently (without triggering events)
-        // This ensures command generation uses the updated values
+        // This keeps per-file configurations in sync with the global track settings used for command generation
         var trackType = SelectedTrack.Type;
         foreach (var kvp in _batchConfiguration.FileConfigurations)
         {
