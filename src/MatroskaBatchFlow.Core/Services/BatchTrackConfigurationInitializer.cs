@@ -7,15 +7,15 @@ namespace MatroskaBatchFlow.Core.Services;
 /// Initializes per-file track configurations based on scanned file information.
 /// </summary>
 /// <remarks>
-/// This class orchestrates the creation of individual track configurations for each file:
+/// This class orchestrates track initialization for each file:
 /// <list type="bullet">
-/// <item>Delegates track configuration creation to <see cref="ITrackConfigurationFactory"/></item>
+/// <item>Creates per-file <see cref="FileTrackValues"/> directly from scanned track metadata</item>
+/// <item>Delegates global <see cref="TrackConfiguration"/> creation to <see cref="ITrackConfigurationFactory"/> when expanding to match maximum track counts</item>
 /// <item>Populates file-specific track lists in <see cref="IBatchConfiguration.FileConfigurations"/></item>
-/// <item>Updates global track collections to reflect maximum track counts for UI display</item>
 /// </list>
 /// </remarks>
 /// <param name="batchConfig">The batch configuration to be modified.</param>
-/// <param name="trackConfigFactory">The factory for creating track configurations.</param>
+/// <param name="trackConfigFactory">The factory for creating global track configurations.</param>
 /// <param name="languageProvider">The language provider for resolving track language codes.</param>
 public class BatchTrackConfigurationInitializer(
     IBatchConfiguration batchConfig,
