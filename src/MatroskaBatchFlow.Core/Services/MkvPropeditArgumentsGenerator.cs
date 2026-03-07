@@ -86,10 +86,9 @@ public sealed partial class MkvPropeditArgumentsGenerator(ILogger<MkvPropeditArg
     /// no requested changes or don't exist in the file.
     /// </summary>
     /// <remarks>
-    /// Modification intent (<c>ShouldModify*</c>) is read from the global <see cref="TrackConfiguration"/> at
-    /// the matching index. The actual values to write (Name, Language, flags) are read from the per-file
-    /// <see cref="FileTrackValues"/>, which are initially populated from the MediaInfo scan and subsequently
-    /// updated when the user changes settings in the UI.
+    /// Both the modification intent (<c>ShouldModify*</c>) and the actual values to write (Name, Language,
+    /// flags) are read from the global <see cref="TrackConfiguration"/> at the matching index. Per-file
+    /// <see cref="FileTrackValues"/> are used only to determine which tracks exist in each file.
     /// </remarks>
     /// <param name="builder">The accumulating mkvpropedit argument builder.</param>
     /// <param name="file">The file being processed.</param>
@@ -148,27 +147,27 @@ public sealed partial class MkvPropeditArgumentsGenerator(ILogger<MkvPropeditArg
 
                 if (globalTrack.ShouldModifyLanguage)
                 {
-                    tb.WithLanguage(track.Language.Code);
+                    tb.WithLanguage(globalTrack.Language.Code);
                 }
 
                 if (globalTrack.ShouldModifyName)
                 {
-                    tb.WithName(track.Name);
+                    tb.WithName(globalTrack.Name);
                 }
 
                 if (globalTrack.ShouldModifyDefaultFlag)
                 {
-                    tb.WithIsDefault(track.Default);
+                    tb.WithIsDefault(globalTrack.Default);
                 }
 
                 if (globalTrack.ShouldModifyForcedFlag)
                 {
-                    tb.WithIsForced(track.Forced);
+                    tb.WithIsForced(globalTrack.Forced);
                 }
 
                 if (globalTrack.ShouldModifyEnabledFlag)
                 {
-                    tb.WithIsEnabled(track.Enabled);
+                    tb.WithIsEnabled(globalTrack.Enabled);
                 }
 
                 return tb;
