@@ -3,8 +3,7 @@ using MatroskaBatchFlow.Core.Enums;
 namespace MatroskaBatchFlow.Core.Models;
 
 /// <summary>
-/// Stores per-file track values that are initially populated from the MediaInfo scan and
-/// subsequently updated when the user changes settings in the UI.
+/// Stores per-file track values that are initially populated from the MediaInfo scan.
 /// The original scanned data is always available via <see cref="ScannedTrackInfo"/>.
 /// </summary>
 /// <remarks>
@@ -12,15 +11,18 @@ namespace MatroskaBatchFlow.Core.Models;
 /// <list type="bullet">
 /// <item>
 /// <see cref="Services.TrackConfiguration"/> - one per track index in the global collection.
-/// Carries modification intent (<c>ShouldModify*</c> flags) and is shared across all files.
+/// Carries modification intent (<c>ShouldModify*</c> flags) and the effective values
+/// (Name, Language, flags) that should be written, and is shared across all files.
 /// </item>
 /// <item>
 /// <see cref="FileTrackValues"/> - one per track per file in <see cref="FileTrackConfiguration"/>.
-/// Holds the actual values (Name, Language, flags) to write for that specific file.
+/// Represents the scanned/current per-file values and indicates whether a given file actually
+/// has a track at a particular index.
 /// </item>
 /// </list>
-/// During command generation, <see cref="Services.MkvPropeditArgumentsGenerator"/> reads
-/// <c>ShouldModify*</c> from the global track and the values to write from the per-file track.
+/// During command generation, <see cref="Services.MkvPropeditArgumentsGenerator"/> reads both
+/// <c>ShouldModify*</c> and the values to write from the global track configuration, and uses
+/// <see cref="FileTrackValues"/> only to determine per-file track existence and indexing.
 /// </remarks>
 public sealed class FileTrackValues
 {
