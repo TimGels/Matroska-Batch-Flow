@@ -25,6 +25,9 @@ public class AudioTrackNamingRule : IFileProcessingRule
 
         for (int i = 0; i < globalTracks.Count; i++)
         {
+            if (globalTracks[i].IsNameUserSet)
+                continue;
+
             // Gather all track names for this index across files to determine a common name.
             var names = GetDistinctAudioTrackNames(batchConfig.FileList, i);
 

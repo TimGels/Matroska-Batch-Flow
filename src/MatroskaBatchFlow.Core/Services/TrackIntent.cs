@@ -23,6 +23,11 @@ public sealed class TrackIntent(TrackInfo trackInfo) : INotifyPropertyChanged
     private bool _shouldModifyDefaultFlag;
     private bool _shouldModifyForcedFlag;
     private bool _shouldModifyEnabledFlag;
+    private bool _isNameUserSet;
+    private bool _isLanguageUserSet;
+    private bool _isDefaultUserSet;
+    private bool _isForcedUserSet;
+    private bool _isEnabledUserSet;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -220,6 +225,120 @@ public sealed class TrackIntent(TrackInfo trackInfo) : INotifyPropertyChanged
                 _shouldModifyEnabledFlag = value;
                 OnPropertyChanged(nameof(ShouldModifyEnabledFlag));
             }
+        }
+    }
+
+    /// <summary>
+    /// Whether the user has explicitly set <see cref="Name"/>. When <see langword="true"/>,
+    /// seed rules must not overwrite the value.
+    /// </summary>
+    public bool IsNameUserSet => _isNameUserSet;
+
+    /// <summary>
+    /// Whether the user has explicitly set <see cref="Language"/>. When <see langword="true"/>,
+    /// seed rules must not overwrite the value.
+    /// </summary>
+    public bool IsLanguageUserSet => _isLanguageUserSet;
+
+    /// <summary>
+    /// Whether the user has explicitly set <see cref="Default"/>. When <see langword="true"/>,
+    /// seed rules must not overwrite the value.
+    /// </summary>
+    public bool IsDefaultUserSet => _isDefaultUserSet;
+
+    /// <summary>
+    /// Whether the user has explicitly set <see cref="Forced"/>. When <see langword="true"/>,
+    /// seed rules must not overwrite the value.
+    /// </summary>
+    public bool IsForcedUserSet => _isForcedUserSet;
+
+    /// <summary>
+    /// Whether the user has explicitly set <see cref="Enabled"/>. When <see langword="true"/>,
+    /// seed rules must not overwrite the value.
+    /// </summary>
+    public bool IsEnabledUserSet => _isEnabledUserSet;
+
+    /// <summary>
+    /// Marks the specified property as user-set so seed rules will leave it untouched.
+    /// </summary>
+    /// <param name="property">The property to mark as user-set.</param>
+    public void MarkUserSet(TrackIntentProperty property)
+    {
+        switch (property)
+        {
+            case TrackIntentProperty.Name:
+                if (_isNameUserSet) return;
+                _isNameUserSet = true;
+                OnPropertyChanged(nameof(IsNameUserSet));
+                break;
+            case TrackIntentProperty.Language:
+                if (_isLanguageUserSet) return;
+                _isLanguageUserSet = true;
+                OnPropertyChanged(nameof(IsLanguageUserSet));
+                break;
+            case TrackIntentProperty.Default:
+                if (_isDefaultUserSet) return;
+                _isDefaultUserSet = true;
+                OnPropertyChanged(nameof(IsDefaultUserSet));
+                break;
+            case TrackIntentProperty.Forced:
+                if (_isForcedUserSet) return;
+                _isForcedUserSet = true;
+                OnPropertyChanged(nameof(IsForcedUserSet));
+                break;
+            case TrackIntentProperty.Enabled:
+                if (_isEnabledUserSet) return;
+                _isEnabledUserSet = true;
+                OnPropertyChanged(nameof(IsEnabledUserSet));
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Clears the user-set flag for the specified property, or for all properties when
+    /// <paramref name="property"/> is <see langword="null"/>. Seed rules may overwrite
+    /// the corresponding values again after this call.
+    /// </summary>
+    /// <param name="property">The property to reset, or <see langword="null"/> to reset all.</param>
+    public void ResetUserSet(TrackIntentProperty? property = null)
+    {
+        if (property is null)
+        {
+            ResetUserSet(TrackIntentProperty.Name);
+            ResetUserSet(TrackIntentProperty.Language);
+            ResetUserSet(TrackIntentProperty.Default);
+            ResetUserSet(TrackIntentProperty.Forced);
+            ResetUserSet(TrackIntentProperty.Enabled);
+            return;
+        }
+
+        switch (property.Value)
+        {
+            case TrackIntentProperty.Name:
+                if (!_isNameUserSet) return;
+                _isNameUserSet = false;
+                OnPropertyChanged(nameof(IsNameUserSet));
+                break;
+            case TrackIntentProperty.Language:
+                if (!_isLanguageUserSet) return;
+                _isLanguageUserSet = false;
+                OnPropertyChanged(nameof(IsLanguageUserSet));
+                break;
+            case TrackIntentProperty.Default:
+                if (!_isDefaultUserSet) return;
+                _isDefaultUserSet = false;
+                OnPropertyChanged(nameof(IsDefaultUserSet));
+                break;
+            case TrackIntentProperty.Forced:
+                if (!_isForcedUserSet) return;
+                _isForcedUserSet = false;
+                OnPropertyChanged(nameof(IsForcedUserSet));
+                break;
+            case TrackIntentProperty.Enabled:
+                if (!_isEnabledUserSet) return;
+                _isEnabledUserSet = false;
+                OnPropertyChanged(nameof(IsEnabledUserSet));
+                break;
         }
     }
 

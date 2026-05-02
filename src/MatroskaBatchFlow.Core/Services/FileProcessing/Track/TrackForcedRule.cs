@@ -25,6 +25,9 @@ public class TrackForcedRule : IFileProcessingRule
 
             for (int i = 0; i < globalTracks.Count; i++)
             {
+                if (globalTracks[i].IsForcedUserSet)
+                    continue;
+
                 var forcedFlags = batchConfig.FileList
                     .Select(f => f.GetTracks(trackType))
                     .Where(tracks => i < tracks.Count)

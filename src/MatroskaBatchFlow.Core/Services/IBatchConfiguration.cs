@@ -23,6 +23,22 @@ public interface IBatchConfiguration : INotifyPropertyChanged
     bool DeleteTrackStatisticsTags { get; set; }
     bool ShouldModifyTrackStatisticsTags { get; set; }
 
+    /// <summary>
+    /// Whether the user has explicitly set <see cref="Title"/>. Seed rules must not
+    /// overwrite the value when this is <see langword="true"/>.
+    /// </summary>
+    bool IsTitleUserSet { get; }
+
+    /// <summary>
+    /// Marks <see cref="Title"/> as user-set so seed rules will leave it untouched.
+    /// </summary>
+    void MarkTitleUserSet();
+
+    /// <summary>
+    /// Clears the user-set flag for <see cref="Title"/>, allowing seed rules to overwrite it again.
+    /// </summary>
+    void ResetTitleUserSet();
+
     UniqueObservableCollection<ScannedFileInfo> FileList { get; }
     ObservableCollection<TrackIntent> AudioTracks { get; set; }
     ObservableCollection<TrackIntent> VideoTracks { get; set; }

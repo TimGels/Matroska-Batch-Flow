@@ -25,6 +25,9 @@ public class TrackDefaultRule : IFileProcessingRule
 
             for (int i = 0; i < globalTracks.Count; i++)
             {
+                if (globalTracks[i].IsDefaultUserSet)
+                    continue;
+
                 var defaultFlags = batchConfig.FileList
                     .Select(f => f.GetTracks(trackType))
                     .Where(tracks => i < tracks.Count)

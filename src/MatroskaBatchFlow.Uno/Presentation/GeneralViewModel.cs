@@ -16,6 +16,7 @@ public partial class GeneralViewModel : ObservableObject
             if (_batchConfiguration.Title != value)
             {
                 _batchConfiguration.Title = value;
+                _batchConfiguration.MarkTitleUserSet();
                 OnPropertyChanged(nameof(Title));
             }
         }

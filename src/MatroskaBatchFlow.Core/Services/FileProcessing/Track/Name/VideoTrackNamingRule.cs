@@ -17,6 +17,9 @@ public class VideoTrackNamingRule : IFileProcessingRule
 
         for (int i = 0; i < globalTracks.Count; i++)
         {
+            if (globalTracks[i].IsNameUserSet)
+                continue;
+
             var names = batchConfig.FileList
                 .Select(f => f.GetTracks(TrackType.Video))
                 .Where(tracks => i < tracks.Count)
