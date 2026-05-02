@@ -27,6 +27,9 @@ public class FileTitleNamingRule : IFileProcessingRule
         if (scannedFile is not { Result.Media.Track: var tracks } || batchConfig is null)
             return;
 
+        if (batchConfig.IsTitleUserSet)
+            return;
+
         // Find the general track (segment information) in the scanned file. We only support one general track or segment.
         var scannedTrack = tracks.FirstOrDefault(t => t.Type == TrackType.General);
 

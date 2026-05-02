@@ -28,6 +28,9 @@ public class SubtitleTrackNamingRule : IFileProcessingRule
 
         for (int i = 0; i < globalTracks.Count; i++)
         {
+            if (globalTracks[i].IsNameUserSet)
+                continue;
+
             var names = batchConfig.FileList
                 .Select(f => f.GetTracks(TrackType.Text))
                 .Where(tracks => i < tracks.Count)

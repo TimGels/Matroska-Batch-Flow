@@ -20,6 +20,9 @@ public class TrackLanguageRule(ILanguageProvider languageProvider) : IFileProces
 
             for (int i = 0; i < globalTracks.Count; i++)
             {
+                if (globalTracks[i].IsLanguageUserSet)
+                    continue;
+
                 // Resolve raw MediaInfo values before grouping so aliases such as "en" and "eng"
                 // are counted as the same canonical language.
                 var languages = batchConfig.FileList

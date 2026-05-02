@@ -29,6 +29,7 @@ public partial class BatchConfiguration : IBatchConfiguration
     /// same physical file, avoiding redundant processing during batch operations.</remarks>
     private readonly UniqueObservableCollection<ScannedFileInfo> _fileList;
     private readonly HashSet<Guid> _staleFileIds = [];
+    private bool _isTitleUserSet;
     private ObservableCollection<TrackIntent> _audioTracks = [];
     private ObservableCollection<TrackIntent> _videoTracks = [];
     private ObservableCollection<TrackIntent> _subtitleTracks = [];
@@ -280,10 +281,34 @@ public partial class BatchConfiguration : IBatchConfiguration
     }
 
     /// <inheritdoc />
+    public bool IsTitleUserSet => _isTitleUserSet;
+
+    /// <inheritdoc />
+    public void MarkTitleUserSet()
+    {
+        if (_isTitleUserSet)
+            return;
+
+        _isTitleUserSet = true;
+        OnPropertyChanged(nameof(IsTitleUserSet));
+    }
+
+    /// <inheritdoc />
+    public void ResetTitleUserSet()
+    {
+        if (!_isTitleUserSet)
+            return;
+
+        _isTitleUserSet = false;
+        OnPropertyChanged(nameof(IsTitleUserSet));
+    }
+
+    /// <inheritdoc />
     public void Clear()
     {
         DirectoryPath = string.Empty;
         Title = string.Empty;
+        ResetTitleUserSet();
         FileList.Clear();
         AudioTracks.Clear();
         VideoTracks.Clear();
@@ -344,6 +369,7 @@ public partial class BatchConfiguration : IBatchConfiguration
         DeleteTrackStatisticsTags = false;
         ShouldModifyTrackStatisticsTags = false;
         ShouldModifyTitle = false;
+        ResetTitleUserSet();
         ClearTracks();
     }
 

@@ -54,7 +54,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isDefaultTrack = value;
                 OnPropertyChanged(nameof(IsDefaultTrack));
-                UpdateTrackIntentProperty(intent => intent.Default = value);
+                UpdateTrackIntentProperty(intent => intent.Default = value, TrackIntentProperty.Default);
             }
         }
     }
@@ -86,7 +86,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isEnabledTrack = value;
                 OnPropertyChanged(nameof(IsEnabledTrack));
-                UpdateTrackIntentProperty(intent => intent.Enabled = value);
+                UpdateTrackIntentProperty(intent => intent.Enabled = value, TrackIntentProperty.Enabled);
             }
         }
     }
@@ -118,7 +118,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isForcedTrack = value;
                 OnPropertyChanged(nameof(IsForcedTrack));
-                UpdateTrackIntentProperty(intent => intent.Forced = value);
+                UpdateTrackIntentProperty(intent => intent.Forced = value, TrackIntentProperty.Forced);
             }
         }
     }
@@ -150,7 +150,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _trackName = value;
                 OnPropertyChanged(nameof(TrackName));
-                UpdateTrackIntentProperty(intent => intent.Name = value);
+                UpdateTrackIntentProperty(intent => intent.Name = value, TrackIntentProperty.Name);
             }
         }
     }
@@ -191,7 +191,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
                 }
 
                 MatroskaLanguageOption language = value ?? MatroskaLanguageOption.Undetermined;
-                UpdateTrackIntentProperty(intent => intent.Language = language);
+                UpdateTrackIntentProperty(intent => intent.Language = language, TrackIntentProperty.Language);
             }
         }
     }
@@ -344,7 +344,8 @@ public abstract partial class TrackViewModelBase : ObservableObject
     /// Updates a property on the selected track intent, guarded by the suppression flag.
     /// </summary>
     /// <param name="updateAction">An <see cref="Action{TrackIntent}"/> delegate that updates the intent property.</param>
-    protected virtual void UpdateTrackIntentProperty(Action<TrackIntent> updateAction)
+    /// <param name="userSetKind">When non-null, marks the corresponding property as user-set on the intent so seed rules won't overwrite it.</param>
+    protected virtual void UpdateTrackIntentProperty(Action<TrackIntent> updateAction, TrackIntentProperty? userSetKind = null)
     {
         if (_suppressBatchConfigUpdate)
             return;
@@ -357,6 +358,9 @@ public abstract partial class TrackViewModelBase : ObservableObject
             return;
 
         updateAction(tracks[index]);
+
+        if (userSetKind is not null)
+            tracks[index].MarkUserSet(userSetKind.Value);
     }
 
     /// <summary>

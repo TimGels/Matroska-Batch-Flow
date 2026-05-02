@@ -58,6 +58,33 @@ public class TrackLanguageRuleTests
         Assert.Same(MatroskaLanguageOption.Undetermined, batchConfig.AudioTracks[0].Language);
     }
 
+    [Fact]
+    public void Apply_WhenLanguageIsUserSet_DoesNotOverwrite()
+    {
+        // Arrange
+        var english = new MatroskaLanguageOption("English", "en", "eng", "eng", "eng");
+        var japanese = new MatroskaLanguageOption("Japanese", "ja", "jpn", "jpn", "jpn");
+        var batchConfig = CreateBatchConfiguration();
+        var languageProvider = CreateLanguageProvider(english, japanese);
+
+        var englishFile1 = CreateScannedFile("file1.mkv", "eng");
+        var englishFile2 = CreateScannedFile("file2.mkv", "eng");
+
+        AddAndInitializeTracks(batchConfig, languageProvider, englishFile1, englishFile2);
+
+        // Simulate the user explicitly choosing Japanese for slot 0.
+        batchConfig.AudioTracks[0].Language = japanese;
+        batchConfig.AudioTracks[0].MarkUserSet(TrackIntentProperty.Language);
+
+        var sut = new TrackLanguageRule(languageProvider);
+
+        // Act
+        sut.Apply(englishFile1, batchConfig);
+
+        // Assert
+        Assert.Same(japanese, batchConfig.AudioTracks[0].Language);
+    }
+
     private static BatchConfiguration CreateBatchConfiguration()
     {
         var platformService = Substitute.For<IPlatformService>();
