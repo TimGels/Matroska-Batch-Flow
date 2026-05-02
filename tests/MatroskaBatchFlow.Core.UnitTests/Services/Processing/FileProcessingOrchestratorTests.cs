@@ -27,7 +27,7 @@ public class FileProcessingOrchestratorTests
         var report = CreateFileReport(ProcessingStatus.Running);
 
         // Act
-        var result = await orchestrator.ProcessFileAsync(report);
+        var result = await orchestrator.ProcessFileAsync(report, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(ProcessingStatus.Running, result.Status);
@@ -61,7 +61,7 @@ public class FileProcessingOrchestratorTests
             .Returns(string.Empty);
 
         // Act
-        await orchestrator.ProcessFileAsync(report);
+        await orchestrator.ProcessFileAsync(report, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(report.StartedAt);
@@ -77,7 +77,7 @@ public class FileProcessingOrchestratorTests
             .Returns(string.Empty);
 
         // Act
-        var result = await orchestrator.ProcessFileAsync(report);
+        var result = await orchestrator.ProcessFileAsync(report, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(ProcessingStatus.Skipped, result.Status);
@@ -94,7 +94,7 @@ public class FileProcessingOrchestratorTests
             .Returns("   ");
 
         // Act
-        var result = await orchestrator.ProcessFileAsync(report);
+        var result = await orchestrator.ProcessFileAsync(report, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(ProcessingStatus.Skipped, result.Status);
@@ -113,7 +113,7 @@ public class FileProcessingOrchestratorTests
             .Returns(CreateSuccessResult());
 
         // Act
-        await orchestrator.ProcessFileAsync(report);
+        await orchestrator.ProcessFileAsync(report, TestContext.Current.CancellationToken);
 
         // Assert
         await _mkvToolExecutor.Received(1).ExecuteAsync(args, Arg.Any<CancellationToken>());
@@ -131,7 +131,7 @@ public class FileProcessingOrchestratorTests
             .Returns(CreateSuccessResult());
 
         // Act
-        var result = await orchestrator.ProcessFileAsync(report);
+        var result = await orchestrator.ProcessFileAsync(report, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(ProcessingStatus.Succeeded, result.Status);
@@ -149,7 +149,7 @@ public class FileProcessingOrchestratorTests
             .Returns(CreateWarningResult());
 
         // Act
-        var result = await orchestrator.ProcessFileAsync(report);
+        var result = await orchestrator.ProcessFileAsync(report, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(ProcessingStatus.SucceededWithWarnings, result.Status);
@@ -168,7 +168,7 @@ public class FileProcessingOrchestratorTests
             .Returns(CreateFailureResult());
 
         // Act
-        var result = await orchestrator.ProcessFileAsync(report);
+        var result = await orchestrator.ProcessFileAsync(report, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(ProcessingStatus.Failed, result.Status);
@@ -213,7 +213,7 @@ public class FileProcessingOrchestratorTests
             .Returns<MkvPropeditResult>(_ => throw new InvalidOperationException("Test error"));
 
         // Act
-        var result = await orchestrator.ProcessFileAsync(report);
+        var result = await orchestrator.ProcessFileAsync(report, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(ProcessingStatus.Failed, result.Status);
@@ -240,7 +240,7 @@ public class FileProcessingOrchestratorTests
             });
 
         // Act
-        var result = await orchestrator.ProcessFileAsync(report);
+        var result = await orchestrator.ProcessFileAsync(report, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Contains(executablePath, result.ExecutedCommand);
@@ -263,7 +263,7 @@ public class FileProcessingOrchestratorTests
             });
 
         // Act
-        var result = await orchestrator.ProcessFileAsync(report);
+        var result = await orchestrator.ProcessFileAsync(report, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result.Duration);
@@ -282,7 +282,7 @@ public class FileProcessingOrchestratorTests
             .Returns(CreateSuccessResult());
 
         // Act
-        var result = await orchestrator.ProcessFileAsync(report);
+        var result = await orchestrator.ProcessFileAsync(report, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result.StartedAt);
@@ -308,7 +308,7 @@ public class FileProcessingOrchestratorTests
             .Returns(CreateSuccessResult());
 
         // Act
-        var results = await orchestrator.ProcessAllAsync(files);
+        var results = await orchestrator.ProcessAllAsync(files, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(3, results.Count);
@@ -328,7 +328,7 @@ public class FileProcessingOrchestratorTests
             .Returns(CreateSuccessResult());
 
         // Act
-        await orchestrator.ProcessAllAsync(files);
+        await orchestrator.ProcessAllAsync(files, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Single(activeBatch.FileReports);
@@ -377,7 +377,7 @@ public class FileProcessingOrchestratorTests
         _batchReportStore.ActiveBatch.Returns(activeBatch);
 
         // Act
-        var results = await orchestrator.ProcessAllAsync(Array.Empty<ScannedFileInfo>());
+        var results = await orchestrator.ProcessAllAsync(Array.Empty<ScannedFileInfo>(), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Empty(results);
@@ -404,7 +404,7 @@ public class FileProcessingOrchestratorTests
             .Returns(string.Empty);
 
         // Act - Pass file2 which has a different report ID
-        var results = await orchestrator.ProcessAllAsync(new[] { file2 });
+        var results = await orchestrator.ProcessAllAsync(new[] { file2 }, TestContext.Current.CancellationToken);
 
         // Assert - Should create a new report since it's a different FileProcessingReport instance
         Assert.Single(results);

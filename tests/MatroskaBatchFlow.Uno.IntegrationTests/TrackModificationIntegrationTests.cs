@@ -60,9 +60,9 @@ public class TrackModificationIntegrationTests
         batchConfig.FileList.Add(file1);
         batchConfig.FileList.Add(file2);
 
-        // Initialize per-file configurations
-        var trackConfigFactory = new TrackConfigurationFactory(mockLanguageProvider);
-        var initializer = new BatchTrackConfigurationInitializer(batchConfig, trackConfigFactory, mockLanguageProvider);
+        // Initialize global track intents
+        var trackIntentFactory = new TrackIntentFactory(mockLanguageProvider);
+        var initializer = new BatchTrackConfigurationInitializer(batchConfig, trackIntentFactory);
         initializer.Initialize(file1, TrackType.Text);
         initializer.Initialize(file2, TrackType.Text);
 
@@ -93,20 +93,13 @@ public class TrackModificationIntegrationTests
         await tcs.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         Assert.True(tcs.Task.IsCompleted, "StateChanged should fire when updating track name");
 
-        // Verify global configuration was updated
+        // Verify global configuration was updated via TrackIntent properties
         Assert.Equal("Track17Modified", batchConfig.SubtitleTracks[16].Name);
         Assert.True(batchConfig.SubtitleTracks[16].ShouldModifyName);
 
-        // Verify per-file configurations
-        var file1Config = batchConfig.FileConfigurations[file1.Id];
-        Assert.Single(file1Config.SubtitleTracks);
-        Assert.NotEqual("Track17Modified", file1Config.SubtitleTracks[0].Name);
-
-        var file2Config = batchConfig.FileConfigurations[file2.Id];
-        Assert.Equal(17, file2Config.SubtitleTracks.Count);
-        Assert.Equal("Track17Modified", file2Config.SubtitleTracks[16].Name);
-
         // Verify command generation works correctly
+        // File1 has only 1 subtitle track, so track index 16 doesn't apply — no commands for file1
+        // File2 has 17 subtitle tracks, so the modification applies to track 17
         var argumentsGenerator = new MkvPropeditArgumentsGenerator(Substitute.For<ILogger<MkvPropeditArgumentsGenerator>>());
         var commands = argumentsGenerator.BuildBatchArguments(batchConfig);
 

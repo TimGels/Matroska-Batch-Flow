@@ -31,7 +31,7 @@ public sealed partial class AudioPage : Page
 
     private void TrackAvailabilityDot_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
-        if (sender is not Ellipse ellipse || ellipse.DataContext is not TrackConfiguration track)
+        if (sender is not Ellipse ellipse || ellipse.DataContext is not TrackIntent track)
             return;
 
         int trackIndex = track.Index;

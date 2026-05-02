@@ -7,14 +7,14 @@ using NSubstitute;
 namespace MatroskaBatchFlow.Core.UnitTests.Services;
 
 /// <summary>
-/// Contains unit tests for the TrackConfigurationFactory class, verifying correct creation of
-/// TrackConfiguration objects from scanned track information.
+/// Contains unit tests for the TrackIntentFactory class, verifying correct creation of
+/// TrackIntent objects from scanned track information.
 /// </summary>
-public class TrackConfigurationFactoryTests
+public class TrackIntentFactoryTests
 {
     private readonly ILanguageProvider _mockLanguageProvider = Substitute.For<ILanguageProvider>();
 
-    public TrackConfigurationFactoryTests()
+    public TrackIntentFactoryTests()
     {
         // Default: any unmatched code resolves to Undetermined.
         _mockLanguageProvider.Resolve(Arg.Any<string?>()).Returns(MatroskaLanguageOption.Undetermined);
@@ -24,7 +24,7 @@ public class TrackConfigurationFactoryTests
     public void Create_SetsBasicProperties()
     {
         // Arrange
-        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
+        var factory = new TrackIntentFactory(_mockLanguageProvider);
         var trackInfo = new TrackInfoBuilder()
             .WithType(TrackType.Audio)
             .WithTitle("English Commentary")
@@ -49,7 +49,7 @@ public class TrackConfigurationFactoryTests
     public void Create_SetsEmptyNameWhenTitleIsNull()
     {
         // Arrange
-        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
+        var factory = new TrackIntentFactory(_mockLanguageProvider);
         var trackInfo = new TrackInfoBuilder()
             .WithType(TrackType.Video)
             .WithStreamKindID(0)
@@ -73,7 +73,7 @@ public class TrackConfigurationFactoryTests
             iso639_2_t: "eng",
             iso639_3: "eng");
         _mockLanguageProvider.Resolve("eng").Returns(englishLanguage);
-        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
+        var factory = new TrackIntentFactory(_mockLanguageProvider);
         var trackInfo = new TrackInfoBuilder()
             .WithType(TrackType.Audio)
             .WithLanguage("eng")
@@ -98,7 +98,7 @@ public class TrackConfigurationFactoryTests
             iso639_2_t: "jpn",
             iso639_3: "jpn");
         _mockLanguageProvider.Resolve("ja").Returns(japaneseLanguage);
-        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
+        var factory = new TrackIntentFactory(_mockLanguageProvider);
         var trackInfo = new TrackInfoBuilder()
             .WithType(TrackType.Audio)
             .WithLanguage("ja")
@@ -116,7 +116,7 @@ public class TrackConfigurationFactoryTests
     public void Create_ReturnsUndeterminedForUnknownLanguage()
     {
         // Arrange
-        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
+        var factory = new TrackIntentFactory(_mockLanguageProvider);
         var trackInfo = new TrackInfoBuilder()
             .WithType(TrackType.Audio)
             .WithLanguage("xyz")
@@ -134,7 +134,7 @@ public class TrackConfigurationFactoryTests
     public void Create_ReturnsUndeterminedForEmptyLanguage()
     {
         // Arrange
-        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
+        var factory = new TrackIntentFactory(_mockLanguageProvider);
         var trackInfo = new TrackInfoBuilder()
             .WithType(TrackType.Audio)
             .WithLanguage(string.Empty)
@@ -152,7 +152,7 @@ public class TrackConfigurationFactoryTests
     public void Create_ReturnsUndeterminedForWhitespaceLanguage()
     {
         // Arrange
-        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
+        var factory = new TrackIntentFactory(_mockLanguageProvider);
         var trackInfo = new TrackInfoBuilder()
             .WithType(TrackType.Audio)
             .WithLanguage("   ")
@@ -170,7 +170,7 @@ public class TrackConfigurationFactoryTests
     public void Create_ThrowsForNullTrackInfo()
     {
         // Arrange
-        var factory = new TrackConfigurationFactory(_mockLanguageProvider);
+        var factory = new TrackIntentFactory(_mockLanguageProvider);
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => factory.Create(null!, TrackType.Audio, 0));

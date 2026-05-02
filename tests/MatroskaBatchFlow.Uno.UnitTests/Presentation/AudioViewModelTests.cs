@@ -27,9 +27,8 @@ public class AudioViewModelTests
         _logger = Substitute.For<ILogger<AudioViewModel>>();
 
         _languageProvider.Languages.Returns([]);
-        _batchConfiguration.AudioTracks.Returns(new ObservableCollection<TrackConfiguration>());
+        _batchConfiguration.AudioTracks.Returns(new ObservableCollection<TrackIntent>());
         _batchConfiguration.FileList.Returns(new UniqueObservableCollection<ScannedFileInfo>(Substitute.For<IScannedFileInfoPathComparer>()));
-        _batchConfiguration.FileConfigurations.Returns(new Dictionary<Guid, FileTrackConfiguration>());
     }
 
     [Fact]
@@ -42,10 +41,8 @@ public class AudioViewModelTests
             .Build();
         var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Audio);
 
-        var audioTracks = new ObservableCollection<TrackConfiguration>
-        {
-            new TrackConfiguration(trackInfo) { Type = TrackType.Audio, Index = 0, Name = "Track 1" }
-        };
+        var intent = new TrackIntent(trackInfo) { Type = TrackType.Audio, Index = 0, Name = "Track 1" };
+        var audioTracks = new ObservableCollection<TrackIntent> { intent };
         _batchConfiguration.AudioTracks.Returns(audioTracks);
 
         // Act
@@ -66,10 +63,8 @@ public class AudioViewModelTests
             .Build();
         var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Audio);
 
-        var audioTracks = new ObservableCollection<TrackConfiguration>
-        {
-            new TrackConfiguration(trackInfo) { Type = TrackType.Audio, Index = 0, Name = "Track 1" }
-        };
+        var intent = new TrackIntent(trackInfo) { Type = TrackType.Audio, Index = 0, Name = "Track 1" };
+        var audioTracks = new ObservableCollection<TrackIntent> { intent };
         _batchConfiguration.AudioTracks.Returns(audioTracks);
 
         // Act
@@ -145,7 +140,7 @@ public class AudioViewModelTests
     public void OnBatchConfigurationAudioTracksChanged_UpdatesAudioTracks()
     {
         // Arrange
-        var audioTracks = new ObservableCollection<TrackConfiguration>();
+        var audioTracks = new ObservableCollection<TrackIntent>();
         _batchConfiguration.AudioTracks.Returns(audioTracks);
 
         var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
@@ -156,7 +151,7 @@ public class AudioViewModelTests
             .AddTrackOfType(TrackType.Audio)
             .Build();
         var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Audio);
-        var newTrack = new TrackConfiguration(trackInfo) { Type = TrackType.Audio, Index = 0, Name = "New Track" };
+        var newTrack = new TrackIntent(trackInfo) { Type = TrackType.Audio, Index = 0, Name = "New Track" };
 
         // Act
         audioTracks.Add(newTrack);
@@ -169,7 +164,7 @@ public class AudioViewModelTests
     public void OnBatchConfigurationChanged_UpdatesAudioTracksWhenAudioTracksPropertyChanges()
     {
         // Arrange
-        var initialTracks = new ObservableCollection<TrackConfiguration>();
+        var initialTracks = new ObservableCollection<TrackIntent>();
         _batchConfiguration.AudioTracks.Returns(initialTracks);
 
         var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
@@ -180,10 +175,8 @@ public class AudioViewModelTests
             .Build();
         var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Audio);
 
-        var newTracks = new ObservableCollection<TrackConfiguration>
-        {
-            new TrackConfiguration(trackInfo) { Type = TrackType.Audio, Index = 0, Name = "Track 1" }
-        };
+        var intent = new TrackIntent(trackInfo) { Type = TrackType.Audio, Index = 0, Name = "Track 1" };
+        var newTracks = new ObservableCollection<TrackIntent> { intent };
 
         // Act
         _batchConfiguration.AudioTracks.Returns(newTracks);
@@ -199,7 +192,7 @@ public class AudioViewModelTests
     public void OnBatchConfigurationChanged_DoesNotUpdateWhenOtherPropertiesChange()
     {
         // Arrange
-        var audioTracks = new ObservableCollection<TrackConfiguration>();
+        var audioTracks = new ObservableCollection<TrackIntent>();
         _batchConfiguration.AudioTracks.Returns(audioTracks);
 
         var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);

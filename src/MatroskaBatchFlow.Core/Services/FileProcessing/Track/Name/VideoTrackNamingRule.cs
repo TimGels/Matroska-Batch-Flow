@@ -4,8 +4,7 @@ using MatroskaBatchFlow.Core.Models;
 namespace MatroskaBatchFlow.Core.Services.FileProcessing.Track.Name;
 
 /// <summary>
-/// Analyzes per-file video track names and populates global UI properties with smart defaults.
-/// Per-file configurations are already populated by <see cref="BatchTrackConfigurationInitializer"/>.
+/// Analyzes per-file video track names and populates global TrackIntent properties with smart defaults.
 /// </summary>
 public class VideoTrackNamingRule : IFileProcessingRule
 {
@@ -14,28 +13,24 @@ public class VideoTrackNamingRule : IFileProcessingRule
         if (scannedFile?.Result?.Media?.Track == null || batchConfig == null)
             return;
 
-        // Per-file configs already populated by synchronizer - we just populate global UI
         var globalTracks = batchConfig.GetTrackListForType(TrackType.Video);
 
         for (int i = 0; i < globalTracks.Count; i++)
         {
-            // Collect names from all files that have this track
-            var names = batchConfig.FileConfigurations.Values
-                .Select(fc => fc.GetTrackListForType(TrackType.Video))
+            var names = batchConfig.FileList
+                .Select(f => f.GetTracks(TrackType.Video))
                 .Where(tracks => i < tracks.Count)
-                .Select(tracks => tracks[i].Name)
+                .Select(tracks => tracks[i].Title ?? string.Empty)
                 .Where(name => !string.IsNullOrWhiteSpace(name))
                 .Distinct()
                 .ToList();
 
-            // Business logic: Use common name if all files agree, otherwise use most common or empty
             if (names.Count == 1)
             {
                 globalTracks[i].Name = names[0];
             }
             else if (names.Count > 0)
             {
-                // Multiple different names - use most common
                 var mostCommonName = names
                     .GroupBy(n => n)
                     .OrderByDescending(g => g.Count())

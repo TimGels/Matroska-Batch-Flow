@@ -12,7 +12,7 @@ public sealed partial class TrackSettingsControl : UserControl
     public static readonly DependencyProperty SelectedTrackProperty =
         DependencyProperty.Register(
             nameof(SelectedTrack),
-            typeof(TrackConfiguration),
+            typeof(TrackIntent),
             typeof(TrackSettingsControl),
             new PropertyMetadata(null));
 
@@ -124,9 +124,9 @@ public sealed partial class TrackSettingsControl : UserControl
         set => SetValue(TrackNameProperty, value);
     }
 
-    public TrackConfiguration SelectedTrack
+    public TrackIntent SelectedTrack
     {
-        get => (TrackConfiguration)GetValue(SelectedTrackProperty);
+        get => (TrackIntent)GetValue(SelectedTrackProperty);
         set => SetValue(SelectedTrackProperty, value);
     }
 

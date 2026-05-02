@@ -8,7 +8,9 @@ namespace MatroskaBatchFlow.Core.Services;
 /// </summary>
 public sealed partial class MkvPropeditArgumentsGenerator
 {
-    [LoggerMessage(Level = LogLevel.Warning,
-        Message = "Per-file {TrackType} track index {TrackIndex} exceeds global track count {GlobalTrackCount} for file: {FilePath}")]
-    private partial void LogPerFileTrackExceedsGlobalCount(string filePath, TrackType trackType, int trackIndex, int globalTrackCount);
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Generated mkvpropedit arguments for {CommandCount} of {FileCount} file(s).")]
+    private partial void LogBatchArgumentsGenerated(int fileCount, int commandCount);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Skipping {TrackType} track index {TrackIndex} for file '{FilePath}' because the track does not exist.")]
+    private partial void LogTrackMissingInFile(string filePath, TrackType trackType, int trackIndex);
 }

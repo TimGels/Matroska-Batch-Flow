@@ -1,4 +1,5 @@
 using MatroskaBatchFlow.Core.Enums;
+using TrackInfo = MatroskaBatchFlow.Core.Models.MediaInfoResult.MediaInfo.TrackInfo;
 
 namespace MatroskaBatchFlow.Core.Models;
 
@@ -77,5 +78,28 @@ public sealed record ScannedFileInfo
             TrackType.Text => trackIndex < SubtitleTrackCount,
             _ => false
         };
+    }
+
+    /// <summary>
+    /// Gets the tracks of a specific type in file order.
+    /// </summary>
+    /// <param name="trackType">Type of track to return.</param>
+    /// <returns>An ordered read-only list of tracks for the requested type.</returns>
+    public IReadOnlyList<TrackInfo> GetTracks(TrackType trackType)
+    {
+        if (trackType is not (TrackType.Audio or TrackType.Video or TrackType.Text))
+        {
+            return Array.Empty<TrackInfo>();
+        }
+
+        var tracks = Result?.Media?.Track;
+        if (tracks is null)
+        {
+            return Array.Empty<TrackInfo>();
+        }
+
+        return [.. tracks
+            .Where(track => track.Type == trackType)
+            .OrderBy(track => track.StreamKindID)];
     }
 }

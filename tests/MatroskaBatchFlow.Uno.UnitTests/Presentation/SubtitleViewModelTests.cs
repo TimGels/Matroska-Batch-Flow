@@ -27,9 +27,8 @@ public class SubtitleViewModelTests
         _logger = Substitute.For<ILogger<SubtitleViewModel>>();
 
         _languageProvider.Languages.Returns([]);
-        _batchConfiguration.SubtitleTracks.Returns(new ObservableCollection<TrackConfiguration>());
+        _batchConfiguration.SubtitleTracks.Returns(new ObservableCollection<TrackIntent>());
         _batchConfiguration.FileList.Returns(new UniqueObservableCollection<ScannedFileInfo>(Substitute.For<IScannedFileInfoPathComparer>()));
-        _batchConfiguration.FileConfigurations.Returns(new Dictionary<Guid, FileTrackConfiguration>());
     }
 
     [Fact]
@@ -42,10 +41,8 @@ public class SubtitleViewModelTests
             .Build();
         var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Text);
 
-        var subtitleTracks = new ObservableCollection<TrackConfiguration>
-        {
-            new TrackConfiguration(trackInfo) { Type = TrackType.Text, Index = 0, Name = "Track 1" }
-        };
+        var intent = new TrackIntent(trackInfo) { Type = TrackType.Text, Index = 0, Name = "Track 1" };
+        var subtitleTracks = new ObservableCollection<TrackIntent> { intent };
         _batchConfiguration.SubtitleTracks.Returns(subtitleTracks);
 
         // Act
@@ -66,10 +63,8 @@ public class SubtitleViewModelTests
             .Build();
         var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Text);
 
-        var subtitleTracks = new ObservableCollection<TrackConfiguration>
-        {
-            new TrackConfiguration(trackInfo) { Type = TrackType.Text, Index = 0, Name = "Track 1" }
-        };
+        var intent = new TrackIntent(trackInfo) { Type = TrackType.Text, Index = 0, Name = "Track 1" };
+        var subtitleTracks = new ObservableCollection<TrackIntent> { intent };
         _batchConfiguration.SubtitleTracks.Returns(subtitleTracks);
 
         // Act
@@ -145,7 +140,7 @@ public class SubtitleViewModelTests
     public void OnBatchConfigurationSubtitleTracksChanged_UpdatesSubtitleTracks()
     {
         // Arrange
-        var subtitleTracks = new ObservableCollection<TrackConfiguration>();
+        var subtitleTracks = new ObservableCollection<TrackIntent>();
         _batchConfiguration.SubtitleTracks.Returns(subtitleTracks);
 
         var viewModel = new SubtitleViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
@@ -156,7 +151,7 @@ public class SubtitleViewModelTests
             .AddTrackOfType(TrackType.Text)
             .Build();
         var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Text);
-        var newTrack = new TrackConfiguration(trackInfo) { Type = TrackType.Text, Index = 0, Name = "New Track" };
+        var newTrack = new TrackIntent(trackInfo) { Type = TrackType.Text, Index = 0, Name = "New Track" };
 
         // Act
         subtitleTracks.Add(newTrack);
@@ -169,7 +164,7 @@ public class SubtitleViewModelTests
     public void OnBatchConfigurationChanged_UpdatesSubtitleTracksWhenSubtitleTracksPropertyChanges()
     {
         // Arrange
-        var initialTracks = new ObservableCollection<TrackConfiguration>();
+        var initialTracks = new ObservableCollection<TrackIntent>();
         _batchConfiguration.SubtitleTracks.Returns(initialTracks);
 
         var viewModel = new SubtitleViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
@@ -180,10 +175,8 @@ public class SubtitleViewModelTests
             .Build();
         var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Text);
 
-        var newTracks = new ObservableCollection<TrackConfiguration>
-        {
-            new TrackConfiguration(trackInfo) { Type = TrackType.Text, Index = 0, Name = "Track 1" }
-        };
+        var intent = new TrackIntent(trackInfo) { Type = TrackType.Text, Index = 0, Name = "Track 1" };
+        var newTracks = new ObservableCollection<TrackIntent> { intent };
 
         // Act
         _batchConfiguration.SubtitleTracks.Returns(newTracks);
@@ -199,7 +192,7 @@ public class SubtitleViewModelTests
     public void OnBatchConfigurationChanged_DoesNotUpdateWhenOtherPropertiesChange()
     {
         // Arrange
-        var subtitleTracks = new ObservableCollection<TrackConfiguration>();
+        var subtitleTracks = new ObservableCollection<TrackIntent>();
         _batchConfiguration.SubtitleTracks.Returns(subtitleTracks);
 
         var viewModel = new SubtitleViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);

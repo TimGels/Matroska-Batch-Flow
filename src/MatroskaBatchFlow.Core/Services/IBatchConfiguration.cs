@@ -9,9 +9,9 @@ namespace MatroskaBatchFlow.Core.Services;
 /// <summary>
 /// Defines the contract for batch configuration of media files.
 /// <br />
-/// Note: The TrackConfiguration items in the global collections implement INotifyPropertyChanged,
-/// so property changes within global tracks can be observed.
-/// Per-file track values are stored as <see cref="FileTrackValues"/> which carry no modification intent.
+/// Track intents in the global collections implement INotifyPropertyChanged,
+/// so property changes within tracks can be observed.
+/// Per-file values are computed on demand via the transform pipeline at resolution time.
 /// </summary>
 public interface IBatchConfiguration : INotifyPropertyChanged
 {
@@ -24,15 +24,9 @@ public interface IBatchConfiguration : INotifyPropertyChanged
     bool ShouldModifyTrackStatisticsTags { get; set; }
 
     UniqueObservableCollection<ScannedFileInfo> FileList { get; }
-    ObservableCollection<TrackConfiguration> AudioTracks { get; set; }
-    ObservableCollection<TrackConfiguration> VideoTracks { get; set; }
-    ObservableCollection<TrackConfiguration> SubtitleTracks { get; set; }
-
-    /// <summary>
-    /// Per-file track configurations for flexible batch processing.
-    /// Key is the ScannedFileInfo.Id (Guid), not the file path.
-    /// </summary>
-    Dictionary<Guid, FileTrackConfiguration> FileConfigurations { get; set; }
+    ObservableCollection<TrackIntent> AudioTracks { get; set; }
+    ObservableCollection<TrackIntent> VideoTracks { get; set; }
+    ObservableCollection<TrackIntent> SubtitleTracks { get; set; }
 
     event EventHandler? StateChanged;
 
@@ -42,33 +36,14 @@ public interface IBatchConfiguration : INotifyPropertyChanged
     public void Clear();
 
     /// <summary>
-    /// Returns the list of <see cref="TrackConfiguration"/> objects for the specified <see cref="TrackType"/>.
+    /// Returns the list of <see cref="TrackIntent"/> objects for the specified <see cref="TrackType"/>.
     /// </summary>
     /// <param name="trackType">The track type.</param>
     /// <returns>
-    /// The corresponding list of <see cref="TrackConfiguration"/> objects for the given track type.
+    /// The corresponding list of <see cref="TrackIntent"/> objects for the given track type.
     /// If the track type is not <see cref="TrackType.Audio"/>, <see cref="TrackType.Video"/>, or <see cref="TrackType.Text"/>, it returns an empty list.
     /// </returns>
-    public IList<TrackConfiguration> GetTrackListForType(TrackType trackType);
-
-    /// <summary>
-    /// Gets the per-file track values for a specific file and track type.
-    /// These carry only scanned values (Name, Language, flags) — no modification intent.
-    /// Modification flags (<c>ShouldModify*</c>) live on the global <see cref="TrackConfiguration"/> objects returned by <see cref="GetTrackListForType"/>.
-    /// </summary>
-    /// <param name="fileId">The ScannedFileInfo.Id (Guid) of the file.</param>
-    /// <param name="trackType">Type of track to retrieve.</param>
-    /// <returns>List of per-file track values for the specified file and track type.</returns>
-    public IList<FileTrackValues> GetTrackListForFile(Guid fileId, TrackType trackType);
-
-    /// <summary>
-    /// Migrates file configuration from an old file ID to a new file ID.
-    /// Used when replacing a file with a re-scanned version that has a new Guid.
-    /// Preserves user's configuration while updating the file's metadata.
-    /// </summary>
-    /// <param name="oldFileId">The original file's unique identifier.</param>
-    /// <param name="newFileId">The new file's unique identifier.</param>
-    public void MigrateFileConfiguration(Guid oldFileId, Guid newFileId);
+    public IList<TrackIntent> GetTrackListForType(TrackType trackType);
 
     /// <summary>
     /// Marks a file's metadata as stale (needs re-scanning).

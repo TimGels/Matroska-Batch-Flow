@@ -24,6 +24,8 @@ public sealed partial class MkvPropeditArgumentsGenerator(ILogger<MkvPropeditArg
             }
         }
 
+        LogBatchArgumentsGenerated(batchConfiguration.FileList.Count, results.Count);
+
         return [.. results];
     }
 
@@ -40,8 +42,8 @@ public sealed partial class MkvPropeditArgumentsGenerator(ILogger<MkvPropeditArg
     /// modification indicators.
     /// </summary>
     /// <param name="file">The scanned file whose path will be set as the mkvpropedit input.</param>
-    /// <param name="batchConfiguration">Contains global title settings and per-file track configurations.</param>
-    /// <returns> Token array suitable for joining. Returns an empty array if no modifications are requested 
+    /// <param name="batchConfiguration">Contains global title settings and track intents.</param>
+    /// <returns>Token array suitable for joining. Returns an empty array if no modifications are requested 
     /// (to signal "no-op").</returns>
     private string[] BuildFileArgumentTokens(ScannedFileInfo file, IBatchConfiguration batchConfiguration)
     {
@@ -64,7 +66,6 @@ public sealed partial class MkvPropeditArgumentsGenerator(ILogger<MkvPropeditArg
             }
         }
 
-        // Per-track modifications using file-specific configurations
         AddTracksForFile(builder, file, TrackType.Audio, batchConfiguration);
         AddTracksForFile(builder, file, TrackType.Video, batchConfiguration);
         AddTracksForFile(builder, file, TrackType.Text, batchConfiguration);
@@ -82,18 +83,12 @@ public sealed partial class MkvPropeditArgumentsGenerator(ILogger<MkvPropeditArg
     }
 
     /// <summary>
-    /// Adds track-specific modifications to the builder for a specific file, filtering out tracks that have
-    /// no requested changes or don't exist in the file.
+    /// Adds track-specific modifications to the builder for a specific file.
     /// </summary>
-    /// <remarks>
-    /// Both the modification intent (<c>ShouldModify*</c>) and the actual values to write (Name, Language,
-    /// flags) are read from the global <see cref="TrackConfiguration"/> at the matching index. Per-file
-    /// <see cref="FileTrackValues"/> are used only to determine which tracks exist in each file.
-    /// </remarks>
     /// <param name="builder">The accumulating mkvpropedit argument builder.</param>
     /// <param name="file">The file being processed.</param>
     /// <param name="type">The track type (must map to a Matroska track element).</param>
-    /// <param name="batchConfig">The batch configuration containing track availability data.</param>
+    /// <param name="batchConfig">The batch configuration containing track intents.</param>
     private void AddTracksForFile(
         MkvPropeditArgumentsBuilder builder,
         ScannedFileInfo file,
@@ -105,69 +100,56 @@ public sealed partial class MkvPropeditArgumentsGenerator(ILogger<MkvPropeditArg
             return;
         }
 
-        // Per-file values (Name, Language, flags as scanned from this file).
-        var perFileTracks = batchConfig.GetTrackListForFile(file.Id, type);
+        var trackIntents = batchConfig.GetTrackListForType(type);
 
-        // Global tracks carry the modification intent (ShouldModify* flags).
-        var globalTracks = batchConfig.GetTrackListForType(type);
+        var scannedTracks = file.GetTracks(type);
 
-        foreach (var track in perFileTracks)
+        foreach (var intent in trackIntents)
         {
-            // Defensive: the initializer always expands global tracks to the maximum
-            // count, so this should not be true under normal operation.
-            if (track.Index >= globalTracks.Count)
-            {
-                LogPerFileTrackExceedsGlobalCount(file.Path, type, track.Index, globalTracks.Count);
-                continue;
-            }
-
-            var globalTrack = globalTracks[track.Index];
-
-            // Skip inert tracks (no requested modifications).
-            if (!(globalTrack.ShouldModifyLanguage ||
-                  globalTrack.ShouldModifyName ||
-                  globalTrack.ShouldModifyDefaultFlag ||
-                  globalTrack.ShouldModifyForcedFlag ||
-                  globalTrack.ShouldModifyEnabledFlag))
-            {
-                continue;
-            }
-
             // Check if this track actually exists in the file
-            if (!file.HasTrack(type, track.Index))
+            if (intent.Index < 0 || intent.Index >= scannedTracks.Count)
             {
-                // Track doesn't exist in this file, skip gracefully
+                LogTrackMissingInFile(file.Path, type, intent.Index);
+                continue;
+            }
+
+            if (!(intent.ShouldModifyLanguage ||
+                  intent.ShouldModifyName ||
+                  intent.ShouldModifyDefaultFlag ||
+                  intent.ShouldModifyForcedFlag ||
+                  intent.ShouldModifyEnabledFlag))
+            {
                 continue;
             }
 
             builder.AddTrack(tb =>
             {
                 // Track ID converted to 1-based indexing for mkvpropedit conventions.
-                tb.SetTrackId(track.Index + 1).SetTrackType(type);
+                tb.SetTrackId(intent.Index + 1).SetTrackType(type);
 
-                if (globalTrack.ShouldModifyLanguage)
+                if (intent.ShouldModifyLanguage)
                 {
-                    tb.WithLanguage(globalTrack.Language.Code);
+                    tb.WithLanguage(intent.Language.Code);
                 }
 
-                if (globalTrack.ShouldModifyName)
+                if (intent.ShouldModifyName)
                 {
-                    tb.WithName(globalTrack.Name);
+                    tb.WithName(intent.Name);
                 }
 
-                if (globalTrack.ShouldModifyDefaultFlag)
+                if (intent.ShouldModifyDefaultFlag)
                 {
-                    tb.WithIsDefault(globalTrack.Default);
+                    tb.WithIsDefault(intent.Default);
                 }
 
-                if (globalTrack.ShouldModifyForcedFlag)
+                if (intent.ShouldModifyForcedFlag)
                 {
-                    tb.WithIsForced(globalTrack.Forced);
+                    tb.WithIsForced(intent.Forced);
                 }
 
-                if (globalTrack.ShouldModifyEnabledFlag)
+                if (intent.ShouldModifyEnabledFlag)
                 {
-                    tb.WithIsEnabled(globalTrack.Enabled);
+                    tb.WithIsEnabled(intent.Enabled);
                 }
 
                 return tb;
