@@ -43,7 +43,7 @@
                       IsEnabled="{x:Bind ViewModel.SubtitleTracks.Count, Converter={StaticResource GreaterThanZeroConverter}, Mode=OneWay}"
                       PlaceholderText="{x:Bind ViewModel.SubtitleTracks, Converter={StaticResource EmptyStateToTextConverter}, ConverterParameter='No tracks|Select track'}">
                 <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="BatchConfig:TrackConfiguration">
+                    <DataTemplate x:DataType="BatchConfig:TrackIntent">
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>

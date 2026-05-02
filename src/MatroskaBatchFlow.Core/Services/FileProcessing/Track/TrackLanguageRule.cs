@@ -4,67 +4,65 @@ using MatroskaBatchFlow.Core.Models;
 namespace MatroskaBatchFlow.Core.Services.FileProcessing.Track;
 
 /// <summary>
-/// Analyzes per-file track languages and populates global UI properties with smart defaults.
-/// Per-file configurations are already populated by <see cref="BatchTrackConfigurationInitializer"/>.
-/// This rule determines what language to display in the UI based on all files.
+/// Analyzes per-file track languages and populates global TrackIntent properties with smart defaults.
+/// This rule determines what language to display in the UI based on all scanned files.
 /// </summary>
-public class TrackLanguageRule : IFileProcessingRule
+public class TrackLanguageRule(ILanguageProvider languageProvider) : IFileProcessingRule
 {
     public void Apply(ScannedFileInfo scannedFile, IBatchConfiguration batchConfig)
     {
         ArgumentNullException.ThrowIfNull(scannedFile);
         ArgumentNullException.ThrowIfNull(batchConfig);
 
-        // Per-file configs already populated by synchronizer - we just populate global UI
         foreach (var trackType in Enum.GetValues<TrackType>().Where(t => t.IsMatroskaTrackElement()))
         {
             var globalTracks = batchConfig.GetTrackListForType(trackType);
 
             for (int i = 0; i < globalTracks.Count; i++)
             {
-                // Collect languages from all files that have this track
-                var languages = batchConfig.FileConfigurations.Values
-                    .Select(fc => fc.GetTrackListForType(trackType))
+                // Resolve raw MediaInfo values before grouping so aliases such as "en" and "eng"
+                // are counted as the same canonical language.
+                var languages = batchConfig.FileList
+                    .Select(f => f.GetTracks(trackType))
                     .Where(tracks => i < tracks.Count)
-                    .Select(tracks => tracks[i].Language)
-                    .Where(lang => lang != null)
+                    .Select(tracks => languageProvider.Resolve(tracks[i].Language))
                     .ToList();
 
                 if (languages.Count == 0)
                     continue;
 
-                // Business logic: Use most common language, or Undetermined if no clear winner
                 globalTracks[i].Language = DetermineMostCommonLanguage(languages);
             }
         }
     }
 
     /// <summary>
-    /// Determines the most common language from a list of languages across multiple files.
+    /// Determines the most common normalized language across multiple files.
     /// </summary>
-    /// <param name="languages">List of languages from all files for a specific track position.</param>
-    /// <returns>The most frequently occurring language, or Undetermined if all languages differ equally.</returns>
+    /// <param name="languages">List of resolved languages from all files for a specific track position.</param>
+    /// <returns>The most frequently occurring language, or <see cref="MatroskaLanguageOption.Undetermined"/> if there is no clear winner.</returns>
     private static MatroskaLanguageOption DetermineMostCommonLanguage(List<MatroskaLanguageOption> languages)
     {
         if (languages.Count == 0)
             return MatroskaLanguageOption.Undetermined;
 
-        // If all files have the same language, use it
-        if (languages.Distinct().Count() == 1)
+        // If all languages are the same (including aliases), return that language immediately.
+        if (languages.Select(l => l.Iso639_2_b).Distinct(StringComparer.OrdinalIgnoreCase).Count() == 1)
             return languages[0];
 
-        // Find most common language
-        var languageGroups = languages
-            .GroupBy(l => l.Iso639_2_b)
+        // Group languages by their ISO 639-2/B code and find the most common one. 
+        // This handles cases where different aliases represent the same language.
+        var groups = languages
+            .GroupBy(l => l.Iso639_2_b, StringComparer.OrdinalIgnoreCase)
             .OrderByDescending(g => g.Count())
             .ToList();
 
-        // If there's a clear winner (more than half), use it
-        var mostCommon = languageGroups[0];
+        // If the most common language represents a majority, return it.
+        var mostCommon = groups[0];
         if (mostCommon.Count() > languages.Count / 2)
-            return mostCommon.First();
+            return languages.First(l => string.Equals(l.Iso639_2_b, mostCommon.Key, StringComparison.OrdinalIgnoreCase));
 
-        // Otherwise, no clear default - return Undetermined
+        // No language has a majority, return undetermined to avoid making an arbitrary choice.
         return MatroskaLanguageOption.Undetermined;
     }
 }

@@ -10,8 +10,8 @@ using NSubstitute;
 namespace MatroskaBatchFlow.Core.UnitTests.Services;
 
 /// <summary>
-/// Contains unit tests for the BatchTrackConfigurationInitializer class, verifying correct creation of
-/// per-file track configurations based on scanned file information.
+/// Contains unit tests for the BatchTrackConfigurationInitializer class, verifying correct expansion of
+/// global track intent collections based on scanned file information.
 /// </summary>
 public class BatchTrackConfigurationInitializerTests
 {
@@ -23,21 +23,18 @@ public class BatchTrackConfigurationInitializerTests
         return mockLanguageProvider;
     }
 
-    private static (IBatchConfiguration mockConfig, 
-                    Dictionary<Guid, FileTrackConfiguration> fileConfigs,
-                    ObservableCollection<TrackConfiguration> audioTracks,
-                    ObservableCollection<TrackConfiguration> videoTracks,
-                    ObservableCollection<TrackConfiguration> subtitleTracks) CreateMockConfig()
+    private static (IBatchConfiguration mockConfig,
+                    ObservableCollection<TrackIntent> audioTracks,
+                    ObservableCollection<TrackIntent> videoTracks,
+                    ObservableCollection<TrackIntent> subtitleTracks) CreateMockConfig()
     {
         var mockConfig = Substitute.For<IBatchConfiguration>();
-        var fileConfigs = new Dictionary<Guid, FileTrackConfiguration>();
-        var audioTracks = new ObservableCollection<TrackConfiguration>();
-        var videoTracks = new ObservableCollection<TrackConfiguration>();
-        var subtitleTracks = new ObservableCollection<TrackConfiguration>();
+        var audioTracks = new ObservableCollection<TrackIntent>();
+        var videoTracks = new ObservableCollection<TrackIntent>();
+        var subtitleTracks = new ObservableCollection<TrackIntent>();
         var mockComparer = Substitute.For<IScannedFileInfoPathComparer>();
         var fileList = new UniqueObservableCollection<ScannedFileInfo>(mockComparer);
-        
-        mockConfig.FileConfigurations.Returns(fileConfigs);
+
         mockConfig.AudioTracks.Returns(audioTracks);
         mockConfig.VideoTracks.Returns(videoTracks);
         mockConfig.SubtitleTracks.Returns(subtitleTracks);
@@ -45,24 +42,24 @@ public class BatchTrackConfigurationInitializerTests
         mockConfig.GetTrackListForType(TrackType.Audio).Returns(audioTracks);
         mockConfig.GetTrackListForType(TrackType.Video).Returns(videoTracks);
         mockConfig.GetTrackListForType(TrackType.Text).Returns(subtitleTracks);
-        
-        return (mockConfig, fileConfigs, audioTracks, videoTracks, subtitleTracks);
+
+        return (mockConfig, audioTracks, videoTracks, subtitleTracks);
     }
 
     private static BatchTrackConfigurationInitializer CreateInitializer(
-        IBatchConfiguration batchConfig, 
+        IBatchConfiguration batchConfig,
         ILanguageProvider? languageProvider = null)
     {
         languageProvider ??= CreateMockLanguageProvider();
-        var trackConfigFactory = new TrackConfigurationFactory(languageProvider);
-        return new BatchTrackConfigurationInitializer(batchConfig, trackConfigFactory, languageProvider);
+        var trackIntentFactory = new TrackIntentFactory(languageProvider);
+        return new BatchTrackConfigurationInitializer(batchConfig, trackIntentFactory);
     }
 
     [Fact]
-    public void Initialize_CreatesPerFileConfiguration()
+    public void Initialize_PopulatesGlobalTracks()
     {
         // Arrange
-        var (mockConfig, fileConfigs, audioTracks, _, _) = CreateMockConfig();
+        var (mockConfig, audioTracks, _, _) = CreateMockConfig();
         var initializer = CreateInitializer(mockConfig);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
@@ -77,11 +74,7 @@ public class BatchTrackConfigurationInitializerTests
         // Act
         initializer.Initialize(scannedFile, TrackType.Audio);
 
-        // Assert - Verify per-file configuration was created
-        Assert.True(fileConfigs.ContainsKey(scannedFile.Id));
-        Assert.Equal(3, fileConfigs[scannedFile.Id].AudioTracks.Count);
-        
-        // Verify global tracks were populated (first file)
+        // Assert - Global tracks should be populated
         Assert.Equal(3, audioTracks.Count);
     }
 
@@ -89,7 +82,7 @@ public class BatchTrackConfigurationInitializerTests
     public void Initialize_PopulatesMultipleTrackTypes()
     {
         // Arrange
-        var (mockConfig, fileConfigs, audioTracks, videoTracks, subtitleTracks) = CreateMockConfig();
+        var (mockConfig, audioTracks, videoTracks, subtitleTracks) = CreateMockConfig();
         var initializer = CreateInitializer(mockConfig);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
@@ -106,17 +99,11 @@ public class BatchTrackConfigurationInitializerTests
         // Act
         initializer.Initialize(scannedFile, TrackType.Audio, TrackType.Video, TrackType.Text);
 
-        // Assert
-        var fileConfig = fileConfigs[scannedFile.Id];
-        Assert.Equal(2, fileConfig.AudioTracks.Count);
-        Assert.Single(fileConfig.VideoTracks);
-        Assert.Equal(2, fileConfig.SubtitleTracks.Count);
-        
-        // Verify ScannedFileInfo has correct track counts
+        // Assert - Verify ScannedFileInfo has correct track counts
         Assert.Equal(2, scannedFile.AudioTrackCount);
         Assert.Equal(1, scannedFile.VideoTrackCount);
         Assert.Equal(2, scannedFile.SubtitleTrackCount);
-        
+
         // Verify global tracks populated
         Assert.Equal(2, audioTracks.Count);
         Assert.Single(videoTracks);
@@ -127,7 +114,7 @@ public class BatchTrackConfigurationInitializerTests
     public void Initialize_UpdatesGlobalTracksToMaximumCount()
     {
         // Arrange
-        var (mockConfig, fileConfigs, audioTracks, _, _) = CreateMockConfig();
+        var (mockConfig, audioTracks, _, _) = CreateMockConfig();
         var initializer = CreateInitializer(mockConfig);
 
         // First file - 2 audio tracks
@@ -157,17 +144,13 @@ public class BatchTrackConfigurationInitializerTests
 
         // Assert - Global tracks should now be 3 (maximum across all files)
         Assert.Equal(3, audioTracks.Count);
-        
-        // Per-file configurations should be correct
-        Assert.Equal(2, fileConfigs[firstFile.Id].AudioTracks.Count);
-        Assert.Equal(3, fileConfigs[secondFile.Id].AudioTracks.Count);
     }
 
     [Fact]
     public void Initialize_HandlesEmptyTrackTypes()
     {
         // Arrange
-        var (mockConfig, fileConfigs, _, _, _) = CreateMockConfig();
+        var (mockConfig, audioTracks, _, _) = CreateMockConfig();
         var initializer = CreateInitializer(mockConfig);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
@@ -180,28 +163,28 @@ public class BatchTrackConfigurationInitializerTests
         initializer.Initialize(scannedFile);
 
         // Assert - Nothing should be created (method returns early when trackTypes is empty)
-        Assert.False(fileConfigs.ContainsKey(scannedFile.Id));
+        Assert.Empty(audioTracks);
     }
 
     [Fact]
     public void Initialize_NullScannedFile_DoesNothing()
     {
         // Arrange
-        var (mockConfig, fileConfigs, _, _, _) = CreateMockConfig();
+        var (mockConfig, audioTracks, _, _) = CreateMockConfig();
         var initializer = CreateInitializer(mockConfig);
 
         // Act
         initializer.Initialize(null!, TrackType.Audio);
 
-        // Assert - No entries created
-        Assert.Empty(fileConfigs);
+        // Assert - No tracks created
+        Assert.Empty(audioTracks);
     }
 
     [Fact]
     public void Initialize_NullResult_DoesNothing()
     {
         // Arrange
-        var (mockConfig, fileConfigs, _, _, _) = CreateMockConfig();
+        var (mockConfig, audioTracks, _, _) = CreateMockConfig();
         var initializer = CreateInitializer(mockConfig);
 
         var scannedFile = new ScannedFileInfo(null!, "file.mkv");
@@ -209,15 +192,15 @@ public class BatchTrackConfigurationInitializerTests
         // Act
         initializer.Initialize(scannedFile, TrackType.Audio);
 
-        // Assert - No entries created
-        Assert.Empty(fileConfigs);
+        // Assert - No tracks created
+        Assert.Empty(audioTracks);
     }
 
     [Fact]
-    public void Initialize_EmptyMediaInfo_CreatesConfigWithoutTracks()
+    public void Initialize_EmptyMediaInfo_DoesNotAddTracks()
     {
         // Arrange
-        var (mockConfig, fileConfigs, _, _, _) = CreateMockConfig();
+        var (mockConfig, audioTracks, _, _) = CreateMockConfig();
         var initializer = CreateInitializer(mockConfig);
 
         // Create a MediaInfoResult with creating library but no tracks
@@ -229,17 +212,14 @@ public class BatchTrackConfigurationInitializerTests
 
         // Assert - ScannedFileInfo should have 0 audio tracks
         Assert.Equal(0, scannedFile.AudioTrackCount);
-        
-        // FileConfiguration should be created even with no tracks
-        Assert.True(fileConfigs.ContainsKey(scannedFile.Id));
-        Assert.Empty(fileConfigs[scannedFile.Id].AudioTracks);
+        Assert.Empty(audioTracks);
     }
 
     [Fact]
-    public void Initialize_PerFileTracksAreFileTrackValuesWithScannedData()
+    public void Initialize_GlobalTracksHaveCorrectScannedTrackInfo()
     {
         // Arrange
-        var (mockConfig, fileConfigs, _, _, _) = CreateMockConfig();
+        var (mockConfig, audioTracks, _, _) = CreateMockConfig();
         var initializer = CreateInitializer(mockConfig);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
@@ -253,45 +233,40 @@ public class BatchTrackConfigurationInitializerTests
         // Act
         initializer.Initialize(scannedFile, TrackType.Audio);
 
-        // Assert - per-file tracks are FileTrackValues initialized from the scan
-        var fileConfig = fileConfigs[scannedFile.Id];
-        Assert.Equal(2, fileConfig.AudioTracks.Count);
+        // Assert - global tracks have correct properties
+        Assert.Equal(2, audioTracks.Count);
 
-        Assert.Equal(TrackType.Audio, fileConfig.AudioTracks[0].Type);
-        Assert.Equal(0, fileConfig.AudioTracks[0].Index);
-        Assert.NotNull(fileConfig.AudioTracks[0].ScannedTrackInfo);
+        Assert.Equal(TrackType.Audio, audioTracks[0].Type);
+        Assert.Equal(0, audioTracks[0].Index);
+        Assert.NotNull(audioTracks[0].ScannedTrackInfo);
 
-        Assert.Equal(TrackType.Audio, fileConfig.AudioTracks[1].Type);
-        Assert.Equal(1, fileConfig.AudioTracks[1].Index);
-        Assert.NotNull(fileConfig.AudioTracks[1].ScannedTrackInfo);
+        Assert.Equal(TrackType.Audio, audioTracks[1].Type);
+        Assert.Equal(1, audioTracks[1].Index);
+        Assert.NotNull(audioTracks[1].ScannedTrackInfo);
     }
 
     [Fact]
-    public void Initialize_FilesAddedAfterUserConfigure_ReceiveFileTrackValues()
+    public void Initialize_DoesNotShrinkGlobalTracksWhenFewerTracksScanned()
     {
-        // Regression test for issue #85: files added after processing were skipped because
-        // per-file TrackConfiguration objects always had ShouldModify* = false.
-        // Now per-file tracks are FileTrackValues with no ShouldModify* fields,
-        // so the argument generator reads ShouldModify* from global tracks for every file.
         // Arrange
-        var (mockConfig, fileConfigs, audioTracks, _, _) = CreateMockConfig();
+        var (mockConfig, audioTracks, _, _) = CreateMockConfig();
         var initializer = CreateInitializer(mockConfig);
 
+        // First file - 3 audio tracks
         var firstFile = new ScannedFileInfo(
             new MediaInfoResultBuilder()
                 .WithCreatingLibrary()
+                .AddTrackOfType(TrackType.Audio)
+                .AddTrackOfType(TrackType.Audio)
                 .AddTrackOfType(TrackType.Audio)
                 .Build(),
             "file1.mkv"
         );
         mockConfig.FileList.Add(firstFile);
         initializer.Initialize(firstFile, TrackType.Audio);
+        Assert.Equal(3, audioTracks.Count);
 
-        // Simulate user enabling modifications on the global track
-        audioTracks[0].ShouldModifyLanguage = true;
-        audioTracks[0].ShouldModifyName = true;
-
-        // Add a second file after modifications were configured (this was the bug scenario)
+        // Second file - only 1 audio track
         var secondFile = new ScannedFileInfo(
             new MediaInfoResultBuilder()
                 .WithCreatingLibrary()
@@ -300,19 +275,9 @@ public class BatchTrackConfigurationInitializerTests
             "file2.mkv"
         );
         mockConfig.FileList.Add(secondFile);
-
-        // Act
         initializer.Initialize(secondFile, TrackType.Audio);
 
-        // Assert - second file receives FileTrackValues (not TrackConfiguration with ShouldModify* = false)
-        Assert.True(fileConfigs.ContainsKey(secondFile.Id));
-        var secondFileConfig = fileConfigs[secondFile.Id];
-        Assert.Single(secondFileConfig.AudioTracks);
-        Assert.Equal(TrackType.Audio, secondFileConfig.AudioTracks[0].Type);
-        Assert.Equal(0, secondFileConfig.AudioTracks[0].Index);
-
-        // Global tracks still hold the ShouldModify* flags set by the user
-        Assert.True(audioTracks[0].ShouldModifyLanguage);
-        Assert.True(audioTracks[0].ShouldModifyName);
+        // Assert - Global tracks should still be 3 (never shrinks)
+        Assert.Equal(3, audioTracks.Count);
     }
 }

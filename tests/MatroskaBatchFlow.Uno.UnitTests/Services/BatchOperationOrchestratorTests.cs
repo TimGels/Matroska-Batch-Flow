@@ -2,6 +2,7 @@ using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileProcessing;
+using MatroskaBatchFlow.Core.Services.FileProcessing.Track;
 using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Core.Services.Pipeline;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
@@ -94,13 +95,115 @@ public class BatchOperationOrchestratorTests
             Assert.Same(_filterDuplicatesStage, capturedStages[0]);
             Assert.Same(_scanFilesStage, capturedStages[1]);
             Assert.Same(_refreshStaleMetadataStage, capturedStages[2]);
-            Assert.Same(_initTrackConfigStage, capturedStages[3]);
-            Assert.Same(_addFilesStage, capturedStages[4]);
+            Assert.Same(_addFilesStage, capturedStages[3]);
+            Assert.Same(_initTrackConfigStage, capturedStages[4]);
             Assert.Same(_validateStage, capturedStages[5]);
         }
         finally
         {
             File.Delete(testFile);
+        }
+    }
+
+    [Fact]
+    public async Task ImportFilesAsync_AddsFilesBeforeApplyingTrackConfiguration()
+    {
+        IReadOnlyList<IPipelineStage>? capturedStages = null;
+        await _pipelineRunner.RunAsync(
+            Arg.Do<IReadOnlyList<IPipelineStage>>(s => capturedStages = s),
+            Arg.Any<PipelineContext>(),
+            Arg.Any<CancellationToken>());
+
+        var testFile = Path.GetTempFileName();
+        try
+        {
+            var orchestrator = CreateOrchestrator();
+            await orchestrator.ImportFilesAsync([new FileInfo(testFile)]);
+
+            Assert.NotNull(capturedStages);
+
+            var addFilesIndex = capturedStages.IndexOf(_addFilesStage);
+            var initializeIndex = capturedStages.IndexOf(_initTrackConfigStage);
+
+            Assert.True(addFilesIndex >= 0, "AddFilesToBatchStage should be part of the import pipeline.");
+            Assert.True(initializeIndex >= 0, "InitializeTrackConfigStage should be part of the import pipeline.");
+            Assert.True(
+                addFilesIndex < initializeIndex,
+                "Imported files must be added to the batch before track initialization runs so aggregate defaults can see the full batch.");
+        }
+        finally
+        {
+            File.Delete(testFile);
+        }
+    }
+
+    [Fact]
+    public async Task ImportFilesAsync_WhenImportedFilesDisagreeOnDefaultFlag_UsesAllImportedFilesForDerivedDefault()
+    {
+        var platformService = Substitute.For<IPlatformService>();
+        platformService.IsWindows().Returns(true);
+
+        var pathComparer = new ScannedFileInfoPathComparer(platformService);
+        var batchConfig = new BatchConfiguration(pathComparer, Substitute.For<ILogger<BatchConfiguration>>());
+        var fileListAdapter = new FileListAdapter(batchConfig, Substitute.For<ILogger<FileListAdapter>>());
+
+        var fileScanner = Substitute.For<IFileScanner>();
+        var languageProvider = Substitute.For<ILanguageProvider>();
+        languageProvider.Resolve(Arg.Any<string?>()).Returns(MatroskaLanguageOption.Undetermined);
+
+        var validationStateService = Substitute.For<IValidationStateService>();
+        validationStateService.RevalidateAsync().Returns(Task.CompletedTask);
+
+        var firstPath = Path.GetTempFileName();
+        var secondPath = Path.GetTempFileName();
+
+        try
+        {
+            var firstScannedFile = CreateScannedFile(firstPath, audioDefault: true);
+            var secondScannedFile = CreateScannedFile(secondPath, audioDefault: false);
+
+            var scannedFilesByPath = new Dictionary<string, ScannedFileInfo>(StringComparer.OrdinalIgnoreCase)
+            {
+                [firstPath] = firstScannedFile,
+                [secondPath] = secondScannedFile,
+            };
+
+            fileScanner.ScanAsync(Arg.Any<FileInfo[]>(), Arg.Any<IProgress<(int current, int total)>>())
+                .Returns(callInfo =>
+                {
+                    var files = callInfo.Arg<FileInfo[]>();
+                    return files.Select(file => scannedFilesByPath[file.FullName]).ToList();
+                });
+
+            var orchestrator = new BatchOperationOrchestrator(
+                new ExecutingPipelineRunner(),
+                new FilterDuplicateFilesStage(batchConfig, platformService, Substitute.For<ILogger<FilterDuplicateFilesStage>>()),
+                new ScanFilesStage(fileScanner, Substitute.For<ILogger<ScanFilesStage>>()),
+                new RefreshStaleMetadataStage(fileScanner, batchConfig, pathComparer, Substitute.For<ILogger<RefreshStaleMetadataStage>>()),
+                new InitializeTrackConfigStage(
+                    new BatchTrackConfigurationInitializer(batchConfig, new TrackIntentFactory(languageProvider)),
+                    new FileProcessingEngine([new TrackDefaultRule()]),
+                    batchConfig),
+                new AddFilesToBatchStage(fileListAdapter),
+                new RemoveFilesFromBatchStage(fileListAdapter),
+                new ValidateStage(validationStateService),
+                Substitute.For<ILogger<BatchOperationOrchestrator>>());
+
+            await orchestrator.ImportFilesAsync([new FileInfo(firstPath), new FileInfo(secondPath)]);
+
+            Assert.Equal(2, batchConfig.FileList.Count);
+
+            var audioTrack = Assert.Single(batchConfig.AudioTracks);
+
+            Assert.True(firstScannedFile.GetTracks(TrackType.Audio)[0].Default);
+            Assert.False(secondScannedFile.GetTracks(TrackType.Audio)[0].Default);
+            Assert.False(audioTrack.Default);
+        }
+        finally
+        {
+            File.Delete(firstPath);
+            File.Delete(secondPath);
+            fileListAdapter.Dispose();
         }
     }
 
@@ -217,11 +320,34 @@ public class BatchOperationOrchestratorTests
             _logger);
     }
 
-    private static ScannedFileInfo CreateScannedFile(string path)
+    private sealed class ExecutingPipelineRunner : IPipelineRunner
+    {
+        public async Task RunAsync(IReadOnlyList<IPipelineStage> stages, PipelineContext context, CancellationToken ct = default)
+        {
+            foreach (var stage in stages)
+            {
+                ct.ThrowIfCancellationRequested();
+
+                if (context.IsAborted)
+                {
+                    break;
+                }
+
+                await stage.ExecuteAsync(context, progress: null, ct);
+            }
+        }
+    }
+
+    private static ScannedFileInfo CreateScannedFile(string path, bool audioDefault = false)
     {
         var builder = new MediaInfoResultBuilder()
             .AddTrackOfType(TrackType.Video)
-            .AddTrackOfType(TrackType.Audio);
+            .AddTrack(new TrackInfoBuilder()
+                .WithType(TrackType.Audio)
+                .WithStreamKindID(0)
+                .WithDefault(audioDefault)
+                .Build());
+
         return new ScannedFileInfo(builder.Build(), path);
     }
 }

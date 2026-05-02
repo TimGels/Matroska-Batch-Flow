@@ -50,7 +50,7 @@ public static class ServiceCollectionExtensions
 
             // Register application services
             services.AddSingleton<ILogLevelService, LogLevelService>();
-            services.AddSingleton<ITrackConfigurationFactory, TrackConfigurationFactory>();
+            services.AddSingleton<ITrackIntentFactory, TrackIntentFactory>();
             services.AddSingleton<IBatchTrackConfigurationInitializer, BatchTrackConfigurationInitializer>();
             services.AddSingleton<IValidationSettingsService, ValidationSettingsService>();
             services.AddSingleton<IValidationStateService, ValidationStateService>();
@@ -96,7 +96,6 @@ public static class ServiceCollectionExtensions
         public IServiceCollection AddFileProcessingRules()
         {
             services.AddSingleton<IFileProcessingEngine, FileProcessingEngine>();
-            services.AddSingleton<IFileProcessingRule, TrackPositionRule>();
             services.AddSingleton<IFileProcessingRule, SubtitleTrackNamingRule>();
             services.AddSingleton<IFileProcessingRule, AudioTrackNamingRule>();
             services.AddSingleton<IFileProcessingRule, VideoTrackNamingRule>();

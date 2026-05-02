@@ -60,6 +60,16 @@ public partial class FileProcessingOrchestrator : IFileProcessingOrchestrator
 
     /// <inheritdoc/>
     public async Task<FileProcessingReport> ProcessFileAsync(FileProcessingReport fileReport, CancellationToken ct = default)
+        => await ProcessFileCoreAsync(fileReport, ct);
+
+    /// <summary>
+    /// Processes a single file report.
+    /// </summary>
+    /// <param name="fileReport">The file report being processed.</param>
+    /// <param name="ct">Cancellation token.</param>
+    private async Task<FileProcessingReport> ProcessFileCoreAsync(
+        FileProcessingReport fileReport,
+        CancellationToken ct)
     {
         // If already running, return existing report.
         if (fileReport.Status == ProcessingStatus.Running)
@@ -147,12 +157,19 @@ public partial class FileProcessingOrchestrator : IFileProcessingOrchestrator
     public async Task<List<FileProcessingReport>> ProcessAllAsync(IEnumerable<ScannedFileInfo> scannedFiles, CancellationToken ct = default)
     {
         List<FileProcessingReport> reports = EnrollFiles(scannedFiles);
+        
+        // Skip timer and logging if there are no files to process.
+        if (reports.Count == 0)
+        {
+            return reports;
+        }
+
         LogBatchStart(reports.Count);
 
         var stopwatch = Stopwatch.StartNew();
         foreach (var report in reports)
         {
-            await ProcessFileAsync(report, ct);       
+            await ProcessFileCoreAsync(report, ct);
         }
         stopwatch.Stop();
 

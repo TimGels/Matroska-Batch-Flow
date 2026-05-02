@@ -9,7 +9,7 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 
 public partial class VideoViewModel : TrackViewModelBase
 {
-    public ObservableCollection<TrackConfiguration> VideoTracks
+    public ObservableCollection<TrackIntent> VideoTracks
     {
         get => _tracks;
         set
@@ -39,7 +39,7 @@ public partial class VideoViewModel : TrackViewModelBase
     }
 
     /// <inheritdoc />
-    protected override IList<TrackConfiguration> GetTracks() => VideoTracks;
+    protected override IList<TrackIntent> GetTracks() => VideoTracks;
 
     /// <inheritdoc />
     protected override TrackType GetTrackType() => TrackType.Video;
@@ -79,16 +79,16 @@ public partial class VideoViewModel : TrackViewModelBase
     /// items.</param>
     private void OnBatchConfigurationVideoTracksChanged(object? sender, NotifyCollectionChangedEventArgs eventArgs)
     {
-        void Subscribe(IEnumerable<TrackConfiguration>? items) =>
+        void Subscribe(IEnumerable<TrackIntent>? items) =>
             items?.ToList().ForEach(t => t.PropertyChanged += OnTrackPropertyChanged);
 
-        void Unsubscribe(IEnumerable<TrackConfiguration>? items) =>
+        void Unsubscribe(IEnumerable<TrackIntent>? items) =>
             items?.ToList().ForEach(t => t.PropertyChanged -= OnTrackPropertyChanged);
 
         if (eventArgs.NewItems != null)
-            Subscribe(eventArgs.NewItems.Cast<TrackConfiguration>());
+            Subscribe(eventArgs.NewItems.Cast<TrackIntent>());
         if (eventArgs.OldItems != null)
-            Unsubscribe(eventArgs.OldItems.Cast<TrackConfiguration>());
+            Unsubscribe(eventArgs.OldItems.Cast<TrackIntent>());
 
         // Handle the Reset action, which indicates that the entire collection has been replaced or cleared.
         if (eventArgs.Action == NotifyCollectionChangedAction.Reset)

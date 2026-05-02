@@ -4,8 +4,7 @@ using MatroskaBatchFlow.Core.Models;
 namespace MatroskaBatchFlow.Core.Services.FileProcessing.Track.Name;
 
 /// <summary>
-/// Analyzes per-file audio track names and populates global UI properties with smart defaults.
-/// Per-file configurations are already populated by <see cref="BatchTrackConfigurationInitializer"/>.
+/// Analyzes per-file audio track names and populates global TrackIntent properties with smart defaults.
 /// This rule can implement advanced naming logic based on codec, channel layout, etc.
 /// </summary>
 public class AudioTrackNamingRule : IFileProcessingRule
@@ -22,43 +21,60 @@ public class AudioTrackNamingRule : IFileProcessingRule
         if (scannedFile?.Result?.Media?.Track == null || batchConfig == null)
             return;
 
-        // Per-file configs already populated by synchronizer - we just populate global UI
         var globalTracks = batchConfig.GetTrackListForType(TrackType.Audio);
 
         for (int i = 0; i < globalTracks.Count; i++)
         {
-            // Collect names from all files that have this track
-            var names = batchConfig.FileConfigurations.Values
-                .Select(fc => fc.GetTrackListForType(TrackType.Audio))
-                .Where(tracks => i < tracks.Count)
-                .Select(tracks => tracks[i].Name)
-                .Where(name => !string.IsNullOrWhiteSpace(name))
-                .Distinct()
-                .ToList();
+            // Gather all track names for this index across files to determine a common name.
+            var names = GetDistinctAudioTrackNames(batchConfig.FileList, i);
 
-            // Business logic: Use common name if all files agree, otherwise use most common or empty
             if (names.Count == 1)
             {
                 globalTracks[i].Name = names[0];
             }
             else if (names.Count > 0)
             {
-                // Multiple different names - use most common
+                // If multiple distinct names exist, attempt to find the most common one to use as a default.
                 var mostCommonName = names
                     .GroupBy(n => n)
                     .OrderByDescending(g => g.Count())
                     .First()
                     .Key;
+
                 globalTracks[i].Name = mostCommonName;
             }
-
-            // TODO: Future enhancement - generate smart names based on codec/channel layout if no title exists
-            //var format = track.Format ?? string.Empty;
-            //var layout = track.ChannelLayout ?? string.Empty;
-            //    : $"{layoutName} {format}";
-
-            //if (!int.TryParse(track.StreamKindPos, out int position))
-            //    continue;
         }
+    }
+
+    /// <summary>
+    /// Retrieves a list of unique audio track names from a collection of scanned files based on the specified track
+    /// index.
+    /// </summary>
+    /// <param name="files">A collection of <see cref="ScannedFileInfo"/> objects representing the files to analyze for audio track names.</param>
+    /// <param name="trackIndex">The zero-based index of the audio track to retrieve from each file's audio tracks.</param>
+    /// <returns>A list of distinct audio track names corresponding to the specified track index from the provided files. The
+    /// list may be empty if no valid audio tracks are found.</returns>
+    private static List<string> GetDistinctAudioTrackNames(IEnumerable<ScannedFileInfo> files, int trackIndex)
+    {
+        var names = new List<string>();
+
+        foreach (var file in files)
+        {
+            var audioTracks = file.GetTracks(TrackType.Audio);
+
+            if (trackIndex >= audioTracks.Count)
+            {
+                continue;
+            }
+
+            var name = audioTracks[trackIndex].Title;
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                names.Add(name);
+            }
+        }
+
+        // Multiple files may share the same title; callers only need unique candidates.
+        return names.Distinct().ToList();
     }
 }

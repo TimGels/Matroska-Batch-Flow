@@ -9,7 +9,7 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 
 public partial class AudioViewModel : TrackViewModelBase
 {
-    public ObservableCollection<TrackConfiguration> AudioTracks
+    public ObservableCollection<TrackIntent> AudioTracks
     {
         get => _tracks;
         set
@@ -39,7 +39,7 @@ public partial class AudioViewModel : TrackViewModelBase
     }
 
     /// <inheritdoc />
-    protected override IList<TrackConfiguration> GetTracks() => AudioTracks;
+    protected override IList<TrackIntent> GetTracks() => AudioTracks;
 
     /// <inheritdoc />
     protected override TrackType GetTrackType() => TrackType.Audio;
@@ -78,16 +78,16 @@ public partial class AudioViewModel : TrackViewModelBase
     /// performed and the items affected.</param>
     private void OnBatchConfigurationAudioTracksChanged(object? sender, NotifyCollectionChangedEventArgs eventArgs)
     {
-        void Subscribe(IEnumerable<TrackConfiguration>? items) =>
+        void Subscribe(IEnumerable<TrackIntent>? items) =>
             items?.ToList().ForEach(t => t.PropertyChanged += OnTrackPropertyChanged);
 
-        void Unsubscribe(IEnumerable<TrackConfiguration>? items) =>
+        void Unsubscribe(IEnumerable<TrackIntent>? items) =>
             items?.ToList().ForEach(t => t.PropertyChanged -= OnTrackPropertyChanged);
 
         if (eventArgs.NewItems != null)
-            Subscribe(eventArgs.NewItems.Cast<TrackConfiguration>());
+            Subscribe(eventArgs.NewItems.Cast<TrackIntent>());
         if (eventArgs.OldItems != null)
-            Unsubscribe(eventArgs.OldItems.Cast<TrackConfiguration>());
+            Unsubscribe(eventArgs.OldItems.Cast<TrackIntent>());
 
         if (eventArgs.Action == NotifyCollectionChangedAction.Reset)
         {

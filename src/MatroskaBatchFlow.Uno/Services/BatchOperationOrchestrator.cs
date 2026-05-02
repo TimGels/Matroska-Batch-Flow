@@ -44,8 +44,8 @@ public sealed partial class BatchOperationOrchestrator(
             filterDuplicatesStage,
             scanFilesStage,
             refreshStaleMetadataStage,
-            initTrackConfigStage,
             addFilesStage,
+            initTrackConfigStage,
             validateStage
         ], context);
     }

@@ -6,7 +6,6 @@ using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Utilities;
 using Microsoft.Extensions.Logging;
-using static MatroskaBatchFlow.Core.Models.MediaInfoResult.MediaInfo;
 
 namespace MatroskaBatchFlow.Core.Services;
 
@@ -30,12 +29,11 @@ public partial class BatchConfiguration : IBatchConfiguration
     /// same physical file, avoiding redundant processing during batch operations.</remarks>
     private readonly UniqueObservableCollection<ScannedFileInfo> _fileList;
     private readonly HashSet<Guid> _staleFileIds = [];
-    private ObservableCollection<TrackConfiguration> _audioTracks = [];
-    private ObservableCollection<TrackConfiguration> _videoTracks = [];
-    private ObservableCollection<TrackConfiguration> _subtitleTracks = [];
-    private static readonly ImmutableList<TrackConfiguration> _emptyTrackList = [];
+    private ObservableCollection<TrackIntent> _audioTracks = [];
+    private ObservableCollection<TrackIntent> _videoTracks = [];
+    private ObservableCollection<TrackIntent> _subtitleTracks = [];
+    private static readonly ImmutableList<TrackIntent> _emptyTrackList = [];
     private string _mkvpropeditArguments = string.Empty;
-    private Dictionary<Guid, FileTrackConfiguration> _fileConfigurations = [];
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler? StateChanged;
@@ -67,26 +65,26 @@ public partial class BatchConfiguration : IBatchConfiguration
     }
 
     /// <summary>
-    /// Handles changes to an <see cref="ObservableCollection{T}"/> of <see cref="TrackConfiguration"/> objects and
+    /// Handles changes to an <see cref="ObservableCollection{T}"/> of <see cref="TrackIntent"/> objects and
     /// updates subscriptions to their <see cref="INotifyPropertyChanged.PropertyChanged"/> events accordingly.
     /// </summary>
-    /// <param name="collection">The collection of <see cref="TrackConfiguration"/> objects being tracked.</param>
+    /// <param name="collection">The collection of <see cref="TrackIntent"/> objects being tracked.</param>
     /// <param name="eventArgs">The event data describing the changes to the collection.</param>
-    private void TrackCollectionChanged(ObservableCollection<TrackConfiguration> collection, NotifyCollectionChangedEventArgs eventArgs)
+    private void TrackCollectionChanged(ObservableCollection<TrackIntent> collection, NotifyCollectionChangedEventArgs eventArgs)
     {
-        void Subscribe(IEnumerable<TrackConfiguration> trackConfigurations)
+        void Subscribe(IEnumerable<TrackIntent> trackIntents)
         {
-            foreach (var trackConfiguration in trackConfigurations)
+            foreach (var trackIntent in trackIntents)
             {
-                trackConfiguration.PropertyChanged += TrackConfiguration_PropertyChanged;
+                trackIntent.PropertyChanged += TrackIntent_PropertyChanged;
             }
         }
 
-        void Unsubscribe(IEnumerable<TrackConfiguration> trackConfigurations)
+        void Unsubscribe(IEnumerable<TrackIntent> trackIntents)
         {
-            foreach (var trackConfiguration in trackConfigurations)
+            foreach (var trackIntent in trackIntents)
             {
-                trackConfiguration.PropertyChanged -= TrackConfiguration_PropertyChanged;
+                trackIntent.PropertyChanged -= TrackIntent_PropertyChanged;
             }
         }
 
@@ -97,26 +95,26 @@ public partial class BatchConfiguration : IBatchConfiguration
             case NotifyCollectionChangedAction.Add:
                 if (eventArgs.NewItems?.Count > 0)
                 {
-                    Subscribe(eventArgs.NewItems.Cast<TrackConfiguration>());
+                    Subscribe(eventArgs.NewItems.Cast<TrackIntent>());
                     stateChanged = true;
                 }
                 break;
             case NotifyCollectionChangedAction.Remove:
                 if (eventArgs.OldItems?.Count > 0)
                 {
-                    Unsubscribe(eventArgs.OldItems.Cast<TrackConfiguration>());
+                    Unsubscribe(eventArgs.OldItems.Cast<TrackIntent>());
                     stateChanged = true;
                 }
                 break;
             case NotifyCollectionChangedAction.Replace:
                 if (eventArgs.OldItems?.Count > 0)
                 {
-                    Unsubscribe(eventArgs.OldItems.Cast<TrackConfiguration>());
+                    Unsubscribe(eventArgs.OldItems.Cast<TrackIntent>());
                 }
 
                 if (eventArgs.NewItems?.Count > 0)
                 {
-                    Subscribe(eventArgs.NewItems.Cast<TrackConfiguration>());
+                    Subscribe(eventArgs.NewItems.Cast<TrackIntent>());
                 }
 
                 stateChanged = true;
@@ -137,7 +135,7 @@ public partial class BatchConfiguration : IBatchConfiguration
         }
     }
 
-    private void TrackConfiguration_PropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
+    private void TrackIntent_PropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
         OnStateChanged();
     }
@@ -223,7 +221,7 @@ public partial class BatchConfiguration : IBatchConfiguration
 
     public UniqueObservableCollection<ScannedFileInfo> FileList => _fileList;
 
-    public ObservableCollection<TrackConfiguration> AudioTracks
+    public ObservableCollection<TrackIntent> AudioTracks
     {
         get => _audioTracks;
         set
@@ -236,7 +234,7 @@ public partial class BatchConfiguration : IBatchConfiguration
         }
     }
 
-    public ObservableCollection<TrackConfiguration> VideoTracks
+    public ObservableCollection<TrackIntent> VideoTracks
     {
         get => _videoTracks;
         set
@@ -249,7 +247,7 @@ public partial class BatchConfiguration : IBatchConfiguration
         }
     }
 
-    public ObservableCollection<TrackConfiguration> SubtitleTracks
+    public ObservableCollection<TrackIntent> SubtitleTracks
     {
         get => _subtitleTracks;
         set
@@ -275,19 +273,6 @@ public partial class BatchConfiguration : IBatchConfiguration
         }
     }
 
-    public Dictionary<Guid, FileTrackConfiguration> FileConfigurations
-    {
-        get => _fileConfigurations;
-        set
-        {
-            if (!ReferenceEquals(_fileConfigurations, value))
-            {
-                _fileConfigurations = value;
-                OnPropertyChanged(nameof(FileConfigurations));
-            }
-        }
-    }
-
     protected virtual void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -303,12 +288,11 @@ public partial class BatchConfiguration : IBatchConfiguration
         AudioTracks.Clear();
         VideoTracks.Clear();
         SubtitleTracks.Clear();
-        FileConfigurations.Clear();
         MkvpropeditArguments = string.Empty;
     }
 
     /// <inheritdoc />
-    public IList<TrackConfiguration> GetTrackListForType(TrackType trackType)
+    public IList<TrackIntent> GetTrackListForType(TrackType trackType)
     {
         return trackType switch
         {
@@ -317,19 +301,6 @@ public partial class BatchConfiguration : IBatchConfiguration
             TrackType.Text => SubtitleTracks,
             _ => _emptyTrackList
         };
-    }
-
-    /// <inheritdoc />
-    /// <exception cref="InvalidOperationException">Thrown if no per-file track configuration exists for the specified file ID.</exception>
-    public IList<FileTrackValues> GetTrackListForFile(Guid fileId, TrackType trackType)
-    {
-        // Prefer per-file configuration. If none exists, fail fast by throwing an exception.
-        if (FileConfigurations.TryGetValue(fileId, out var fileConfig))
-        {
-            return fileConfig.GetTrackListForType(trackType);
-        }
-
-        throw new InvalidOperationException($"No per-file track configuration found for file ID '{fileId}'.");
     }
 
     /// <summary>
@@ -351,14 +322,13 @@ public partial class BatchConfiguration : IBatchConfiguration
     /// <param name="eventArgs">The event data associated with the file removal.</param>
     private void OnFileRemoval(object? sender, NotifyCollectionChangedEventArgs eventArgs)
     {
-        // Clean up per-file state for removed files.
+        // Clean up stale tracking for removed files.
         // OldItems is populated for Remove/Replace but null for Reset (Clear).
         if (eventArgs.OldItems != null)
         {
             foreach (ScannedFileInfo file in eventArgs.OldItems)
             {
-                _staleFileIds.Remove(file.Id); // Clear any stale tracking for the removed file.
-                _fileConfigurations.Remove(file.Id); // Remove per-file track configuration for the removed file.
+                _staleFileIds.Remove(file.Id);
             }
         }
 
@@ -374,7 +344,6 @@ public partial class BatchConfiguration : IBatchConfiguration
         DeleteTrackStatisticsTags = false;
         ShouldModifyTrackStatisticsTags = false;
         ShouldModifyTitle = false;
-        FileConfigurations.Clear();
         ClearTracks();
     }
 
@@ -384,27 +353,6 @@ public partial class BatchConfiguration : IBatchConfiguration
     private void OnStateChanged()
     {
         StateChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    /// <summary>
-    /// Migrates file configuration from an old file ID to a new file ID.
-    /// Used when replacing a file with a re-scanned version that has a new Guid.
-    /// Preserves user's configuration while updating the file's metadata.
-    /// </summary>
-    /// <param name="oldFileId">The original file's unique identifier.</param>
-    /// <param name="newFileId">The new file's unique identifier.</param>
-    public void MigrateFileConfiguration(Guid oldFileId, Guid newFileId)
-    {
-        if (_fileConfigurations.TryGetValue(oldFileId, out var config))
-        {
-            _fileConfigurations.Remove(oldFileId);
-            _fileConfigurations[newFileId] = config;
-            LogFileConfigurationMigrated(oldFileId, newFileId);
-        }
-        else
-        {
-            LogMigrationSkippedNoConfiguration(oldFileId);
-        }
     }
 
     /// <summary>
@@ -452,212 +400,4 @@ public partial class BatchConfiguration : IBatchConfiguration
     /// <returns>An enumerable collection of files with stale metadata.</returns>
     public IEnumerable<ScannedFileInfo> GetStaleFiles()
         => _fileList.Where(f => _staleFileIds.Contains(f.Id));
-}
-
-/// <summary>
-/// Represents the configuration for a specific media track. Properties that are null should be seen as 
-/// missing from the scanned Matroska file.
-/// </summary>
-/// <remarks>Constructor parameter <paramref name="trackInfo"/> is needed to due generation error when using object initializer syntax.</remarks>
-/// <param name="trackInfo">The <see cref="TrackInfo"/> instance containing the scanned track information. Must not be null.</param>
-public sealed class TrackConfiguration(TrackInfo trackInfo) : INotifyPropertyChanged
-{
-    private TrackType _type;
-    private int _index;
-    /// <summary>
-    /// Represents a human-readable label for a track or segment.
-    /// <para>
-    /// For <see cref="TrackType.Audio"/>, <see cref="TrackType.Video"/>, and <see cref="TrackType.Text"/>,
-    /// this property corresponds to the track's <i>Name</i> element as defined in the Matroska specification.
-    /// </para>
-    /// <para>
-    /// For <see cref="TrackType.General"/>, this property represents the segment's <i>Title</i> element.
-    /// </para>
-    /// <para>
-    /// See the Matroska specification for details:
-    /// <list type="bullet">
-    ///   <item>
-    ///     <i>Name</i> (track): <see href="https://www.matroska.org/technical/elements.html#Name">specification</see>
-    ///   </item>
-    ///   <item>
-    ///     <i>Title</i> (segment): <see href="https://www.matroska.org/technical/elements.html#Title">specification</see>
-    ///   </item>
-    /// </list>
-    /// </para>
-    /// </summary>
-    private string _name = string.Empty;
-    private MatroskaLanguageOption _language = MatroskaLanguageOption.Undetermined;
-    private bool _default;
-    private bool _forced;
-    private bool _remove;
-    private bool _shouldModifyDefaultFlag = false;
-    private bool _shouldModifyForcedFlag = false;
-    private bool _shouldModifyEnabledFlag = false;
-    private bool _shouldModifyName = false;
-    private bool _shouldModifyLanguage = false;
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    public TrackInfo ScannedTrackInfo { get; init; } = trackInfo ?? throw new ArgumentNullException(nameof(trackInfo));
-
-    public TrackType Type
-    {
-        get => _type;
-        set
-        {
-            if (_type != value)
-            {
-                _type = value;
-                OnPropertyChanged(nameof(Type));
-            }
-        }
-    }
-
-    public int Index
-    {
-        get => _index;
-        set
-        {
-            if (_index != value)
-            {
-                _index = value;
-                OnPropertyChanged(nameof(Index));
-            }
-        }
-    }
-
-    public string Name
-    {
-        get => _name;
-        set
-        {
-            if (_name != value)
-            {
-                _name = value;
-                OnPropertyChanged(nameof(Name));
-            }
-        }
-    }
-
-    public bool ShouldModifyName
-    {
-        get => _shouldModifyName;
-        set
-        {
-            if (_shouldModifyName != value)
-            {
-                _shouldModifyName = value;
-                OnPropertyChanged(nameof(ShouldModifyName));
-            }
-        }
-    }
-
-    public MatroskaLanguageOption Language
-    {
-        get => _language;
-        set
-        {
-            if (_language != value)
-            {
-                _language = value;
-                OnPropertyChanged(nameof(Language));
-            }
-        }
-    }
-
-    public bool ShouldModifyLanguage
-    {
-        get => _shouldModifyLanguage;
-        set
-        {
-            if (_shouldModifyLanguage != value)
-            {
-                _shouldModifyLanguage = value;
-                OnPropertyChanged(nameof(ShouldModifyLanguage));
-            }
-        }
-    }
-
-    public bool Default
-    {
-        get => _default;
-        set
-        {
-            if (_default != value)
-            {
-                _default = value;
-                OnPropertyChanged(nameof(Default));
-            }
-        }
-    }
-
-    public bool ShouldModifyDefaultFlag
-    {
-        get => _shouldModifyDefaultFlag;
-        set
-        {
-            if (_shouldModifyDefaultFlag != value)
-            {
-                _shouldModifyDefaultFlag = value;
-                OnPropertyChanged(nameof(ShouldModifyDefaultFlag));
-            }
-        }
-    }
-
-    public bool Forced
-    {
-        get => _forced;
-        set
-        {
-            if (_forced != value)
-            {
-                _forced = value;
-                OnPropertyChanged(nameof(Forced));
-            }
-        }
-    }
-
-    public bool ShouldModifyForcedFlag
-    {
-        get => _shouldModifyForcedFlag;
-        set
-        {
-            if (_shouldModifyForcedFlag != value)
-            {
-                _shouldModifyForcedFlag = value;
-                OnPropertyChanged(nameof(ShouldModifyForcedFlag));
-            }
-        }
-    }
-
-    public bool Enabled
-    {
-        get => _remove;
-        set
-        {
-            if (_remove != value)
-            {
-                _remove = value;
-                OnPropertyChanged(nameof(Enabled));
-            }
-        }
-    }
-
-    public bool ShouldModifyEnabledFlag
-    {
-        get => _shouldModifyEnabledFlag;
-        set
-        {
-            if (_shouldModifyEnabledFlag != value)
-            {
-                _shouldModifyEnabledFlag = value;
-                OnPropertyChanged(nameof(ShouldModifyEnabledFlag));
-            }
-        }
-    }
-
-    private void OnPropertyChanged(string propertyName)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
 }

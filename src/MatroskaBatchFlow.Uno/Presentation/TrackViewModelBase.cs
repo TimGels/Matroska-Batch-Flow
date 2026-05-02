@@ -10,7 +10,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
 {
     private readonly ILogger _logger;
     protected bool _suppressBatchConfigUpdate = false;
-    protected ObservableCollection<TrackConfiguration> _tracks = [];
+    protected ObservableCollection<TrackIntent> _tracks = [];
 
     protected ImmutableList<MatroskaLanguageOption> _languages;
 
@@ -27,14 +27,14 @@ public abstract partial class TrackViewModelBase : ObservableObject
         }
     }
 
-    private TrackConfiguration? _selectedTrack;
+    private TrackIntent? _selectedTrack;
 
-    public TrackConfiguration? SelectedTrack
+    public TrackIntent? SelectedTrack
     {
         get => _selectedTrack;
         set
         {
-            if (!EqualityComparer<TrackConfiguration?>.Default.Equals(_selectedTrack, value))
+            if (!ReferenceEquals(_selectedTrack, value))
             {
                 _selectedTrack = value;
                 OnPropertyChanged(nameof(SelectedTrack));
@@ -54,7 +54,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isDefaultTrack = value;
                 OnPropertyChanged(nameof(IsDefaultTrack));
-                UpdateBatchConfigTrackProperty(tc => tc.Default = value, ftv => ftv.Default = value);
+                UpdateTrackIntentProperty(intent => intent.Default = value);
             }
         }
     }
@@ -70,7 +70,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isDefaultFlagModificationEnabled = value;
                 OnPropertyChanged(nameof(IsDefaultFlagModificationEnabled));
-                UpdateGlobalModificationFlag(tc => tc.ShouldModifyDefaultFlag = value);
+                UpdateTrackIntentProperty(intent => intent.ShouldModifyDefaultFlag = value);
             }
         }
     }
@@ -86,7 +86,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isEnabledTrack = value;
                 OnPropertyChanged(nameof(IsEnabledTrack));
-                UpdateBatchConfigTrackProperty(tc => tc.Enabled = value, ftv => ftv.Enabled = value);
+                UpdateTrackIntentProperty(intent => intent.Enabled = value);
             }
         }
     }
@@ -102,7 +102,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isEnabledFlagModificationEnabled = value;
                 OnPropertyChanged(nameof(IsEnabledFlagModificationEnabled));
-                UpdateGlobalModificationFlag(tc => tc.ShouldModifyEnabledFlag = value);
+                UpdateTrackIntentProperty(intent => intent.ShouldModifyEnabledFlag = value);
             }
         }
     }
@@ -118,7 +118,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isForcedTrack = value;
                 OnPropertyChanged(nameof(IsForcedTrack));
-                UpdateBatchConfigTrackProperty(tc => tc.Forced = value, ftv => ftv.Forced = value);
+                UpdateTrackIntentProperty(intent => intent.Forced = value);
             }
         }
     }
@@ -134,7 +134,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isForcedFlagModificationEnabled = value;
                 OnPropertyChanged(nameof(IsForcedFlagModificationEnabled));
-                UpdateGlobalModificationFlag(tc => tc.ShouldModifyForcedFlag = value);
+                UpdateTrackIntentProperty(intent => intent.ShouldModifyForcedFlag = value);
             }
         }
     }
@@ -150,7 +150,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _trackName = value;
                 OnPropertyChanged(nameof(TrackName));
-                UpdateBatchConfigTrackProperty(tc => tc.Name = value, ftv => ftv.Name = value);
+                UpdateTrackIntentProperty(intent => intent.Name = value);
             }
         }
     }
@@ -166,7 +166,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isTrackNameModificationEnabled = value;
                 OnPropertyChanged(nameof(IsTrackNameModificationEnabled));
-                UpdateGlobalModificationFlag(tc => tc.ShouldModifyName = value);
+                UpdateTrackIntentProperty(intent => intent.ShouldModifyName = value);
             }
         }
     }
@@ -191,7 +191,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
                 }
 
                 MatroskaLanguageOption language = value ?? MatroskaLanguageOption.Undetermined;
-                UpdateBatchConfigTrackProperty(tc => tc.Language = language, ftv => ftv.Language = language);
+                UpdateTrackIntentProperty(intent => intent.Language = language);
             }
         }
     }
@@ -207,7 +207,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _isSelectedLanguageModificationEnabled = value;
                 OnPropertyChanged(nameof(IsSelectedLanguageModificationEnabled));
-                UpdateGlobalModificationFlag(tc => tc.ShouldModifyLanguage = value);
+                UpdateTrackIntentProperty(intent => intent.ShouldModifyLanguage = value);
             }
         }
     }
@@ -289,11 +289,11 @@ public abstract partial class TrackViewModelBase : ObservableObject
     }
 
     /// <summary>
-    /// Retrieves a collection of track configurations.
+    /// Retrieves a collection of track intents.
     /// </summary>
-    /// <returns>A list of <see cref="TrackConfiguration"/> objects representing the available tracks. 
+    /// <returns>A list of <see cref="TrackIntent"/> objects representing the available tracks. 
     /// If no tracks are available, an empty list is returned.</returns>
-    protected abstract IList<TrackConfiguration> GetTracks();
+    protected abstract IList<TrackIntent> GetTracks();
 
     /// <summary>
     /// Sets up event handlers for monitoring changes in the batch configuration and its specific tracks collection. 
@@ -309,12 +309,13 @@ public abstract partial class TrackViewModelBase : ObservableObject
     protected abstract void OnBatchConfigurationChanged(object? sender, PropertyChangedEventArgs eventArgs);
 
     /// <summary>
-    /// Handles property change notifications for the selected track and updates corresponding properties.
+    /// Handles property change notifications from a track intent and re-applies the selected track's properties.
     /// </summary>
-    /// <remarks>This method synchronizes the properties of the selected track with the associated UI state. 
-    /// It suppresses batch configuration updates during the synchronization process to prevent potential
-    /// recursion.</remarks>
-    /// <param name="sender">The source of the property change event, typically the selected track.</param>
+    /// <remarks>
+    /// The current implementation re-applies all bound properties whenever the selected track changes.
+    /// This keeps the view state simple and avoids per-property synchronization code.
+    /// </remarks>
+    /// <param name="sender">The source of the property change event, typically a <see cref="TrackIntent"/>.</param>
     /// <param name="eventArgs">The event data containing the name of the property that changed.</param>
     protected virtual void OnTrackPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
@@ -325,69 +326,29 @@ public abstract partial class TrackViewModelBase : ObservableObject
         if (!ReferenceEquals(sender, SelectedTrack))
             return;
 
-        // Suppress batch configuration updates while synchronizing properties to avoid (potential) recursion. 
+        // Re-apply all properties from the selected track.
+        // Suppress batch config updates to avoid write-back recursion.
         _suppressBatchConfigUpdate = true;
 
-        switch (eventArgs.PropertyName)
+        try
         {
-            case nameof(TrackConfiguration.Name):
-                TrackName = SelectedTrack.Name;
-                break;
-            case nameof(TrackConfiguration.Default):
-                IsDefaultTrack = SelectedTrack.Default;
-                break;
-            case nameof(TrackConfiguration.Forced):
-                IsForcedTrack = SelectedTrack.Forced;
-                break;
-            case nameof(TrackConfiguration.Enabled):
-                IsEnabledTrack = SelectedTrack.Enabled;
-                break;
-            case nameof(TrackConfiguration.Language):
-                SelectedLanguage = SelectedTrack.Language;
-                break;
-            case nameof(TrackConfiguration.ShouldModifyDefaultFlag):
-                IsDefaultFlagModificationEnabled = SelectedTrack.ShouldModifyDefaultFlag;
-                break;
-            case nameof(TrackConfiguration.ShouldModifyEnabledFlag):
-                IsEnabledFlagModificationEnabled = SelectedTrack.ShouldModifyEnabledFlag;
-                break;
-            case nameof(TrackConfiguration.ShouldModifyForcedFlag):
-                IsForcedFlagModificationEnabled = SelectedTrack.ShouldModifyForcedFlag;
-                break;
-            case nameof(TrackConfiguration.ShouldModifyName):
-                IsTrackNameModificationEnabled = SelectedTrack.ShouldModifyName;
-                break;
-            case nameof(TrackConfiguration.ShouldModifyLanguage):
-                IsSelectedLanguageModificationEnabled = SelectedTrack.ShouldModifyLanguage;
-                break;
+            ApplyTrackProperties(SelectedTrack);
         }
-
-        _suppressBatchConfigUpdate = false;
+        finally
+        {
+            _suppressBatchConfigUpdate = false;
+        }
     }
 
     /// <summary>
-    /// Updates the properties of the currently selected track in the batch configuration using the provided update action.
+    /// Updates a property on the selected track intent, guarded by the suppression flag.
     /// </summary>
-    /// <remarks>
-    /// This method applies the provided update actions to both:
-    /// <list type="bullet">
-    /// <item>The global track collection (used for UI display) - triggers PropertyChanged which fires StateChanged</item>
-    /// <item>All per-file track value collections (used for command generation) - updated silently</item>
-    /// </list>
-    /// The global track update will trigger the StateChanged event through its PropertyChanged handler,
-    /// ensuring the UI and command generation stay synchronized.
-    /// If updates are suppressed or no track is selected, the method performs no operation.
-    /// </remarks>
-    /// <param name="globalUpdateAction">An <see cref="Action{TrackConfiguration}"/> delegate that defines the update to apply to the global track configuration.</param>
-    /// <param name="perFileUpdateAction">An <see cref="Action{FileTrackValues}"/> delegate that defines the update to apply to each per-file track value.</param>
-    protected virtual void UpdateBatchConfigTrackProperty(
-        Action<TrackConfiguration> globalUpdateAction,
-        Action<FileTrackValues> perFileUpdateAction)
+    /// <param name="updateAction">An <see cref="Action{TrackIntent}"/> delegate that updates the intent property.</param>
+    protected virtual void UpdateTrackIntentProperty(Action<TrackIntent> updateAction)
     {
-        // If suppressing updates, do nothing to avoid (potential) recursion.
         if (_suppressBatchConfigUpdate)
             return;
-        if (SelectedTrack == null || GetTracks() == null)
+        if (SelectedTrack is null || GetTracks().Count == 0)
             return;
 
         int index = SelectedTrack.Index;
@@ -395,58 +356,14 @@ public abstract partial class TrackViewModelBase : ObservableObject
         if (index < 0 || index >= tracks.Count)
             return;
 
-        // First, update all per-file value collections silently (without triggering events)
-        // This keeps per-file configurations in sync with the global track settings used for command generation
-        var trackType = SelectedTrack.Type;
-        foreach (var kvp in _batchConfiguration.FileConfigurations)
-        {
-            var fileConfig = kvp.Value;
-            var fileTracks = fileConfig.GetTrackListForType(trackType);
-
-            // Only update if this file actually has this track
-            if (index >= 0 && index < fileTracks.Count)
-            {
-                perFileUpdateAction(fileTracks[index]);
-            }
-        }
-
-        // Finally, apply the update action to the global track configuration
-        // This will trigger PropertyChanged -> TrackConfiguration_PropertyChanged -> StateChanged
-        // which updates CanProcessBatch and regenerates commands
-        globalUpdateAction(tracks[index]);
-    }
-
-    /// <summary>
-    /// Updates only the global <see cref="TrackConfiguration"/> for a modification flag (e.g. <c>ShouldModify*</c>).
-    /// Per-file track values do not carry modification flags, so only the global track is updated.
-    /// </summary>
-    /// <remarks>
-    /// If updates are suppressed or no track is selected, the method performs no operation.
-    /// </remarks>
-    /// <param name="updateAction">An <see cref="Action{TrackConfiguration}"/> delegate that sets the modification flag on the global track configuration.</param>
-    protected virtual void UpdateGlobalModificationFlag(Action<TrackConfiguration> updateAction)
-    {
-        // If suppressing updates, do nothing to avoid (potential) recursion.
-        if (_suppressBatchConfigUpdate)
-            return;
-        if (SelectedTrack == null || GetTracks() == null)
-            return;
-
-        int index = SelectedTrack.Index;
-        var tracks = GetTracks();
-        if (index < 0 || index >= tracks.Count)
-            return;
-
-        // Apply the update action to the global track configuration only
-        // This will trigger PropertyChanged -> TrackConfiguration_PropertyChanged -> StateChanged
         updateAction(tracks[index]);
     }
 
     /// <summary>
     /// Updates the bound view properties when the selected track changes to reflect the state of the newly selected track.
     /// </summary>
-    /// <param name="newSelectedTrack">The newly selected <see cref="TrackConfiguration"/>, or <see langword="null"/> if no track is currently selected.</param>
-    protected virtual void OnSelectedTrackChanged(TrackConfiguration? newSelectedTrack)
+    /// <param name="newSelectedTrack">The newly selected <see cref="TrackIntent"/>, or <see langword="null"/> if no track is currently selected.</param>
+    protected virtual void OnSelectedTrackChanged(TrackIntent? newSelectedTrack)
     {
         // Raise event to re-calculate IsTrackSelected
         OnPropertyChanged(nameof(IsTrackSelected));
@@ -455,19 +372,18 @@ public abstract partial class TrackViewModelBase : ObservableObject
     }
 
     /// <summary>
-    /// Updates the track-related properties based on the specified <see cref="TrackConfiguration"/> instance.
+    /// Updates the track-related properties based on the specified <see cref="TrackIntent"/> instance.
     /// </summary>
-    /// <param name="track">The <see cref="TrackConfiguration"/> instance containing the track properties to apply. If <paramref
-    /// name="track"/> is <see langword="null"/>, all track-related properties are reset to default values.</param>
-    private void ApplyTrackProperties(TrackConfiguration? track)
+    /// <param name="intent">The <see cref="TrackIntent"/> instance containing the track properties to apply. If <paramref
+    /// name="intent"/> is <see langword="null"/>, all track-related properties are reset to default values.</param>
+    private void ApplyTrackProperties(TrackIntent? intent)
     {
-        // Suppress batch config updates while synchronizing properties to avoid (potential) recursion.
+        // Suppress batch config updates while synchronizing properties to avoid recursion.
         _suppressBatchConfigUpdate = true;
 
         try
         {
-            // TODO: Need a better way to reset properties when no track is provided.
-            if (track is null)
+            if (intent is null)
             {
                 IsDefaultTrack = false;
                 IsEnabledTrack = true;
@@ -483,17 +399,17 @@ public abstract partial class TrackViewModelBase : ObservableObject
                 return;
             }
 
-            // Synchronize properties with the selected track.
-            IsDefaultTrack = track.Default;
-            IsEnabledTrack = track.Enabled;
-            IsForcedTrack = track.Forced;
-            TrackName = track.Name;
-            SelectedLanguage = track.Language;
-            IsDefaultFlagModificationEnabled = track.ShouldModifyDefaultFlag;
-            IsEnabledFlagModificationEnabled = track.ShouldModifyEnabledFlag;
-            IsForcedFlagModificationEnabled = track.ShouldModifyForcedFlag;
-            IsTrackNameModificationEnabled = track.ShouldModifyName;
-            IsSelectedLanguageModificationEnabled = track.ShouldModifyLanguage;
+            // Synchronize properties with the selected track intent.
+            IsDefaultTrack = intent.Default;
+            IsEnabledTrack = intent.Enabled;
+            IsForcedTrack = intent.Forced;
+            TrackName = intent.Name;
+            SelectedLanguage = intent.Language;
+            IsDefaultFlagModificationEnabled = intent.ShouldModifyDefaultFlag;
+            IsEnabledFlagModificationEnabled = intent.ShouldModifyEnabledFlag;
+            IsForcedFlagModificationEnabled = intent.ShouldModifyForcedFlag;
+            IsTrackNameModificationEnabled = intent.ShouldModifyName;
+            IsSelectedLanguageModificationEnabled = intent.ShouldModifyLanguage;
         }
         finally
         {

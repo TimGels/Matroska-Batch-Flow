@@ -27,9 +27,8 @@ public class VideoViewModelTests
         _logger = Substitute.For<ILogger<VideoViewModel>>();
 
         _languageProvider.Languages.Returns([]);
-        _batchConfiguration.VideoTracks.Returns(new ObservableCollection<TrackConfiguration>());
+        _batchConfiguration.VideoTracks.Returns(new ObservableCollection<TrackIntent>());
         _batchConfiguration.FileList.Returns(new UniqueObservableCollection<ScannedFileInfo>(Substitute.For<IScannedFileInfoPathComparer>()));
-        _batchConfiguration.FileConfigurations.Returns(new Dictionary<Guid, FileTrackConfiguration>());
     }
 
     [Fact]
@@ -42,10 +41,8 @@ public class VideoViewModelTests
             .Build();
         var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Video);
 
-        var videoTracks = new ObservableCollection<TrackConfiguration>
-        {
-            new TrackConfiguration(trackInfo) { Type = TrackType.Video, Index = 0, Name = "Track 1" }
-        };
+        var intent = new TrackIntent(trackInfo) { Type = TrackType.Video, Index = 0, Name = "Track 1" };
+        var videoTracks = new ObservableCollection<TrackIntent> { intent };
         _batchConfiguration.VideoTracks.Returns(videoTracks);
 
         // Act
@@ -66,10 +63,8 @@ public class VideoViewModelTests
             .Build();
         var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Video);
 
-        var videoTracks = new ObservableCollection<TrackConfiguration>
-        {
-            new TrackConfiguration(trackInfo) { Type = TrackType.Video, Index = 0, Name = "Track 1" }
-        };
+        var intent = new TrackIntent(trackInfo) { Type = TrackType.Video, Index = 0, Name = "Track 1" };
+        var videoTracks = new ObservableCollection<TrackIntent> { intent };
         _batchConfiguration.VideoTracks.Returns(videoTracks);
 
         // Act
@@ -145,7 +140,7 @@ public class VideoViewModelTests
     public void OnBatchConfigurationVideoTracksChanged_UpdatesVideoTracks()
     {
         // Arrange
-        var videoTracks = new ObservableCollection<TrackConfiguration>();
+        var videoTracks = new ObservableCollection<TrackIntent>();
         _batchConfiguration.VideoTracks.Returns(videoTracks);
 
         var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
@@ -156,7 +151,7 @@ public class VideoViewModelTests
             .AddTrackOfType(TrackType.Video)
             .Build();
         var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Video);
-        var newTrack = new TrackConfiguration(trackInfo) { Type = TrackType.Video, Index = 0, Name = "New Track" };
+        var newTrack = new TrackIntent(trackInfo) { Type = TrackType.Video, Index = 0, Name = "New Track" };
 
         // Act
         videoTracks.Add(newTrack);
@@ -169,7 +164,7 @@ public class VideoViewModelTests
     public void OnBatchConfigurationChanged_UpdatesVideoTracksWhenVideoTracksPropertyChanges()
     {
         // Arrange
-        var initialTracks = new ObservableCollection<TrackConfiguration>();
+        var initialTracks = new ObservableCollection<TrackIntent>();
         _batchConfiguration.VideoTracks.Returns(initialTracks);
 
         var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
@@ -180,10 +175,8 @@ public class VideoViewModelTests
             .Build();
         var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Video);
 
-        var newTracks = new ObservableCollection<TrackConfiguration>
-        {
-            new TrackConfiguration(trackInfo) { Type = TrackType.Video, Index = 0, Name = "Track 1" }
-        };
+        var intent = new TrackIntent(trackInfo) { Type = TrackType.Video, Index = 0, Name = "Track 1" };
+        var newTracks = new ObservableCollection<TrackIntent> { intent };
 
         // Act
         _batchConfiguration.VideoTracks.Returns(newTracks);
@@ -199,7 +192,7 @@ public class VideoViewModelTests
     public void OnBatchConfigurationChanged_DoesNotUpdateWhenOtherPropertiesChange()
     {
         // Arrange
-        var videoTracks = new ObservableCollection<TrackConfiguration>();
+        var videoTracks = new ObservableCollection<TrackIntent>();
         _batchConfiguration.VideoTracks.Returns(videoTracks);
 
         var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);

@@ -7,7 +7,7 @@ namespace MatroskaBatchFlow.Core.Services.Pipeline;
 /// </summary>
 /// <remarks>
 /// Stale files are files whose metadata may be outdated (e.g., modified externally since the last scan).
-/// This stage performs a single batch re-scan operation, migrates existing configurations, and clears stale flags.
+/// This stage performs a single batch re-scan operation, replaces stale file entries with fresh scans, and clears stale flags.
 /// If a re-scan fails for any file the error is logged and the stale flag is cleared to prevent repeated attempts.
 /// </remarks>
 public sealed partial class RefreshStaleMetadataStage(
@@ -46,7 +46,8 @@ public sealed partial class RefreshStaleMetadataStage(
 
                 if (freshScan != null)
                 {
-                    batchConfig.MigrateFileConfiguration(staleFile.Id, freshScan.Id);
+                    // TODO: Refreshing the scanned file updates FileList but does not reconcile batch-global TrackIntent state.
+                    // Re-running the structural initializer may be needed when refreshed metadata introduces new track slots, and any follow-up recomputation of derived defaults must avoid clobbering user edits.
                     batchConfig.FileList.Remove(staleFile);
                     batchConfig.FileList.Add(freshScan);
                     batchConfig.ClearStaleFlag(staleFile.Id);

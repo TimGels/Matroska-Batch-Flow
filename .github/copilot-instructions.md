@@ -3,7 +3,7 @@
 > **Audience**: These instructions are for AI coding assistants, not for human developers.  
 > **Human developers**: See [README.md](../README.md) for setup and contribution guidelines.
 
-> **Last Updated**: 2026-02-19  
+> **Last Updated**: 2026-04-28  
 > **Next Review**: When architecture changes, new patterns are introduced, or build commands change
 > 
 > **Maintenance**: When making significant code changes, update this file and Serena memories to keep them in sync with the codebase.
@@ -80,9 +80,9 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
   - Results are severity-based: Error, Warning, Information
   - Cross-file property comparison rules (e.g., `DefaultFlagConsistencyRule`, `ForcedFlagConsistencyRule`, `LanguageConsistencyRule`) use `RollingReferenceComparer` to handle batches where files have different track counts: for each track position, the first file that has that position serves as the rolling reference for all subsequent files
 
-- **Configuration Management**: `IBatchConfiguration` tracks file-level and track-level configurations
-  - `IBatchTrackConfigurationInitializer`: Initializes track configurations from scanned files
-  - `ITrackConfigurationFactory`: Creates track configurations by type (Video, Audio, Subtitle, General)
+- **Configuration Management**: `IBatchConfiguration` tracks file-level settings and global per-slot `TrackIntent` collections
+  - `IBatchTrackConfigurationInitializer`: Expands global track intent collections from scanned files
+  - `ITrackIntentFactory`: Creates `TrackIntent` instances from scanned track data
 
 #### Presentation Layer (MVVM + Messaging)
 - **Architecture**: MVVM with CommunityToolkit.Mvvm (source generators for commands/properties)
@@ -221,8 +221,8 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 ### Working with Track Configurations
 1. Track-specific ViewModels inherit from `TrackViewModelBase`
 2. Use `_suppressBatchConfigUpdate` flag when bulk-updating properties to prevent excessive batch config updates
-3. Track collections are `ObservableCollection<TrackConfiguration>` for change notifications
-4. Use `ITrackConfigurationFactory` to create track configurations by type
+3. Track collections are `ObservableCollection<TrackIntent>` for change notifications
+4. `TrackIntent` stores direct values (`Name`, `Language`, `Default`, `Forced`, `Enabled`) plus `ShouldModify*` flags
 
 ### Debugging Batch Processing
 1. Check `BatchExecutionReport` in `IBatchReportStore` for detailed results
