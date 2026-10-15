@@ -3,7 +3,7 @@
 > **Audience**: These instructions are for AI coding assistants, not for human developers.  
 > **Human developers**: See [README.md](../README.md) for setup and contribution guidelines.
 
-> **Last Updated**: 2026-04-28  
+> **Last Updated**: 2026-10-15
 > **Next Review**: When architecture changes, new patterns are introduced, or build commands change
 > 
 > **Maintenance**: When making significant code changes, update this file and Serena memories to keep them in sync with the codebase.
@@ -32,17 +32,23 @@ dotnet build MatroskaBatchFlow.sln
 
 ### Running
 ```powershell
+Tests use Microsoft.Testing.Platform, selected by `test.runner` in `global.json`.
+Use the .NET 10 SDK and MTP arguments, not VSTest `--filter`, `--logger`, or `--collect` arguments.
+
 # Run the application (automatically builds if needed)
 dotnet run --project src/MatroskaBatchFlow.Uno/MatroskaBatchFlow.Uno.csproj -f net10.0-windows10.0.19041
 ```
 
 ### Testing
-```powershell
-# Run all tests
-dotnet test
+dotnet test --project tests/MatroskaBatchFlow.Core.UnitTests/MatroskaBatchFlow.Core.UnitTests.csproj
+dotnet test --project tests/MatroskaBatchFlow.Uno.UnitTests/MatroskaBatchFlow.Uno.UnitTests.csproj
+dotnet test --project tests/MatroskaBatchFlow.Uno.IntegrationTests/MatroskaBatchFlow.Uno.IntegrationTests.csproj
 
-# Run a specific test project
-dotnet test tests/MatroskaBatchFlow.Core.UnitTests/MatroskaBatchFlow.Core.UnitTests.csproj
+# Run a specific test class
+dotnet test --filter-class "*BatchConfigurationTests"
+
+# Generate TRX results and Cobertura coverage reports
+dotnet test --report-xunit-trx --coverlet --coverlet-output-format cobertura
 dotnet test tests/MatroskaBatchFlow.Uno.UnitTests/MatroskaBatchFlow.Uno.UnitTests.csproj
 dotnet test tests/MatroskaBatchFlow.Uno.IntegrationTests/MatroskaBatchFlow.Uno.IntegrationTests.csproj
 
@@ -139,6 +145,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 
 ### Testing
 - **xUnit v3** for all test projects with `[Fact]` and `[Theory]` attributes
+- **Microsoft.Testing.Platform** for `dotnet test` on .NET 10, with `coverlet.MTP` for coverage and xUnit's built-in TRX reporter
 - **NSubstitute** for mocking
 - **Builder pattern** for test data construction (e.g., `MediaInfoResultBuilder`)
 - Builders marked with `[ExcludeFromCodeCoverage]`

@@ -196,12 +196,20 @@ dotnet run --project src/MatroskaBatchFlow.Uno/MatroskaBatchFlow.Uno.csproj -f n
 
 ### Testing
 
+Tests use Microsoft.Testing.Platform with the .NET 10 SDK, selected in `global.json`.
+
 ```powershell
 # Run all tests
 dotnet test
 
 # Run a specific test project. In this example, the core project unit tests.
-dotnet test tests/MatroskaBatchFlow.Core.UnitTests
+dotnet test --project tests/MatroskaBatchFlow.Core.UnitTests
+
+# Run a specific test class
+dotnet test --filter-class "*BatchConfigurationTests"
+
+# Generate TRX results and Cobertura coverage reports
+dotnet test --report-xunit-trx --coverlet --coverlet-output-format cobertura
 ```
 
 ## Contributing
