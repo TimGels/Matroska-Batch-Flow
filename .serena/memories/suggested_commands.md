@@ -8,6 +8,8 @@ Ensure you have:
 
 ## Building the Projects
 
+When building Release with `--no-restore`, first run `dotnet restore MatroskaBatchFlow.sln --property:Configuration=Release`. Uno's Debug restore enables DevServer build assets that cause UNOB0019 in optimized builds. The Release graph can retain the DevServer package entry with `IncludeAssets=None`; verify its build targets are not imported rather than requiring the package entry to be absent.
+
 ### Build Core Library
 ```powershell
 dotnet build src/MatroskaBatchFlow.Core/MatroskaBatchFlow.Core.csproj
@@ -62,6 +64,10 @@ Use the configured task: `publish-desktop`
 
 ## Testing
 
+Use the .NET 10 SDK. `global.json` selects Microsoft.Testing.Platform for xUnit v3.
+Use MTP arguments instead of VSTest `--filter`, `--logger`, and `--collect`.
+Coverage uses `coverlet.MTP`; do not exclude its compile assets with an `IncludeAssets` filter.
+
 ### Run All Tests
 ```powershell
 dotnet test
@@ -69,22 +75,23 @@ dotnet test
 
 ### Run Core Tests Only
 ```powershell
-dotnet test tests/MatroskaBatchFlow.Core/MatroskaBatchFlow.Core.Tests.csproj
+dotnet test --project tests/MatroskaBatchFlow.Core.UnitTests/MatroskaBatchFlow.Core.UnitTests.csproj
 ```
 
 ### Run Uno Tests Only
 ```powershell
-dotnet test tests/MatroskaBatchFlow.Uno/MatroskaBatchFlow.Uno.Tests.csproj
+dotnet test --project tests/MatroskaBatchFlow.Uno.UnitTests/MatroskaBatchFlow.Uno.UnitTests.csproj
+dotnet test --project tests/MatroskaBatchFlow.Uno.IntegrationTests/MatroskaBatchFlow.Uno.IntegrationTests.csproj
 ```
 
 ### Run Tests with Coverage
 ```powershell
-dotnet test --collect:"XPlat Code Coverage"
+dotnet test --report-xunit-trx --coverlet --coverlet-output-format cobertura
 ```
 
 ### Run Specific Test
 ```powershell
-dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
+dotnet test --filter-class "*BatchConfigurationTests"
 ```
 
 ## Cleaning
