@@ -10,6 +10,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="coverlet.MTP">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
         <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" />
         <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />

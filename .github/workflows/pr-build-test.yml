@@ -117,13 +117,13 @@ jobs:
       run: dotnet restore MatroskaBatchFlow.sln
 
     - name: Run Core unit tests
-      run: dotnet test tests/MatroskaBatchFlow.Core.UnitTests/MatroskaBatchFlow.Core.UnitTests.csproj --configuration Release --verbosity normal --logger "trx;LogFileName=core-tests.trx" --collect:"XPlat Code Coverage"
+      run: dotnet test --project tests/MatroskaBatchFlow.Core.UnitTests/MatroskaBatchFlow.Core.UnitTests.csproj --configuration Release --verbosity normal --report-xunit-trx --report-xunit-trx-filename core-tests.trx --coverlet --coverlet-output-format cobertura
 
     - name: Run Uno unit tests
-      run: dotnet test tests/MatroskaBatchFlow.Uno.UnitTests/MatroskaBatchFlow.Uno.UnitTests.csproj --configuration Release --verbosity normal --logger "trx;LogFileName=uno-tests.trx" --collect:"XPlat Code Coverage"
+      run: dotnet test --project tests/MatroskaBatchFlow.Uno.UnitTests/MatroskaBatchFlow.Uno.UnitTests.csproj --configuration Release --verbosity normal --report-xunit-trx --report-xunit-trx-filename uno-tests.trx --coverlet --coverlet-output-format cobertura
 
     - name: Run Uno integration tests
-      run: dotnet test tests/MatroskaBatchFlow.Uno.IntegrationTests/MatroskaBatchFlow.Uno.IntegrationTests.csproj --configuration Release --verbosity normal --logger "trx;LogFileName=integration-tests.trx" --collect:"XPlat Code Coverage"
+      run: dotnet test --project tests/MatroskaBatchFlow.Uno.IntegrationTests/MatroskaBatchFlow.Uno.IntegrationTests.csproj --configuration Release --verbosity normal --report-xunit-trx --report-xunit-trx-filename integration-tests.trx --coverlet --coverlet-output-format cobertura
 
     - name: Upload test results
       if: always()
@@ -138,7 +138,7 @@ jobs:
       uses: actions/upload-artifact@v6
       with:
         name: coverage-reports
-        path: '**/TestResults/**/coverage.cobertura.xml'
+        path: '**/TestResults/**/coverage.cobertura*.xml'
         retention-days: 7
 
   test-summary:
