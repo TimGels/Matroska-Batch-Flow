@@ -26,12 +26,12 @@ jobs:
     outputs:
       src: ${{ steps.filter.outputs.src }}
       docs: ${{ steps.filter.outputs.docs }}
-    
+
     steps:
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0
-    
+
     - uses: dorny/paths-filter@v3
       id: filter
       with:
@@ -55,11 +55,11 @@ jobs:
     needs: changes
     if: needs.changes.outputs.docs == 'true' && needs.changes.outputs.src == 'false'
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
-    
+
     - name: Documentation Check Complete
       run: echo "✅ Documentation-only changes, no build required"
 
@@ -68,16 +68,16 @@ jobs:
     needs: changes
     if: needs.changes.outputs.src == 'true'
     runs-on: windows-latest
-    
+
     strategy:
       fail-fast: false
       matrix:
-        target: 
+        target:
           - framework: net10.0-windows10.0.19041
             name: WinAppSDK
           - framework: net10.0-desktop
             name: Skia Desktop
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
@@ -103,7 +103,7 @@ jobs:
     name: Run Tests
     runs-on: windows-latest
     needs: build
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
@@ -146,11 +146,11 @@ jobs:
     runs-on: windows-latest
     needs: [changes, test]
     if: always() && needs.changes.outputs.src == 'true'
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
-    
+
     - name: Download all test results
       uses: actions/download-artifact@v6
       with:
