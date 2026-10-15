@@ -91,7 +91,7 @@ jobs:
       run: dotnet --info
 
     - name: Restore dependencies
-      run: dotnet restore MatroskaBatchFlow.sln
+      run: dotnet restore MatroskaBatchFlow.sln --property:Configuration=Release
 
     - name: Build Core library
       run: dotnet build src/MatroskaBatchFlow.Core/MatroskaBatchFlow.Core.csproj --configuration Release --no-restore
@@ -114,7 +114,7 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Restore dependencies
-      run: dotnet restore MatroskaBatchFlow.sln
+      run: dotnet restore MatroskaBatchFlow.sln --property:Configuration=Release
 
     - name: Run Core unit tests
       run: dotnet test --project tests/MatroskaBatchFlow.Core.UnitTests/MatroskaBatchFlow.Core.UnitTests.csproj --configuration Release --verbosity normal --report-xunit-trx --report-xunit-trx-filename core-tests.trx --coverlet --coverlet-output-format cobertura
