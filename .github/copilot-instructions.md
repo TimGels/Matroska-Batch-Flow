@@ -241,6 +241,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 ## Common Gotchas and Troubleshooting
 
 ### Build Issues
+- **UNOB0019 in Release CI builds**: Restore with `dotnet restore MatroskaBatchFlow.sln --property:Configuration=Release` before building Release with `--no-restore`. A default Debug restore enables Uno DevServer build assets, which cannot be used in optimized builds. Keep Release optimization enabled.
 - **Missing packages**: Run `dotnet restore` from solution root
 - **Wrong target framework**: Ensure `-f net10.0-windows10.0.19041` is specified
 - **Uno SDK version mismatch**: Check `global.json` for correct SDK version
