@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Presentation;
@@ -71,7 +72,7 @@ public class TrackModificationIntegrationTests
         batchConfig.StateChanged += (_, __) => tcs.TrySetResult(true);
 
         // Create SubtitleViewModel using real BatchConfiguration
-        var subtitleViewModel = new SubtitleViewModel(Substitute.For<ILogger<SubtitleViewModel>>(), mockLanguageProvider, batchConfig, mockUIPreferences);
+        var subtitleViewModel = new SubtitleViewModel(Substitute.For<ILogger<SubtitleViewModel>>(), mockLanguageProvider, batchConfig, Substitute.For<IFileProcessingEngine>(), mockUIPreferences);
 
         // Select track 17 (index 16) - only exists in file2
         Assert.Equal(17, batchConfig.SubtitleTracks.Count);

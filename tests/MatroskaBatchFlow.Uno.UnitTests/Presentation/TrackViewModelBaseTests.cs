@@ -2,6 +2,7 @@ using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
 using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
@@ -26,8 +27,8 @@ public class TrackViewModelBaseTests
     {
         private readonly IList<TrackIntent> _testTracks;
 
-        public TestTrackViewModel(ILogger logger, ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences, IList<TrackIntent> tracks)
-            : base(logger, languageProvider, batchConfiguration, uiPreferences)
+        public TestTrackViewModel(ILogger logger, ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IFileProcessingEngine fileProcessingEngine, IUIPreferencesService uiPreferences, IList<TrackIntent> tracks)
+            : base(logger, languageProvider, batchConfiguration, fileProcessingEngine, uiPreferences)
         {
             _testTracks = tracks;
             SetupEventHandlers();
@@ -65,7 +66,7 @@ public class TrackViewModelBaseTests
         var intent = new TrackIntent(trackInfo) { Type = TrackType.Text, Index = 0, Name = "Original" };
         var globalTracks = new List<TrackIntent> { intent };
 
-        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, Substitute.For<IFileProcessingEngine>(), mockUIPreferences, globalTracks);
         viewModel.SelectedTrack = globalTracks[0];
 
         // Act
@@ -100,7 +101,7 @@ public class TrackViewModelBaseTests
         };
         var globalTracks = new List<TrackIntent> { intent };
 
-        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, Substitute.For<IFileProcessingEngine>(), mockUIPreferences, globalTracks);
         viewModel.SelectedTrack = globalTracks[0];
 
         // Act - Set selected track to null
@@ -136,7 +137,7 @@ public class TrackViewModelBaseTests
         var intent = new TrackIntent(trackInfo) { Type = TrackType.Text, Index = 0 };
         var globalTracks = new List<TrackIntent> { intent };
 
-        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, Substitute.For<IFileProcessingEngine>(), mockUIPreferences, globalTracks);
 
         // Act
         viewModel.SelectedTrack = globalTracks[0];
@@ -155,7 +156,7 @@ public class TrackViewModelBaseTests
 
         var globalTracks = new List<TrackIntent>();
 
-        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, Substitute.For<IFileProcessingEngine>(), mockUIPreferences, globalTracks);
 
         // Act & Assert
         Assert.False(viewModel.IsTrackSelected);
@@ -178,7 +179,7 @@ public class TrackViewModelBaseTests
         var intent = new TrackIntent(trackInfo) { Type = TrackType.Text, Index = 0, Default = false };
         var globalTracks = new List<TrackIntent> { intent };
 
-        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, Substitute.For<IFileProcessingEngine>(), mockUIPreferences, globalTracks);
         viewModel.SelectedTrack = globalTracks[0];
 
         // Act
@@ -205,7 +206,7 @@ public class TrackViewModelBaseTests
         var intent = new TrackIntent(trackInfo) { Type = TrackType.Text, Index = 0, Forced = false };
         var globalTracks = new List<TrackIntent> { intent };
 
-        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, Substitute.For<IFileProcessingEngine>(), mockUIPreferences, globalTracks);
         viewModel.SelectedTrack = globalTracks[0];
 
         // Act
@@ -237,7 +238,7 @@ public class TrackViewModelBaseTests
         };
         var globalTracks = new List<TrackIntent> { intent };
 
-        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, globalTracks);
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, Substitute.For<IFileProcessingEngine>(), mockUIPreferences, globalTracks);
         viewModel.SelectedTrack = globalTracks[0];
 
         var newLanguage = new MatroskaLanguageOption("English", "en", "eng", "eng", "eng");
@@ -277,7 +278,7 @@ public class TrackViewModelBaseTests
 
         mockBatchConfig.FileList.Returns(fileList);
 
-        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, new List<TrackIntent>());
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, Substitute.For<IFileProcessingEngine>(), mockUIPreferences, new List<TrackIntent>());
 
         // Act
         int count0 = viewModel.GetTrackAvailabilityCount(0);
@@ -308,7 +309,7 @@ public class TrackViewModelBaseTests
 
         mockBatchConfig.FileList.Returns(fileList);
 
-        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, new List<TrackIntent>());
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, Substitute.For<IFileProcessingEngine>(), mockUIPreferences, new List<TrackIntent>());
 
         // Act
         string result = viewModel.GetTrackAvailabilityText(0);
@@ -328,7 +329,7 @@ public class TrackViewModelBaseTests
         var fileList = new UniqueObservableCollection<ScannedFileInfo>(Substitute.For<IScannedFileInfoPathComparer>());
         mockBatchConfig.FileList.Returns(fileList);
 
-        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, new List<TrackIntent>());
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, Substitute.For<IFileProcessingEngine>(), mockUIPreferences, new List<TrackIntent>());
 
         // Act & Assert
         Assert.Equal(0, viewModel.TotalFileCount);
@@ -345,7 +346,7 @@ public class TrackViewModelBaseTests
         mockUIPreferences.ShowTrackAvailabilityText.Returns(true);
 
         // Act
-        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, new List<TrackIntent>());
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, Substitute.For<IFileProcessingEngine>(), mockUIPreferences, new List<TrackIntent>());
 
         // Assert
         Assert.True(viewModel.ShowTrackAvailabilityText);
@@ -361,7 +362,7 @@ public class TrackViewModelBaseTests
 
         mockUIPreferences.ShowTrackAvailabilityText.Returns(false);
 
-        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, mockUIPreferences, new List<TrackIntent>());
+        var viewModel = new TestTrackViewModel(_mockLogger, mockLanguageProvider, mockBatchConfig, Substitute.For<IFileProcessingEngine>(), mockUIPreferences, new List<TrackIntent>());
         Assert.False(viewModel.ShowTrackAvailabilityText);
 
         // Act

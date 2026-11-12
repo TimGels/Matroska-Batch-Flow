@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using MatroskaBatchFlow.Core.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation.Controls;
@@ -100,6 +101,41 @@ public sealed partial class TrackSettingsControl : UserControl
             typeof(TrackSettingsControl),
             new PropertyMetadata(false));
 
+    public static readonly DependencyProperty IsDefaultUserSetProperty =
+        DependencyProperty.Register(
+            nameof(IsDefaultUserSet),
+            typeof(bool),
+            typeof(TrackSettingsControl),
+            new PropertyMetadata(false, OnIsDefaultUserSetChanged));
+
+    public static readonly DependencyProperty IsForcedUserSetProperty =
+        DependencyProperty.Register(
+            nameof(IsForcedUserSet),
+            typeof(bool),
+            typeof(TrackSettingsControl),
+            new PropertyMetadata(false, OnIsForcedUserSetChanged));
+
+    public static readonly DependencyProperty IsNameUserSetProperty =
+        DependencyProperty.Register(
+            nameof(IsNameUserSet),
+            typeof(bool),
+            typeof(TrackSettingsControl),
+            new PropertyMetadata(false, OnIsNameUserSetChanged));
+
+    public static readonly DependencyProperty IsLanguageUserSetProperty =
+        DependencyProperty.Register(
+            nameof(IsLanguageUserSet),
+            typeof(bool),
+            typeof(TrackSettingsControl),
+            new PropertyMetadata(false, OnIsLanguageUserSetChanged));
+
+    public static readonly DependencyProperty ResetPropertyCommandProperty =
+        DependencyProperty.Register(
+            nameof(ResetPropertyCommand),
+            typeof(ICommand),
+            typeof(TrackSettingsControl),
+            new PropertyMetadata(null));
+
     public bool IsDefaultTrack
     {
         get => (bool)GetValue(IsDefaultTrackProperty);
@@ -172,6 +208,36 @@ public sealed partial class TrackSettingsControl : UserControl
         set => SetValue(ShouldModifyLanguageProperty, value);
     }
 
+    public bool IsDefaultUserSet
+    {
+        get => (bool)GetValue(IsDefaultUserSetProperty);
+        set => SetValue(IsDefaultUserSetProperty, value);
+    }
+
+    public bool IsForcedUserSet
+    {
+        get => (bool)GetValue(IsForcedUserSetProperty);
+        set => SetValue(IsForcedUserSetProperty, value);
+    }
+
+    public bool IsNameUserSet
+    {
+        get => (bool)GetValue(IsNameUserSetProperty);
+        set => SetValue(IsNameUserSetProperty, value);
+    }
+
+    public bool IsLanguageUserSet
+    {
+        get => (bool)GetValue(IsLanguageUserSetProperty);
+        set => SetValue(IsLanguageUserSetProperty, value);
+    }
+
+    public ICommand? ResetPropertyCommand
+    {
+        get => (ICommand?)GetValue(ResetPropertyCommandProperty);
+        set => SetValue(ResetPropertyCommandProperty, value);
+    }
+
     private void DefaultYesRadioButton_Checked(object sender, RoutedEventArgs e)
     {
 
@@ -180,6 +246,30 @@ public sealed partial class TrackSettingsControl : UserControl
     private void DefaultNoRadioButton_Checked(object sender, RoutedEventArgs e)
     {
 
+    }
+
+    private static void OnIsDefaultUserSetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is TrackSettingsControl control)
+            control.ResetDefaultButton.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private static void OnIsForcedUserSetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is TrackSettingsControl control)
+            control.ResetForcedButton.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private static void OnIsNameUserSetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is TrackSettingsControl control)
+            control.ResetNameButton.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private static void OnIsLanguageUserSetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is TrackSettingsControl control)
+            control.ResetLanguageButton.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
     }
 
     /// <summary>
@@ -216,4 +306,16 @@ public sealed partial class TrackSettingsControl : UserControl
             string.Equals(lang.Iso639_3, input, StringComparison.OrdinalIgnoreCase))
             ?? MatroskaLanguageOption.Undetermined;
     }
+
+    private void ResetDefaultButton_Click(object sender, RoutedEventArgs e) =>
+        ResetPropertyCommand?.Execute(TrackIntentProperty.Default);
+
+    private void ResetForcedButton_Click(object sender, RoutedEventArgs e) =>
+        ResetPropertyCommand?.Execute(TrackIntentProperty.Forced);
+
+    private void ResetNameButton_Click(object sender, RoutedEventArgs e) =>
+        ResetPropertyCommand?.Execute(TrackIntentProperty.Name);
+
+    private void ResetLanguageButton_Click(object sender, RoutedEventArgs e) =>
+        ResetPropertyCommand?.Execute(TrackIntentProperty.Language);
 }

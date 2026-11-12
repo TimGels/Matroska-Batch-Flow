@@ -98,7 +98,12 @@
                                        ShouldModifyEnabledFlag="{x:Bind ViewModel.IsEnabledFlagModificationEnabled, Mode=TwoWay}"
                                        ShouldModifyName="{x:Bind ViewModel.IsTrackNameModificationEnabled, Mode=TwoWay}"
                                        ShouldModifyDefaultFlag="{x:Bind ViewModel.IsDefaultFlagModificationEnabled, Mode=TwoWay}"
-                                       ShouldModifyLanguage="{x:Bind ViewModel.IsSelectedLanguageModificationEnabled, Mode=TwoWay}" />
+                                       ShouldModifyLanguage="{x:Bind ViewModel.IsSelectedLanguageModificationEnabled, Mode=TwoWay}"
+                                       IsDefaultUserSet="{x:Bind ViewModel.IsDefaultUserSet, Mode=OneWay}"
+                                       IsForcedUserSet="{x:Bind ViewModel.IsForcedUserSet, Mode=OneWay}"
+                                       IsNameUserSet="{x:Bind ViewModel.IsNameUserSet, Mode=OneWay}"
+                                       IsLanguageUserSet="{x:Bind ViewModel.IsLanguageUserSet, Mode=OneWay}"
+                                       ResetPropertyCommand="{x:Bind ViewModel.ResetPropertyCommand}" />
 
     </Grid>
 </Page>

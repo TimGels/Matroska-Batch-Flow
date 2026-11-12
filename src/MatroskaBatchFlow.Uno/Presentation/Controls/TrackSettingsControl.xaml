@@ -35,6 +35,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <!--Default track-->
@@ -74,6 +75,19 @@
                     </Grid>
                 </ContentControl>
             </StackPanel>
+            <Button x:Name="ResetDefaultButton"
+                    Grid.Column="4"
+                    Grid.Row="1"
+                    ToolTipService.ToolTip="Reset to auto-detected value"
+                    Click="ResetDefaultButton_Click"
+                    Visibility="Collapsed"
+                    VerticalAlignment="Center"
+                    Margin="8,0,0,0"
+                    Padding="4"
+                    Background="Transparent"
+                    BorderThickness="0">
+                <FontIcon Glyph="&#xE777;" FontSize="14" />
+            </Button>
 
             <!--Forced track-->
             <ToggleSwitch Grid.Column="0"
@@ -112,6 +126,19 @@
                     </Grid>
                 </ContentControl>
             </StackPanel>
+            <Button x:Name="ResetForcedButton"
+                    Grid.Column="4"
+                    Grid.Row="2"
+                    ToolTipService.ToolTip="Reset to auto-detected value"
+                    Click="ResetForcedButton_Click"
+                    Visibility="Collapsed"
+                    VerticalAlignment="Center"
+                    Margin="8,0,0,0"
+                    Padding="4"
+                    Background="Transparent"
+                    BorderThickness="0">
+                <FontIcon Glyph="&#xE777;" FontSize="14" />
+            </Button>
 
             <!--Track name-->
             <ToggleSwitch Grid.Column="0"
@@ -127,12 +154,25 @@
                        VerticalAlignment="Center" />
             <TextBox Grid.Column="2"
                      Grid.Row="3"
-                     Grid.ColumnSpan="3"
+                     Grid.ColumnSpan="2"
                      ToolTipService.ToolTip="The name of this track."
                      MinWidth="500"
                      VerticalAlignment="Center"
                      Text="{x:Bind TrackName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      IsEnabled="{x:Bind ShouldModifyName, Mode=OneWay}" />
+            <Button x:Name="ResetNameButton"
+                    Grid.Column="4"
+                    Grid.Row="3"
+                    ToolTipService.ToolTip="Reset to auto-detected value"
+                    Click="ResetNameButton_Click"
+                    Visibility="Collapsed"
+                    VerticalAlignment="Center"
+                    Margin="8,0,0,0"
+                    Padding="4"
+                    Background="Transparent"
+                    BorderThickness="0">
+                <FontIcon Glyph="&#xE777;" FontSize="14" />
+            </Button>
 
             <!--Track Language-->
             <ToggleSwitch Grid.Column="0"
@@ -148,7 +188,7 @@
                        Text="Language: "
                        VerticalAlignment="Center" />
             <ComboBox Grid.Column="2"
-                      Grid.ColumnSpan="3"
+                      Grid.ColumnSpan="2"
                       Grid.Row="4"
                       ToolTipService.ToolTip="The language of this track."
                       x:Name="LanguagesComboBox"
@@ -159,6 +199,19 @@
                       SelectedItem="{x:Bind SelectedLanguage, Mode=TwoWay}"
                       IsEnabled="{x:Bind ShouldModifyLanguage, Mode=OneWay}"
                       TextSubmitted="LanguagesComboBox_TextSubmitted" />
+            <Button x:Name="ResetLanguageButton"
+                    Grid.Column="4"
+                    Grid.Row="4"
+                    ToolTipService.ToolTip="Reset to auto-detected value"
+                    Click="ResetLanguageButton_Click"
+                    Visibility="Collapsed"
+                    VerticalAlignment="Center"
+                    Margin="8,0,0,0"
+                    Padding="4"
+                    Background="Transparent"
+                    BorderThickness="0">
+                <FontIcon Glyph="&#xE777;" FontSize="14" />
+            </Button>
         </Grid>
     </Grid>
 </UserControl>

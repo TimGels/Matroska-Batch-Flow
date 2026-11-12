@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
@@ -28,8 +29,8 @@ public partial class SubtitleViewModel : TrackViewModelBase
     /// </summary>
     public bool IsFileListPopulated => _batchConfiguration.FileList.Count > 0;
 
-    public SubtitleViewModel(ILogger<SubtitleViewModel> logger, ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences)
-        : base(logger, languageProvider, batchConfiguration, uiPreferences)
+    public SubtitleViewModel(ILogger<SubtitleViewModel> logger, ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IFileProcessingEngine fileProcessingEngine, IUIPreferencesService uiPreferences)
+        : base(logger, languageProvider, batchConfiguration, fileProcessingEngine, uiPreferences)
     {
         SubtitleTracks = [.. _batchConfiguration.SubtitleTracks];
 
@@ -52,6 +53,10 @@ public partial class SubtitleViewModel : TrackViewModelBase
     {
         _batchConfiguration.PropertyChanged += OnBatchConfigurationChanged;
         _batchConfiguration.SubtitleTracks.CollectionChanged += OnBatchConfigurationSubtitleTracksChanged;
+
+        // Subscribe to PropertyChanged on any tracks that already exist at construction time.
+        foreach (var track in _batchConfiguration.SubtitleTracks)
+            track.PropertyChanged += OnTrackPropertyChanged;
 
         // Subscribe to FileList changes to update IsFileListPopulated property.
         _batchConfiguration.FileList.CollectionChanged += OnFileListChanged;

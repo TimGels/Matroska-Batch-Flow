@@ -3,6 +3,7 @@ using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
 using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
@@ -46,7 +47,7 @@ public class AudioViewModelTests
         _batchConfiguration.AudioTracks.Returns(audioTracks);
 
         // Act
-        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
 
         // Assert
         Assert.Single(viewModel.AudioTracks);
@@ -68,7 +69,7 @@ public class AudioViewModelTests
         _batchConfiguration.AudioTracks.Returns(audioTracks);
 
         // Act
-        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
 
         // Assert
         Assert.NotNull(viewModel.SelectedTrack);
@@ -89,7 +90,7 @@ public class AudioViewModelTests
         _batchConfiguration.FileList.Returns(fileList);
 
         // Act
-        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
 
         // Assert
         Assert.True(viewModel.IsFileListPopulated);
@@ -101,7 +102,7 @@ public class AudioViewModelTests
         // Arrange - fileList is empty by default
 
         // Act
-        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
 
         // Assert
         Assert.False(viewModel.IsFileListPopulated);
@@ -114,7 +115,7 @@ public class AudioViewModelTests
         var fileList = new UniqueObservableCollection<ScannedFileInfo>(Substitute.For<IScannedFileInfoPathComparer>());
         _batchConfiguration.FileList.Returns(fileList);
 
-        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
         Assert.False(viewModel.IsFileListPopulated);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
@@ -143,7 +144,7 @@ public class AudioViewModelTests
         var audioTracks = new ObservableCollection<TrackIntent>();
         _batchConfiguration.AudioTracks.Returns(audioTracks);
 
-        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
         Assert.Empty(viewModel.AudioTracks);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
@@ -167,7 +168,7 @@ public class AudioViewModelTests
         var initialTracks = new ObservableCollection<TrackIntent>();
         _batchConfiguration.AudioTracks.Returns(initialTracks);
 
-        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
             .WithCreatingLibrary()
@@ -195,7 +196,7 @@ public class AudioViewModelTests
         var audioTracks = new ObservableCollection<TrackIntent>();
         _batchConfiguration.AudioTracks.Returns(audioTracks);
 
-        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new AudioViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
         int audioTracksChangedCount = 0;
         viewModel.PropertyChanged += (s, e) =>
         {
