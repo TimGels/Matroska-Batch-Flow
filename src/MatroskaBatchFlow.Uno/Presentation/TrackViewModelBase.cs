@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
@@ -215,14 +216,41 @@ public abstract partial class TrackViewModelBase : ObservableObject
     public bool IsTrackSelected => SelectedTrack is not null && GetTracks().Count > 0;
 
     protected readonly IBatchConfiguration _batchConfiguration;
+    private readonly IFileProcessingEngine _fileProcessingEngine;
     private readonly IUIPreferencesService _uiPreferences;
 
     public bool ShowTrackAvailabilityText => _uiPreferences.ShowTrackAvailabilityText;
 
-    protected TrackViewModelBase(ILogger logger, ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IUIPreferencesService uiPreferences)
+    /// <summary>
+    /// Whether the selected track's name has been explicitly set by the user.
+    /// </summary>
+    public bool IsNameUserSet => SelectedTrack?.IsNameUserSet ?? false;
+
+    /// <summary>
+    /// Whether the selected track's language has been explicitly set by the user.
+    /// </summary>
+    public bool IsLanguageUserSet => SelectedTrack?.IsLanguageUserSet ?? false;
+
+    /// <summary>
+    /// Whether the selected track's default flag has been explicitly set by the user.
+    /// </summary>
+    public bool IsDefaultUserSet => SelectedTrack?.IsDefaultUserSet ?? false;
+
+    /// <summary>
+    /// Whether the selected track's forced flag has been explicitly set by the user.
+    /// </summary>
+    public bool IsForcedUserSet => SelectedTrack?.IsForcedUserSet ?? false;
+
+    /// <summary>
+    /// Whether the selected track's enabled flag has been explicitly set by the user.
+    /// </summary>
+    public bool IsEnabledUserSet => SelectedTrack?.IsEnabledUserSet ?? false;
+
+    protected TrackViewModelBase(ILogger logger, ILanguageProvider languageProvider, IBatchConfiguration batchConfiguration, IFileProcessingEngine fileProcessingEngine, IUIPreferencesService uiPreferences)
     {
         _logger = logger;
         _batchConfiguration = batchConfiguration;
+        _fileProcessingEngine = fileProcessingEngine;
         _uiPreferences = uiPreferences;
         _languages = languageProvider.Languages;
 
@@ -326,6 +354,26 @@ public abstract partial class TrackViewModelBase : ObservableObject
         if (!ReferenceEquals(sender, SelectedTrack))
             return;
 
+        // Update user-set flag exposure when the track's flags change.
+        switch (eventArgs.PropertyName)
+        {
+            case nameof(TrackIntent.IsNameUserSet):
+                OnPropertyChanged(nameof(IsNameUserSet));
+                break;
+            case nameof(TrackIntent.IsLanguageUserSet):
+                OnPropertyChanged(nameof(IsLanguageUserSet));
+                break;
+            case nameof(TrackIntent.IsDefaultUserSet):
+                OnPropertyChanged(nameof(IsDefaultUserSet));
+                break;
+            case nameof(TrackIntent.IsForcedUserSet):
+                OnPropertyChanged(nameof(IsForcedUserSet));
+                break;
+            case nameof(TrackIntent.IsEnabledUserSet):
+                OnPropertyChanged(nameof(IsEnabledUserSet));
+                break;
+        }
+
         // Re-apply all properties from the selected track.
         // Suppress batch config updates to avoid write-back recursion.
         _suppressBatchConfigUpdate = true;
@@ -364,6 +412,24 @@ public abstract partial class TrackViewModelBase : ObservableObject
     }
 
     /// <summary>
+    /// Resets the user-set flag for the specified property kind on the selected track and
+    /// re-runs the seed rules so the value is recomputed from the current batch file set.
+    /// </summary>
+    /// <param name="property">The track property to reset.</param>
+    [RelayCommand]
+    public void ResetProperty(TrackIntentProperty property)
+    {
+        if (SelectedTrack is null || _batchConfiguration.FileList.Count == 0)
+            return;
+
+        SelectedTrack.ResetUserSet(property);
+
+        // Re-run all processing rules so the cleared property gets re-seeded.
+        var referenceFile = _batchConfiguration.FileList[0];
+        _fileProcessingEngine.Apply(referenceFile, _batchConfiguration);
+    }
+
+    /// <summary>
     /// Updates the bound view properties when the selected track changes to reflect the state of the newly selected track.
     /// </summary>
     /// <param name="newSelectedTrack">The newly selected <see cref="TrackIntent"/>, or <see langword="null"/> if no track is currently selected.</param>
@@ -371,6 +437,13 @@ public abstract partial class TrackViewModelBase : ObservableObject
     {
         // Raise event to re-calculate IsTrackSelected
         OnPropertyChanged(nameof(IsTrackSelected));
+
+        // Refresh user-set flag bindings for the newly selected track.
+        OnPropertyChanged(nameof(IsNameUserSet));
+        OnPropertyChanged(nameof(IsLanguageUserSet));
+        OnPropertyChanged(nameof(IsDefaultUserSet));
+        OnPropertyChanged(nameof(IsForcedUserSet));
+        OnPropertyChanged(nameof(IsEnabledUserSet));
 
         ApplyTrackProperties(newSelectedTrack);
     }

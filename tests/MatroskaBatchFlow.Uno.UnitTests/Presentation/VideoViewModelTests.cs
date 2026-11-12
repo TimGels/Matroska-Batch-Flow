@@ -3,6 +3,7 @@ using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
 using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
@@ -46,7 +47,7 @@ public class VideoViewModelTests
         _batchConfiguration.VideoTracks.Returns(videoTracks);
 
         // Act
-        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
 
         // Assert
         Assert.Single(viewModel.VideoTracks);
@@ -68,7 +69,7 @@ public class VideoViewModelTests
         _batchConfiguration.VideoTracks.Returns(videoTracks);
 
         // Act
-        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
 
         // Assert
         Assert.NotNull(viewModel.SelectedTrack);
@@ -89,7 +90,7 @@ public class VideoViewModelTests
         _batchConfiguration.FileList.Returns(fileList);
 
         // Act
-        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
 
         // Assert
         Assert.True(viewModel.IsFileListPopulated);
@@ -101,7 +102,7 @@ public class VideoViewModelTests
         // Arrange - fileList is empty by default
 
         // Act
-        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
 
         // Assert
         Assert.False(viewModel.IsFileListPopulated);
@@ -114,7 +115,7 @@ public class VideoViewModelTests
         var fileList = new UniqueObservableCollection<ScannedFileInfo>(Substitute.For<IScannedFileInfoPathComparer>());
         _batchConfiguration.FileList.Returns(fileList);
 
-        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
         Assert.False(viewModel.IsFileListPopulated);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
@@ -143,7 +144,7 @@ public class VideoViewModelTests
         var videoTracks = new ObservableCollection<TrackIntent>();
         _batchConfiguration.VideoTracks.Returns(videoTracks);
 
-        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
         Assert.Empty(viewModel.VideoTracks);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
@@ -167,7 +168,7 @@ public class VideoViewModelTests
         var initialTracks = new ObservableCollection<TrackIntent>();
         _batchConfiguration.VideoTracks.Returns(initialTracks);
 
-        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
 
         var mediaInfoResult = new MediaInfoResultBuilder()
             .WithCreatingLibrary()
@@ -195,7 +196,7 @@ public class VideoViewModelTests
         var videoTracks = new ObservableCollection<TrackIntent>();
         _batchConfiguration.VideoTracks.Returns(videoTracks);
 
-        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, _uiPreferences);
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
         int videoTracksChangedCount = 0;
         viewModel.PropertyChanged += (s, e) =>
         {
@@ -210,5 +211,87 @@ public class VideoViewModelTests
 
         // Assert
         Assert.Equal(0, videoTracksChangedCount);
+    }
+
+    [Fact]
+    public void SettingTrackName_MarksNameAsUserSet()
+    {
+        // Arrange
+        var mediaInfoResult = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .AddTrackOfType(TrackType.Video)
+            .Build();
+        var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Video);
+
+        var intent = new TrackIntent(trackInfo) { Type = TrackType.Video, Index = 0, Name = "Original" };
+        var videoTracks = new ObservableCollection<TrackIntent> { intent };
+        _batchConfiguration.VideoTracks.Returns(videoTracks);
+
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
+
+        // Verify initial state
+        Assert.False(viewModel.IsNameUserSet);
+
+        // Act - simulate user typing in the Name field
+        viewModel.TrackName = "New Name";
+
+        // Assert
+        Assert.True(viewModel.IsNameUserSet);
+    }
+
+    [Fact]
+    public void SettingTrackName_RaisesPropertyChangedForIsNameUserSet_WhenTrackPreexists()
+    {
+        // Arrange - track exists BEFORE ViewModel construction (no CollectionChanged subscription)
+        var mediaInfoResult = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .AddTrackOfType(TrackType.Video)
+            .Build();
+        var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Video);
+
+        var intent = new TrackIntent(trackInfo) { Type = TrackType.Video, Index = 0, Name = "Original" };
+        var videoTracks = new ObservableCollection<TrackIntent> { intent };
+        _batchConfiguration.VideoTracks.Returns(videoTracks);
+
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
+
+        var raisedProperties = new List<string>();
+        viewModel.PropertyChanged += (s, e) => raisedProperties.Add(e.PropertyName!);
+
+        // Act
+        viewModel.TrackName = "New Name";
+
+        // Assert - verify that IsNameUserSet PropertyChanged was raised
+        Assert.Contains(nameof(viewModel.IsNameUserSet), raisedProperties);
+    }
+
+    [Fact]
+    public void SettingTrackName_RaisesPropertyChangedForIsNameUserSet_WhenTrackAddedViaCollectionChanged()
+    {
+        // Arrange - simulate real app flow: track added AFTER ViewModel construction
+        var videoTracks = new ObservableCollection<TrackIntent>();
+        _batchConfiguration.VideoTracks.Returns(videoTracks);
+
+        var viewModel = new VideoViewModel(_logger, _languageProvider, _batchConfiguration, Substitute.For<IFileProcessingEngine>(), _uiPreferences);
+
+        var mediaInfoResult = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .AddTrackOfType(TrackType.Video)
+            .Build();
+        var trackInfo = mediaInfoResult.Media.Track.First(t => t.Type == TrackType.Video);
+
+        var intent = new TrackIntent(trackInfo) { Type = TrackType.Video, Index = 0, Name = "Original" };
+
+        // Add track AFTER ViewModel construction (triggers CollectionChanged → subscription)
+        videoTracks.Add(intent);
+
+        var raisedProperties = new List<string>();
+        viewModel.PropertyChanged += (s, e) => raisedProperties.Add(e.PropertyName!);
+
+        // Act
+        viewModel.TrackName = "New Name";
+
+        // Assert - verify that IsNameUserSet PropertyChanged was raised
+        Assert.Contains(nameof(viewModel.IsNameUserSet), raisedProperties);
     }
 }
