@@ -2,6 +2,7 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:local="using:MatroskaBatchFlow.Uno.Presentation"
+      xmlns:controls="using:MatroskaBatchFlow.Uno.Presentation.Controls"
       xmlns:utu="using:Uno.Toolkit.UI"
       xmlns:dialogs="using:MatroskaBatchFlow.Uno.Presentation.Dialogs"
       xmlns:helpers="using:MatroskaBatchFlow.Uno.Helpers"
@@ -22,6 +23,7 @@
         <NavigationView x:Name="NavigationView"
                         IsBackButtonVisible="Collapsed" 
                         IsBackEnabled="{x:Bind ViewModel.IsBackEnabled, Mode=OneWay}"
+                        IsEnabled="{x:Bind ViewModel.IsInteractionEnabled, Mode=OneWay}"
                         SelectedItem="{x:Bind ViewModel.Selected, Mode=TwoWay}" 
                         PaneDisplayMode="Top"
                         IsSettingsVisible="True">
@@ -67,7 +69,8 @@
 
         <StackPanel Grid.Row="1">
             <CommandBar HorizontalAlignment="Center"
-                        DefaultLabelPosition="Right">
+                        DefaultLabelPosition="Right"
+                        IsEnabled="{x:Bind ViewModel.IsInteractionEnabled, Mode=OneWay}">
                 <CommandBar.PrimaryCommands>
                     <AppBarButton Label="Show Arguments"
                                   Icon="ShowResults"
@@ -82,5 +85,18 @@
                 </CommandBar.PrimaryCommands>
             </CommandBar>
         </StackPanel>
+
+        <!--Covers the whole window while the batch is processed-->
+        <controls:OperationOverlay Grid.RowSpan="2"
+                                   IsActive="{x:Bind ViewModel.ProcessingOverlay.IsActive, Mode=OneWay}"
+                                   Message="{x:Bind ViewModel.ProcessingOverlay.Message, Mode=OneWay}"
+                                   Detail="{x:Bind ViewModel.ProcessingOverlay.Detail, Mode=OneWay}"
+                                   IsIndeterminate="{x:Bind ViewModel.ProcessingOverlay.IsIndeterminate, Mode=OneWay}"
+                                   Current="{x:Bind ViewModel.ProcessingOverlay.Current, Mode=OneWay}"
+                                   Total="{x:Bind ViewModel.ProcessingOverlay.Total, Mode=OneWay}"
+                                   ProgressPercent="{x:Bind ViewModel.ProcessingOverlay.ProgressPercent, Mode=OneWay}"
+                                   BlocksInput="{x:Bind ViewModel.ProcessingOverlay.BlocksInput, Mode=OneWay}"
+                                   IsCancelling="{x:Bind ViewModel.ProcessingOverlay.IsCancelling, Mode=OneWay}"
+                                   CancelCommand="{x:Bind ViewModel.CancelProcessingCommand}" />
     </Grid>
 </Page>

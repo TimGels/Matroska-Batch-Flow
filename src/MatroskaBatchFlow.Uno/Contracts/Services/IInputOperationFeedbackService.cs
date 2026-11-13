@@ -14,7 +14,7 @@ public interface IInputOperationFeedbackService
     /// <summary>
     /// Gets the most recently published overlay state.
     /// </summary>
-    InputOperationOverlayState CurrentState { get; }
+    OperationOverlayState CurrentState { get; }
 
     /// <summary>
     /// Raised whenever the overlay state changes, including when cleared.
@@ -25,10 +25,10 @@ public interface IInputOperationFeedbackService
     /// Publishes a new overlay state and raises <see cref="StateChanged"/>.
     /// </summary>
     /// <param name="state">The overlay state to publish.</param>
-    void Publish(InputOperationOverlayState state);
+    void Publish(OperationOverlayState state);
 
     /// <summary>
-    /// Resets the overlay state to <see cref="InputOperationOverlayState.Inactive"/> and raises <see cref="StateChanged"/>.
+    /// Resets the overlay state to <see cref="OperationOverlayState.Inactive"/> and raises <see cref="StateChanged"/>.
     /// </summary>
     void Clear();
 }

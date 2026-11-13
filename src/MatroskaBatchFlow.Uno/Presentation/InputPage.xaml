@@ -152,11 +152,12 @@
                            Style="{StaticResource TitleTextBlockStyle}" />
             </StackPanel>
 
-            <controls:InputOperationOverlay IsActive="{x:Bind ViewModel.OverlayState.IsActive, Mode=OneWay}"
+            <controls:OperationOverlay IsActive="{x:Bind ViewModel.OverlayState.IsActive, Mode=OneWay}"
                                             Message="{x:Bind ViewModel.OverlayState.Message, Mode=OneWay}"
                                             IsIndeterminate="{x:Bind ViewModel.OverlayState.IsIndeterminate, Mode=OneWay}"
                                             Current="{x:Bind ViewModel.OverlayState.Current, Mode=OneWay}"
                                             Total="{x:Bind ViewModel.OverlayState.Total, Mode=OneWay}"
+                                            ProgressPercent="{x:Bind ViewModel.OverlayState.ProgressPercent, Mode=OneWay}"
                                             BlocksInput="{x:Bind ViewModel.OverlayState.BlocksInput, Mode=OneWay}" />
         </Grid>
     </Grid>

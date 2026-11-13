@@ -21,7 +21,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     private ValidationNotificationState validationNotifications = new();
 
     [ObservableProperty]
-    private InputOperationOverlayState overlayState = InputOperationOverlayState.Inactive;
+    private OperationOverlayState overlayState = OperationOverlayState.Inactive;
 
     private bool _isValidationInfoBarOpen;
 
@@ -123,7 +123,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
         _validationNotificationsChangedHandler = (s, e) => NotifyValidationPropertiesChanged();
         ValidationNotifications.AllNotifications.CollectionChanged += _validationNotificationsChangedHandler;
 
-        OverlayState = _inputOperationFeedbackService.CurrentState ?? InputOperationOverlayState.Inactive;
+        OverlayState = _inputOperationFeedbackService.CurrentState ?? OperationOverlayState.Inactive;
     }
 
     /// <summary>
@@ -250,7 +250,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
 
     private void OnInputOperationFeedbackStateChanged(object? sender, EventArgs e)
     {
-        OverlayState = _inputOperationFeedbackService.CurrentState ?? InputOperationOverlayState.Inactive;
+        OverlayState = _inputOperationFeedbackService.CurrentState ?? OperationOverlayState.Inactive;
     }
 
     /// <summary>

@@ -17,6 +17,7 @@ namespace MatroskaBatchFlow.Uno.UnitTests.Presentation;
 /// <summary>
 /// Contains unit tests for the <see cref="InputViewModel"/> class.
 /// </summary>
+[Collection(MessengerCollectionDefinition.Name)]
 public class InputViewModelTests : IDisposable
 {
     private readonly IFileListAdapter _fileListAdapter;

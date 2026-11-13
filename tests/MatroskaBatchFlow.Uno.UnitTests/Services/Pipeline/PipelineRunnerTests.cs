@@ -132,7 +132,7 @@ public class PipelineRunnerTests
 
         await _runner.RunAsync([stage], new PipelineContext(), TestContext.Current.CancellationToken);
 
-        _feedbackService.Received().Publish(Arg.Is<InputOperationOverlayState>(s =>
+        _feedbackService.Received().Publish(Arg.Is<OperationOverlayState>(s =>
             s.Message == "Scanning files…" &&
             s.IsIndeterminate == true &&
             s.Current == 0 &&
@@ -147,7 +147,7 @@ public class PipelineRunnerTests
 
         await _runner.RunAsync([stage], new PipelineContext(), TestContext.Current.CancellationToken);
 
-        _feedbackService.DidNotReceive().Publish(Arg.Any<InputOperationOverlayState>());
+        _feedbackService.DidNotReceive().Publish(Arg.Any<OperationOverlayState>());
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public class PipelineRunnerTests
 
         await _runner.RunAsync([stage], new PipelineContext(), TestContext.Current.CancellationToken);
 
-        _feedbackService.Received().Publish(Arg.Is<InputOperationOverlayState>(s =>
+        _feedbackService.Received().Publish(Arg.Is<OperationOverlayState>(s =>
             s.Current == 3 &&
             s.Total == 10 &&
             s.IsIndeterminate == false));
@@ -172,8 +172,8 @@ public class PipelineRunnerTests
     {
         var publishedMessages = new List<string>();
         _feedbackService
-            .When(f => f.Publish(Arg.Any<InputOperationOverlayState>()))
-            .Do(ci => publishedMessages.Add(ci.Arg<InputOperationOverlayState>().Message));
+            .When(f => f.Publish(Arg.Any<OperationOverlayState>()))
+            .Do(ci => publishedMessages.Add(ci.Arg<OperationOverlayState>().Message));
 
         var stage1 = CreateStage("Stage A", (_, _, _) => Task.CompletedTask, showsOverlay: true);
         var stage2 = CreateStage("Stage B", (_, _, _) => Task.CompletedTask, showsOverlay: true);
