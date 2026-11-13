@@ -24,6 +24,7 @@ public partial class MainViewModel : ObservableObject
     private readonly IValidationStateService _validationStateService;
     private readonly IUIPreferencesService _uiPreferences;
     private readonly IScannedFileInfoPathComparer _pathComparer;
+    private readonly ITaskbarProgressService _taskbarProgress;
     private readonly ILogger<MainViewModel> _logger;
     private CancellationTokenSource _processingCts = new();
 
@@ -97,6 +98,7 @@ public partial class MainViewModel : ObservableObject
         IValidationStateService validationStateService,
         IUIPreferencesService uiPreferences,
         IScannedFileInfoPathComparer pathComparer,
+        ITaskbarProgressService taskbarProgress,
         ILogger<MainViewModel> logger)
     {
         _batchConfiguration = batchConfiguration;
@@ -106,6 +108,7 @@ public partial class MainViewModel : ObservableObject
         _validationStateService = validationStateService;
         _uiPreferences = uiPreferences;
         _pathComparer = pathComparer;
+        _taskbarProgress = taskbarProgress;
         _logger = logger;
 
         NavigationService = navigationService;
@@ -145,6 +148,7 @@ public partial class MainViewModel : ObservableObject
 
         LogBatchCancellationRequested();
         IsCancelling = true;
+        _taskbarProgress.SetPaused();
 
         if (BatchReport is not null)
             UpdateProcessingProgress(BatchReport);
@@ -163,7 +167,7 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     /// <remarks>
     /// Must be started on the UI thread: progress and status changes of the batch report are raised on the captured
-    /// context and drive the processing overlay.
+    /// context and drive the processing overlay and taskbar progress.
     /// </remarks>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     private async Task ProcessBatchAsync()
@@ -227,6 +231,7 @@ public partial class MainViewModel : ObservableObject
                 await Task.Delay(remaining);
 
             ProcessingOverlay = OperationOverlayState.Inactive;
+            _taskbarProgress.Clear();
             IsCancelling = false;
             IsProcessing = false;
         }
@@ -254,7 +259,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Updates the processing overlay when the progress of the running batch changes.
+    /// Updates the processing overlay and taskbar progress when the progress of the running batch changes.
     /// </summary>
     private void OnProcessingBatchPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
@@ -271,7 +276,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Builds the processing overlay state from the batch report.
+    /// Builds the processing overlay state from the batch report and mirrors the overall progress on the taskbar.
     /// </summary>
     /// <param name="batch">The batch that is being processed.</param>
     private void UpdateProcessingProgress(BatchExecutionReport batch)
@@ -297,6 +302,8 @@ public partial class MainViewModel : ObservableObject
             Progress = batch.OverallProgress,
             IsCancelling = IsCancelling
         };
+
+        _taskbarProgress.SetProgress(batch.OverallProgress);
     }
 
     /// <summary>

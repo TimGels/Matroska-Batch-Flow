@@ -31,6 +31,7 @@ public class MainViewModelTests
     private readonly IValidationStateService _validationStateService;
     private readonly IUIPreferencesService _uiPreferences;
     private readonly IScannedFileInfoPathComparer _pathComparer;
+    private readonly ITaskbarProgressService _taskbarProgress;
     private readonly UniqueObservableCollection<ScannedFileInfo> _fileList;
 
     public MainViewModelTests()
@@ -44,6 +45,7 @@ public class MainViewModelTests
         _validationStateService = Substitute.For<IValidationStateService>();
         _uiPreferences = Substitute.For<IUIPreferencesService>();
         _pathComparer = Substitute.For<IScannedFileInfoPathComparer>();
+        _taskbarProgress = Substitute.For<ITaskbarProgressService>();
 
         _fileList = [];
         _batchConfiguration.FileList.Returns(_fileList);
@@ -306,6 +308,8 @@ public class MainViewModelTests
 
         Assert.False(viewModel.ProcessingOverlay.IsActive);
         Assert.True(viewModel.IsInteractionEnabled);
+        _taskbarProgress.Received().SetProgress(Arg.Is<double>(p => Math.Abs(p - 0.7) < 1e-6));
+        _taskbarProgress.Received(1).Clear();
     }
 
     [Fact]
@@ -351,6 +355,7 @@ public class MainViewModelTests
         Assert.NotNull(overlayAfterCancel);
         Assert.True(overlayAfterCancel.IsCancelling);
         Assert.False(canCancelAgain);
+        _taskbarProgress.Received(1).SetPaused();
         Assert.Contains(dialogs, d => d.Title == "Batch Cancelled" && d.Message.Contains("1 of 1 files were not processed"));
         Assert.False(viewModel.IsCancelling);
         Assert.False(viewModel.CancelProcessingCommand.CanExecute(null));
@@ -391,6 +396,7 @@ public class MainViewModelTests
             _validationStateService,
             _uiPreferences,
             _pathComparer,
+            _taskbarProgress,
             logger);
     }
 
