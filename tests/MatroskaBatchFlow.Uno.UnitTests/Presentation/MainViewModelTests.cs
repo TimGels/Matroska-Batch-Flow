@@ -11,6 +11,7 @@ using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Messages;
 using MatroskaBatchFlow.Uno.Models;
 using MatroskaBatchFlow.Uno.Presentation;
+using MatroskaBatchFlow.Uno.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
@@ -32,6 +33,7 @@ public class MainViewModelTests
     private readonly IUIPreferencesService _uiPreferences;
     private readonly IScannedFileInfoPathComparer _pathComparer;
     private readonly ITaskbarProgressService _taskbarProgress;
+    private readonly BatchOperationGate _operationGate = new();
     private readonly UniqueObservableCollection<ScannedFileInfo> _fileList;
 
     public MainViewModelTests()
@@ -277,6 +279,7 @@ public class MainViewModelTests
         var viewModel = CreateViewModel();
         OperationOverlayState? overlayDuringRun = null;
         var interactionEnabledDuringRun = true;
+        var gateHeldDuringRun = false;
         _orchestrator.ProcessAllAsync(Arg.Any<IEnumerable<ScannedFileInfo>>(), Arg.Any<CancellationToken>())
             .Returns(_ =>
             {
@@ -288,6 +291,7 @@ public class MainViewModelTests
 
                 overlayDuringRun = viewModel.ProcessingOverlay;
                 interactionEnabledDuringRun = viewModel.IsInteractionEnabled;
+                gateHeldDuringRun = _operationGate.IsBusy;
 
                 second.Status = ProcessingStatus.Succeeded;
                 return Task.FromResult(new List<FileProcessingReport> { first, second });
@@ -305,9 +309,11 @@ public class MainViewModelTests
         Assert.Equal("second.mkv (40%)", overlayDuringRun.Detail);
         Assert.Equal(70d, overlayDuringRun.ProgressPercent, precision: 6);
         Assert.False(interactionEnabledDuringRun);
+        Assert.True(gateHeldDuringRun);
 
         Assert.False(viewModel.ProcessingOverlay.IsActive);
         Assert.True(viewModel.IsInteractionEnabled);
+        Assert.False(_operationGate.IsBusy);
         _taskbarProgress.Received().SetProgress(Arg.Is<double>(p => Math.Abs(p - 0.7) < 1e-6));
         _taskbarProgress.Received(1).Clear();
     }
@@ -361,6 +367,55 @@ public class MainViewModelTests
         Assert.False(viewModel.CancelProcessingCommand.CanExecute(null));
     }
 
+    [Fact]
+    public async Task ProcessBatch_DoesNotStart_WhileAnotherBatchOperationRuns()
+    {
+        // Arrange - an import or other pipeline run holds the gate
+        SetupProcessableBatch();
+        var viewModel = CreateViewModel();
+        Assert.True(viewModel.CanProcessBatch);
+        Assert.True(_operationGate.TryEnter(out var importHandle));
+
+        var dialogs = new List<DialogMessage>();
+        var recipient = new object();
+        WeakReferenceMessenger.Default.Register<DialogMessage>(recipient, (_, message) => dialogs.Add(message));
+
+        try
+        {
+            // Act
+            await ((IAsyncRelayCommand)viewModel.ProcessBatchCommand).ExecuteAsync(null);
+        }
+        finally
+        {
+            WeakReferenceMessenger.Default.UnregisterAll(recipient);
+        }
+
+        // Assert
+        Assert.False(viewModel.CanProcessBatch);
+        await _orchestrator.DidNotReceive().ProcessAllAsync(Arg.Any<IEnumerable<ScannedFileInfo>>(), Arg.Any<CancellationToken>());
+        _batchReportStore.DidNotReceive().Reset();
+        Assert.Contains(dialogs, d => d.Title == "Info" && d.Message.Contains("still being added"));
+
+        importHandle.Dispose();
+        Assert.True(viewModel.CanProcessBatch);
+    }
+
+    [Fact]
+    public async Task ProcessBatch_DoesNotStart_WhenValidationHasBlockingErrors()
+    {
+        // Arrange - validation found blocking errors, for example after an import finished
+        SetupProcessableBatch();
+        var viewModel = CreateViewModel();
+        _validationStateService.HasBlockingErrors.Returns(true);
+
+        // Act
+        await ((IAsyncRelayCommand)viewModel.ProcessBatchCommand).ExecuteAsync(null);
+
+        // Assert
+        await _orchestrator.DidNotReceive().ProcessAllAsync(Arg.Any<IEnumerable<ScannedFileInfo>>(), Arg.Any<CancellationToken>());
+        Assert.False(_operationGate.IsBusy);
+    }
+
     private BatchExecutionReport SetupProcessableBatch()
     {
         _fileList.Add(CreateScannedFile("media/file1.mkv"));
@@ -397,6 +452,7 @@ public class MainViewModelTests
             _uiPreferences,
             _pathComparer,
             _taskbarProgress,
+            _operationGate,
             logger);
     }
 

@@ -55,6 +55,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IValidationSettingsService, ValidationSettingsService>();
             services.AddSingleton<IValidationStateService, ValidationStateService>();
             services.AddSingleton<IInputOperationFeedbackService, InputOperationFeedbackService>();
+            services.AddSingleton<IBatchOperationGate, BatchOperationGate>();
             services.AddSingleton<IBatchOperationOrchestrator, BatchOperationOrchestrator>();
             services.AddSingleton<IUIPreferencesService, UIPreferencesService>();
             services.AddSingleton<ILanguageProvider, LanguageProvider>();

@@ -25,6 +25,7 @@ public partial class MainViewModel : ObservableObject
     private readonly IUIPreferencesService _uiPreferences;
     private readonly IScannedFileInfoPathComparer _pathComparer;
     private readonly ITaskbarProgressService _taskbarProgress;
+    private readonly IBatchOperationGate _operationGate;
     private readonly ILogger<MainViewModel> _logger;
     private CancellationTokenSource _processingCts = new();
 
@@ -47,10 +48,17 @@ public partial class MainViewModel : ObservableObject
     private bool hasNoBlockingErrors = true;
 
     /// <summary>
-    /// Gets whether the batch can be processed. Requires files to be present, at least one
-    /// configured change, and no blocking validation errors.
+    /// Gets whether a batch operation (import, removal, revalidation or processing) is running.
     /// </summary>
-    public bool CanProcessBatch => HasFiles && HasConfiguredChanges && HasNoBlockingErrors;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanProcessBatch))]
+    private bool isBatchOperationRunning;
+
+    /// <summary>
+    /// Gets whether the batch can be processed. Requires files to be present, at least one
+    /// configured change, no blocking validation errors, and no other batch operation running.
+    /// </summary>
+    public bool CanProcessBatch => HasFiles && HasConfiguredChanges && HasNoBlockingErrors && !IsBatchOperationRunning;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsInteractionEnabled))]
@@ -99,6 +107,7 @@ public partial class MainViewModel : ObservableObject
         IUIPreferencesService uiPreferences,
         IScannedFileInfoPathComparer pathComparer,
         ITaskbarProgressService taskbarProgress,
+        IBatchOperationGate operationGate,
         ILogger<MainViewModel> logger)
     {
         _batchConfiguration = batchConfiguration;
@@ -109,6 +118,7 @@ public partial class MainViewModel : ObservableObject
         _uiPreferences = uiPreferences;
         _pathComparer = pathComparer;
         _taskbarProgress = taskbarProgress;
+        _operationGate = operationGate;
         _logger = logger;
 
         NavigationService = navigationService;
@@ -122,12 +132,19 @@ public partial class MainViewModel : ObservableObject
         _batchConfiguration.StateChanged += BatchConfigurationOnStateChangedHandler;
         _validationStateService.StateChanged += OnValidationStateChanged;
         _uiPreferences.PropertyChanged += OnUIPreferencesChanged;
+        _operationGate.IsBusyChanged += OnOperationGateChanged;
 
         BatchReport = _batchReportStore.ActiveBatch;
 
         // Initialize state properties based on current batch/validation state
         OnValidationStateChanged(this, EventArgs.Empty);
         BatchConfigurationOnStateChangedHandler(this, EventArgs.Empty);
+        OnOperationGateChanged(this, EventArgs.Empty);
+    }
+
+    private void OnOperationGateChanged(object? sender, EventArgs e)
+    {
+        IsBatchOperationRunning = _operationGate.IsBusy;
     }
 
     private void OnUIPreferencesChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -172,10 +189,42 @@ public partial class MainViewModel : ObservableObject
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     private async Task ProcessBatchAsync()
     {
+        // Processing builds each file's arguments from the live configuration, so it must not overlap an import or
+        // other pipeline run. It does not wait for one either, because the batch would then contain changes the
+        // user has not reviewed. All checks below run while the gate is held.
+        if (!_operationGate.TryEnter(out var gateHandle))
+        {
+            LogBatchProcessingBlocked();
+            WeakReferenceMessenger.Default.Send(new DialogMessage(
+                "Info",
+                "Files are still being added, removed or validated. Process the batch when that has finished."));
+            return;
+        }
+
+        using (gateHandle)
+        {
+            await ProcessBatchWhileGateHeldAsync();
+        }
+    }
+
+    /// <summary>
+    /// Validates and processes the batch. Must only be called while the <see cref="IBatchOperationGate"/> is held.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    private async Task ProcessBatchWhileGateHeldAsync()
+    {
         if (_batchConfiguration.FileList.Count == 0)
         {
             WeakReferenceMessenger.Default.Send(
                 new DialogMessage("Info", "FileInfo list is empty. Please add files to process."));
+            return;
+        }
+
+        if (_validationStateService.HasBlockingErrors)
+        {
+            const string blockingErrorsMessage = "Resolve the validation errors before processing the batch.";
+            LogBatchProcessingAborted(blockingErrorsMessage);
+            WeakReferenceMessenger.Default.Send(new DialogMessage("Error", blockingErrorsMessage));
             return;
         }
 
