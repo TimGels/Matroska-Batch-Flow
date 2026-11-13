@@ -158,3 +158,20 @@ Consistency rules that compare track properties across files use the **rolling r
 - New rules: Implement `IFileProcessingRule` interface
 - Automatic discovery: All rules registered in DI container
 - Sequential execution: Rules applied in registration order
+
+## Batch Processing Progress and Cancellation
+
+### Progress plumbing
+`ProcessRunner` (`onOutputLine` callback, background thread) → `MkvPropeditOutputParser.TryParseProgress` (`label: N%`) → `IProgress<int>` passed to `IMkvToolExecutor.ExecuteAsync` → per-file `Progress<int>` created by `FileProcessingOrchestrator` → `FileProcessingReport.Progress` (only while the file is `Running`) → `BatchExecutionReport.CurrentFile` / `Completed` / `OverallProgress`.
+- mkvpropedit only reports progress for operations that read the whole file (e.g. `--add-track-statistics-tags`)
+- `MkvPropeditExecutor` adds `--ui-language en` on Windows only and strips progress lines from stored output
+- `Completed` and `OverallProgress` exclude `Canceled` files, so a canceled batch stays below 100%
+- `FileProcessingOrchestrator` must not use `ConfigureAwait(false)`: `Progress<T>` and status changes rely on the captured UI context
+
+### Smart cancellation
+`MkvPropeditStopGate` decides when the user's cancellation may kill mkvpropedit: only while the last reported progress is below 100% (read phase, file untouched). Otherwise the process finishes (it may be writing). A stop requested before progress starts is applied once reading starts. When stopped, the executor throws `OperationCanceledException` with the caller's token, so the file is reported as `Canceled` (not `Failed`); the remaining files are canceled before start.
+
+### UI
+- `MainViewModel` subscribes to the active `BatchExecutionReport` while processing and builds an `OperationOverlayState` (`ProcessingOverlay`); `MainPage` shows the shared `OperationOverlay` over the whole window, with Cancel bound to `CancelProcessingCommand`. `IsInteractionEnabled` disables the `NavigationView` and command bar, because arguments are built per file from the live configuration
+- The result dialog is sent after the overlay is hidden; a run with canceled files shows "Batch Cancelled"
+- `ITaskbarProgressService` mirrors `OverallProgress` on the taskbar button (paused while cancelling) via `ITaskbarList3` on WinAppSDK and on Skia Desktop running on Windows
