@@ -1,6 +1,7 @@
 using MatroskaBatchFlow.Core.Services.Pipeline;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Models;
+using MatroskaBatchFlow.Uno.Services;
 using MatroskaBatchFlow.Uno.Services.Pipeline;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -13,6 +14,7 @@ namespace MatroskaBatchFlow.Uno.UnitTests.Services.Pipeline;
 public class PipelineRunnerTests
 {
     private readonly IInputOperationFeedbackService _feedbackService;
+    private readonly BatchOperationGate _operationGate = new();
     private readonly PipelineRunner _runner;
 
     public PipelineRunnerTests()
@@ -20,6 +22,7 @@ public class PipelineRunnerTests
         _feedbackService = Substitute.For<IInputOperationFeedbackService>();
         _runner = new PipelineRunner(
             _feedbackService,
+            _operationGate,
             Substitute.For<ILogger<PipelineRunner>>());
     }
 
@@ -229,6 +232,32 @@ public class PipelineRunnerTests
 
         // Both ran, and first completed entirely before second started.
         Assert.Equal(["first-start", "first-end", "second-start"], executionOrder);
+    }
+
+    [Fact]
+    public async Task RunAsync_WaitsWhileAnotherBatchOperationHoldsTheGate()
+    {
+        // Batch processing holds the shared gate.
+        Assert.True(_operationGate.TryEnter(out var processingHandle));
+        var stageRan = false;
+        var stage = CreateStage("Import", (_, _, _) =>
+        {
+            stageRan = true;
+            return Task.CompletedTask;
+        }, showsOverlay: false);
+
+        var ct = TestContext.Current.CancellationToken;
+        var run = Task.Run(() => _runner.RunAsync([stage], new PipelineContext(), ct), ct);
+
+        // Give the run enough time to attempt to enter the gate.
+        await Task.Delay(50, ct);
+        Assert.False(stageRan);
+
+        processingHandle.Dispose();
+        await run.WaitAsync(ct);
+
+        Assert.True(stageRan);
+        Assert.False(_operationGate.IsBusy);
     }
 
     [Fact]

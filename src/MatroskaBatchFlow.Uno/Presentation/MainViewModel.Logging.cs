@@ -14,6 +14,9 @@ public partial class MainViewModel
     [LoggerMessage(Level = LogLevel.Information, Message = "Cancellation of batch processing was requested")]
     private partial void LogBatchCancellationRequested();
 
+    [LoggerMessage(Level = LogLevel.Information, Message = "Batch processing was not started because another batch operation is running")]
+    private partial void LogBatchProcessingBlocked();
+
     [LoggerMessage(Level = LogLevel.Error, Message = "Unexpected error during batch processing")]
     private partial void LogBatchProcessingError(Exception ex);
 }

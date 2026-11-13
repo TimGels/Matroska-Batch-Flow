@@ -107,6 +107,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 - `IUIPreferencesService`: Persists user preferences via `WritableJsonSettings<T>`
 - `ITaskbarProgressService`: Shows batch progress on the taskbar button via COM `ITaskbarList3` (source-generated COM interop in `Services/Interop/`, hence `AllowUnsafeBlocks` in the Uno project). Works on WinAppSDK and on Skia Desktop when running on Windows (HWND via `Uno.UI.Xaml.WindowHelper.GetNativeWindow`); no-op elsewhere. Call it on the UI thread
 - **Long-running operations** use the shared `OperationOverlay` control with an `OperationOverlayState` record: `InputPage` shows it for scans (via `IInputOperationFeedbackService`), and `MainPage` covers the whole window with it while `MainViewModel` processes a batch (with a Cancel button, navigation and command bar disabled)
+- `IBatchOperationGate`: ensures batch-changing pipeline runs (import, removal, revalidation via `PipelineRunner`) and batch processing never overlap, because processing builds each file's arguments from the live configuration. Pipeline runs wait for the gate; processing only starts if it is free (`CanProcessBatch` is false while it is busy) and does all its checks while holding it
 
 ### External Dependencies
 - **MediaInfo**: Media file analysis (embedded library via P/Invoke)

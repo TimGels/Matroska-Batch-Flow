@@ -173,5 +173,6 @@ A running mkvpropedit is never stopped. It edits the file in place, and its prog
 
 ### UI
 - `MainViewModel` subscribes to the active `BatchExecutionReport` while processing and builds an `OperationOverlayState` (`ProcessingOverlay`); `MainPage` shows the shared `OperationOverlay` over the whole window, with Cancel bound to `CancelProcessingCommand`. `IsInteractionEnabled` disables the `NavigationView` and command bar, because arguments are built per file from the live configuration
+- `IBatchOperationGate` serializes batch processing with pipeline runs (import, removal, revalidation), which change files and track intents. `PipelineRunner` waits for the gate; `MainViewModel.ProcessBatchAsync` uses `TryEnter` and refuses to start while an import is running (it does not wait, so it never processes changes the user has not reviewed), then checks files, blocking validation errors and arguments while holding the gate. `CanProcessBatch` (Process Files and Show Arguments) is false while the gate is busy
 - The result dialog is sent after the overlay is hidden; a run with canceled files shows "Batch Cancelled"
 - `ITaskbarProgressService` mirrors `OverallProgress` on the taskbar button (paused while cancelling) via `ITaskbarList3` on WinAppSDK and on Skia Desktop running on Windows

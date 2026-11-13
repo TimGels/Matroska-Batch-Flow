@@ -9,12 +9,15 @@ namespace MatroskaBatchFlow.Uno.Services.Pipeline;
 /// Executes pipeline stages sequentially and manages overlay feedback for stages that opt in.
 /// </summary>
 /// <remarks>
-/// Concurrent calls to <see cref="RunAsync"/> are serialized: the second caller waits until the
-/// first run completes (or is cancelled) before it begins. This prevents interleaved mutations
-/// on shared state (batch configuration, validation) and avoids one run clearing the overlay
-/// while another is still in progress.
+/// Each run holds the shared <see cref="IBatchOperationGate"/>, so concurrent calls are serialized: the second caller
+/// waits until the first run completes (or is cancelled) before it begins. Batch processing uses the same gate, so a run
+/// never changes the batch while it is being processed. This prevents interleaved mutations on shared state (batch
+/// configuration, validation) and avoids one run clearing the overlay while another is still in progress.
 /// </remarks>
-public sealed partial class PipelineRunner(IInputOperationFeedbackService feedbackService, ILogger<PipelineRunner> logger) : IPipelineRunner
+public sealed partial class PipelineRunner(
+    IInputOperationFeedbackService feedbackService,
+    IBatchOperationGate operationGate,
+    ILogger<PipelineRunner> logger) : IPipelineRunner
 {
     /// <summary>
     /// Minimum overlay visibility duration in milliseconds.
@@ -26,19 +29,13 @@ public sealed partial class PipelineRunner(IInputOperationFeedbackService feedba
     /// </summary>
     private static readonly TimeSpan MinOverlayDuration = TimeSpan.FromMilliseconds(MinOverlayDurationMs);
 
-    /// <summary>
-    /// Ensures that at most one pipeline run executes at a time.
-    /// </summary>
-    private readonly SemaphoreSlim _runLock = new(1, 1);
-
     /// <inheritdoc />
     public async Task RunAsync(IReadOnlyList<IPipelineStage> stages, PipelineContext context, CancellationToken ct = default)
     {
-        if (_runLock.CurrentCount == 0)
+        if (operationGate.IsBusy)
             LogRunQueued();
 
-        await _runLock.WaitAsync(ct);
-        try
+        using (await operationGate.EnterAsync(ct))
         {
             try
             {
@@ -101,10 +98,6 @@ public sealed partial class PipelineRunner(IInputOperationFeedbackService feedba
             {
                 feedbackService.Clear();
             }
-        }
-        finally
-        {
-            _runLock.Release();
         }
     }
 }
