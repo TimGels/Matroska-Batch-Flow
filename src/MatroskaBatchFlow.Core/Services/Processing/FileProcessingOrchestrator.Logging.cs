@@ -31,7 +31,7 @@ public partial class FileProcessingOrchestrator
     [LoggerMessage(Level = LogLevel.Debug, Message = "File processing completed successfully: {FilePath}")]
     private partial void LogFileProcessingCompleted(string filePath);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Processing canceled for file: {FilePath}")]
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Processing canceled for file: {FilePath}")]
     private partial void LogProcessingCanceled(string filePath);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Unexpected error processing file: {FilePath}")]
