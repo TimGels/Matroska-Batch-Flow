@@ -276,7 +276,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 ## Security and Privacy
 
 - **No secrets in code**: Never commit API keys, passwords, or certificates to source control
-- **User data**: File paths are logged at Debug level only; no file content is logged
+- **User data**: Information-level logs never include media file paths, titles or track names (mkvpropedit arguments can contain all three); log those at Debug level. Warnings and errors may include them for the affected file, because they are needed to diagnose the problem. No file content is logged
 - **External tools**: mkvpropedit is executed with controlled arguments; validate user input before passing to command line
 - **File operations**: All file modifications require explicit user action (no automatic writes on scan)
 
