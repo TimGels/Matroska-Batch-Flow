@@ -55,6 +55,8 @@
         <PackageCertificateKeyFile>MatroskaBatchFlow.Uno_TemporaryKey.pfx</PackageCertificateKeyFile>
         <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
         <PublishAot>False</PublishAot>
+        <!-- Required by source-generated COM interop (taskbar progress) -->
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <AssemblyVersion>0.10.0.0</AssemblyVersion>
     </PropertyGroup>
     <ItemGroup>
