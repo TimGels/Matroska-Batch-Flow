@@ -12,7 +12,7 @@ public class InputOperationFeedbackServiceTests
         var raised = false;
         service.StateChanged += (_, _) => raised = true;
 
-        var state = new InputOperationOverlayState(
+        var state = new OperationOverlayState(
             "Revalidating files\u2026",
             true,
             0,
@@ -30,7 +30,7 @@ public class InputOperationFeedbackServiceTests
     {
         var service = new InputOperationFeedbackService();
 
-        service.Publish(new InputOperationOverlayState(
+        service.Publish(new OperationOverlayState(
             "Removing files\u2026",
             true,
             0,
@@ -39,14 +39,14 @@ public class InputOperationFeedbackServiceTests
 
         service.Clear();
 
-        Assert.Equal(InputOperationOverlayState.Inactive, service.CurrentState);
+        Assert.Equal(OperationOverlayState.Inactive, service.CurrentState);
     }
 
     [Fact]
     public void LateSubscriber_CanHydrateFromCurrentSnapshot()
     {
         var service = new InputOperationFeedbackService();
-        var expected = new InputOperationOverlayState(
+        var expected = new OperationOverlayState(
             "Applying track configuration\u2026",
             false,
             2,
@@ -55,7 +55,7 @@ public class InputOperationFeedbackServiceTests
 
         service.Publish(expected);
 
-        InputOperationOverlayState? observed = null;
+        OperationOverlayState? observed = null;
         service.StateChanged += (_, _) => observed = service.CurrentState;
 
         Assert.Equal(expected, service.CurrentState);

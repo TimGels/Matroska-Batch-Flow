@@ -1,3 +1,5 @@
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
@@ -6,6 +8,8 @@ using MatroskaBatchFlow.Core.Services.Processing;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
 using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
+using MatroskaBatchFlow.Uno.Messages;
+using MatroskaBatchFlow.Uno.Models;
 using MatroskaBatchFlow.Uno.Presentation;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -15,6 +19,7 @@ namespace MatroskaBatchFlow.Uno.UnitTests.Presentation;
 /// <summary>
 /// Contains unit tests for the <see cref="MainViewModel"/> class.
 /// </summary>
+[Collection(MessengerCollectionDefinition.Name)]
 public class MainViewModelTests
 {
     private readonly IBatchConfiguration _batchConfiguration;
@@ -260,6 +265,117 @@ public class MainViewModelTests
 
         // Assert
         Assert.Same(expectedReport, viewModel.BatchReport);
+    }
+
+    [Fact]
+    public async Task ProcessBatch_ShowsProgressOfNewBatch_AndHidesOverlayWhenDone()
+    {
+        // Arrange
+        var batch = SetupProcessableBatch();
+        var viewModel = CreateViewModel();
+        OperationOverlayState? overlayDuringRun = null;
+        var interactionEnabledDuringRun = true;
+        _orchestrator.ProcessAllAsync(Arg.Any<IEnumerable<ScannedFileInfo>>(), Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                var first = CreateReport("media/first.mkv", ProcessingStatus.Succeeded);
+                var second = CreateReport("media/second.mkv", ProcessingStatus.Running);
+                batch.TryAddFileReport(first);
+                batch.TryAddFileReport(second);
+                second.Progress = 40;
+
+                overlayDuringRun = viewModel.ProcessingOverlay;
+                interactionEnabledDuringRun = viewModel.IsInteractionEnabled;
+
+                second.Status = ProcessingStatus.Succeeded;
+                return Task.FromResult(new List<FileProcessingReport> { first, second });
+            });
+
+        // Act
+        await ((IAsyncRelayCommand)viewModel.ProcessBatchCommand).ExecuteAsync(null);
+
+        // Assert
+        Assert.Same(batch, viewModel.BatchReport);
+        Assert.NotNull(overlayDuringRun);
+        Assert.True(overlayDuringRun.IsActive);
+        Assert.Equal(2, overlayDuringRun.Current);
+        Assert.Equal(2, overlayDuringRun.Total);
+        Assert.Equal("second.mkv (40%)", overlayDuringRun.Detail);
+        Assert.Equal(70d, overlayDuringRun.ProgressPercent, precision: 6);
+        Assert.False(interactionEnabledDuringRun);
+
+        Assert.False(viewModel.ProcessingOverlay.IsActive);
+        Assert.True(viewModel.IsInteractionEnabled);
+    }
+
+    [Fact]
+    public async Task CancelProcessing_CancelsRun_AndReportsCancelledBatch()
+    {
+        // Arrange
+        var batch = SetupProcessableBatch();
+        var viewModel = CreateViewModel();
+        OperationOverlayState? overlayAfterCancel = null;
+        var tokenCanceled = false;
+        var canCancelAgain = true;
+        _orchestrator.ProcessAllAsync(Arg.Any<IEnumerable<ScannedFileInfo>>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                var report = CreateReport("media/file1.mkv", ProcessingStatus.Running);
+                batch.TryAddFileReport(report);
+
+                viewModel.CancelProcessingCommand.Execute(null);
+                overlayAfterCancel = viewModel.ProcessingOverlay;
+                tokenCanceled = callInfo.Arg<CancellationToken>().IsCancellationRequested;
+                canCancelAgain = viewModel.CancelProcessingCommand.CanExecute(null);
+
+                report.Status = ProcessingStatus.Canceled;
+                return Task.FromResult(new List<FileProcessingReport> { report });
+            });
+
+        var dialogs = new List<DialogMessage>();
+        var recipient = new object();
+        WeakReferenceMessenger.Default.Register<DialogMessage>(recipient, (_, message) => dialogs.Add(message));
+
+        try
+        {
+            // Act
+            await ((IAsyncRelayCommand)viewModel.ProcessBatchCommand).ExecuteAsync(null);
+        }
+        finally
+        {
+            WeakReferenceMessenger.Default.UnregisterAll(recipient);
+        }
+
+        // Assert
+        Assert.True(tokenCanceled);
+        Assert.NotNull(overlayAfterCancel);
+        Assert.True(overlayAfterCancel.IsCancelling);
+        Assert.False(canCancelAgain);
+        Assert.Contains(dialogs, d => d.Title == "Batch Cancelled" && d.Message.Contains("1 of 1 files were not processed"));
+        Assert.False(viewModel.IsCancelling);
+        Assert.False(viewModel.CancelProcessingCommand.CanExecute(null));
+    }
+
+    private BatchExecutionReport SetupProcessableBatch()
+    {
+        _fileList.Add(CreateScannedFile("media/file1.mkv"));
+        _validationStateService.HasBlockingErrors.Returns(false);
+        _argumentsGenerator.BuildBatchArguments(_batchConfiguration)
+            .Returns(["mkvpropedit file1.mkv --set title=Test"]);
+
+        var batch = new BatchExecutionReport();
+        _batchReportStore.CreateBatch().Returns(batch);
+        return batch;
+    }
+
+    private static FileProcessingReport CreateReport(string path, ProcessingStatus status)
+    {
+        return new FileProcessingReport
+        {
+            SourceFile = CreateScannedFile(path),
+            Path = path,
+            Status = status
+        };
     }
 
     private MainViewModel CreateViewModel()

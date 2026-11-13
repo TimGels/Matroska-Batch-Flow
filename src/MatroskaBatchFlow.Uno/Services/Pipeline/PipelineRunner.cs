@@ -55,7 +55,7 @@ public sealed partial class PipelineRunner(IInputOperationFeedbackService feedba
                     if (stage.ShowsOverlay)
                     {
                         // Publish initial overlay state for this stage.
-                        feedbackService.Publish(new InputOperationOverlayState(
+                        feedbackService.Publish(new OperationOverlayState(
                             stage.DisplayName,
                             stage.IsIndeterminate,
                             Current: 0,
@@ -69,7 +69,7 @@ public sealed partial class PipelineRunner(IInputOperationFeedbackService feedba
 
                         // Create a progress reporter that updates the overlay with determinate progress.
                         progress = new Progress<(int current, int total)>(p =>
-                            feedbackService.Publish(new InputOperationOverlayState(
+                            feedbackService.Publish(new OperationOverlayState(
                                 stage.DisplayName,
                                 IsIndeterminate: false,
                                 p.current,

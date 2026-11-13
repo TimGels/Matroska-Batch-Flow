@@ -6,13 +6,13 @@ namespace MatroskaBatchFlow.Uno.Services;
 /// <inheritdoc />
 public sealed class InputOperationFeedbackService : IInputOperationFeedbackService
 {
-    private InputOperationOverlayState _currentState = InputOperationOverlayState.Inactive;
+    private OperationOverlayState _currentState = OperationOverlayState.Inactive;
 
-    public InputOperationOverlayState CurrentState => _currentState;
+    public OperationOverlayState CurrentState => _currentState;
 
     public event EventHandler? StateChanged;
 
-    public void Publish(InputOperationOverlayState state)
+    public void Publish(OperationOverlayState state)
     {
         _currentState = state;
         StateChanged?.Invoke(this, EventArgs.Empty);
@@ -20,6 +20,6 @@ public sealed class InputOperationFeedbackService : IInputOperationFeedbackServi
 
     public void Clear()
     {
-        Publish(InputOperationOverlayState.Inactive);
+        Publish(OperationOverlayState.Inactive);
     }
 }
