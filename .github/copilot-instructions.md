@@ -3,7 +3,7 @@
 > **Audience**: These instructions are for AI coding assistants, not for human developers.  
 > **Human developers**: See [README.md](../README.md) for setup and contribution guidelines.
 
-> **Last Updated**: 2026-10-15
+> **Last Updated**: 2026-11-13
 > **Next Review**: When architecture changes, new patterns are introduced, or build commands change
 > 
 > **Maintenance**: When making significant code changes, update this file and Serena memories to keep them in sync with the codebase.
@@ -80,6 +80,9 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
   - `FileValidationEngine`: Validates file consistency using pluggable validation rules
   - `FileProcessingOrchestrator`: Coordinates batch file processing with cancellation support
   - `MkvPropeditExecutor`: Executes `mkvpropedit` commands via `ProcessRunner`
+  - **Progress**: `ProcessRunner` passes every output line to an `onOutputLine` callback → `MkvPropeditOutputParser` reads `Progress: N%` → `IProgress<int>` → `FileProcessingReport.Progress` → `BatchExecutionReport.CurrentFile`/`Completed`/`OverallProgress` (canceled files do not count as progress). mkvpropedit only reports progress while it reads the whole file (e.g. `--add-track-statistics-tags`); on Windows `--ui-language en` is added at execution so the output is English
+  - **Cancellation**: `MkvPropeditStopGate` only kills mkvpropedit while it is reading (last progress below 100%), so a file that may already be written is never interrupted; the remaining files are marked `Canceled`. When stopped, the executor throws `OperationCanceledException` (with the caller's token)
+  - `FileProcessingOrchestrator` must not use `ConfigureAwait(false)`: its per-file `Progress<int>` and status changes rely on the captured UI context
 
 - **Validation System**: Rule-based validation with three strictness modes (Strict, Lenient, Custom)
   - Rules implement `IFileValidationRule` (e.g., `TrackCountConsistencyRule`, `LanguageConsistencyRule`)
@@ -102,6 +105,8 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 - `IValidationSettingsService`: Manages validation strictness modes and track-level severity settings
 - `IThemeApplierService`: Applies Light/Dark/System themes
 - `IUIPreferencesService`: Persists user preferences via `WritableJsonSettings<T>`
+- `ITaskbarProgressService`: Shows batch progress on the taskbar button via COM `ITaskbarList3` (source-generated COM interop in `Services/Interop/`, hence `AllowUnsafeBlocks` in the Uno project). Works on WinAppSDK and on Skia Desktop when running on Windows (HWND via `Uno.UI.Xaml.WindowHelper.GetNativeWindow`); no-op elsewhere. Call it on the UI thread
+- **Long-running operations** use the shared `OperationOverlay` control with an `OperationOverlayState` record: `InputPage` shows it for scans (via `IInputOperationFeedbackService`), and `MainPage` covers the whole window with it while `MainViewModel` processes a batch (with a Cancel button, navigation and command bar disabled)
 
 ### External Dependencies
 - **MediaInfo**: Media file analysis (embedded library via P/Invoke)
@@ -246,6 +251,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 - **Wrong target framework**: Ensure `-f net10.0-windows10.0.19041` is specified
 - **Uno SDK version mismatch**: Check `global.json` for correct SDK version
 - **WinAppSDK issues**: Ensure Windows 11 SDK is installed
+- **MSB3073 `XamlCompiler.exe exited with code 1` without any message (WinAppSDK target)**: The incremental XAML compiler state in `obj` is stale, for example after renaming a XAML control or when IDE design-time builds ran at the same time. Run `dotnet build-server shutdown`, delete `src/MatroskaBatchFlow.Uno/obj/Debug/net10.0-windows10.0.19041` and the matching `bin` folder, then build again
 
 ### Runtime Issues
 - **Configuration validation fails**: Check appsettings.json against DataAnnotations in model classes
@@ -257,6 +263,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 - **Tests fail to discover**: Ensure xUnit v3 test adapter is installed
 - **Mock setup complexity**: Use NSubstitute's fluent API and builder pattern for test data
 - **Integration test isolation**: Each test should use its own service container
+- **Global messenger in tests**: Tests that use `WeakReferenceMessenger.Default` must join `[Collection(MessengerCollectionDefinition.Name)]`, because `InputViewModelTests` resets the messenger after each test
 
 ### Common Code Patterns to Avoid
 - Don't use #region/#endregion blocks (use comments and whitespace)
