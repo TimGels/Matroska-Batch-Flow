@@ -58,37 +58,16 @@ public class MkvPropeditExecutorTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_StopsProcessAndThrows_WhenCanceledWhileReading()
+    public async Task ExecuteAsync_LetsProcessFinish_WhenCanceledWhileRunning()
     {
         // Arrange
         using var cts = new CancellationTokenSource();
-        SetupRunner((onLine, stopToken) =>
+        var processCanBeStopped = true;
+        SetupRunner((onLine, processToken) =>
         {
             onLine("Progress: 40%");
             cts.Cancel();
-
-            // ProcessRunner throws once the token it observes is canceled.
-            stopToken.ThrowIfCancellationRequested();
-            return SuccessResult();
-        });
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            () => CreateExecutor().ExecuteAsync(FileArguments, ct: cts.Token));
-        Assert.Equal(cts.Token, exception.CancellationToken);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_LetsProcessFinish_WhenCanceledAfterReading()
-    {
-        // Arrange
-        using var cts = new CancellationTokenSource();
-        var wasStopped = true;
-        SetupRunner((onLine, stopToken) =>
-        {
-            onLine("Progress: 100%");
-            cts.Cancel();
-            wasStopped = stopToken.IsCancellationRequested;
+            processCanBeStopped = processToken.CanBeCanceled;
             return SuccessResult();
         });
 
@@ -96,7 +75,7 @@ public class MkvPropeditExecutorTests
         var result = await CreateExecutor().ExecuteAsync(FileArguments, ct: cts.Token);
 
         // Assert
-        Assert.False(wasStopped);
+        Assert.False(processCanBeStopped);
         Assert.Equal(MkvPropeditStatus.Success, result.Status);
     }
 

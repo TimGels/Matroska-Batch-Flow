@@ -168,8 +168,8 @@ Consistency rules that compare track properties across files use the **rolling r
 - `Completed` and `OverallProgress` exclude `Canceled` files, so a canceled batch stays below 100%
 - `FileProcessingOrchestrator` must not use `ConfigureAwait(false)`: `Progress<T>` and status changes rely on the captured UI context
 
-### Smart cancellation
-`MkvPropeditStopGate` decides when the user's cancellation may kill mkvpropedit: only while the last reported progress is below 100% (read phase, file untouched). Otherwise the process finishes (it may be writing). A stop requested before progress starts is applied once reading starts. When stopped, the executor throws `OperationCanceledException` with the caller's token, so the file is reported as `Canceled` (not `Failed`); the remaining files are canceled before start.
+### Cancellation
+A running mkvpropedit is never stopped. It edits the file in place, and its progress lines reach the app through a pipe and a reader thread, so they lag behind the process: a percentage below 100% does not prove that writing has not started, and killing it could corrupt the file. `MkvPropeditExecutor` therefore passes `CancellationToken.None` to `ProcessRunner` and only checks the caller's token before starting. Cancel lets the current file finish (it is reported with its real result) and the orchestrator marks the remaining files `Canceled` before start. Do not reintroduce killing the process unless mkvpropedit gains a cooperative safe-stop mechanism.
 
 ### UI
 - `MainViewModel` subscribes to the active `BatchExecutionReport` while processing and builds an `OperationOverlayState` (`ProcessingOverlay`); `MainPage` shows the shared `OperationOverlay` over the whole window, with Cancel bound to `CancelProcessingCommand`. `IsInteractionEnabled` disables the `NavigationView` and command bar, because arguments are built per file from the live configuration

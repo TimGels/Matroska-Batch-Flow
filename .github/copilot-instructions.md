@@ -81,7 +81,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
   - `FileProcessingOrchestrator`: Coordinates batch file processing with cancellation support
   - `MkvPropeditExecutor`: Executes `mkvpropedit` commands via `ProcessRunner`
   - **Progress**: `ProcessRunner` passes every output line to an `onOutputLine` callback → `MkvPropeditOutputParser` reads `Progress: N%` → `IProgress<int>` → `FileProcessingReport.Progress` → `BatchExecutionReport.CurrentFile`/`Completed`/`OverallProgress` (canceled files do not count as progress). mkvpropedit only reports progress while it reads the whole file (e.g. `--add-track-statistics-tags`); on Windows `--ui-language en` is added at execution so the output is English
-  - **Cancellation**: `MkvPropeditStopGate` only kills mkvpropedit while it is reading (last progress below 100%), so a file that may already be written is never interrupted; the remaining files are marked `Canceled`. When stopped, the executor throws `OperationCanceledException` (with the caller's token)
+  - **Cancellation**: a running mkvpropedit is never stopped: it edits the file in place, and its progress output reaches us with a delay, so it cannot prove that writing has not started. `MkvPropeditExecutor` passes `CancellationToken.None` to `ProcessRunner` and only checks the caller's token before starting. Cancel lets the current file finish and marks the remaining files `Canceled`
   - `FileProcessingOrchestrator` must not use `ConfigureAwait(false)`: its per-file `Progress<int>` and status changes rely on the captured UI context
 
 - **Validation System**: Rule-based validation with three strictness modes (Strict, Lenient, Custom)

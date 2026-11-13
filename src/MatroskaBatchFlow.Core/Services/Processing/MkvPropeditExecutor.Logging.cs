@@ -18,7 +18,4 @@ public partial class MkvPropeditExecutor
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Exception executing mkvpropedit with arguments: {Arguments}")]
     private partial void LogExecutionException(Exception ex, string arguments);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "mkvpropedit was stopped because processing was canceled. Arguments: {Arguments}")]
-    private partial void LogExecutionStopped(string arguments);
 }
