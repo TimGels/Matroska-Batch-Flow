@@ -15,6 +15,7 @@ public class FileProcessingReport : INotifyPropertyChanged
     private DateTimeOffset? _finishedAt;
     private string? _executedCommand;
     private string? _notes;
+    private int? _progress;
 
     private readonly ObservableCollection<string> _warnings = [];
     private readonly ObservableCollection<string> _errors = [];
@@ -106,6 +107,26 @@ public class FileProcessingReport : INotifyPropertyChanged
 
             _notes = value;
             OnPropertyChanged(nameof(Notes));
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the last progress percentage (0-100) reported while the file was running.
+    /// </summary>
+    /// <remarks>
+    /// <see langword="null"/> when no progress was reported. mkvpropedit only reports progress for operations
+    /// that read the whole file, such as calculating track statistics.
+    /// </remarks>
+    public int? Progress
+    {
+        get => _progress;
+        set
+        {
+            if (_progress == value)
+                return;
+
+            _progress = value;
+            OnPropertyChanged(nameof(Progress));
         }
     }
 

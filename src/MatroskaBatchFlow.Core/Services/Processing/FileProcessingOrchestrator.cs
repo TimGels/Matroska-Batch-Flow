@@ -105,8 +105,18 @@ public partial class FileProcessingOrchestrator : IFileProcessingOrchestrator
                 return fileReport;
             }
 
+            // Progress<T> invokes the callback on the SynchronizationContext captured here. When processing is
+            // started from the UI thread, progress updates stay on that thread, like the status changes below.
+            // Therefore this class must not use ConfigureAwait(false).
+            var fileProgress = new Progress<int>(percent =>
+            {
+                // Ignore reports that arrive after the file has finished.
+                if (fileReport.Status == ProcessingStatus.Running)
+                    fileReport.Progress = percent;
+            });
+
             // Execute mkvpropedit with the constructed arguments.
-            MkvPropeditResult propeditResult = await _mkvToolExecutor.ExecuteAsync(argString, ct);
+            MkvPropeditResult propeditResult = await _mkvToolExecutor.ExecuteAsync(argString, fileProgress, ct);
             fileReport.ExecutedCommand = propeditResult.SimulatedCommandLine;
 
             if (propeditResult.IsFatal)

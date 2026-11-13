@@ -21,6 +21,9 @@ public class BatchExecutionReport : INotifyPropertyChanged
     private int _pending;
     private int _skipped;
     private int _canceled;
+    private int _completed;
+    private FileProcessingReport? _currentFile;
+    private double _overallProgress;
 
     public ReadOnlyObservableCollection<FileProcessingReport> FileReports { get; }
 
@@ -34,6 +37,22 @@ public class BatchExecutionReport : INotifyPropertyChanged
     public int Pending => _pending;
     public int Skipped => _skipped;
     public int Canceled => _canceled;
+
+    /// <summary>
+    /// Gets the number of files that finished processing: succeeded, failed or skipped. Canceled files are not included.
+    /// </summary>
+    public int Completed => _completed;
+
+    /// <summary>
+    /// Gets the file that is currently being processed, or <see langword="null"/> if no file is running.
+    /// </summary>
+    public FileProcessingReport? CurrentFile => _currentFile;
+
+    /// <summary>
+    /// Gets the overall progress of the batch between 0 and 1, including the progress of the current file.
+    /// </summary>
+    /// <remarks>Canceled files do not count as progress, so a canceled batch stays below 1.</remarks>
+    public double OverallProgress => _overallProgress;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -127,6 +146,10 @@ public class BatchExecutionReport : INotifyPropertyChanged
         {
             Recompute();
         }
+        else if (eventArgs.PropertyName is nameof(FileProcessingReport.Progress) && ReferenceEquals(sender, _currentFile))
+        {
+            UpdateOverallProgress();
+        }
     }
 
     /// <summary>
@@ -142,17 +165,31 @@ public class BatchExecutionReport : INotifyPropertyChanged
         Set(ref _pending, _fileReports.Count(r => r.Status == ProcessingStatus.Pending), nameof(Pending));
         Set(ref _skipped, _fileReports.Count(r => r.Status == ProcessingStatus.Skipped), nameof(Skipped));
         Set(ref _canceled, _fileReports.Count(r => r.Status == ProcessingStatus.Canceled), nameof(Canceled));
+        Set(ref _completed, _fileReports.Count(r => r.Status is not (ProcessingStatus.Pending or ProcessingStatus.Running or ProcessingStatus.Canceled)), nameof(Completed));
+        Set(ref _currentFile, _fileReports.FirstOrDefault(r => r.Status == ProcessingStatus.Running), nameof(CurrentFile));
+        UpdateOverallProgress();
+    }
+
+    /// <summary>
+    /// Updates <see cref="OverallProgress"/> from the completed files and the progress of the current file.
+    /// </summary>
+    private void UpdateOverallProgress()
+    {
+        var currentFileFraction = (_currentFile?.Progress ?? 0) / 100d;
+        var progress = _total == 0 ? 0d : Math.Clamp((_completed + currentFileFraction) / _total, 0d, 1d);
+        Set(ref _overallProgress, progress, nameof(OverallProgress));
     }
 
     /// <summary>
     /// Sets the field to the specified value and raises the PropertyChanged event if the value has changed.
     /// </summary>
+    /// <typeparam name="T">The type of the backing field.</typeparam>
     /// <param name="field">The backing field to set.</param>
     /// <param name="value">The new value to set.</param>
     /// <param name="propertyName">The name of the property to raise the event for.</param>
-    private void Set(ref int field, int value, string propertyName)
+    private void Set<T>(ref T field, T value, string propertyName)
     {
-        if (field == value)
+        if (EqualityComparer<T>.Default.Equals(field, value))
             return;
 
         field = value;

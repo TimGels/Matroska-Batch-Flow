@@ -18,8 +18,13 @@ namespace MatroskaBatchFlow.Core.Services.Processing;
 /// <param name="logger">The logger for recording execution information.</param>
 public partial class MkvPropeditExecutor(IOptions<AppConfigOptions> optionsMonitor, IWritableSettings<UserSettings> userSettings, IProcessRunner processRunner, ILogger<MkvPropeditExecutor> logger) : IMkvToolExecutor
 {
+    /// <summary>
+    /// Forces English output so progress lines and warnings are recognised regardless of the system language.
+    /// </summary>
+    private const string EnglishUiLanguageArgument = "--ui-language en";
+
     /// <inheritdoc/>
-    public async Task<MkvPropeditResult> ExecuteAsync(string commandLineArguments, CancellationToken ct = default)
+    public async Task<MkvPropeditResult> ExecuteAsync(string commandLineArguments, IProgress<int>? progress = null, CancellationToken ct = default)
     {
         if (!TryResolveExecutable(out var resolvedExe, out var resolveError))
         {
@@ -35,19 +40,44 @@ public partial class MkvPropeditExecutor(IOptions<AppConfigOptions> optionsMonit
             };
         }
 
-        LogExecutingCommand(resolvedExe, commandLineArguments);
+        ct.ThrowIfCancellationRequested();
 
-        var startInfo = CreateStartInfo(resolvedExe, commandLineArguments);
+        var arguments = BuildExecutionArguments(commandLineArguments);
+        LogExecutingCommand(resolvedExe, arguments);
+
+        var startInfo = CreateStartInfo(resolvedExe, arguments);
+
+        // The process is only stopped through the gate, which holds back cancellation while the file may be written.
+        using var stopGate = new MkvPropeditStopGate();
+        using var cancellationRegistration = ct.Register(stopGate.RequestStop);
+
+        void OnOutputLine(string line)
+        {
+            if (!MkvPropeditOutputParser.TryParseProgress(line, out var percent))
+                return;
+
+            stopGate.ReportProgress(percent);
+            progress?.Report(percent);
+        }
+
         try
         {
-            ProcessExecutionResult executionResult = await processRunner.RunAsync(startInfo, IsWarning, ct).ConfigureAwait(false);
-            
+            ProcessExecutionResult executionResult = await processRunner.RunAsync(startInfo, IsWarning, OnOutputLine, stopGate.StopToken).ConfigureAwait(false);
+
+            if (executionResult.Canceled)
+                throw new OperationCanceledException(ct);
+
             LogCommandCompleted(executionResult.ExitCode);
-            return MapToResult(executionResult, resolvedExe, commandLineArguments);
+            return MapToResult(executionResult, resolvedExe, arguments);
+        }
+        catch (OperationCanceledException ex) when (ct.IsCancellationRequested)
+        {
+            LogExecutionStopped(arguments);
+            throw new OperationCanceledException("mkvpropedit was stopped because processing was canceled.", ex, ct);
         }
         catch (Exception ex)
         {
-            LogExecutionException(ex, commandLineArguments);
+            LogExecutionException(ex, arguments);
             return new MkvPropeditResult
             {
                 Status = MkvPropeditStatus.Unknown,
@@ -55,9 +85,25 @@ public partial class MkvPropeditExecutor(IOptions<AppConfigOptions> optionsMonit
                 StandardError = ex.Message,
                 Warnings = [],
                 ResolvedExecutablePath = resolvedExe,
-                ExecutableArguments = commandLineArguments
+                ExecutableArguments = arguments
             };
         }
+    }
+
+    /// <summary>
+    /// Builds the arguments used to start mkvpropedit.
+    /// </summary>
+    /// <remarks>
+    /// English output is only forced on Windows, where the option has been verified with the bundled mkvpropedit.
+    /// Elsewhere, forcing a UI language may depend on the matching system locale being installed.
+    /// </remarks>
+    /// <param name="commandLineArguments">The arguments generated for the file.</param>
+    /// <returns>The arguments to pass to the process.</returns>
+    private static string BuildExecutionArguments(string commandLineArguments)
+    {
+        return OperatingSystem.IsWindows()
+            ? $"{EnglishUiLanguageArgument} {commandLineArguments}"
+            : commandLineArguments;
     }
 
     /// <summary>
@@ -133,25 +179,14 @@ public partial class MkvPropeditExecutor(IOptions<AppConfigOptions> optionsMonit
     {
         ArgumentNullException.ThrowIfNull(exec);
 
-        if (exec.Canceled)
-        {
-            return new MkvPropeditResult
-            {
-                Status = MkvPropeditStatus.Unknown,
-                StandardOutput = exec.StdOut,
-                StandardError = "Canceled.",
-                Warnings = exec.Warnings,
-                ResolvedExecutablePath = resolvedExe,
-                ExecutableArguments = arguments
-            };
-        }
+        var standardOutput = MkvPropeditOutputParser.RemoveProgressLines(exec.StdOut);
 
         return exec.ExitCode switch
         {
             0 => new MkvPropeditResult
             {
                 Status = MkvPropeditStatus.Success,
-                StandardOutput = exec.StdOut,
+                StandardOutput = standardOutput,
                 StandardError = null,
                 Warnings = exec.Warnings,
                 ResolvedExecutablePath = resolvedExe,
@@ -160,7 +195,7 @@ public partial class MkvPropeditExecutor(IOptions<AppConfigOptions> optionsMonit
             1 => new MkvPropeditResult
             {
                 Status = MkvPropeditStatus.Warning,
-                StandardOutput = exec.StdOut,
+                StandardOutput = standardOutput,
                 StandardError = exec.StdErr,
                 Warnings = exec.Warnings,
                 ResolvedExecutablePath = resolvedExe,
@@ -169,7 +204,7 @@ public partial class MkvPropeditExecutor(IOptions<AppConfigOptions> optionsMonit
             2 => new MkvPropeditResult
             {
                 Status = MkvPropeditStatus.Error,
-                StandardOutput = exec.StdOut,
+                StandardOutput = standardOutput,
                 StandardError = exec.StdErr,
                 Warnings = exec.Warnings,
                 ResolvedExecutablePath = resolvedExe,
@@ -178,7 +213,7 @@ public partial class MkvPropeditExecutor(IOptions<AppConfigOptions> optionsMonit
             _ => new MkvPropeditResult
             {
                 Status = MkvPropeditStatus.Unknown,
-                StandardOutput = exec.StdOut,
+                StandardOutput = standardOutput,
                 StandardError = "Unexpected mkvpropedit exit code.",
                 Warnings = exec.Warnings,
                 ResolvedExecutablePath = resolvedExe,

@@ -11,7 +11,11 @@ public sealed partial class ProcessRunner(ILogger<ProcessRunner> logger) : IProc
 {
 
     /// <inheritdoc />
-    public async Task<ProcessExecutionResult> RunAsync(ProcessStartInfo startInfo, Func<string, bool>? isWarning = null, CancellationToken ct = default)
+    public async Task<ProcessExecutionResult> RunAsync(
+        ProcessStartInfo startInfo,
+        Func<string, bool>? isWarning = null,
+        Action<string>? onOutputLine = null,
+        CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(startInfo);
 
@@ -48,6 +52,8 @@ public sealed partial class ProcessRunner(ILogger<ProcessRunner> logger) : IProc
             {
                 warnings.Add(e.Data);
             }
+
+            onOutputLine?.Invoke(e.Data);
         }
 
         // Handler for standard error data.
@@ -63,6 +69,8 @@ public sealed partial class ProcessRunner(ILogger<ProcessRunner> logger) : IProc
             {
                 warnings.Add(e.Data);
             }
+
+            onOutputLine?.Invoke(e.Data);
         }
 
         process.OutputDataReceived += OnOutput;
