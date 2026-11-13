@@ -256,6 +256,8 @@ public partial class MainViewModel : ObservableObject
         DialogMessage outcome;
         try
         {
+            // Let the overlay render before files are enrolled and the first file is started on this thread.
+            await Task.Yield();
             await _orchestrator.ProcessAllAsync(_batchConfiguration.FileList, _processingCts.Token);
 
             MarkProcessedFilesAsStale(batch);

@@ -79,6 +79,32 @@ public class BatchExecutionReportTests
         Assert.Equal(1d / 3, batch.OverallProgress, precision: 6);
     }
 
+    [Fact]
+    public void AddFileReports_SkipsDuplicates_AndUpdatesSummaryOnce()
+    {
+        // Arrange
+        var batch = new BatchExecutionReport();
+        var existing = CreateReport("existing.mkv");
+        batch.TryAddFileReport(existing);
+        var first = CreateReport("first.mkv");
+        var second = CreateReport("second.mkv");
+        var totalNotifications = 0;
+        batch.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(BatchExecutionReport.Total))
+                totalNotifications++;
+        };
+
+        // Act
+        var added = batch.AddFileReports([first, existing, second, first]);
+
+        // Assert
+        Assert.Equal([first, second], added);
+        Assert.Equal(3, batch.Total);
+        Assert.Equal(3, batch.Pending);
+        Assert.Equal(1, totalNotifications);
+    }
+
     private static FileProcessingReport CreateReport(string path)
     {
         var mediaInfoResult = new MediaInfoResultBuilder()

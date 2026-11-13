@@ -12,6 +12,12 @@ namespace MatroskaBatchFlow.Core.Models;
 public class BatchExecutionReport : INotifyPropertyChanged
 {
     private readonly ObservableCollection<FileProcessingReport> _fileReports = [];
+    private readonly HashSet<Guid> _reportIds = [];
+
+    /// <summary>
+    /// Set while <see cref="AddFileReports"/> runs, so the summary is recomputed once instead of after every report.
+    /// </summary>
+    private bool _isAddingRange;
 
     private int _total;
     private int _succeeded;
@@ -64,10 +70,11 @@ public class BatchExecutionReport : INotifyPropertyChanged
         FileReports = new ReadOnlyObservableCollection<FileProcessingReport>(_fileReports);
         _fileReports.CollectionChanged += (_, e) =>
         {
-            if (e.Action is NotifyCollectionChangedAction.Add
-                or NotifyCollectionChangedAction.Remove
-                or NotifyCollectionChangedAction.Reset
-                or NotifyCollectionChangedAction.Replace)
+            if (!_isAddingRange
+                && e.Action is NotifyCollectionChangedAction.Add
+                    or NotifyCollectionChangedAction.Remove
+                    or NotifyCollectionChangedAction.Reset
+                    or NotifyCollectionChangedAction.Replace)
             {
                 Recompute();
             }
@@ -98,15 +105,39 @@ public class BatchExecutionReport : INotifyPropertyChanged
     /// if a report with the same Id already exists.</returns>
     public bool TryAddFileReport(FileProcessingReport report)
     {
-        if (_fileReports.Any(r => r.Id == report.Id))
-        {
+        if (!_reportIds.Add(report.Id))
             return false;
-        }
 
         _fileReports.Add(report);
+        return true;
+    }
+
+    /// <summary>
+    /// Adds the reports that are not in the batch yet, and recomputes the summary properties once afterwards.
+    /// </summary>
+    /// <remarks>Use this for many reports at once: adding them one by one recomputes the summary after every report.</remarks>
+    /// <param name="reports">The reports to add.</param>
+    /// <returns>The reports that were added; reports with an Id that already exists are skipped.</returns>
+    public IReadOnlyList<FileProcessingReport> AddFileReports(IEnumerable<FileProcessingReport> reports)
+    {
+        var added = new List<FileProcessingReport>();
+
+        _isAddingRange = true;
+        try
         {
-            return true;
+            foreach (var report in reports)
+            {
+                if (TryAddFileReport(report))
+                    added.Add(report);
+            }
         }
+        finally
+        {
+            _isAddingRange = false;
+            Recompute();
+        }
+
+        return added;
     }
 
     /// <summary>
@@ -122,6 +153,7 @@ public class BatchExecutionReport : INotifyPropertyChanged
             report.PropertyChanged -= FileReportChanged;
         }
 
+        _reportIds.Clear();
         _fileReports.Clear();
     }
 

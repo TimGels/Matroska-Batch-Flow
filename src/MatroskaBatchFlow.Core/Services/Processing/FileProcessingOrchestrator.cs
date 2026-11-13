@@ -37,25 +37,14 @@ public partial class FileProcessingOrchestrator : IFileProcessingOrchestrator
     /// <returns>A list of created <see cref="FileProcessingReport"/> instances.</returns>
     private List<FileProcessingReport> EnrollFiles(IEnumerable<ScannedFileInfo> scannedFiles)
     {
-        var batchReport = _batchReportStore.ActiveBatch;
-        var created = new List<FileProcessingReport>();
-
-        foreach (var scannedFile in scannedFiles)
+        var reports = scannedFiles.Select(scannedFile => new FileProcessingReport
         {
-            var report = new FileProcessingReport
-            {
-                SourceFile = scannedFile,
-                Path = scannedFile.Path,
-                Status = ProcessingStatus.Pending
-            };
+            SourceFile = scannedFile,
+            Path = scannedFile.Path,
+            Status = ProcessingStatus.Pending
+        });
 
-            if (batchReport.TryAddFileReport(report))
-            {
-                created.Add(report);
-            }
-        }
-
-        return created;
+        return [.. _batchReportStore.ActiveBatch.AddFileReports(reports)];
     }
 
     /// <inheritdoc/>
