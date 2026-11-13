@@ -139,7 +139,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Requests cancellation of the running batch. Files that are already being written are finished first.
+    /// Requests cancellation of the running batch. The file being processed is finished first, then the remaining files are skipped.
     /// </summary>
     private void CancelProcessing()
     {
@@ -292,7 +292,7 @@ public partial class MainViewModel : ObservableObject
         }
 
         ProcessingOverlay = new OperationOverlayState(
-            IsCancelling ? "Cancelling…" : "Processing files…",
+            IsCancelling ? "Cancelling after the current file…" : "Processing files…",
             IsIndeterminate: false,
             Current: fileNumber,
             Total: batch.Total,

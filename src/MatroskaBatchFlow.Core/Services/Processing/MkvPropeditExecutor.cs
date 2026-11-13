@@ -47,33 +47,20 @@ public partial class MkvPropeditExecutor(IOptions<AppConfigOptions> optionsMonit
 
         var startInfo = CreateStartInfo(resolvedExe, arguments);
 
-        // The process is only stopped through the gate, which holds back cancellation while the file may be written.
-        using var stopGate = new MkvPropeditStopGate();
-        using var cancellationRegistration = ct.Register(stopGate.RequestStop);
-
         void OnOutputLine(string line)
         {
-            if (!MkvPropeditOutputParser.TryParseProgress(line, out var percent))
-                return;
-
-            stopGate.ReportProgress(percent);
-            progress?.Report(percent);
+            if (MkvPropeditOutputParser.TryParseProgress(line, out var percent))
+                progress?.Report(percent);
         }
 
         try
         {
-            ProcessExecutionResult executionResult = await processRunner.RunAsync(startInfo, IsWarning, OnOutputLine, stopGate.StopToken).ConfigureAwait(false);
-
-            if (executionResult.Canceled)
-                throw new OperationCanceledException(ct);
+            // A started process is never stopped: mkvpropedit edits the file in place, and its output cannot prove that it
+            // has not started writing yet, so stopping it could corrupt the file. Cancellation applies to later files.
+            ProcessExecutionResult executionResult = await processRunner.RunAsync(startInfo, IsWarning, OnOutputLine, CancellationToken.None).ConfigureAwait(false);
 
             LogCommandCompleted(executionResult.ExitCode);
             return MapToResult(executionResult, resolvedExe, arguments);
-        }
-        catch (OperationCanceledException ex) when (ct.IsCancellationRequested)
-        {
-            LogExecutionStopped(arguments);
-            throw new OperationCanceledException("mkvpropedit was stopped because processing was canceled.", ex, ct);
         }
         catch (Exception ex)
         {
