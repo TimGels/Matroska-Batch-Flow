@@ -214,7 +214,28 @@ dotnet test --report-xunit-trx --coverlet --coverlet-output-format cobertura
 
 ## Contributing
 
-This is a personal project. If you encounter a bug or have a feature suggestion, you're welcome to [open an issue](../../issues), but please ensure it's detailed and actionable. Low-effort submissions (low quality pull requests, vague reports, duplicate issues, feature requests without context) may be closed without action.
+This is a personal project. While I'm open to contributions, whether one is accepted is up to me. I may decline a contribution even if there's nothing wrong with it, for example if it doesn't fit the project's direction, or for any other reason. When that happens, it isn't a judgment of your work.
+
+I work on this project when I have time and motivation, and there may be periods of inactivity. Please be patient and understanding regarding response times and updates.
+
+If you encounter a bug or have a feature suggestion, you're welcome to [open an issue](../../issues), but please ensure it's detailed and actionable. Low-effort submissions (low quality pull requests, vague reports, duplicate issues, feature requests without context) may be closed without action and without further notice.
+
+### AI Usage
+
+**Maintainer:** I've been developing software since before AI coding assistants became widespread, and I now use them as part of my workflow to speed up development work. But ultimately, I'm responsible for the project's direction and design, and I'm accountable for everything that ships.
+
+**Contributors:** You're welcome to use AI tools. I expect you to:
+
+- Understand what you submit and be able to explain it.
+- Check bug reports yourself before submitting them.
+- Stay in the loop; understand the context and implications of your contributions.
+- Only submit content you have the right to contribute under the project's license.
+
+Submissions that look like unreviewed AI output fall under the low-effort policy above and may be closed without action. Keep in mind that AI tools are meant to assist, not replace, human judgment and review. Always review and understand the output before submitting it.
+
+**The app:** Matroska Batch Flow currently contains no AI features.
+
+This section may change as tools and practices evolve.
 
 ## Credits
 
