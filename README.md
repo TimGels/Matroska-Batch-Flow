@@ -222,13 +222,12 @@ If you encounter a bug or have a feature suggestion, you're welcome to [open an 
 
 ### AI Usage
 
-**Maintainer:** I've been developing software since before AI coding assistants became widespread, and I now use them as part of my workflow to speed up development work. But ultimately, I'm responsible for the project's direction and design, and I'm accountable for everything that ships.
+**Maintainer:** I use AI coding assistants to support and speed up development, not to replace my own understanding or judgment. I make the final decisions about the project's direction, design, and what gets included.
 
-**Contributors:** You're welcome to use AI tools. I expect you to:
+**Contributors:** While you're welcome to use AI tools, I expect you to:
 
-- Understand what you submit and be able to explain it.
+- Review and understand what you submit, including its context and implications, and be able to explain it.
 - Check bug reports yourself before submitting them.
-- Stay in the loop; understand the context and implications of your contributions.
 - Only submit content you have the right to contribute under the project's license.
 
 Submissions that look like unreviewed AI output fall under the low-effort policy above and may be closed without action. Keep in mind that AI tools are meant to assist, not replace, human judgment and review. Always review and understand the output before submitting it.
