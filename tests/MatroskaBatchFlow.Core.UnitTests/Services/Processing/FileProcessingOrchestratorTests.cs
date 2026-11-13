@@ -109,14 +109,14 @@ public class FileProcessingOrchestratorTests
         var args = "test arguments";
         _argsGenerator.BuildFileArgumentString(Arg.Any<ScannedFileInfo>(), Arg.Any<IBatchConfiguration>())
             .Returns(args);
-        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>())
             .Returns(CreateSuccessResult());
 
         // Act
         await orchestrator.ProcessFileAsync(report, TestContext.Current.CancellationToken);
 
         // Assert
-        await _mkvToolExecutor.Received(1).ExecuteAsync(args, Arg.Any<CancellationToken>());
+        await _mkvToolExecutor.Received(1).ExecuteAsync(args, Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public class FileProcessingOrchestratorTests
         var report = CreateFileReport();
         _argsGenerator.BuildFileArgumentString(Arg.Any<ScannedFileInfo>(), Arg.Any<IBatchConfiguration>())
             .Returns("args");
-        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>())
             .Returns(CreateSuccessResult());
 
         // Act
@@ -145,7 +145,7 @@ public class FileProcessingOrchestratorTests
         var report = CreateFileReport();
         _argsGenerator.BuildFileArgumentString(Arg.Any<ScannedFileInfo>(), Arg.Any<IBatchConfiguration>())
             .Returns("args");
-        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>())
             .Returns(CreateWarningResult());
 
         // Act
@@ -164,7 +164,7 @@ public class FileProcessingOrchestratorTests
         var report = CreateFileReport();
         _argsGenerator.BuildFileArgumentString(Arg.Any<ScannedFileInfo>(), Arg.Any<IBatchConfiguration>())
             .Returns("args");
-        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>())
             .Returns(CreateFailureResult());
 
         // Act
@@ -184,7 +184,7 @@ public class FileProcessingOrchestratorTests
         var cts = new CancellationTokenSource();
         _argsGenerator.BuildFileArgumentString(Arg.Any<ScannedFileInfo>(), Arg.Any<IBatchConfiguration>())
             .Returns("args");
-        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>())
             .Returns(async callInfo =>
             {
                 var token = callInfo.Arg<CancellationToken>();
@@ -209,7 +209,7 @@ public class FileProcessingOrchestratorTests
         var report = CreateFileReport();
         _argsGenerator.BuildFileArgumentString(Arg.Any<ScannedFileInfo>(), Arg.Any<IBatchConfiguration>())
             .Returns("args");
-        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>())
             .Returns<MkvPropeditResult>(_ => throw new InvalidOperationException("Test error"));
 
         // Act
@@ -230,7 +230,7 @@ public class FileProcessingOrchestratorTests
         var arguments = "test.mkv --args";
         _argsGenerator.BuildFileArgumentString(Arg.Any<ScannedFileInfo>(), Arg.Any<IBatchConfiguration>())
             .Returns("args");
-        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>())
             .Returns(new MkvPropeditResult
             {
                 Status = MkvPropeditStatus.Success,
@@ -255,7 +255,7 @@ public class FileProcessingOrchestratorTests
         var report = CreateFileReport();
         _argsGenerator.BuildFileArgumentString(Arg.Any<ScannedFileInfo>(), Arg.Any<IBatchConfiguration>())
             .Returns("args");
-        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>())
             .Returns(async _ =>
             {
                 await Task.Delay(100);
@@ -278,7 +278,7 @@ public class FileProcessingOrchestratorTests
         var report = CreateFileReport();
         _argsGenerator.BuildFileArgumentString(Arg.Any<ScannedFileInfo>(), Arg.Any<IBatchConfiguration>())
             .Returns("args");
-        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>())
             .Returns(CreateSuccessResult());
 
         // Act
@@ -304,7 +304,7 @@ public class FileProcessingOrchestratorTests
         SetupActiveBatchWithReports(files);
         _argsGenerator.BuildFileArgumentString(Arg.Any<ScannedFileInfo>(), Arg.Any<IBatchConfiguration>())
             .Returns("args");
-        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>())
             .Returns(CreateSuccessResult());
 
         // Act
@@ -324,7 +324,7 @@ public class FileProcessingOrchestratorTests
         _batchReportStore.ActiveBatch.Returns(activeBatch);
         _argsGenerator.BuildFileArgumentString(Arg.Any<ScannedFileInfo>(), Arg.Any<IBatchConfiguration>())
             .Returns("args");
-        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>())
             .Returns(CreateSuccessResult());
 
         // Act
@@ -350,7 +350,7 @@ public class FileProcessingOrchestratorTests
             .Returns("args");
 
         var callCount = 0;
-        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>())
             .Returns(_ =>
             {
                 if (++callCount == 1)
@@ -408,6 +408,51 @@ public class FileProcessingOrchestratorTests
 
         // Assert - Should create a new report since it's a different FileProcessingReport instance
         Assert.Single(results);
+    }
+
+    [Fact]
+    public async Task ProcessFileAsync_ForwardsProgress_OnlyWhileFileIsRunning()
+    {
+        // Arrange
+        var orchestrator = CreateOrchestrator();
+        var report = CreateFileReport();
+        IProgress<int>? executorProgress = null;
+        int? progressWhileRunning = null;
+        _argsGenerator.BuildFileArgumentString(Arg.Any<ScannedFileInfo>(), Arg.Any<IBatchConfiguration>())
+            .Returns("args");
+        _mkvToolExecutor.ExecuteAsync(Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                executorProgress = callInfo.ArgAt<IProgress<int>?>(1);
+                executorProgress?.Report(42);
+                progressWhileRunning = report.Progress;
+                return CreateSuccessResult();
+            });
+
+        var previousContext = SynchronizationContext.Current;
+        SynchronizationContext.SetSynchronizationContext(new InlineSynchronizationContext());
+        try
+        {
+            // Act
+            await orchestrator.ProcessFileAsync(report, TestContext.Current.CancellationToken);
+            executorProgress!.Report(99);
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(previousContext);
+        }
+
+        // Assert
+        Assert.Equal(42, progressWhileRunning);
+        Assert.Equal(42, report.Progress);
+    }
+
+    /// <summary>
+    /// Runs posted callbacks immediately, so <see cref="Progress{T}"/> reports are applied synchronously.
+    /// </summary>
+    private sealed class InlineSynchronizationContext : SynchronizationContext
+    {
+        public override void Post(SendOrPostCallback d, object? state) => d(state);
     }
 
     private FileProcessingOrchestrator CreateOrchestrator()
