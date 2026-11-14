@@ -4,6 +4,9 @@ using MatroskaBatchFlow.Core.Models.AppSettings;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Extensions;
 using MatroskaBatchFlow.Uno.Messages;
+#if __UNO_SKIA__
+using MatroskaBatchFlow.Uno.Platforms.Desktop;
+#endif
 using MatroskaBatchFlow.Uno.Services;
 using MatroskaBatchFlow.Uno.Utilities;
 using Microsoft.Extensions.Configuration;
@@ -188,6 +191,30 @@ public partial class App : Application
             Content = Host!.Services.GetRequiredService<Shell>(),
             ExtendsContentIntoTitleBar = false,
         };
+
+#if __UNO_SKIA__
+        if (OperatingSystem.IsWindows())
+        {
+            var installationAttempted = false;
+            window.Activated += (_, _) =>
+            {
+                if (installationAttempted)
+                {
+                    return;
+                }
+
+                installationAttempted = true;
+                try
+                {
+                    SkiaWin32DragDropWorkaround.Install(window);
+                }
+                catch (Exception ex)
+                {
+                    LogSkiaWin32DragDropWorkaroundFailed(ex);
+                }
+            };
+        }
+#endif
 
         // Set the dispatcher queue for the logging view service to enable UI thread marshalling
         loggingViewService.SetDispatcherQueue(window.DispatcherQueue);

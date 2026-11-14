@@ -117,7 +117,7 @@ public class DropFilesBehavior
             return;
         }
 
-        var files = e.DataView.GetStorageItemsAsync().GetAwaiter().GetResult();
+        var files = await e.DataView.GetStorageItemsAsync();
         if (files.Count == 0)
         {
             return;
