@@ -37,6 +37,9 @@ public partial class App
     [LoggerMessage(Level = LogLevel.Critical, Message = "Unhandled exception occurred: {Message}")]
     private partial void LogUnhandledException(Exception ex, string message);
 
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to install the Skia Win32 drag-and-drop workaround.")]
+    private partial void LogSkiaWin32DragDropWorkaroundFailed(Exception exception);
+
     /// <summary>
     /// Logs application startup information including version, platform, and environment details.
     /// </summary>

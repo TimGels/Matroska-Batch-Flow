@@ -3,7 +3,7 @@
 > **Audience**: These instructions are for AI coding assistants, not for human developers.  
 > **Human developers**: See [README.md](../README.md) for setup and contribution guidelines.
 
-> **Last Updated**: 2026-11-13
+> **Last Updated**: 2026-11-14
 > **Next Review**: When architecture changes, new patterns are introduced, or build commands change
 > 
 > **Maintenance**: When making significant code changes, update this file and Serena memories to keep them in sync with the codebase.
@@ -259,6 +259,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 - **mkvpropedit not found**: Set `MkvPropeditPath` in appsettings.json or Settings UI
 - **Languages not loading**: Verify `Resources/languages.json` exists and is valid JSON
 - **File scanning fails**: Check file permissions and ensure MediaInfo.dll is in Binaries folder
+- **Skia Win32 file drops stall on drag-enter**: The Windows Skia host wraps Uno's OLE drop target and hides `FileGroupDescriptorW`/`FileContents` when `CF_HDROP` paths are available. If installation fails, check the application log for `Failed to install the Skia Win32 drag-and-drop workaround.` Linux and macOS continue using Uno's native drop targets; virtual-file drops without `CF_HDROP` retain Uno's original behavior.
 
 ### Testing Issues
 - **Tests fail to discover**: Ensure xUnit v3 test adapter is installed
