@@ -27,6 +27,7 @@ public class MkvPropeditOutputParserTests
     [InlineData("The file is read in order to create track statistics.")]
     [InlineData("The changes are written to the file.")]
     [InlineData("Done.")]
+    [InlineData("Progress: \u0664\u0662%")]
     [InlineData("")]
     [InlineData(null)]
     public void TryParseProgress_ReturnsFalse_ForOtherLines(string? line)

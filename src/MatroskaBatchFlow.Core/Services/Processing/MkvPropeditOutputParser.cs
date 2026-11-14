@@ -49,6 +49,9 @@ internal static partial class MkvPropeditOutputParser
         return string.Join(Environment.NewLine, lines);
     }
 
-    [GeneratedRegex(@"^\s*[^\d:：]+[:：]\s*(?<percent>\d{1,3})\s*%\s*$", RegexOptions.CultureInvariant)]
+    /// <summary>
+    /// Matches a complete mkvpropedit progress line and captures its percentage.
+    /// </summary>
+    [GeneratedRegex(@"^\s*[^0-9:\uFF1A]+[:\uFF1A]\s*(?<percent>[0-9]{1,3})\s*%\s*$", RegexOptions.CultureInvariant)]
     private static partial Regex ProgressLineRegex();
 }
