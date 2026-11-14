@@ -57,7 +57,7 @@
         <PublishAot>False</PublishAot>
         <!-- Required by source-generated COM interop (taskbar progress) -->
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <AssemblyVersion>0.10.0.0</AssemblyVersion>
+        <AssemblyVersion>0.11.0.0</AssemblyVersion>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" />
