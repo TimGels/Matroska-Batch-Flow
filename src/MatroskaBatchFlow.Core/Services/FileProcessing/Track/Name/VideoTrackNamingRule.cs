@@ -41,6 +41,10 @@ public class VideoTrackNamingRule : IFileProcessingRule
                     .Key;
                 globalTracks[i].Name = mostCommonName;
             }
+            else
+            {
+                globalTracks[i].Name = string.Empty;
+            }
         }
     }
 }
