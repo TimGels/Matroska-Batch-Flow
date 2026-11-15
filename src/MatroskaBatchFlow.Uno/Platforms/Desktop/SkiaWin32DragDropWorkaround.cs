@@ -5,6 +5,9 @@ using System.Runtime.InteropServices.Marshalling;
 namespace MatroskaBatchFlow.Uno.Platforms.Desktop;
 
 // Workaround for the drag-and-drop issue tracked at https://github.com/TimGels/Matroska-Batch-Flow/issues/101.
+// Upstream issue: https://github.com/unoplatform/uno/issues/26482
+// Upstream fix: https://github.com/unoplatform/uno/pull/26494
+// Remove this workaround once the fix ships: https://github.com/TimGels/Matroska-Batch-Flow/issues/105
 internal static partial class SkiaWin32DragDropWorkaround
 {
     private const string DropTargetPropertyName = "OleDropTargetInterface";
