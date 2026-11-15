@@ -52,6 +52,10 @@ public class SubtitleTrackNamingRule : IFileProcessingRule
                     .Key;
                 globalTracks[i].Name = mostCommonName;
             }
+            else
+            {
+                globalTracks[i].Name = string.Empty;
+            }
 
             // TODO: Future enhancement - generate smart names based on subtitle format if no title exists
         }

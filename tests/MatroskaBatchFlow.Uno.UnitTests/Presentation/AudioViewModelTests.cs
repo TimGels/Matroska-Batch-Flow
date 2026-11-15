@@ -4,6 +4,7 @@ using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileProcessing;
+using MatroskaBatchFlow.Core.Services.FileProcessing.Track.Name;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
 using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
@@ -30,6 +31,42 @@ public class AudioViewModelTests
         _languageProvider.Languages.Returns([]);
         _batchConfiguration.AudioTracks.Returns(new ObservableCollection<TrackIntent>());
         _batchConfiguration.FileList.Returns(new UniqueObservableCollection<ScannedFileInfo>(Substitute.For<IScannedFileInfoPathComparer>()));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("Original")]
+    public void ResetProperty_Name_RestoresDetectedNameInViewModel(string scannedName)
+    {
+        var trackInfo = new TrackInfoBuilder()
+            .WithType(TrackType.Audio)
+            .WithStreamKindID(0)
+            .WithTitle(scannedName)
+            .Build();
+        var result = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .AddTrack(trackInfo)
+            .Build();
+        var file = new ScannedFileInfo(result, "file.mkv");
+        var config = new BatchConfiguration(
+            Substitute.For<IScannedFileInfoPathComparer>(),
+            Substitute.For<ILogger<BatchConfiguration>>());
+        config.FileList.Add(file);
+        var intent = new TrackIntent(trackInfo) { Type = TrackType.Audio, Index = 0, Name = scannedName };
+        config.AudioTracks.Add(intent);
+        var engine = new FileProcessingEngine([new AudioTrackNamingRule()]);
+        var viewModel = new AudioViewModel(_logger, _languageProvider, config, engine, _uiPreferences);
+        viewModel.IsTrackNameModificationEnabled = true;
+        viewModel.TrackName = "Edited";
+        Assert.True(viewModel.IsNameUserSet);
+
+        viewModel.ResetPropertyCommand.Execute(TrackIntentProperty.Name);
+
+        Assert.False(intent.IsNameUserSet);
+        Assert.Equal(scannedName, intent.Name);
+        Assert.Equal(scannedName, viewModel.TrackName);
+        Assert.False(viewModel.IsNameUserSet);
+        Assert.True(viewModel.IsTrackNameModificationEnabled);
     }
 
     [Fact]

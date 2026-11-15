@@ -46,6 +46,10 @@ public class AudioTrackNamingRule : IFileProcessingRule
 
                 globalTracks[i].Name = mostCommonName;
             }
+            else
+            {
+                globalTracks[i].Name = string.Empty;
+            }
         }
     }
 
