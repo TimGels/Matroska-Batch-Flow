@@ -156,6 +156,9 @@ var audioTrackInfo = new MediaInfoResultBuilder()
 
 ## Control Flow Patterns
 
+### Braces for `if` statements
+Use braces by default. A simple guard with no `else` may omit braces if its entire body is a single `return`, `throw`, or `continue` statement. Braces are also fine for these guards. Use braces when a branch does work (such as assigning a value, logging, or calling a service), even for one statement.
+
 ### Early Returns
 - **Prefer guard clauses** with early returns over nested conditionals
 - **Keep returns simple** - avoid complex expressions in return statements
@@ -192,7 +195,7 @@ public void MarkFileAsStale(Guid fileId)
 
 ### Exception Throwing
 - **Prefer built-in ThrowIf methods** when available (.NET 6+)
-- **Single-line throws** without braces under if statements for other cases
+- When no `ThrowIf` helper fits, a single `throw` follows the guard clause rule above.
 - Use guard clauses for parameter validation
 
 **Example:**
@@ -208,11 +211,6 @@ ArgumentException.ThrowIfNullOrWhiteSpace(input);
 if (value == null)
     throw new ArgumentNullException(nameof(value));
 
-// ❌ Avoid: Braces for single-line throw
-if (value == null)
-{
-    throw new ArgumentNullException(nameof(value));
-}
 ```
 
 ### Complex LINQ Queries
