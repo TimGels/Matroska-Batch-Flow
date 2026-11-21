@@ -47,7 +47,7 @@ public class ForcedFlagConsistencyRule : IFileValidationRule
             var forcedFlagMatrix = BuildForcedFlagMatrix(scannedFiles, type);
 
             foreach (var result in RollingReferenceComparer.Compare(
-                forcedFlagMatrix, scannedFiles, type, trackSettings.ForcedFlag, "Forced flag"))
+                forcedFlagMatrix, scannedFiles, type, trackSettings.ForcedFlag, "Forced flag", ValidationCheckKind.ForcedFlag))
                 yield return result;
         }
     }

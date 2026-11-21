@@ -84,7 +84,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IFileValidationEngine, FileValidationEngine>();
             services.AddSingleton<IFileValidationRule, LanguageConsistencyRule>();
             services.AddSingleton<IFileValidationRule, TrackCountConsistencyRule>();
-            services.AddSingleton<IFileValidationRule, FileFormatValidationRule>();
+            services.AddSingleton<FileFormatValidationRule>();
             services.AddSingleton<IFileValidationRule, DefaultFlagConsistencyRule>();
             services.AddSingleton<IFileValidationRule, ForcedFlagConsistencyRule>();
 

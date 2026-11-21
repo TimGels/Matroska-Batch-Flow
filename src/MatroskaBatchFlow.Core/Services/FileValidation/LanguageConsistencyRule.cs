@@ -48,7 +48,7 @@ public class LanguageConsistencyRule : IFileValidationRule
             var languageMatrix = BuildLanguageMatrix(scannedFiles, type);
 
             foreach (var result in RollingReferenceComparer.Compare(
-                languageMatrix, scannedFiles, type, trackSettings.Language, "Language"))
+                languageMatrix, scannedFiles, type, trackSettings.Language, "Language", ValidationCheckKind.Language))
                 yield return result;
         }
     }
