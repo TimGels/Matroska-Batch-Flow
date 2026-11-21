@@ -78,6 +78,8 @@ Generate mkvpropedit commands for differences
 - Models: Domain entities and business logic (Core project)
 
 ### ViewModel Patterns
+- The processing footer binds to `MainViewModel.Availability` (reason and relevant count). The view resolves English fallback and translated strings from `Resources.resw` for button labels, the no-changes hint and automation help. Test availability by reason and count, not by display text.
+- Validation, Input badges and track coverage use `ValidationText` bindings for dynamic text and `x:Uid` for static labels. File topics, format issues, raw tags, missing slots and visit state stay independent of the resource language. Unstructured diagnostics and scanned identifiers are displayed verbatim.
 - `TrackViewModelBase`: Base class for track-specific ViewModels
 - Method: `UpdateBatchConfigTrackProperty` - synchronizes global and per-file configurations when user edits UI
 - Pattern: ViewModels update both global (for UI) and per-file (for command generation) simultaneously
@@ -138,10 +140,19 @@ Consistency rules that compare track properties across files use the **rolling r
 
 **Adding a new property-comparison rule**:
 1. Build a `List<List<T>>` matrix using a private `Build*Matrix` helper
-2. Call `RollingReferenceComparer.Compare(matrix, files, trackType, severity, propertyName)`
+2. Call `RollingReferenceComparer.Compare(matrix, files, trackType, severity, propertyName, checkKind)`
 3. The comparer yields `FileValidationResult` for every mismatch found
 
 **Validation rule interface**: All rules implement `IFileValidationRule` and are registered in DI. No explicit orchestration needed — `FileValidationEngine` discovers and runs them all.
+
+### Contextual File Checks (ui-patterns, validation)
+
+- `FileValidationResult` preserves its diagnostic message and severity, with a `ValidationCheckKind` and structured `ValidationComparison` snapshots for presentation. Do not parse messages to identify issues.
+- Property comparisons share one snapshot per differing track position across result instances, including matching files but excluding files without that position. Run FileFormatValidationRule as a separate first stage. Unsupported files block in every mode but are excluded from all later comparisons; track-count evidence includes zero counts for supported files.
+- `FileCheckSummary` groups findings by kind, severity, track type, and one-based position. The dedicated `FileChecksPage` selects one topic and displays its impact, value counts and per-file comparisons; neither the reference nor the majority is described as correct. A compact selector replaces the side list on narrow windows.
+- `InputViewModel` replaces its compact toolbar summary on validation events and updates existing `ScannedFileViewModel` indicators without rebuilding the file list or changing selection. Do not put expandable findings above the Input file list.
+- `MainViewModel` exposes processing availability and a primary review action for blockers. The Validation tab sits next to Input. The tab opens a batch-wide FileCheckVisit; the footer, Input toolbar and per-file counts also navigate to that tab. A file-scoped visit shows its value above the full comparison. Expandable rows show filenames by raw value; absent slots have their own contextual row and do not change the comparison participants. On Back, restore the topic and expanded value keys against live results, not saved file lists. TrackCheckInspection opens a batch-wide editor with supported-file coverage beside the selector and a native Back link. Use the Input tab to return to the cached file list. Navigating away does not dismiss findings.
+- Findings describe scanned metadata, not pending output edits. The UI must not claim a finding is fixed merely because the user configured a change.
 
 ## Processing Pipeline
 
@@ -173,6 +184,6 @@ A running mkvpropedit is never stopped. It edits the file in place, and its prog
 
 ### UI
 - `MainViewModel` subscribes to the active `BatchExecutionReport` while processing and builds an `OperationOverlayState` (`ProcessingOverlay`); `MainPage` shows the shared `OperationOverlay` over the whole window, with Cancel bound to `CancelProcessingCommand`. `IsInteractionEnabled` disables the `NavigationView` and command bar, because arguments are built per file from the live configuration
-- `IBatchOperationGate` serializes batch processing with pipeline runs (import, removal, revalidation), which change files and track intents. `PipelineRunner` waits for the gate; `MainViewModel.ProcessBatchAsync` uses `TryEnter` and refuses to start while an import is running (it does not wait, so it never processes changes the user has not reviewed), then checks files, blocking validation errors and arguments while holding the gate. `CanProcessBatch` (Process Files and Show Arguments) is false while the gate is busy
+- `IBatchOperationGate` serializes batch processing with pipeline runs (import, removal, revalidation), which change files and track intents. `PipelineRunner` waits for the gate; `MainViewModel.ProcessBatchAsync` uses `TryEnter` and refuses to start while an import is running (it does not wait, so it never processes changes the user has not reviewed), then checks files, blocking validation errors and arguments while holding the gate. `CanProcessBatch` (Apply changes and Show Arguments) is false while the gate is busy
 - The result dialog is sent after the overlay is hidden; a run with canceled files shows "Batch Cancelled"
 - `ITaskbarProgressService` mirrors `OverallProgress` on the taskbar button (paused while cancelling) via `ITaskbarList3` on WinAppSDK and on Skia Desktop running on Windows
