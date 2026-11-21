@@ -46,15 +46,11 @@ Whether you're an archivist, home theater enthusiast, or anyone who works with M
 | **Batch Editing** | Modify container properties (track names, languages, and more) for multiple files at once |
 | **Modern GUI** | Intuitive interface built with WinUI 3 and Uno Platform |
 | **Drag-and-Drop** | Add files or folders by dragging them into the application |
-| **Flexible Validation** | Three configurable strictness levels for file validation (see [Validation Modes](#validation-modes)) |
+| **Batch Validation** | Compare track counts and properties across files with Strict, Lenient, or Custom validation |
 | **Track Availability Indicators** | Visual indicators showing track coverage across files in your batch |
 | **Themes** | Choose between Light, Dark, or System theme |
 
-### Validation Modes
-
-- **Strict Mode** — Enforces consistent track counts and properties across all files *(default)*
-- **Lenient Mode** — Allows files with different track counts, with non-blocking notifications
-- **Custom Mode** — Configure validation severity per track type and property for maximum control
+For instructions on using the application, see the [user guide](https://matroskabatchflow.com/docs/user-guide).
 
 ## Screenshots
 
