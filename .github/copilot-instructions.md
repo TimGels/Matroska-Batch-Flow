@@ -3,7 +3,7 @@
 > **Audience**: These instructions are for AI coding assistants, not for human developers.  
 > **Human developers**: See [README.md](../README.md) for setup and contribution guidelines.
 
-> **Last Updated**: 2026-11-14
+> **Last Updated**: 2026-11-21
 > **Next Review**: When architecture changes, new patterns are introduced, or build commands change
 > 
 > **Maintenance**: When making significant code changes, update this file and Serena memories to keep them in sync with the codebase.
@@ -88,15 +88,19 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
   - Rules implement `IFileValidationRule` (e.g., `TrackCountConsistencyRule`, `LanguageConsistencyRule`)
   - Results are severity-based: Error, Warning, Information
   - Cross-file property comparison rules (e.g., `DefaultFlagConsistencyRule`, `ForcedFlagConsistencyRule`, `LanguageConsistencyRule`) use `RollingReferenceComparer` to handle batches where files have different track counts: for each track position, the first file that has that position serves as the rolling reference for all subsequent files
+  - `FileFormatValidationRule` is a mandatory first stage, registered separately from consistency rules. Unsupported inputs block in every mode and never enter track comparisons. Results carry `ValidationCheckKind` and structured `ValidationComparison` evidence; per-position snapshots include matching files and exclude absent slots. Track-count evidence includes all supported files, including zero counts.
+  - `FileCheckSummary` groups findings by kind, severity, track type and numeric position; never parse diagnostic messages to build the UI. Input's Batch checks column counts participation rather than faults. The Validation page groups positions by property within Blocking and Advisory. A file filter scopes checks and removal, not the batch distribution. Expand scanned values for filenames. The separate absent-slot row is the supported batch minus participants; its files do not count as participants. Removing unsupported inputs uses the existing removal/revalidation pipeline. Neither a reference nor a majority is assumed correct.
 
 - **Configuration Management**: `IBatchConfiguration` tracks file-level settings and global per-slot `TrackIntent` collections
+  - The Validation tab opens a fresh batch-wide `FileCheckVisit`; Input's per-file shortcuts select the same tab with a file scope. Each visit is one frame-history entry: restore its file scope, topic and expanded raw value keys against live results on Back. Null identifies an absent slot; an empty string identifies an unspecified value on an existing track. `TrackCheckInspection` navigates to a batch-wide editor; scope counts exclude unsupported inputs and indicate presence, not proposed writes.
   - `IBatchTrackConfigurationInitializer`: Expands global track intent collections from scanned files
   - `ITrackIntentFactory`: Creates `TrackIntent` instances from scanned track data
 
 #### Presentation Layer (MVVM + Messaging)
 - **Architecture**: MVVM with CommunityToolkit.Mvvm (source generators for commands/properties)
+- **UI localization**: The footer and validation workflow expose reasons, counts, topics and raw evidence. Views bind dynamic wording through `UiText` / `ValidationText` and use `x:Uid` for fixed labels. English defaults live in `Strings/en/Resources.resw`; translations use matching keys in `Strings/<language>/`. Use complete counted phrases. Do not group, sort, restore selection or identify unsupported formats by localized strings.
 - **Messaging**: Uses `WeakReferenceMessenger` for loosely-coupled communication between ViewModels and Views
-  - Message types in `Messages/` folder: `DialogMessage`, `ExceptionDialogMessage`, `ShowValidationDetailsMessage`, etc.
+  - Message types in `Messages/` folder: `DialogMessage`, `ExceptionDialogMessage`, etc.
 - **Navigation**: `INavigationService` handles page navigation with `INavigationAware` interface for lifecycle hooks
 - **Services**: Interface-first design with contracts in `Contracts/Services/` and implementations in `Services/`
 
