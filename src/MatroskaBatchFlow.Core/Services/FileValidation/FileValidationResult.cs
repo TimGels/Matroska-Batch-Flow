@@ -1,4 +1,5 @@
 using MatroskaBatchFlow.Core.Enums;
+using MatroskaBatchFlow.Core.Models;
 
 namespace MatroskaBatchFlow.Core.Services.FileValidation;
 
@@ -42,7 +43,22 @@ public sealed record FileValidationResult(
     string Message)
 {
     /// <summary>
-    /// Gets whether this result is an error (blocks file addition).
+    /// Gets the check that produced this result.
+    /// </summary>
+    public ValidationCheckKind CheckKind { get; init; }
+
+    /// <summary>Structured reason for a format finding, independent of its diagnostic message.</summary>
+    public UnsupportedFormatIssue? FormatIssue { get; init; }
+
+    /// <summary>
+    /// Gets structured comparison evidence for presentation without parsing <see cref="Message"/>.
+    /// </summary>
+    /// <remarks>A file can differ in several track counts. Conversely, several results can describe the same
+    /// batch comparison; its files are participants, not additional mismatches.</remarks>
+    public IReadOnlyList<ValidationComparison> Comparisons { get; init; } = [];
+
+    /// <summary>
+    /// Gets whether the configured severity is an error.
     /// </summary>
     public bool IsError => Severity == ValidationSeverity.Error;
 
@@ -57,7 +73,7 @@ public sealed record FileValidationResult(
     public bool IsInfo => Severity == ValidationSeverity.Info;
 
     /// <summary>
-    /// Gets whether this result blocks file addition.
+    /// Gets whether this finding prevents applying changes to the batch. The input remains available for review.
     /// </summary>
     /// <remarks>
     /// Currently identical to <see cref="IsError"/>. Kept as a separate property to allow

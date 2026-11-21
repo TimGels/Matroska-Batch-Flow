@@ -48,7 +48,7 @@ public class DefaultFlagConsistencyRule : IFileValidationRule
             var defaultFlagMatrix = BuildDefaultFlagMatrix(scannedFiles, type);
 
             foreach (var result in RollingReferenceComparer.Compare(
-                defaultFlagMatrix, scannedFiles, type, trackSettings.DefaultFlag, "Default flag"))
+                defaultFlagMatrix, scannedFiles, type, trackSettings.DefaultFlag, "Default flag", ValidationCheckKind.DefaultFlag))
                 yield return result;
         }
     }

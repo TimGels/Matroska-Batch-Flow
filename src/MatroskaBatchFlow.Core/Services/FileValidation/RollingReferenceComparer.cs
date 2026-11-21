@@ -1,3 +1,4 @@
+using System.Globalization;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 
@@ -21,13 +22,15 @@ internal static class RollingReferenceComparer
     /// <param name="trackType">The type of track being compared (Audio, Video, Text).</param>
     /// <param name="severity">The severity level for any mismatches found.</param>
     /// <param name="propertyName">A human-readable property name for error messages (e.g., "Default flag", "Language").</param>
+    /// <param name="checkKind">The structured identity of the check.</param>
     /// <returns>Validation results for any detected mismatches.</returns>
     internal static IEnumerable<FileValidationResult> Compare<T>(
         IReadOnlyList<IReadOnlyList<T>> matrix,
         IReadOnlyList<ScannedFileInfo> files,
         TrackType trackType,
         ValidationSeverity severity,
-        string propertyName)
+        string propertyName,
+        ValidationCheckKind checkKind = ValidationCheckKind.Other)
     {
         if (matrix.Count < 2)
             yield break;
@@ -53,6 +56,7 @@ internal static class RollingReferenceComparer
                 continue;
 
             T referenceValue = matrix[referenceFileIndex][trackIndex];
+            ValidationComparison? comparison = null;
 
             // Compare all subsequent files that have this track position against the reference.
             for (int fileIndex = referenceFileIndex + 1; fileIndex < matrix.Count; fileIndex++)
@@ -66,13 +70,24 @@ internal static class RollingReferenceComparer
                 if (EqualityComparer<T>.Default.Equals(referenceValue, currentValue))
                     continue;
 
+                // Share one snapshot across mismatches; include matching files, but not missing slots.
+                comparison ??= new ValidationComparison(trackType, trackIndex + 1,
+                    [.. Enumerable.Range(0, files.Count)
+                        .Where(index => trackIndex < matrix[index].Count)
+                        .Select(index => new ValidationFileValue(files[index].Path,
+                            Convert.ToString(matrix[index][trackIndex], CultureInfo.InvariantCulture) ?? string.Empty))]);
+
                 yield return new FileValidationResult(
                     severity,
                     files[fileIndex].Path,
                     $"{propertyName} mismatch in {trackType} tracks at position {trackIndex + 1}: " +
                     $"'{referenceValue}' (in '{files[referenceFileIndex].Path}') " +
                     $"vs '{currentValue}' (in '{files[fileIndex].Path}')."
-                );
+                )
+                {
+                    CheckKind = checkKind,
+                    Comparisons = [comparison]
+                };
             }
         }
     }

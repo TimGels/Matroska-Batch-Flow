@@ -10,6 +10,27 @@ namespace MatroskaBatchFlow.Core.UnitTests.Services.FileValidation;
 /// </summary>
 public class RollingReferenceComparerTests
 {
+    [Fact]
+    public void Compare_StructuredEvidence_IncludesMatchingFilesAndExcludesMissingSlots()
+    {
+        List<List<string>> matrix = [[], ["eng"], ["eng"], ["jpn"], ["fre"]];
+        var files = Enumerable.Range(0, 5)
+            .Select(index => CreateFileWithAudioTracks($"file{index}.mkv", index == 0 ? 0 : 1))
+            .ToList();
+
+        var results = RollingReferenceComparer.Compare(matrix, files, TrackType.Audio,
+            ValidationSeverity.Warning, "Language", ValidationCheckKind.Language).ToList();
+
+        Assert.Equal(2, results.Count);
+        var comparison = Assert.Single(results[0].Comparisons);
+        Assert.Same(comparison, Assert.Single(results[1].Comparisons));
+        Assert.Equal(ValidationCheckKind.Language, results[0].CheckKind);
+        Assert.Equal(TrackType.Audio, comparison.TrackType);
+        Assert.Equal(1, comparison.TrackPosition);
+        Assert.Equal(["eng", "eng", "jpn", "fre"], comparison.Files.Select(file => file.Value));
+        Assert.Equal(files.Skip(1).Select(file => file.Path), comparison.Files.Select(file => file.FilePath));
+    }
+
     // -- Edge cases --
 
     [Fact]

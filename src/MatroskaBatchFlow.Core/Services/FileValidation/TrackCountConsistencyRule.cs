@@ -1,3 +1,4 @@
+using System.Globalization;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Models.AppSettings;
@@ -41,6 +42,7 @@ public class TrackCountConsistencyRule : IFileValidationRule
             type => type,
             type => referenceFile.Result?.Media?.Track?.Count(t => t.Type == type) ?? 0
         );
+        var comparisons = new Dictionary<TrackType, ValidationComparison>();
 
         // Check the track counts of the reference file against all other files.
         foreach (var file in scannedFiles.Skip(1))
@@ -61,11 +63,29 @@ public class TrackCountConsistencyRule : IFileValidationRule
                 )
             );
 
+            foreach (var type in mismatches)
+            {
+                // Include matching and zero-count files so the review can show the full distribution for this track type.
+                var fileValues = new List<ValidationFileValue>();
+                foreach (var scannedFile in scannedFiles)
+                {
+                    int trackCount = scannedFile.Result?.Media?.Track?.Count(track => track.Type == type) ?? 0;
+                    string value = trackCount.ToString(CultureInfo.InvariantCulture);
+                    fileValues.Add(new ValidationFileValue(scannedFile.Path, value));
+                }
+
+                comparisons[type] = new ValidationComparison(type, null, fileValues);
+            }
+
             yield return new FileValidationResult(
                 settings.CustomSettings.TrackCountParity,
                 file.Path,
                 $"Track count mismatch for ('{file.Path}'): {details}"
-            );
+            )
+            {
+                CheckKind = ValidationCheckKind.TrackCount,
+                Comparisons = [.. mismatches.Select(type => comparisons[type])]
+            };
         }
     }
 }

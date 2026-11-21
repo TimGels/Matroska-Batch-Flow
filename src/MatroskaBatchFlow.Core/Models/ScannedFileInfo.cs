@@ -38,6 +38,9 @@ public sealed record ScannedFileInfo
     /// </summary>
     public int SubtitleTrackCount { get; }
 
+    /// <summary>Null when the scanned container is a supported input for a batch edit.</summary>
+    public UnsupportedFormatIssue? UnsupportedFormatReason { get; }
+
     /// <summary>
     /// Initializes a new instance with auto-computed track counts.
     /// </summary>
@@ -51,11 +54,28 @@ public sealed record ScannedFileInfo
 
         Result = result;
         Path = path;
+        UnsupportedFormatReason = GetUnsupportedFormatReason(path, result);
 
         var tracks = result?.Media?.Track ?? [];
         AudioTrackCount = tracks.Count(t => t.Type == TrackType.Audio);
         VideoTrackCount = tracks.Count(t => t.Type == TrackType.Video);
         SubtitleTrackCount = tracks.Count(t => t.Type == TrackType.Text);
+    }
+
+    private static UnsupportedFormatIssue? GetUnsupportedFormatReason(string path, MediaInfoResult? result)
+    {
+        string extension = System.IO.Path.GetExtension(path);
+        if (!extension.Equals(".mkv", StringComparison.OrdinalIgnoreCase))
+            return extension.Length == 0 ? new(UnsupportedFormatKind.MissingExtension) : new(UnsupportedFormatKind.WrongExtension, extension);
+
+        var formats = result?.Media?.Track?
+            .Where(track => track?.Type == TrackType.General && !string.IsNullOrWhiteSpace(track.Format))
+            .Select(track => track.Format).ToArray();
+        if (formats is not { Length: > 0 })
+            return new(UnsupportedFormatKind.UnknownContainer);
+
+        string? unsupported = formats.FirstOrDefault(format => !string.Equals(format, "Matroska", StringComparison.OrdinalIgnoreCase));
+        return unsupported is null ? null : new(UnsupportedFormatKind.WrongContainer, unsupported);
     }
 
     /// <summary>

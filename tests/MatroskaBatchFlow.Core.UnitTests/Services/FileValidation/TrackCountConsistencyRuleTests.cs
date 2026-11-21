@@ -14,6 +14,33 @@ public class TrackCountConsistencyRuleTests
     private readonly TrackCountConsistencyRule _rule = new();
 
     [Fact]
+    public void Validate_MultipleTrackTypes_PreservesResultCountAndIncludesAllComparedFiles()
+    {
+        var files = new[]
+        {
+            CreateFileWithTracks("reference.mkv", audioCount: 2, videoCount: 1, textCount: 2),
+            CreateFileWithTracks("different.mkv", audioCount: 1, videoCount: 1, textCount: 1),
+            CreateFileWithTracks("matching.mkv", audioCount: 2, videoCount: 1, textCount: 2)
+        };
+        var settings = new BatchValidationSettings
+        {
+            CustomSettings = new ValidationSeveritySettings { TrackCountParity = ValidationSeverity.Warning }
+        };
+
+        var result = Assert.Single(_rule.Validate(files, settings));
+
+        Assert.Equal("different.mkv", result.ValidatedFilePath);
+        Assert.Equal(ValidationCheckKind.TrackCount, result.CheckKind);
+        Assert.Equal([TrackType.Audio, TrackType.Text], result.Comparisons.Select(item => item.TrackType));
+        Assert.All(result.Comparisons, comparison =>
+        {
+            Assert.Null(comparison.TrackPosition);
+            Assert.Equal(["2", "1", "2"], comparison.Files.Select(file => file.Value));
+            Assert.Equal(files.Select(file => file.Path), comparison.Files.Select(file => file.FilePath));
+        });
+    }
+
+    [Fact]
     public void Validate_ReturnsNoErrors_WhenValidationIsOff()
     {
         // Arrange
