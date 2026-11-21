@@ -4,10 +4,12 @@ using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileProcessing;
 using MatroskaBatchFlow.Uno.Contracts.Services;
+using MatroskaBatchFlow.Uno.Contracts.ViewModels;
+using MatroskaBatchFlow.Uno.Models;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
-public abstract partial class TrackViewModelBase : ObservableObject
+public abstract partial class TrackViewModelBase : ObservableObject, INavigationAware
 {
     private readonly ILogger _logger;
     protected bool _suppressBatchConfigUpdate = false;
@@ -39,6 +41,7 @@ public abstract partial class TrackViewModelBase : ObservableObject
             {
                 _selectedTrack = value;
                 OnPropertyChanged(nameof(SelectedTrack));
+                OnPropertyChanged(nameof(EditScope));
                 OnSelectedTrackChanged(value);
             }
         }
@@ -322,6 +325,48 @@ public abstract partial class TrackViewModelBase : ObservableObject
     /// <returns>A list of <see cref="TrackIntent"/> objects representing the available tracks. 
     /// If no tracks are available, an empty list is returned.</returns>
     protected abstract IList<TrackIntent> GetTracks();
+
+    /// <summary>Describes how many supported inputs contain the selected track position. This is coverage, not a count of pending edits.</summary>
+    public TrackCoverage? EditScope
+    {
+        get
+        {
+            if (SelectedTrack is not { } track)
+                return null;
+            var type = GetTrackType();
+            int supported = 0, withTrack = 0;
+            foreach (var file in _batchConfiguration.FileList)
+            {
+                if (file.UnsupportedFormatReason is not null)
+                    continue;
+                supported++;
+                if (file.HasTrack(type, track.Index))
+                {
+                    withTrack++;
+                }
+            }
+            return new(type, track.Index + 1, withTrack, supported);
+        }
+    }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanReturnToCheck))]
+    private TrackCheckInspection? inspection;
+
+    public bool CanReturnToCheck => Inspection is not null;
+
+    public void OnNavigatedTo(object parameter)
+    {
+        Inspection = parameter as TrackCheckInspection;
+        if (Inspection?.TrackPosition is int position)
+        {
+            SelectedTrack = GetTracks().FirstOrDefault(track => track.Index + 1 == position);
+        }
+    }
+
+    public void OnNavigatedFrom()
+    {
+    }
 
     /// <summary>
     /// Sets up event handlers for monitoring changes in the batch configuration and its specific tracks collection. 

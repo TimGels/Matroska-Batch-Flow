@@ -11,6 +11,8 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 
 public partial class SettingsViewModel : ObservableObject
 {
+    internal const string ValidationSection = "BatchValidation";
+
     private readonly IWritableSettings<UserSettings> _userSettings;
     private readonly IValidationSettingsService _validationSettingsService;
     private readonly IValidationStateService _validationStateService;

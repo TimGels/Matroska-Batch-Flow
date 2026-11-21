@@ -30,51 +30,128 @@ public partial class MainViewModel : ObservableObject
     private CancellationTokenSource _processingCts = new();
 
     [ObservableProperty]
-    private bool isBackEnabled;
+    public partial bool IsBackEnabled { get; set; }
 
     [ObservableProperty]
-    private object? selected;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanProcessBatch))]
-    private bool hasFiles;
+    public partial object? Selected { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanProcessBatch))]
-    private bool hasConfiguredChanges;
+    [NotifyPropertyChangedFor(nameof(Availability))]
+    [NotifyPropertyChangedFor(nameof(ShowNoChangesHint))]
+    public partial bool HasFiles { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanProcessBatch))]
-    private bool hasNoBlockingErrors = true;
+    [NotifyPropertyChangedFor(nameof(Availability))]
+    [NotifyPropertyChangedFor(nameof(ShowNoChangesHint))]
+    public partial bool HasConfiguredChanges { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanProcessBatch))]
+    [NotifyPropertyChangedFor(nameof(Availability))]
+    [NotifyPropertyChangedFor(nameof(ShowReviewFileChecks))]
+    [NotifyPropertyChangedFor(nameof(ShowNoChangesHint))]
+    public partial bool HasNoBlockingErrors { get; set; } = true;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Availability))]
+    [NotifyPropertyChangedFor(nameof(ShowReviewFileChecks))]
+    public partial bool HasFileCheckFindings { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowReviewFileChecks))]
+    public partial bool IsViewingFileChecks { get; set; }
+
+    private bool IsBlockedByValidation => !HasNoBlockingErrors;
+
+    public bool ShowReviewFileChecks => HasFileCheckFindings && IsBlockedByValidation
+        && !IsViewingFileChecks && !IsBatchOperationRunning;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Availability))]
+    public partial (int UnsupportedFiles, int OtherChecks) Blockers { get; set; }
 
     /// <summary>
     /// Gets whether a batch operation (import, removal, revalidation or processing) is running.
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanProcessBatch))]
-    private bool isBatchOperationRunning;
+    [NotifyPropertyChangedFor(nameof(Availability))]
+    [NotifyPropertyChangedFor(nameof(ShowReviewFileChecks))]
+    [NotifyPropertyChangedFor(nameof(ShowNoChangesHint))]
+    public partial bool IsBatchOperationRunning { get; set; }
+
+    private bool IsBatchAvailable => HasFiles && HasNoBlockingErrors && !IsBatchOperationRunning;
+    public bool ShowNoChangesHint => IsBatchAvailable && !HasConfiguredChanges;
 
     /// <summary>
     /// Gets whether the batch can be processed. Requires files to be present, at least one
     /// configured change, no blocking validation errors, and no other batch operation running.
     /// </summary>
-    public bool CanProcessBatch => HasFiles && HasConfiguredChanges && HasNoBlockingErrors && !IsBatchOperationRunning;
+    public bool CanProcessBatch => IsBatchAvailable && HasConfiguredChanges;
+
+    /// <summary>Identifies why the batch is ready or unavailable; <see cref="CanProcessBatch"/> controls whether edits can be applied.</summary>
+    /// <remarks>
+    /// An empty batch or a running operation takes precedence over validation. Blocking findings are
+    /// reported before missing edits so the user can review them even before choosing a change.
+    /// </remarks>
+    public BatchAvailability Availability
+    {
+        get
+        {
+            if (!HasFiles)
+                return new(BatchAvailabilityReason.NoFiles);
+
+            if (IsBatchOperationRunning)
+                return new(BatchAvailabilityReason.Busy);
+
+            if (IsBlockedByValidation)
+                return GetBlockingAvailability();
+
+            if (!HasConfiguredChanges)
+                return new(BatchAvailabilityReason.NoChanges);
+
+            return new(HasFileCheckFindings ? BatchAvailabilityReason.ReadyWithAdvisories : BatchAvailabilityReason.Ready);
+        }
+    }
+
+    /// <summary>
+    /// Reports unsupported files first. Otherwise, reports the number of distinct blocking checks,
+    /// not the number of files involved in those checks.
+    /// </summary>
+    private BatchAvailability GetBlockingAvailability()
+    {
+        if (Blockers.UnsupportedFiles > 0)
+            return new(BatchAvailabilityReason.UnsupportedFiles, Blockers.UnsupportedFiles);
+
+        if (Blockers.OtherChecks > 0)
+            return new(BatchAvailabilityReason.BlockingChecks, Blockers.OtherChecks);
+
+        return new(BatchAvailabilityReason.ValidationBlocked);
+    }
+
+    [RelayCommand]
+    private void ReviewFileChecks()
+    {
+        NavigationService.NavigateTo(typeof(FileChecksViewModel).FullName!, new FileCheckVisit());
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsInteractionEnabled))]
-    private bool isProcessing;
+    public partial bool IsProcessing { get; set; }
 
     /// <summary>
     /// Gets whether cancellation of the running batch was requested.
     /// </summary>
     [ObservableProperty]
-    private bool isCancelling;
+    public partial bool IsCancelling { get; set; }
 
     /// <summary>
     /// Gets the state of the overlay shown while the batch is being processed.
     /// </summary>
     [ObservableProperty]
-    private OperationOverlayState processingOverlay = OperationOverlayState.Inactive;
+    public partial OperationOverlayState ProcessingOverlay { get; set; } = OperationOverlayState.Inactive;
 
     /// <summary>
     /// Gets whether the navigation and commands can be used. They are disabled while the batch is being processed,
@@ -82,8 +159,9 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     public bool IsInteractionEnabled => !IsProcessing;
 
+    /// <summary>Gets or sets the current batch summary shown in the UI.</summary>
     [ObservableProperty]
-    private BatchExecutionReport? batchReport; // expose current batch summary to UI
+    public partial BatchExecutionReport? BatchReport { get; set; }
 
     /// <summary>
     /// Gets a value indicating whether the log viewer tab should be visible.
@@ -419,6 +497,7 @@ public partial class MainViewModel : ObservableObject
     private void OnNavigated(object sender, NavigationEventArgs eventArgs)
     {
         IsBackEnabled = NavigationService.CanGoBack;
+        IsViewingFileChecks = eventArgs.SourcePageType == typeof(FileChecksPage);
         if (eventArgs.SourcePageType == typeof(SettingsPage))
         {
             Selected = NavigationViewService.SettingsItem;
@@ -435,7 +514,9 @@ public partial class MainViewModel : ObservableObject
     private void OnValidationStateChanged(object? sender, EventArgs e)
     {
         HasFiles = _batchConfiguration.FileList.Count > 0;
+        Blockers = FileCheckSummary.CountBlockers(_validationStateService.CurrentResults);
         HasNoBlockingErrors = !_validationStateService.HasBlockingErrors;
+        HasFileCheckFindings = _validationStateService.HasResults;
     }
 
     /// <summary>

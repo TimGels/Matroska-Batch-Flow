@@ -3,6 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:local="using:MatroskaBatchFlow.Uno.Presentation"
       xmlns:controls="using:MatroskaBatchFlow.Uno.Presentation.Controls"
+      xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
       xmlns:utu="using:Uno.Toolkit.UI"
       xmlns:dialogs="using:MatroskaBatchFlow.Uno.Presentation.Dialogs"
       xmlns:helpers="using:MatroskaBatchFlow.Uno.Helpers"
@@ -32,6 +33,8 @@
                                     x:Name="InputPageNavItem"
                                     helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.InputViewModel"
                                     helpers:NavigationHelper.IsDefault="True" />
+                <NavigationViewItem x:Uid="ChecksNavItem" Tag="FileChecksPage"
+                                    helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.FileChecksViewModel" />
                 <NavigationViewItem Content="General" Tag="GeneralPage"
                                     helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.GeneralViewModel" />
                 <NavigationViewItem Content="Video" Tag="VideoPage"
@@ -67,24 +70,35 @@
                     HorizontalAlignment="Stretch" />
         </skia:Grid>
 
-        <StackPanel Grid.Row="1">
-            <CommandBar HorizontalAlignment="Center"
-                        DefaultLabelPosition="Right"
+        <toolkit:WrapPanel Grid.Row="1" HorizontalAlignment="Center">
+            <CommandBar DefaultLabelPosition="Right"
                         IsEnabled="{x:Bind ViewModel.IsInteractionEnabled, Mode=OneWay}">
                 <CommandBar.PrimaryCommands>
-                    <AppBarButton Label="Show Arguments"
+                    <AppBarButton x:Uid="FooterShowArguments"
                                   Icon="ShowResults"
                                   IsEnabled="{x:Bind ViewModel.CanProcessBatch, Mode=OneWay}"
                                   Command="{x:Bind ViewModel.GenerateMkvpropeditArgumentsCommand}" />
                     <AppBarSeparator />
-                    <AppBarButton Label="Process Files"
+                    <AppBarButton x:Uid="FooterApplyChanges"
+                                  AutomationProperties.HelpText="{x:Bind AvailabilityText(ViewModel.Availability), Mode=OneWay}"
                                   IsEnabled="{x:Bind ViewModel.CanProcessBatch, Mode=OneWay}"
                                   Command="{x:Bind ViewModel.ProcessBatchCommand}">
                         <FontIcon Glyph="&#xE9F5;" />
                     </AppBarButton>
                 </CommandBar.PrimaryCommands>
             </CommandBar>
-        </StackPanel>
+            <TextBlock Text="{x:Bind AvailabilityText(ViewModel.Availability), Mode=OneWay}"
+                       Visibility="{x:Bind ViewModel.ShowNoChangesHint, Mode=OneWay}"
+                       Margin="8,4" VerticalAlignment="Center"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       AutomationProperties.LiveSetting="Polite" />
+            <Button Content="{x:Bind ReviewActionText(ViewModel.Availability), Mode=OneWay}"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Margin="8,4" VerticalAlignment="Center"
+                    IsEnabled="{x:Bind ViewModel.IsInteractionEnabled, Mode=OneWay}"
+                    Visibility="{x:Bind ViewModel.ShowReviewFileChecks, Mode=OneWay}"
+                    Command="{x:Bind ViewModel.ReviewFileChecksCommand}" />
+        </toolkit:WrapPanel>
 
         <!--Covers the whole window while the batch is processed-->
         <controls:OperationOverlay Grid.RowSpan="2"

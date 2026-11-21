@@ -72,6 +72,7 @@ public class MainViewModelTests
         Assert.True(viewModel.HasNoBlockingErrors);
         Assert.True(viewModel.HasConfiguredChanges);
         Assert.True(viewModel.CanProcessBatch);
+        Assert.Equal(BatchAvailabilityReason.Ready, viewModel.Availability.Reason);
     }
 
     [Fact]
@@ -90,6 +91,7 @@ public class MainViewModelTests
         Assert.True(viewModel.HasNoBlockingErrors);
         Assert.False(viewModel.HasConfiguredChanges);
         Assert.False(viewModel.CanProcessBatch);
+        Assert.Equal(BatchAvailabilityReason.NoFiles, viewModel.Availability.Reason);
     }
 
     [Fact]
@@ -110,6 +112,7 @@ public class MainViewModelTests
         Assert.False(viewModel.HasNoBlockingErrors); // Blocking errors present
         Assert.True(viewModel.HasConfiguredChanges);
         Assert.False(viewModel.CanProcessBatch); // Cannot process due to blocking errors
+        Assert.Equal(BatchAvailabilityReason.ValidationBlocked, viewModel.Availability.Reason);
     }
 
     [Fact]
@@ -130,6 +133,54 @@ public class MainViewModelTests
         Assert.True(viewModel.HasNoBlockingErrors);
         Assert.False(viewModel.HasConfiguredChanges); // No valid commands
         Assert.False(viewModel.CanProcessBatch); // Cannot process without changes
+        Assert.Equal(BatchAvailabilityReason.NoChanges, viewModel.Availability.Reason);
+    }
+
+    [Fact]
+    public void ReviewFileChecks_NavigatesToDedicatedPage()
+    {
+        var viewModel = CreateViewModel();
+
+        viewModel.ReviewFileChecksCommand.Execute(null);
+
+        _navigationService.Received(1).NavigateTo(typeof(FileChecksViewModel).FullName!,
+            Arg.Is<FileCheckVisit>(visit => visit.FilePath == null));
+    }
+
+    [Fact]
+    public void Footer_PrioritizesUnsupportedFilesThenCountsDistinctBlockingTopics()
+    {
+        _fileList.Add(CreateScannedFile("one.mkv"));
+        _validationStateService.HasResults.Returns(true);
+        _validationStateService.HasBlockingErrors.Returns(true);
+        var comparison = new ValidationComparison(TrackType.Audio, 1,
+            [new("one.mkv", "en"), new("two.mkv", "ja"), new("three.mkv", "ja")]);
+        var language = new FileValidationResult(ValidationSeverity.Error, "two.mkv", "Mismatch")
+            { CheckKind = ValidationCheckKind.Language, Comparisons = [comparison] };
+        FileValidationResult[] differences = [language, language with { ValidatedFilePath = "three.mkv" }];
+        FileValidationResult[] mixed = [
+            new(ValidationSeverity.Error, "other.mp4", "Format") { CheckKind = ValidationCheckKind.FileFormat },
+            .. differences
+        ];
+        _validationStateService.CurrentResults.Returns(mixed);
+        var vm = CreateViewModel();
+        Assert.Equal(new BatchAvailability(BatchAvailabilityReason.UnsupportedFiles, 1), vm.Availability);
+        Assert.True(vm.ShowReviewFileChecks);
+
+        _validationStateService.CurrentResults.Returns(differences);
+        _validationStateService.StateChanged += Raise.Event<EventHandler>(this, EventArgs.Empty);
+        Assert.Equal(new BatchAvailability(BatchAvailabilityReason.BlockingChecks, 1), vm.Availability);
+        Assert.False(vm.CanProcessBatch);
+
+        _validationStateService.CurrentResults.Returns([language, language with { CheckKind = ValidationCheckKind.DefaultFlag }]);
+        Assert.PropertyChanged(vm, nameof(MainViewModel.Availability),
+            () => _validationStateService.StateChanged += Raise.Event<EventHandler>(this, EventArgs.Empty));
+        Assert.Equal(new BatchAvailability(BatchAvailabilityReason.BlockingChecks, 2), vm.Availability);
+
+        _validationStateService.CurrentResults.Returns([language with { Severity = ValidationSeverity.Warning }]);
+        _validationStateService.HasBlockingErrors.Returns(false);
+        _validationStateService.StateChanged += Raise.Event<EventHandler>(this, EventArgs.Empty);
+        Assert.False(vm.ShowReviewFileChecks);
     }
 
     [Fact]
@@ -170,13 +221,18 @@ public class MainViewModelTests
     }
 
     [Fact]
-    public void BatchConfigurationStateChanged_UpdatesHasConfiguredChanges()
+    public void BatchConfigurationStateChanged_WithAdvisoryChecks_EnablesProcessingWhenAnEditIsConfigured()
     {
         // Arrange
+        _fileList.Add(CreateScannedFile("file1.mkv"));
+        _validationStateService.HasResults.Returns(true);
+        _validationStateService.HasBlockingErrors.Returns(false);
         _argumentsGenerator.BuildBatchArguments(_batchConfiguration)
             .Returns([""]);
         var viewModel = CreateViewModel();
-        Assert.False(viewModel.HasConfiguredChanges);
+        Assert.False(viewModel.CanProcessBatch);
+        Assert.True(viewModel.ShowNoChangesHint);
+        Assert.Equal(BatchAvailabilityReason.NoChanges, viewModel.Availability.Reason);
 
         // Act - Simulate configuration change that produces valid commands
         _argumentsGenerator.BuildBatchArguments(_batchConfiguration)
@@ -184,7 +240,35 @@ public class MainViewModelTests
         _batchConfiguration.StateChanged += Raise.Event<EventHandler>(this, EventArgs.Empty);
 
         // Assert
-        Assert.True(viewModel.HasConfiguredChanges);
+        Assert.True(viewModel.CanProcessBatch);
+        Assert.False(viewModel.ShowNoChangesHint);
+        Assert.Equal(BatchAvailabilityReason.ReadyWithAdvisories, viewModel.Availability.Reason);
+    }
+
+    [Fact]
+    public void Footer_ShowsNoChangesHintOnlyWhenMissingEditsAreTheOnlyObstacle()
+    {
+        _argumentsGenerator.BuildBatchArguments(_batchConfiguration).Returns([]);
+        var vm = CreateViewModel();
+        Assert.False(vm.ShowNoChangesHint);
+
+        _fileList.Add(CreateScannedFile("one.mkv"));
+        _validationStateService.HasBlockingErrors.Returns(true);
+        _validationStateService.HasResults.Returns(true);
+        _validationStateService.StateChanged += Raise.Event<EventHandler>(this, EventArgs.Empty);
+        Assert.True(vm.ShowReviewFileChecks);
+        Assert.False(vm.ShowNoChangesHint);
+
+        _validationStateService.HasBlockingErrors.Returns(false);
+        _validationStateService.StateChanged += Raise.Event<EventHandler>(this, EventArgs.Empty);
+        Assert.True(vm.ShowNoChangesHint);
+        Assert.True(_operationGate.TryEnter(out var handle));
+        using (handle)
+        {
+            Assert.False(vm.ShowNoChangesHint);
+            Assert.Equal(BatchAvailabilityReason.Busy, vm.Availability.Reason);
+        }
+        Assert.True(vm.ShowNoChangesHint);
     }
 
     [Fact]

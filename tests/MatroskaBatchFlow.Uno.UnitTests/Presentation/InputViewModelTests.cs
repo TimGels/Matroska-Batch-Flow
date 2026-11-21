@@ -27,6 +27,8 @@ public class InputViewModelTests : IDisposable
     private readonly IValidationStateService _validationStateService;
     private readonly IInputOperationFeedbackService _inputOperationFeedbackService;
     private readonly IBatchOperationOrchestrator _orchestrator;
+    private readonly ILanguageProvider _languageProvider;
+    private readonly INavigationService _navigationService;
     private readonly ILogger<InputViewModel> _logger;
     private readonly UniqueObservableCollection<ScannedFileInfo> _fileList;
 
@@ -39,11 +41,15 @@ public class InputViewModelTests : IDisposable
         _validationStateService = Substitute.For<IValidationStateService>();
         _inputOperationFeedbackService = Substitute.For<IInputOperationFeedbackService>();
         _orchestrator = Substitute.For<IBatchOperationOrchestrator>();
+        _languageProvider = Substitute.For<ILanguageProvider>();
+        _navigationService = Substitute.For<INavigationService>();
         _logger = Substitute.For<ILogger<InputViewModel>>();
 
         _fileList = [];
 
         _batchConfiguration.FileList.Returns(_fileList);
+        _fileListAdapter.ScannedFileViewModels.Returns(new ObservableCollection<ScannedFileViewModel>());
+        _validationStateService.CurrentResults.Returns(Array.Empty<FileValidationResult>());
         _userSettings.Value.Returns(new UserSettings());
     }
 
@@ -79,68 +85,105 @@ public class InputViewModelTests : IDisposable
     }
 
     [Fact]
-    public void IsValidationInfoBarOpen_WhenSetToFalse_ClearsNotifications()
+    public void ReviewFileChecks_NavigatesWithoutDiscardingBlockingFindings()
     {
-        // Arrange
-        var viewModel = CreateViewModel();
-        viewModel.ValidationNotifications.AddNotifications([
-            new ValidationNotificationItem
-            {
-                Severity = ValidationSeverity.Error,
-                FilePath = "test.mkv",
-                Message = "Test error"
-            }
-        ]);
-        viewModel.IsValidationInfoBarOpen = true;
-        Assert.True(viewModel.HasValidationNotifications);
+        _fileList.Add(CreateScannedFile("test.mkv"));
+        _validationStateService.CurrentResults.Returns(
+            new[] { new FileValidationResult(ValidationSeverity.Error, "test.mkv", "Test error") });
+        using var viewModel = CreateViewModel();
 
-        // Act
-        viewModel.IsValidationInfoBarOpen = false;
+        viewModel.ReviewFileChecksCommand.Execute(null);
 
-        // Assert
-        Assert.False(viewModel.HasValidationNotifications);
+        _navigationService.Received(1).NavigateTo(typeof(FileChecksViewModel).FullName!,
+            Arg.Is<FileCheckVisit>(visit => visit.FilePath == null));
+        Assert.True(viewModel.FileChecks.HasBlockingIssues);
+        Assert.Single(viewModel.FileChecks.Groups);
     }
 
     [Fact]
-    public void ValidationProperties_ReflectNotificationState_WithErrors()
+    public void ReviewFileChecks_FromFileIndicator_PassesFilePathWithoutChangingSelection()
     {
-        // Arrange
-        var viewModel = CreateViewModel();
-        viewModel.ValidationNotifications.AddNotifications([
-            new ValidationNotificationItem
-            {
-                Severity = ValidationSeverity.Error,
-                FilePath = "test.mkv",
-                Message = "Test error"
-            }
-        ]);
+        var selectedFile = new ScannedFileViewModel(CreateScannedFile("selected.mkv"), _batchConfiguration);
+        var reviewedFile = new ScannedFileViewModel(CreateScannedFile("reviewed.mkv"), _batchConfiguration);
+        using var viewModel = CreateViewModel();
+        viewModel.SelectedFiles.Add(selectedFile);
 
-        // Assert
-        Assert.True(viewModel.HasValidationNotifications);
-        Assert.True(viewModel.HasErrors);
-        Assert.False(viewModel.HasWarnings);
-        Assert.False(viewModel.HasInfoMessages);
+        viewModel.ReviewFileChecksCommand.Execute(reviewedFile);
+
+        _navigationService.Received(1).NavigateTo(typeof(FileChecksViewModel).FullName!,
+            Arg.Is<FileCheckVisit>(visit => visit.FilePath == "reviewed.mkv"));
+        Assert.Same(selectedFile, Assert.Single(viewModel.SelectedFiles));
+    }
+
+    [Theory]
+    [InlineData(ValidationSeverity.Error, true)]
+    [InlineData(ValidationSeverity.Warning, false)]
+    public void FileChecks_InitialState_ReflectsCurrentValidation(ValidationSeverity severity, bool blocks)
+    {
+        _fileList.Add(CreateScannedFile("test.mkv"));
+        _validationStateService.CurrentResults.Returns(
+            new[] { new FileValidationResult(severity, "test.mkv", "Test finding") });
+
+        using var viewModel = CreateViewModel();
+
+        Assert.True(viewModel.FileChecks.HasFindings);
+        Assert.True(viewModel.FileChecks.IsVisible);
+        Assert.Equal(blocks, viewModel.FileChecks.HasBlockingIssues);
+        Assert.Equal(severity, Assert.Single(viewModel.FileChecks.Groups).Severity);
     }
 
     [Fact]
-    public void ValidationProperties_ReflectNotificationState_WithWarnings()
+    public void FileChecks_CountsComparisonParticipantsAndMarksOnlyUnsupportedInputs()
     {
-        // Arrange
-        var viewModel = CreateViewModel();
-        viewModel.ValidationNotifications.AddNotifications([
-            new ValidationNotificationItem
-            {
-                Severity = ValidationSeverity.Warning,
-                FilePath = "test.mkv",
-                Message = "Test warning"
-            }
-        ]);
+        foreach (string path in new[] { "one.mkv", "two.mkv", "clip.mp4" })
+        {
+            var file = CreateScannedFile(path);
+            _fileList.Add(file);
+            _fileListAdapter.ScannedFileViewModels.Add(new ScannedFileViewModel(file, _batchConfiguration));
+        }
+        _validationStateService.CurrentResults.Returns(new[] {
+            new FileValidationResult(ValidationSeverity.Error, "two.mkv", "Track counts differ") {
+                CheckKind = ValidationCheckKind.TrackCount,
+                Comparisons = [new(TrackType.Audio, null, [new("one.mkv", "1"), new("two.mkv", "2")])]
+            },
+            new FileValidationResult(ValidationSeverity.Error, "clip.mp4", "Unsupported extension")
+                { CheckKind = ValidationCheckKind.FileFormat }
+        });
 
-        // Assert
-        Assert.True(viewModel.HasValidationNotifications);
-        Assert.False(viewModel.HasErrors);
-        Assert.True(viewModel.HasWarnings);
-        Assert.False(viewModel.HasInfoMessages);
+        using var vm = CreateViewModel();
+
+        Assert.Equal([1, 1, 1], vm.FileList.Select(file => file.FileCheckCount));
+        Assert.Equal("clip.mp4", Assert.Single(vm.FileList, file => file.IsUnsupported).FileName);
+    }
+
+    [Fact]
+    public void FileChecks_Revalidation_UpdatesFileIndicatorsWithoutChangingSelection()
+    {
+        var file = CreateScannedFile("test.mkv");
+        _fileList.Add(file);
+        var fileViewModel = new ScannedFileViewModel(file, _batchConfiguration);
+        _fileListAdapter.ScannedFileViewModels.Add(fileViewModel);
+        using var viewModel = CreateViewModel();
+        viewModel.SelectedFiles.Add(fileViewModel);
+        _validationStateService.CurrentResults.Returns(
+            new[] { new FileValidationResult(ValidationSeverity.Warning, file.Path, "Test finding") });
+
+        _validationStateService.StateChanged += Raise.Event<EventHandler>(this, EventArgs.Empty);
+
+        Assert.True(fileViewModel.HasFileChecks);
+        Assert.Equal(1, fileViewModel.FileCheckCount);
+        Assert.Single(viewModel.SelectedFiles);
+
+        _validationStateService.CurrentResults.Returns(Array.Empty<FileValidationResult>());
+        _validationStateService.StateChanged += Raise.Event<EventHandler>(this, EventArgs.Empty);
+
+        Assert.False(fileViewModel.HasFileChecks);
+        Assert.Empty(viewModel.FileChecks.Groups);
+        Assert.Single(viewModel.SelectedFiles);
+
+        _fileList.Clear();
+        _validationStateService.StateChanged += Raise.Event<EventHandler>(this, EventArgs.Empty);
+        Assert.False(viewModel.FileChecks.IsVisible);
     }
 
     [Fact]
@@ -194,6 +237,8 @@ public class InputViewModelTests : IDisposable
             _validationStateService,
             _inputOperationFeedbackService,
             _orchestrator,
+            _languageProvider,
+            _navigationService,
             _logger);
     }
 

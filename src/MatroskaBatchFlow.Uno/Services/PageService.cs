@@ -1,16 +1,20 @@
 using MatroskaBatchFlow.Uno.Contracts.Services;
+using MatroskaBatchFlow.Uno.Models;
 
 namespace MatroskaBatchFlow.Uno.Services;
 
 public class PageService : IPageService
 {
     private readonly Dictionary<string, Type> _pages = [];
+    private readonly Dictionary<string, Func<object>> _defaultParameters = [];
 
     public PageService()
     {
         Configure<BatchResultsViewModel, BatchResultsPage>();
         Configure<MainViewModel, MainPage>();
         Configure<InputViewModel, InputPage>();
+        // A menu visit needs its own frame parameter so Back can restore the selected check and expanded rows.
+        Configure<FileChecksViewModel, FileChecksPage>(() => new FileCheckVisit());
         Configure<GeneralViewModel, GeneralPage>();
         Configure<VideoViewModel, VideoPage>();
         Configure<AudioViewModel, AudioPage>();
@@ -34,7 +38,18 @@ public class PageService : IPageService
         return pageType;
     }
 
-    private void Configure<VM, V>()
+    public object? CreateDefaultParameter(string key)
+    {
+        Func<object>? factory;
+        lock (_pages)
+        {
+            _defaultParameters.TryGetValue(key, out factory);
+        }
+
+        return factory?.Invoke();
+    }
+
+    private void Configure<VM, V>(Func<object>? defaultParameter = null)
         where VM : ObservableObject
         where V : Page
     {
@@ -53,6 +68,10 @@ public class PageService : IPageService
             }
 
             _pages.Add(key, type);
+            if (defaultParameter is not null)
+            {
+                _defaultParameters.Add(key, defaultParameter);
+            }
         }
     }
 }
