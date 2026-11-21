@@ -22,8 +22,10 @@
     <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
         <value>[base64 mime encoded serialized .NET Framework object]</value>
     </data>
-    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing"
+  mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework
+  object]</value>
         <comment>This is a comment</comment>
     </data>
 
@@ -59,7 +61,8 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
@@ -112,12 +115,156 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0,
+      Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0,
+      Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ApplicationName" xml:space="preserve">
     <value>MatroskaBatchFlow.Uno-en</value>
   </data>
+  <data name="FooterShowArguments.Label" xml:space="preserve">
+    <value>Show Arguments</value>
+  </data>
+  <data name="FooterApplyChanges.Label" xml:space="preserve">
+    <value>Apply changes</value>
+  </data>
+  <data name="FooterNoFiles" xml:space="preserve">
+    <value>Add files to get started.</value>
+  </data>
+  <data name="FooterBusy" xml:space="preserve">
+    <value>A batch operation is in progress.</value>
+  </data>
+  <data name="FooterNoChanges" xml:space="preserve">
+    <value>No changes to apply</value>
+  </data>
+  <data name="FooterReady" xml:space="preserve">
+    <value>Ready to process.</value>
+  </data>
+  <data name="FooterReadyWithAdvisories" xml:space="preserve">
+    <value>Ready to process. File checks are advisory.</value>
+  </data>
+  <data name="FooterValidationBlocked" xml:space="preserve">
+    <value>Processing is blocked by file checks.</value>
+  </data>
+  <data name="FooterUnsupportedFilesSingle" xml:space="preserve">
+    <value>{0} unsupported file blocks processing.</value>
+    <comment>{0} is the number of unsupported files (exactly 1).</comment>
+  </data>
+  <data name="FooterUnsupportedFilesMultiple" xml:space="preserve">
+    <value>{0} unsupported files block processing.</value>
+    <comment>{0} is the number of unsupported files (2 or more).</comment>
+  </data>
+  <data name="FooterBlockingChecksSingle" xml:space="preserve">
+    <value>{0} check blocks processing under your validation settings.</value>
+    <comment>{0} is the number of distinct blocking checks (exactly 1), not the file count.</comment>
+  </data>
+  <data name="FooterBlockingChecksMultiple" xml:space="preserve">
+    <value>{0} checks block processing under your validation settings.</value>
+    <comment>{0} is the number of distinct blocking checks (2 or more), not the file count.</comment>
+  </data>
+  <data name="FooterReviewChecks" xml:space="preserve">
+    <value>Review file checks</value>
+  </data>
+  <data name="FooterReviewUnsupportedFilesSingle" xml:space="preserve">
+    <value>Review {0} unsupported file</value>
+    <comment>Button label. {0} is the number of unsupported files (exactly 1).</comment>
+  </data>
+  <data name="FooterReviewUnsupportedFilesMultiple" xml:space="preserve">
+    <value>Review {0} unsupported files</value>
+    <comment>Button label. {0} is the number of unsupported files (2 or more).</comment>
+  </data>
+  <data name="FooterReviewBlockingChecksSingle" xml:space="preserve">
+    <value>Review {0} blocking check</value>
+    <comment>Button label. {0} is the number of distinct blocking checks (exactly 1).</comment>
+  </data>
+  <data name="FooterReviewBlockingChecksMultiple" xml:space="preserve">
+    <value>Review {0} blocking checks</value>
+    <comment>Button label. {0} is the number of distinct blocking checks (2 or more).</comment>
+  </data>
+  <data name="ChecksNavItem.Content" xml:space="preserve"><value>Validation</value></data>
+  <data name="ChecksPageTitle.Text" xml:space="preserve"><value>Validation</value></data>
+  <data name="ChecksSettingsSection.Text" xml:space="preserve"><value>Batch Validation</value></data>
+  <data name="ChecksFileColumn.Text" xml:space="preserve"><value>File</value></data>
+  <data name="ChecksCountColumn.Text" xml:space="preserve"><value>Batch checks</value></data>
+  <data name="ChecksUnsupportedBadge.Text" xml:space="preserve"><value>Unsupported file</value></data>
+  <data name="ChecksCompactSelector.Header" xml:space="preserve"><value>Check to review</value></data>
+  <data name="ChecksThisFile.Text" xml:space="preserve"><value>This file</value></data>
+  <data name="ChecksOpenTracks.Content" xml:space="preserve"><value>Open track settings</value></data>
+  <data name="ChecksOpenSettings.Content" xml:space="preserve"><value>Validation settings</value></data>
+  <data name="ChecksRemovalHint.Text" xml:space="preserve"><value>Removing a file from the batch does not delete it from disk.</value></data>
+  <data name="ChecksClearFilter" xml:space="preserve"><value>Clear file filter and show all checks</value></data>
+  <data name="ChecksListName" xml:space="preserve"><value>Checks to review</value></data>
+  <data name="ChecksDetailsName" xml:space="preserve"><value>Check details</value></data>
+  <data name="ChecksDiagnosticsName" xml:space="preserve"><value>Files and reasons</value></data>
+  <data name="ChecksTrackSettingsHint" xml:space="preserve"><value>Open the batch editor for this track</value></data>
+  <data name="ChecksUpdating" xml:space="preserve"><value>Updating file checks...</value></data>
+  <data name="ChecksClean" xml:space="preserve"><value>No issues found by enabled checks</value></data>
+  <data name="ChecksEmptyBatch" xml:space="preserve"><value>No files to check</value></data>
+  <data name="ChecksAddFiles" xml:space="preserve"><value>Add files on the Input page to compare their track metadata.</value></data>
+  <data name="ChecksCleanDescription" xml:space="preserve"><value>The enabled checks found no differences to report. This does not verify playback or file integrity.</value></data>
+  <data name="ChecksListSeparator" xml:space="preserve"><value> / </value></data>
+  <data name="ChecksUnsupportedCountSingle" xml:space="preserve"><value>{0} unsupported file</value></data>
+  <data name="ChecksUnsupportedCountMultiple" xml:space="preserve"><value>{0} unsupported files</value></data>
+  <data name="ChecksBlockingCountSingle" xml:space="preserve"><value>{0} blocking check</value></data>
+  <data name="ChecksBlockingCountMultiple" xml:space="preserve"><value>{0} blocking checks</value></data>
+  <data name="ChecksAdvisoryCountSingle" xml:space="preserve"><value>{0} advisory check</value></data>
+  <data name="ChecksAdvisoryCountMultiple" xml:space="preserve"><value>{0} advisory checks</value></data>
+  <data name="ChecksBatchSizeSingle" xml:space="preserve"><value>{0} file in this batch</value></data>
+  <data name="ChecksBatchSizeMultiple" xml:space="preserve"><value>{0} files in this batch</value></data>
+  <data name="ChecksSummary" xml:space="preserve"><value>{0} - {1}</value><comment>{0}: batch size phrase; {1}: validation findings summary.</comment></data>
+  <data name="ChecksComparison" xml:space="preserve"><value>Scanned values · {0}</value><comment>{0}: batch size phrase.</comment></data>
+  <data name="ChecksSupportedComparison" xml:space="preserve"><value>Scanned values · {0} of {1} files supported</value></data>
+  <data name="ChecksReviewSingle" xml:space="preserve"><value>View {0} check</value></data>
+  <data name="ChecksReviewMultiple" xml:space="preserve"><value>View all {0} checks</value></data>
+  <data name="ChecksReviewFileSingle" xml:space="preserve"><value>Review {0} batch check involving {1}</value><comment>{1}: filename.</comment></data>
+  <data name="ChecksReviewFileMultiple" xml:space="preserve"><value>Review {0} batch checks involving {1}</value><comment>{1}: filename.</comment></data>
+  <data name="ChecksFileScope" xml:space="preserve"><value>File: {0}</value></data>
+  <data name="ChecksRemovedSingle" xml:space="preserve"><value>Removed {0} unsupported file from the batch.</value></data>
+  <data name="ChecksRemovedMultiple" xml:space="preserve"><value>Removed {0} unsupported files from the batch.</value></data>
+  <data name="ChecksRemoveActionSingle" xml:space="preserve"><value>Remove file from batch</value></data>
+  <data name="ChecksRemoveActionMultiple" xml:space="preserve"><value>Remove {0} unsupported files from batch</value></data>
+  <data name="ChecksBlocking" xml:space="preserve"><value>Blocking</value></data>
+  <data name="ChecksAdvisory" xml:space="preserve"><value>Advisory</value></data>
+  <data name="ChecksCategoryCount" xml:space="preserve"><value>{0} ({1})</value><comment>{0}: category; {1}: number of checks.</comment></data>
+  <data name="ChecksSelector" xml:space="preserve"><value>{0}: {1}</value><comment>{0}: category; {1}: check title.</comment></data>
+  <data name="ChecksAudio" xml:space="preserve"><value>Audio</value></data>
+  <data name="ChecksVideo" xml:space="preserve"><value>Video</value></data>
+  <data name="ChecksSubtitle" xml:space="preserve"><value>Subtitle</value></data>
+  <data name="ChecksTrackCounts" xml:space="preserve"><value>Track counts</value></data>
+  <data name="ChecksLanguageFamily" xml:space="preserve"><value>{0} language tags</value></data>
+  <data name="ChecksDefaultFamily" xml:space="preserve"><value>{0} default flags</value></data>
+  <data name="ChecksForcedFamily" xml:space="preserve"><value>{0} forced flags</value></data>
+  <data name="ChecksOtherFamily" xml:space="preserve"><value>{0} scanned values</value></data>
+  <data name="ChecksUnsupportedTitle" xml:space="preserve"><value>Unsupported files</value></data>
+  <data name="ChecksDiagnosticTitle" xml:space="preserve"><value>File check</value></data>
+  <data name="ChecksTrackCountTitle" xml:space="preserve"><value>{0} track count</value></data>
+  <data name="ChecksLanguageTitle" xml:space="preserve"><value>{0} track {1} · Language tag</value></data>
+  <data name="ChecksDefaultTitle" xml:space="preserve"><value>{0} track {1} · Default flag</value></data>
+  <data name="ChecksForcedTitle" xml:space="preserve"><value>{0} track {1} · Forced flag</value></data>
+  <data name="ChecksOtherTitle" xml:space="preserve"><value>{0} track {1} · Scanned value</value></data>
+  <data name="ChecksTrackPosition" xml:space="preserve"><value>Track {0}</value></data>
+  <data name="ChecksAlwaysBlock" xml:space="preserve"><value>Blocks batch edits in every validation mode.</value></data>
+  <data name="ChecksBlockBySettings" xml:space="preserve"><value>Blocks batch edits under your current validation settings.</value></data>
+  <data name="ChecksDoNotBlock" xml:space="preserve"><value>Advisory · Does not block batch edits.</value></data>
+  <data name="ChecksMissingExtension" xml:space="preserve"><value>Missing .mkv extension.</value></data>
+  <data name="ChecksWrongExtension" xml:space="preserve"><value>Unsupported extension: {0}. Expected .mkv.</value></data>
+  <data name="ChecksUnknownContainer" xml:space="preserve"><value>The scan could not identify the container format.</value></data>
+  <data name="ChecksWrongContainer" xml:space="preserve"><value>Detected container: {0}. Expected Matroska.</value></data>
+  <data name="ChecksAbsentTrack" xml:space="preserve"><value>Track not present</value></data>
+  <data name="ChecksUnspecified" xml:space="preserve"><value>Not specified</value></data>
+  <data name="ChecksLanguageTag" xml:space="preserve"><value>{0} ({1})</value><comment>{0}: language name from the catalog; {1}: scanned tag.</comment></data>
+  <data name="ChecksYes" xml:space="preserve"><value>Yes</value></data>
+  <data name="ChecksNo" xml:space="preserve"><value>No</value></data>
+  <data name="ChecksTracksSingle" xml:space="preserve"><value>{0} track</value></data>
+  <data name="ChecksTracksMultiple" xml:space="preserve"><value>{0} tracks</value></data>
+  <data name="ChecksFilesSingle" xml:space="preserve"><value>{0} file</value></data>
+  <data name="ChecksFilesMultiple" xml:space="preserve"><value>{0} files</value></data>
+  <data name="ChecksValueCount" xml:space="preserve"><value>{0}, {1}</value><comment>Accessible row name: {0}: scanned value; {1}: counted files phrase.</comment></data>
+  <data name="ChecksCoverageSingle" xml:space="preserve"><value>Batch-wide settings: {0} track {1} is present in {2} of {3} supported file.</value><comment>{0}: track type; {1}: track position; {2}: files containing the track; {3}: supported files.</comment></data>
+  <data name="ChecksCoverageMultiple" xml:space="preserve"><value>Batch-wide settings: {0} track {1} is present in {2} of {3} supported files.</value><comment>{0}: track type; {1}: track position; {2}: files containing the track; {3}: supported files.</comment></data>
+  <data name="ChecksBackToFileCheck" xml:space="preserve"><value>Back to this file's check</value></data>
+  <data name="ChecksBackToCheck" xml:space="preserve"><value>Back to this check</value></data>
 </root>

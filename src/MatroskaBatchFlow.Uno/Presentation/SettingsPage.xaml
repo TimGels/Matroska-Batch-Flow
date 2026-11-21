@@ -97,7 +97,7 @@
                 </controls:SwitchPresenter>
 
                 <!--Batch Validation section-->
-                <TextBlock Text="Batch Validation"
+                <TextBlock x:Name="ValidationHeader" x:Uid="ChecksSettingsSection"
                            Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
 
                 <controls:SwitchPresenter TargetType="x:Boolean"

@@ -8,6 +8,29 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 
 public sealed partial class SettingsPage : Page
 {
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        if (e.Parameter is string section && section == SettingsViewModel.ValidationSection)
+        {
+            if (ValidationHeader.IsLoaded)
+            {
+                ValidationHeader.StartBringIntoView();
+            }
+            else
+            {
+                ValidationHeader.Loaded -= BringValidationIntoView;
+                ValidationHeader.Loaded += BringValidationIntoView;
+            }
+        }
+    }
+
+    private void BringValidationIntoView(object sender, RoutedEventArgs e)
+    {
+        ValidationHeader.Loaded -= BringValidationIntoView;
+        ValidationHeader.StartBringIntoView();
+    }
+
     public bool IsCardEnabled { get; set; } = true;
 
     public SettingsViewModel ViewModel { get; }

@@ -1,3 +1,4 @@
+using MatroskaBatchFlow.Uno.Models;
 using MatroskaBatchFlow.Uno.Presentation;
 using MatroskaBatchFlow.Uno.Services;
 
@@ -17,6 +18,7 @@ public class PageServiceTests
         // Assert - Verify all expected pages are registered
         Assert.NotNull(service.GetPageType(typeof(MainViewModel).FullName!));
         Assert.NotNull(service.GetPageType(typeof(InputViewModel).FullName!));
+        Assert.NotNull(service.GetPageType(typeof(FileChecksViewModel).FullName!));
         Assert.NotNull(service.GetPageType(typeof(GeneralViewModel).FullName!));
         Assert.NotNull(service.GetPageType(typeof(VideoViewModel).FullName!));
         Assert.NotNull(service.GetPageType(typeof(AudioViewModel).FullName!));
@@ -138,5 +140,27 @@ public class PageServiceTests
 
         // Act & Assert
         Assert.Throws<ArgumentException>(() => service.GetPageType("   "));
+    }
+
+    [Fact]
+    public void CreateDefaultParameter_WithFileChecksViewModel_ReturnsFreshVisitEachTime()
+    {
+        var service = new PageService();
+        var key = typeof(FileChecksViewModel).FullName!;
+
+        var first = service.CreateDefaultParameter(key);
+        var second = service.CreateDefaultParameter(key);
+
+        Assert.IsType<FileCheckVisit>(first);
+        Assert.IsType<FileCheckVisit>(second);
+        Assert.NotSame(first, second);
+    }
+
+    [Fact]
+    public void CreateDefaultParameter_WithPageWithoutDefault_ReturnsNull()
+    {
+        var service = new PageService();
+
+        Assert.Null(service.CreateDefaultParameter(typeof(InputViewModel).FullName!));
     }
 }

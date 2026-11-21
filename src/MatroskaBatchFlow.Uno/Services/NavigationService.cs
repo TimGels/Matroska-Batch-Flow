@@ -76,6 +76,8 @@ public partial class NavigationService(IPageService pageService, ILogger<Navigat
         if (!shouldNavigate)
             return false;
 
+        parameter ??= pageService.CreateDefaultParameter(pageKey);
+
         LogNavigatingTo(pageKey, clearNavigation, transitionInfo);
 
         _frame.Tag = clearNavigation;

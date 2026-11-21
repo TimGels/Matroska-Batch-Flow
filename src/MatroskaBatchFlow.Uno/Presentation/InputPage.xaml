@@ -22,9 +22,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -32,29 +30,9 @@
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Validation InfoBar -->
-        <InfoBar x:Name="ValidationInfoBar"
-                 Grid.Column="1"
-                 Grid.Row="0"
-                 Visibility="{x:Bind ViewModel.ValidationInfoBarVisibility, Mode=OneWay}"
-                 IsOpen="{x:Bind ViewModel.IsValidationInfoBarOpen, Mode=TwoWay}"
-                 Severity="{x:Bind ViewModel.ValidationInfoBarSeverity, Mode=OneWay}"
-                 Title="{x:Bind ViewModel.ValidationSummaryTitle, Mode=OneWay}"
-                 Message="{x:Bind ViewModel.ValidationSummaryMessage, Mode=OneWay}"
-                 IsClosable="True"
-                 Margin="0,-16,0,28"
-                 AutomationProperties.Name="Validation notifications"
-                 AutomationProperties.LiveSetting="Polite">
-            <InfoBar.ActionButton>
-                <Button Content="View Details"
-                        Command="{x:Bind ViewModel.ShowValidationDetailsCommand}"
-                        AutomationProperties.Name="View validation details" />
-            </InfoBar.ActionButton>
-        </InfoBar>
-
         <!-- CommandBar with actions for file list view-->
         <StackPanel Grid.Column="1"
-                    Grid.Row="1"
+                    Grid.Row="0"
                     HorizontalAlignment="Stretch"
                     skia:Background="{ThemeResource ControlStrokeColorDefaultBrush}"
                     win:Background="{ThemeResource LayerOnMicaBaseAltFillColorSecondary}"
@@ -62,6 +40,7 @@
                     CornerRadius="{ThemeResource ControlCornerRadius}">
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
@@ -88,8 +67,27 @@
                     </CommandBar.PrimaryCommands>
                 </CommandBar>
 
+                <Grid Grid.Column="1" ColumnSpacing="8" Margin="16,0"
+                      Visibility="{x:Bind ViewModel.FileChecks.IsVisible, Mode=OneWay}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{x:Bind local:ValidationText.InputHeadline(ViewModel.FileChecks, ViewModel.OverlayState.IsActive), Mode=OneWay}"
+                               ToolTipService.ToolTip="{x:Bind local:ValidationText.InputHeadline(ViewModel.FileChecks, ViewModel.OverlayState.IsActive), Mode=OneWay}"
+                               VerticalAlignment="Center"
+                               FontSize="12" TextTrimming="CharacterEllipsis"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               AutomationProperties.LiveSetting="Polite" />
+                    <HyperlinkButton Grid.Column="1"
+                                     Content="{x:Bind local:ValidationText.ReviewCount(ViewModel.FileChecks.Groups.Count), Mode=OneWay}"
+                                     Command="{x:Bind ViewModel.ReviewFileChecksCommand}"
+                                     Visibility="{x:Bind ViewModel.FileChecks.HasFindings, Mode=OneWay}"
+                                     VerticalAlignment="Center" />
+                </Grid>
+
                 <!-- Right CommandBar-->
-                <CommandBar Grid.Column="1"
+                <CommandBar Grid.Column="2"
                             DefaultLabelPosition="Right"
                             HorizontalAlignment="Right">
                     <CommandBar.PrimaryCommands>
@@ -108,42 +106,73 @@
             </Grid>
         </StackPanel>
 
-        <Grid Grid.Column="1"
-              Grid.Row="2">
+        <Grid Grid.Column="1" Grid.Row="1"
+              skia:Background="{ThemeResource ControlStrokeColorDefaultBrush}"
+              win:Background="{ThemeResource LayerOnMicaBaseAltFillColorSecondary}"
+              CornerRadius="{ThemeResource ControlCornerRadius}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid Padding="16,8" ColumnSpacing="16"
+                  Visibility="{x:Bind ViewModel.FileChecks.HasFindings, Mode=OneWay}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="96" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Uid="ChecksFileColumn" Style="{ThemeResource CaptionTextBlockStyle}" />
+                <TextBlock Grid.Column="1" x:Uid="ChecksCountColumn" HorizontalAlignment="Center"
+                           Style="{ThemeResource CaptionTextBlockStyle}" />
+            </Grid>
             <ListView x:Name="FileDropListView"
-                      skia:Background="{ThemeResource ControlStrokeColorDefaultBrush}"
-                      win:Background="{ThemeResource LayerOnMicaBaseAltFillColorSecondary}"
-                      CornerRadius="{ThemeResource ControlCornerRadius}"
+                      Grid.Row="1"
                       Actions:DropFilesBehavior.IsEnabled="True"
                       Actions:DropFilesBehavior.FileDropTarget="{x:Bind ViewModel}"
                       ItemsSource="{x:Bind ViewModel.FileList}"
                       AllowDrop="True"
-                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                       ScrollViewer.VerticalScrollBarVisibility="Auto"
-                      ScrollViewer.HorizontalScrollMode="Enabled"
+                      ScrollViewer.HorizontalScrollMode="Disabled"
                       HorizontalContentAlignment="Stretch"
                       SelectionMode="Extended"
                       Actions:ListViewSelectedItemsBehavior.BoundSelectedItems="{x:Bind ViewModel.SelectedFiles, Mode=TwoWay}">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="local:ScannedFileViewModel">
-                        <Grid Margin="0,6,0,6">
+                        <Grid Margin="0,8" ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
                             <Grid.ContextFlyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem Text="Delete"
                                                     Command="{x:Bind RemoveSelf}" />
                                 </MenuFlyout>
                             </Grid.ContextFlyout>
-                            <TextBlock HorizontalAlignment="Left"
-                                       Grid.Column="0"
-                                       VerticalAlignment="Center"
-                                       Text="{x:Bind FileInfo.Path}"
-                                       TextWrapping="Wrap" />
+                            <StackPanel Spacing="3" ToolTipService.ToolTip="{x:Bind FileInfo.Path}">
+                                <TextBlock Text="{x:Bind FileName}" TextWrapping="Wrap" />
+                                <TextBlock x:Uid="ChecksUnsupportedBadge" FontSize="12"
+                                           Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                           Visibility="{x:Bind IsUnsupported, Mode=OneWay}" />
+                                <TextBlock Text="{x:Bind Directory}"
+                                           FontSize="12" TextTrimming="CharacterEllipsis"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <Grid Grid.Column="1" Width="96"
+                                  Visibility="{x:Bind HasFileChecks, Mode=OneWay}">
+                                <HyperlinkButton Padding="12,4" MinWidth="44" HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center" FontSize="12"
+                                                 Content="{x:Bind FileCheckCount, Mode=OneWay}"
+                                                 Click="OnReviewFileChecksClicked"
+                                                 AutomationProperties.Name="{x:Bind local:ValidationText.ReviewFile(FileCheckCount, FileName), Mode=OneWay}"
+                                                 ToolTipService.ToolTip="{x:Bind local:ValidationText.TopicList(CheckTopics), Mode=OneWay}" />
+                            </Grid>
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
 
-            <StackPanel IsHitTestVisible="False"
+            <StackPanel Grid.Row="1" IsHitTestVisible="False"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         Opacity="0.2"
@@ -152,7 +181,7 @@
                            Style="{StaticResource TitleTextBlockStyle}" />
             </StackPanel>
 
-            <controls:OperationOverlay IsActive="{x:Bind ViewModel.OverlayState.IsActive, Mode=OneWay}"
+            <controls:OperationOverlay Grid.RowSpan="2" IsActive="{x:Bind ViewModel.OverlayState.IsActive, Mode=OneWay}"
                                             Message="{x:Bind ViewModel.OverlayState.Message, Mode=OneWay}"
                                             IsIndeterminate="{x:Bind ViewModel.OverlayState.IsIndeterminate, Mode=OneWay}"
                                             Current="{x:Bind ViewModel.OverlayState.Current, Mode=OneWay}"

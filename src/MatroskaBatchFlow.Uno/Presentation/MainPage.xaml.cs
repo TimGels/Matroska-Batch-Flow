@@ -2,8 +2,10 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.Messaging;
 using MatroskaBatchFlow.Uno.Messages;
+using MatroskaBatchFlow.Uno.Models;
 using MatroskaBatchFlow.Uno.Presentation.Dialogs;
 using Windows.Foundation;
+using static MatroskaBatchFlow.Uno.Presentation.UiText;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
@@ -12,6 +14,26 @@ public sealed partial class MainPage : Page
     public MainViewModel ViewModel { get; }
     private readonly ConcurrentQueue<object> _dialogQueue = new();
     private readonly SemaphoreSlim _dialogSemaphore = new(1, 1);
+
+    private string AvailabilityText(BatchAvailability status) => status.Reason switch
+    {
+        BatchAvailabilityReason.NoFiles => Get("FooterNoFiles"),
+        BatchAvailabilityReason.Busy => Get("FooterBusy"),
+        BatchAvailabilityReason.UnsupportedFiles => Counted("FooterUnsupportedFiles", status.Count),
+        BatchAvailabilityReason.BlockingChecks => Counted("FooterBlockingChecks", status.Count),
+        BatchAvailabilityReason.ValidationBlocked => Get("FooterValidationBlocked"),
+        BatchAvailabilityReason.NoChanges => Get("FooterNoChanges"),
+        BatchAvailabilityReason.ReadyWithAdvisories => Get("FooterReadyWithAdvisories"),
+        BatchAvailabilityReason.Ready => Get("FooterReady"),
+        _ => throw new ArgumentOutOfRangeException(nameof(status), status.Reason, "Unknown batch availability reason.")
+    };
+
+    private string ReviewActionText(BatchAvailability status) => status.Reason switch
+    {
+        BatchAvailabilityReason.UnsupportedFiles => Counted("FooterReviewUnsupportedFiles", status.Count),
+        BatchAvailabilityReason.BlockingChecks => Counted("FooterReviewBlockingChecks", status.Count),
+        _ => Get("FooterReviewChecks")
+    };
 
     public MainPage()
     {
