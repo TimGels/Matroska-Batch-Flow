@@ -24,4 +24,8 @@ public sealed partial class InputPage : Page
 
     private void OnReviewFileChecksClicked(object sender, RoutedEventArgs e) =>
         ViewModel.ReviewFileChecksCommand.Execute(((FrameworkElement)sender).DataContext);
+
+    // Context flyout items do not reliably inherit the row's DataContext, so the row is passed through Tag.
+    private void OnRemoveFileClicked(object sender, RoutedEventArgs e) =>
+        ViewModel.RemoveFileCommand.Execute(((FrameworkElement)sender).Tag);
 }

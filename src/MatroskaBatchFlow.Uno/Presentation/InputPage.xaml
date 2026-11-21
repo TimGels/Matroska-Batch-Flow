@@ -146,7 +146,8 @@
                             <Grid.ContextFlyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem Text="Delete"
-                                                    Command="{x:Bind RemoveSelf}" />
+                                                    Tag="{x:Bind}"
+                                                    Click="OnRemoveFileClicked" />
                                 </MenuFlyout>
                             </Grid.ContextFlyout>
                             <StackPanel Spacing="3" ToolTipService.ToolTip="{x:Bind FileInfo.Path}">
