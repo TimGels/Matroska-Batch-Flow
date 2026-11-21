@@ -134,6 +134,18 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     }
 
     /// <summary>
+    /// Removes one file from the batch, regardless of the current selection.
+    /// </summary>
+    [RelayCommand]
+    private async Task RemoveFileAsync(ScannedFileViewModel? file)
+    {
+        if (file is null)
+            return;
+
+        await _orchestrator.RemoveFilesAsync([file.FileInfo]);
+    }
+
+    /// <summary>
     /// Removes all files from the internal file list.
     /// </summary>
     private async Task RemoveAllFilesAsync()

@@ -42,7 +42,7 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
         _batchConfig = batchConfig;
         _logger = logger;
         ScannedFileViewModels = new ObservableCollection<ScannedFileViewModel>(
-            batchConfig.FileList.Select(f => new ScannedFileViewModel(f, batchConfig))
+            batchConfig.FileList.Select(f => new ScannedFileViewModel(f))
         );
 
         // Sync: CoreList -> ScannedFileViewModels
@@ -63,7 +63,7 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
             case NotifyCollectionChangedAction.Add:
                 foreach (ScannedFileInfo file in eventArgs.NewItems!)
                     if (!ScannedFileViewModels.Any(vm => vm.FileInfo == file))
-                        ScannedFileViewModels.Add(new ScannedFileViewModel(file, _batchConfig));
+                        ScannedFileViewModels.Add(new ScannedFileViewModel(file));
                 break;
             case NotifyCollectionChangedAction.Remove:
                 foreach (ScannedFileInfo file in eventArgs.OldItems!)
@@ -85,7 +85,7 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
                 }
                 foreach (ScannedFileInfo file in eventArgs.NewItems!)
                     if (!ScannedFileViewModels.Any(vm => vm.FileInfo == file))
-                        ScannedFileViewModels.Add(new ScannedFileViewModel(file, _batchConfig));
+                        ScannedFileViewModels.Add(new ScannedFileViewModel(file));
                 break;
         }
     }
@@ -195,7 +195,7 @@ public partial class FileListAdapter : IFileListAdapter, IDisposable
         ScannedFileViewModels.Clear();
 
         foreach (var file in _batchConfig.FileList)
-            ScannedFileViewModels.Add(new ScannedFileViewModel(file, _batchConfig));
+            ScannedFileViewModels.Add(new ScannedFileViewModel(file));
     }
 
     /// <summary>

@@ -75,7 +75,7 @@ public class InputViewModelTests : IDisposable
         var viewModel = CreateViewModel();
         var file = CreateScannedFile("file1.mkv");
         _fileList.Add(file);
-        viewModel.SelectedFiles.Add(new ScannedFileViewModel(file, _batchConfiguration));
+        viewModel.SelectedFiles.Add(new ScannedFileViewModel(file));
 
         // Act
         var canSelectAll = viewModel.CanSelectAll;
@@ -103,8 +103,8 @@ public class InputViewModelTests : IDisposable
     [Fact]
     public void ReviewFileChecks_FromFileIndicator_PassesFilePathWithoutChangingSelection()
     {
-        var selectedFile = new ScannedFileViewModel(CreateScannedFile("selected.mkv"), _batchConfiguration);
-        var reviewedFile = new ScannedFileViewModel(CreateScannedFile("reviewed.mkv"), _batchConfiguration);
+        var selectedFile = new ScannedFileViewModel(CreateScannedFile("selected.mkv"));
+        var reviewedFile = new ScannedFileViewModel(CreateScannedFile("reviewed.mkv"));
         using var viewModel = CreateViewModel();
         viewModel.SelectedFiles.Add(selectedFile);
 
@@ -139,7 +139,7 @@ public class InputViewModelTests : IDisposable
         {
             var file = CreateScannedFile(path);
             _fileList.Add(file);
-            _fileListAdapter.ScannedFileViewModels.Add(new ScannedFileViewModel(file, _batchConfiguration));
+            _fileListAdapter.ScannedFileViewModels.Add(new ScannedFileViewModel(file));
         }
         _validationStateService.CurrentResults.Returns(new[] {
             new FileValidationResult(ValidationSeverity.Error, "two.mkv", "Track counts differ") {
@@ -161,7 +161,7 @@ public class InputViewModelTests : IDisposable
     {
         var file = CreateScannedFile("test.mkv");
         _fileList.Add(file);
-        var fileViewModel = new ScannedFileViewModel(file, _batchConfiguration);
+        var fileViewModel = new ScannedFileViewModel(file);
         _fileListAdapter.ScannedFileViewModels.Add(fileViewModel);
         using var viewModel = CreateViewModel();
         viewModel.SelectedFiles.Add(fileViewModel);
@@ -192,7 +192,7 @@ public class InputViewModelTests : IDisposable
         // Arrange
         var viewModel = CreateViewModel();
         var file = CreateScannedFile("file1.mkv");
-        var fileVm = new ScannedFileViewModel(file, _batchConfiguration);
+        var fileVm = new ScannedFileViewModel(file);
         viewModel.SelectedFiles.Add(fileVm);
 
         // Act
@@ -204,13 +204,27 @@ public class InputViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task RemoveFile_FromRowMenu_RemovesOnlyThatFileThroughOrchestrator()
+    {
+        var selected = new ScannedFileViewModel(CreateScannedFile("selected.mkv"));
+        var clicked = new ScannedFileViewModel(CreateScannedFile("clip.mp4"));
+        using var viewModel = CreateViewModel();
+        viewModel.SelectedFiles.Add(selected);
+
+        await viewModel.RemoveFileCommand.ExecuteAsync(clicked);
+
+        await _orchestrator.Received(1).RemoveFilesAsync(Arg.Is<IEnumerable<ScannedFileInfo>>(
+            files => files.Single() == clicked.FileInfo));
+    }
+
+    [Fact]
     public void SelectAll_AddsAllScannedFileViewModelsToSelectedFiles()
     {
         // Arrange
         var file1 = CreateScannedFile("file1.mkv");
         var file2 = CreateScannedFile("file2.mkv");
-        var vm1 = new ScannedFileViewModel(file1, _batchConfiguration);
-        var vm2 = new ScannedFileViewModel(file2, _batchConfiguration);
+        var vm1 = new ScannedFileViewModel(file1);
+        var vm2 = new ScannedFileViewModel(file2);
         var scannedFileViewModels = new ObservableCollection<ScannedFileViewModel> { vm1, vm2 };
         _fileListAdapter.ScannedFileViewModels.Returns(scannedFileViewModels);
         var viewModel = CreateViewModel();
