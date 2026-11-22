@@ -94,7 +94,7 @@ public class InputViewModelTests : IDisposable
 
         viewModel.ReviewFileChecksCommand.Execute(null);
 
-        _navigationService.Received(1).NavigateTo(typeof(FileChecksViewModel).FullName!,
+        _navigationService.Received(1).NavigateTo(typeof(ValidationViewModel).FullName!,
             Arg.Is<FileCheckVisit>(visit => visit.FilePath == null));
         Assert.True(viewModel.FileChecks.HasBlockingIssues);
         Assert.Single(viewModel.FileChecks.Groups);
@@ -110,7 +110,7 @@ public class InputViewModelTests : IDisposable
 
         viewModel.ReviewFileChecksCommand.Execute(reviewedFile);
 
-        _navigationService.Received(1).NavigateTo(typeof(FileChecksViewModel).FullName!,
+        _navigationService.Received(1).NavigateTo(typeof(ValidationViewModel).FullName!,
             Arg.Is<FileCheckVisit>(visit => visit.FilePath == "reviewed.mkv"));
         Assert.Same(selectedFile, Assert.Single(viewModel.SelectedFiles));
     }

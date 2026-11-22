@@ -18,7 +18,7 @@ public class PageServiceTests
         // Assert - Verify all expected pages are registered
         Assert.NotNull(service.GetPageType(typeof(MainViewModel).FullName!));
         Assert.NotNull(service.GetPageType(typeof(InputViewModel).FullName!));
-        Assert.NotNull(service.GetPageType(typeof(FileChecksViewModel).FullName!));
+        Assert.NotNull(service.GetPageType(typeof(ValidationViewModel).FullName!));
         Assert.NotNull(service.GetPageType(typeof(GeneralViewModel).FullName!));
         Assert.NotNull(service.GetPageType(typeof(VideoViewModel).FullName!));
         Assert.NotNull(service.GetPageType(typeof(AudioViewModel).FullName!));
@@ -143,10 +143,10 @@ public class PageServiceTests
     }
 
     [Fact]
-    public void CreateDefaultParameter_WithFileChecksViewModel_ReturnsFreshVisitEachTime()
+    public void CreateDefaultParameter_WithValidationViewModel_ReturnsFreshVisitEachTime()
     {
         var service = new PageService();
-        var key = typeof(FileChecksViewModel).FullName!;
+        var key = typeof(ValidationViewModel).FullName!;
 
         var first = service.CreateDefaultParameter(key);
         var second = service.CreateDefaultParameter(key);

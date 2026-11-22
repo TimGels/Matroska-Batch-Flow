@@ -1,5 +1,5 @@
 <Page
-    x:Class="MatroskaBatchFlow.Uno.Presentation.FileChecksPage"
+    x:Class="MatroskaBatchFlow.Uno.Presentation.ValidationPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
@@ -10,7 +10,7 @@
     <Page.Resources>
         <CollectionViewSource x:Key="ChecksByCategory" IsSourceGrouped="True"
                               Source="{x:Bind ViewModel.CheckSections, Mode=OneWay}" />
-        <DataTemplate x:Key="ChecksHeader" x:DataType="local:FileChecksViewModel">
+        <DataTemplate x:Key="ChecksHeader" x:DataType="local:ValidationViewModel">
             <StackPanel Spacing="8">
                 <TextBlock x:Uid="ChecksPageTitle" FontSize="28" FontWeight="SemiBold" />
                 <TextBlock Text="{x:Bind local:ValidationText.Removed(RemovedFileCount), Mode=OneWay}" TextWrapping="Wrap"

@@ -33,8 +33,8 @@
                                     x:Name="InputPageNavItem"
                                     helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.InputViewModel"
                                     helpers:NavigationHelper.IsDefault="True" />
-                <NavigationViewItem x:Uid="ChecksNavItem" Tag="FileChecksPage"
-                                    helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.FileChecksViewModel" />
+                <NavigationViewItem x:Uid="ChecksNavItem" Tag="ValidationPage"
+                                    helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.ValidationViewModel" />
                 <NavigationViewItem Content="General" Tag="GeneralPage"
                                     helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.GeneralViewModel" />
                 <NavigationViewItem Content="Video" Tag="VideoPage"

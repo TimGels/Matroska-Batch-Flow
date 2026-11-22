@@ -11,7 +11,7 @@ using NSubstitute;
 
 namespace MatroskaBatchFlow.Uno.UnitTests.Presentation;
 
-public class FileChecksViewModelTests
+public class ValidationViewModelTests
 {
     private readonly IBatchConfiguration _batch = Substitute.For<IBatchConfiguration>();
     private readonly IValidationStateService _validation = Substitute.For<IValidationStateService>();
@@ -20,7 +20,7 @@ public class FileChecksViewModelTests
     private readonly IBatchOperationOrchestrator _orchestrator = Substitute.For<IBatchOperationOrchestrator>();
     private readonly UniqueObservableCollection<ScannedFileInfo> _files = [];
 
-    public FileChecksViewModelTests()
+    public ValidationViewModelTests()
     {
         _batch.FileList.Returns(_files);
         _validation.CurrentResults.Returns(Array.Empty<FileValidationResult>());
@@ -262,5 +262,5 @@ public class FileChecksViewModelTests
         Assert.Equal(fileScoped ? 1 : 2, vm.RemovedFileCount);
     }
 
-    private FileChecksViewModel CreateViewModel() => new(_batch, _validation, _languages, _navigation, _orchestrator);
+    private ValidationViewModel CreateViewModel() => new(_batch, _validation, _languages, _navigation, _orchestrator);
 }
