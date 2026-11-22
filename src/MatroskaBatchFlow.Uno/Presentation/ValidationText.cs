@@ -280,28 +280,6 @@ public static class ValidationText
     /// <returns>"Remove file from batch" for one file; otherwise, for example "Remove 2 unsupported files from batch".</returns>
     public static string RemoveAction(int count) => Counted("ChecksRemoveAction", count);
 
-    // Audio, Video and Subtitle pages: the note shown after opening a track from a check.
-
-    /// <summary>
-    /// Gets the note on a track page that states how many supported files contain the selected track.
-    /// </summary>
-    /// <param name="scope">The selected track and the files that contain it, or <see langword="null"/> when no track is selected.</param>
-    /// <returns>
-    /// The note, for example "Batch-wide settings: Audio track 2 is present in 3 of 5 supported files.",
-    /// or an empty string when <paramref name="scope"/> is <see langword="null"/>.
-    /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">The track type is not audio, video or subtitle.</exception>
-    public static string Coverage(TrackCoverage? scope) => scope is null ? string.Empty :
-        Format(CountedKey(TrackKey("ChecksCoverage", scope.Type), scope.Supported), scope.Position, scope.WithTrack, scope.Supported);
-
-    /// <summary>
-    /// Gets the label of the link on a track page that returns to the check it was opened from.
-    /// </summary>
-    /// <param name="inspection">The check that opened the track page, or <see langword="null"/> when it was opened another way.</param>
-    /// <returns>"Back to this file's check" when the review was focused on one file; otherwise, "Back to this check".</returns>
-    public static string ReturnAction(TrackCheckInspection? inspection) =>
-        Get(inspection?.FromFile == true ? "ChecksBackToFileCheck" : "ChecksBackToCheck");
-
     // Shared helpers.
 
     /// <summary>

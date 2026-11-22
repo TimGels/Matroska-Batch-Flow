@@ -41,7 +41,6 @@ public abstract partial class TrackViewModelBase : ObservableObject, INavigation
             {
                 _selectedTrack = value;
                 OnPropertyChanged(nameof(SelectedTrack));
-                OnPropertyChanged(nameof(EditScope));
                 OnSelectedTrackChanged(value);
             }
         }
@@ -326,39 +325,14 @@ public abstract partial class TrackViewModelBase : ObservableObject, INavigation
     /// If no tracks are available, an empty list is returned.</returns>
     protected abstract IList<TrackIntent> GetTracks();
 
-    /// <summary>Describes how many supported inputs contain the selected track position. This is coverage, not a count of pending edits.</summary>
-    public TrackCoverage? EditScope
-    {
-        get
-        {
-            if (SelectedTrack is not { } track)
-                return null;
-            var type = GetTrackType();
-            int supported = 0, withTrack = 0;
-            foreach (var file in _batchConfiguration.FileList)
-            {
-                if (file.UnsupportedFormatReason is not null)
-                    continue;
-                supported++;
-                if (file.HasTrack(type, track.Index))
-                {
-                    withTrack++;
-                }
-            }
-            return new(type, track.Index + 1, withTrack, supported);
-        }
-    }
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanReturnToCheck))]
-    private TrackCheckInspection? inspection;
-
-    public bool CanReturnToCheck => Inspection is not null;
-
+    /// <summary>
+    /// Selects the track at the check's position when the page is opened from a Validation check.
+    /// Other navigations keep the current selection.
+    /// </summary>
+    /// <param name="parameter">A <see cref="TrackCheckInspection"/> when opened from a check; otherwise, any other value or <see langword="null"/>.</param>
     public void OnNavigatedTo(object parameter)
     {
-        Inspection = parameter as TrackCheckInspection;
-        if (Inspection?.TrackPosition is int position)
+        if (parameter is TrackCheckInspection { TrackPosition: int position })
         {
             SelectedTrack = GetTracks().FirstOrDefault(track => track.Index + 1 == position);
         }
