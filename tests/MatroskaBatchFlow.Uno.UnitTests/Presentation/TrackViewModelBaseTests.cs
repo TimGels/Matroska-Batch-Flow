@@ -59,36 +59,11 @@ public class TrackViewModelBaseTests
             Substitute.For<IBatchConfiguration>(), Substitute.For<IFileProcessingEngine>(),
             Substitute.For<IUIPreferencesService>(), tracks);
 
-        vm.OnNavigatedTo(new TrackCheckInspection(2, true));
+        vm.OnNavigatedTo(new TrackCheckInspection(2));
         Assert.Same(tracks[1], vm.SelectedTrack);
-        Assert.True(vm.CanReturnToCheck);
         vm.OnNavigatedTo(null!);
-        Assert.False(vm.CanReturnToCheck);
         Assert.Same(tracks[1], vm.SelectedTrack);
         Assert.False(tracks[1].ShouldModifyLanguage);
-    }
-
-    [Fact]
-    public void EditScope_ReportsTrackCoverageAcrossSupportedFilesEvenFromAFileCheck()
-    {
-        var batch = Substitute.For<IBatchConfiguration>();
-        var source = new MediaInfoResultBuilder()
-            .AddTrack(new TrackInfoBuilder().WithType(TrackType.General).WithFormat("Matroska").Build());
-        var withoutSlot = new ScannedFileInfo(source.Build(), "one.mkv");
-        source.AddTrackOfType(TrackType.Text);
-        var withSlot = new ScannedFileInfo(source.Build(), "two.mkv");
-        batch.FileList.Returns(new UniqueObservableCollection<ScannedFileInfo> {
-            withoutSlot, withSlot, new(source.Build(), "unsupported.mp4")
-        });
-        var vm = new TestTrackViewModel(_mockLogger, Substitute.For<ILanguageProvider>(), batch,
-            Substitute.For<IFileProcessingEngine>(), Substitute.For<IUIPreferencesService>(),
-            [new(withSlot.GetTracks(TrackType.Text).First()) { Index = 0 }]);
-        vm.OnNavigatedTo(new TrackCheckInspection(1, true));
-
-        Assert.Equal(new TrackCoverage(TrackType.Text, 1, 1, 2), vm.EditScope);
-        vm.OnNavigatedTo(new TrackCheckInspection(2, true));
-        Assert.Null(vm.SelectedTrack);
-        Assert.True(vm.CanReturnToCheck);
     }
 
     [Fact]

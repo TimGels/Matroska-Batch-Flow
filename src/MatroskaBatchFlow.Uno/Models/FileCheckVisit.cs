@@ -2,7 +2,10 @@ using MatroskaBatchFlow.Core.Enums;
 
 namespace MatroskaBatchFlow.Uno.Models;
 
-/// <summary>Selection state for one Validation navigation entry. Stores keys rather than file lists so Back uses current scan results.</summary>
+/// <summary>
+/// Selection state of the Validation page: the file filter, the selected check and the expanded values.
+/// Stores keys rather than file lists, so the selection can be restored against new validation results.
+/// </summary>
 /// <param name="filePath">The file to focus, or null to review the whole batch.</param>
 public sealed class FileCheckVisit(string? filePath = null)
 {
@@ -22,8 +25,4 @@ public sealed record FileCheckKey(ValidationCheckKind Kind, ValidationSeverity S
 
 /// <summary>Opens a batch track editor from a validation check without narrowing the scope of edits.</summary>
 /// <param name="TrackPosition">One-based position to select, or null for a track-count check with no specific position.</param>
-/// <param name="FromFile">Whether the review was focused on one file. Used for the return link, not to restrict edits.</param>
-public sealed record TrackCheckInspection(int? TrackPosition, bool FromFile);
-
-/// <summary>Presence of a one-based track position across supported inputs; not the number of pending edits.</summary>
-public sealed record TrackCoverage(TrackType Type, int Position, int WithTrack, int Supported);
+public sealed record TrackCheckInspection(int? TrackPosition);

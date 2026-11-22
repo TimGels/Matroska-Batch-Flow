@@ -1,4 +1,3 @@
-using MatroskaBatchFlow.Uno.Models;
 using MatroskaBatchFlow.Uno.Presentation;
 using MatroskaBatchFlow.Uno.Services;
 
@@ -140,27 +139,5 @@ public class PageServiceTests
 
         // Act & Assert
         Assert.Throws<ArgumentException>(() => service.GetPageType("   "));
-    }
-
-    [Fact]
-    public void CreateDefaultParameter_WithValidationViewModel_ReturnsFreshVisitEachTime()
-    {
-        var service = new PageService();
-        var key = typeof(ValidationViewModel).FullName!;
-
-        var first = service.CreateDefaultParameter(key);
-        var second = service.CreateDefaultParameter(key);
-
-        Assert.IsType<FileCheckVisit>(first);
-        Assert.IsType<FileCheckVisit>(second);
-        Assert.NotSame(first, second);
-    }
-
-    [Fact]
-    public void CreateDefaultParameter_WithPageWithoutDefault_ReturnsNull()
-    {
-        var service = new PageService();
-
-        Assert.Null(service.CreateDefaultParameter(typeof(InputViewModel).FullName!));
     }
 }

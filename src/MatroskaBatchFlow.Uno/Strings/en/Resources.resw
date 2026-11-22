@@ -281,12 +281,4 @@
   <data name="ChecksFilesSingle" xml:space="preserve"><value>{0} file</value></data>
   <data name="ChecksFilesMultiple" xml:space="preserve"><value>{0} files</value></data>
   <data name="ChecksValueCount" xml:space="preserve"><value>{0}, {1}</value><comment>Accessible row name: {0}: scanned value; {1}: counted files phrase.</comment></data>
-  <data name="ChecksCoverageAudioSingle" xml:space="preserve"><value>Batch-wide settings: Audio track {0} is present in {1} of {2} supported file.</value><comment>{0}: track position; {1}: files containing the track; {2}: supported files.</comment></data>
-  <data name="ChecksCoverageAudioMultiple" xml:space="preserve"><value>Batch-wide settings: Audio track {0} is present in {1} of {2} supported files.</value><comment>{0}: track position; {1}: files containing the track; {2}: supported files.</comment></data>
-  <data name="ChecksCoverageVideoSingle" xml:space="preserve"><value>Batch-wide settings: Video track {0} is present in {1} of {2} supported file.</value><comment>{0}: track position; {1}: files containing the track; {2}: supported files.</comment></data>
-  <data name="ChecksCoverageVideoMultiple" xml:space="preserve"><value>Batch-wide settings: Video track {0} is present in {1} of {2} supported files.</value><comment>{0}: track position; {1}: files containing the track; {2}: supported files.</comment></data>
-  <data name="ChecksCoverageSubtitleSingle" xml:space="preserve"><value>Batch-wide settings: Subtitle track {0} is present in {1} of {2} supported file.</value><comment>{0}: track position; {1}: files containing the track; {2}: supported files.</comment></data>
-  <data name="ChecksCoverageSubtitleMultiple" xml:space="preserve"><value>Batch-wide settings: Subtitle track {0} is present in {1} of {2} supported files.</value><comment>{0}: track position; {1}: files containing the track; {2}: supported files.</comment></data>
-  <data name="ChecksBackToFileCheck" xml:space="preserve"><value>Back to this file's check</value></data>
-  <data name="ChecksBackToCheck" xml:space="preserve"><value>Back to this check</value></data>
 </root>

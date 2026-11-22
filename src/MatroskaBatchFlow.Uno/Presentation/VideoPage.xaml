@@ -84,7 +84,6 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            <Controls:TrackEditScope ViewModel="{x:Bind ViewModel}" />
         </StackPanel>
 
         <!--Edit-->

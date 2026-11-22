@@ -159,10 +159,20 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
     private void OpenValidationSettings() =>
         _navigationService.NavigateTo(typeof(SettingsViewModel).FullName!, SettingsViewModel.ValidationSection);
 
+    /// <summary>
+    /// Applies the scope chosen by the caller, or keeps the current selection when opened from the navigation bar.
+    /// </summary>
+    /// <param name="parameter">
+    /// A <see cref="FileCheckVisit"/> from an entry point that chooses a scope, such as a file's check count on the Input page;
+    /// otherwise, <see langword="null"/>.
+    /// </param>
     public void OnNavigatedTo(object parameter)
     {
         SaveVisit();
-        _visit = parameter as FileCheckVisit ?? new FileCheckVisit(parameter as string);
+        if (parameter is FileCheckVisit visit)
+        {
+            _visit = visit;
+        }
         RemovedFileCount = 0;
         RestoreVisit();
     }
@@ -181,7 +191,7 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
             TrackType.Text => typeof(SubtitleViewModel).FullName!,
             _ => throw new InvalidOperationException("The selected check has no track settings page.")
         };
-        _navigationService.NavigateTo(pageKey, new TrackCheckInspection(SelectedCheck!.TrackPosition, IsFileScoped));
+        _navigationService.NavigateTo(pageKey, new TrackCheckInspection(SelectedCheck!.TrackPosition));
     }
 
     public void Dispose() => _validationState.StateChanged -= OnValidationStateChanged;

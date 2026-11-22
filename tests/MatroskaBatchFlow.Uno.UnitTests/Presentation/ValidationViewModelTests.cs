@@ -119,7 +119,7 @@ public class ValidationViewModelTests
     }
 
     [Fact]
-    public void BackRestoresEarlierVisitWhileFreshReviewStartsAtHighestPriority()
+    public void OnNavigatedTo_FromNavigationBar_KeepsSelectionWhileExplicitVisitStartsFresh()
     {
         _validation.CurrentResults.Returns(new[]
         {
@@ -127,19 +127,20 @@ public class ValidationViewModelTests
             new FileValidationResult(ValidationSeverity.Warning, "second.mkv", "Second finding.")
         });
         using var viewModel = CreateViewModel();
-        var visit = new FileCheckVisit("second.mkv");
-        viewModel.OnNavigatedTo(visit);
         viewModel.SelectedCheck = viewModel.FileChecks.Groups[1];
         var selected = viewModel.SelectedCheck;
 
         viewModel.OnNavigatedFrom();
-        viewModel.OnNavigatedTo(new FileCheckVisit());
-        Assert.True(viewModel.SelectedCheck!.IsBlocking);
-        Assert.False(viewModel.IsFileScoped);
-        viewModel.OnNavigatedTo(visit);
-
-        Assert.True(viewModel.IsFileScoped);
+        viewModel.OnNavigatedTo(null!);
         Assert.Same(selected, viewModel.SelectedCheck);
+
+        viewModel.OnNavigatedTo(new FileCheckVisit("second.mkv"));
+        viewModel.OnNavigatedTo(null!);
+        Assert.True(viewModel.IsFileScoped);
+
+        viewModel.OnNavigatedTo(new FileCheckVisit());
+        Assert.False(viewModel.IsFileScoped);
+        Assert.True(viewModel.SelectedCheck!.IsBlocking);
     }
 
     [Theory]
@@ -161,7 +162,7 @@ public class ValidationViewModelTests
         Assert.True(viewModel.ReviewTrackSettingsCommand.CanExecute(null));
         viewModel.ReviewTrackSettingsCommand.Execute(null);
 
-        _navigation.Received(1).NavigateTo(targetViewModel.FullName!, new TrackCheckInspection(1, false));
+        _navigation.Received(1).NavigateTo(targetViewModel.FullName!, new TrackCheckInspection(1));
         Assert.True(viewModel.FileChecks.HasFindings);
     }
 
@@ -189,14 +190,14 @@ public class ValidationViewModelTests
         vm.ReviewTrackSettingsCommand.Execute(null);
         _files.Add(new ScannedFileInfo(new MediaInfoResultBuilder().Build(), "new.mkv"));
         _validation.StateChanged += Raise.Event<EventHandler>(this, EventArgs.Empty);
-        vm.OnNavigatedTo(visit);
+        vm.OnNavigatedTo(null!);
         Assert.Equal([string.Empty, null], vm.ComparisonRows.Where(row => row.IsExpanded).Select(row => row.RawValue));
         Assert.Equal(["first.mkv", "new.mkv"], vm.ComparisonRows.Single(row => row.RawValue is null).Files.Select(file => file.FilePath));
         vm.OnNavigatedTo(new FileCheckVisit("two.mkv"));
         Assert.Equal("hi", Assert.Single(vm.VisibleFiles).Evidence.RawValue);
         Assert.DoesNotContain(vm.ComparisonRows, row => row.IsExpanded);
         vm.ReviewTrackSettingsCommand.Execute(null);
-        _navigation.Received().NavigateTo(typeof(AudioViewModel).FullName!, new TrackCheckInspection(1, true));
+        _navigation.Received().NavigateTo(typeof(AudioViewModel).FullName!, new TrackCheckInspection(1));
     }
 
     [Fact]

@@ -70,7 +70,6 @@ public partial class VideoViewModel : TrackViewModelBase
     private void OnFileListChanged(object? sender, NotifyCollectionChangedEventArgs eventArgs)
     {
         OnPropertyChanged(nameof(IsFileListPopulated));
-        OnPropertyChanged(nameof(EditScope));
     }
 
     /// <summary>
