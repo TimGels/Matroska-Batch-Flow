@@ -78,7 +78,7 @@ Generate mkvpropedit commands for differences
 - Models: Domain entities and business logic (Core project)
 
 ### ViewModel Patterns
-- The processing footer binds to `MainViewModel.Availability` (reason and relevant count). The view resolves English fallback and translated strings from `Resources.resw` for button labels, the no-changes hint and automation help. Test availability by reason and count, not by display text.
+- The processing footer and blocking-check review banner bind to `MainViewModel.Availability` (reason and relevant count). The banner's Review action opens a fresh batch-wide `FileCheckVisit`; it is hidden while viewing Validation or running a batch operation. The view resolves English fallback and translated strings from `Resources.resw` for the banner, button labels, the no-changes info button and automation help. Test availability by reason and count, not by display text.
 - Validation and Input badges use `ValidationText` bindings for dynamic text and `x:Uid` for static labels. File topics, format issues, raw tags, missing slots and visit state stay independent of the resource language. Unstructured diagnostics and scanned identifiers are displayed verbatim.
 - Every UI phrase is one complete `.resw` string. Code inserts only numbers, file names, scanned values or complete phrases separated by punctuation, never a translated word into a sentence. Phrases that name a track type use one key per type (`<Key>Audio` / `<Key>Video` / `<Key>Subtitle`, via `ValidationText.TrackKey`); a word used in different contexts (e.g. a heading for several checks and a label for one) gets a separate key per context.
 - `TrackViewModelBase`: Base class for track-specific ViewModels
