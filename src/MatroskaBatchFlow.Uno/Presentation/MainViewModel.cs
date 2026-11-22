@@ -91,7 +91,9 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     public bool CanProcessBatch => IsBatchAvailable && HasConfiguredChanges;
 
-    /// <summary>Identifies why the batch is ready or unavailable; <see cref="CanProcessBatch"/> controls whether edits can be applied.</summary>
+    /// <summary>
+    /// Identifies why the batch is ready or unavailable; <see cref="CanProcessBatch"/> controls whether edits can be applied.
+    /// </summary>
     /// <remarks>
     /// An empty batch or a running operation takes precedence over validation. Blocking findings are
     /// reported before missing edits so the user can review them even before choosing a change.
@@ -120,6 +122,7 @@ public partial class MainViewModel : ObservableObject
     /// Reports unsupported files first. Otherwise, reports the number of distinct blocking checks,
     /// not the number of files involved in those checks.
     /// </summary>
+    /// <returns>The availability with its reason and the matching count.</returns>
     private BatchAvailability GetBlockingAvailability()
     {
         if (Blockers.UnsupportedFiles > 0)
@@ -159,7 +162,9 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     public bool IsInteractionEnabled => !IsProcessing;
 
-    /// <summary>Gets or sets the current batch summary shown in the UI.</summary>
+    /// <summary>
+    /// Gets or sets the current batch summary shown in the UI.
+    /// </summary>
     [ObservableProperty]
     public partial BatchExecutionReport? BatchReport { get; set; }
 

@@ -136,6 +136,8 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     /// <summary>
     /// Removes one file from the batch, regardless of the current selection.
     /// </summary>
+    /// <param name="file">The file to remove, or <see langword="null"/> to do nothing.</param>
+    /// <returns>A task that completes when the file has been removed and the batch has been validated again.</returns>
     [RelayCommand]
     private async Task RemoveFileAsync(ScannedFileViewModel? file)
     {
@@ -199,6 +201,8 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     /// <summary>
     /// Updates each input's check count from the topics it participates in, not just the mismatches reported against its path.
     /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
     private void OnValidationStateChanged(object? sender, EventArgs e)
     {
         FileChecks = FileCheckSummary.Create(

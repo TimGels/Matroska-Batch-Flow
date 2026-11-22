@@ -62,7 +62,10 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
     public FileCheckFile? FocusedFile => IsFileScoped
         ? SelectedCheck?.Files.FirstOrDefault(file => file.FilePath == _focusedPath) : null;
     public bool ShowDiagnostics => SelectedCheck is { HasComparison: false };
-    /// <summary>Files in scope for diagnostics and removal. Comparison rows always describe the batch, regardless of this filter.</summary>
+
+    /// <summary>
+    /// Files in scope for diagnostics and removal. Comparison rows always describe the batch, regardless of this filter.
+    /// </summary>
     public IReadOnlyList<FileCheckFile> VisibleFiles => IsFileScoped
         ? FocusedFile is { } file ? [file] : []
         : SelectedCheck?.Files ?? [];
@@ -109,9 +112,13 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
             .Select(row => row.RawValue).ToHashSet(StringComparer.Ordinal);
     }
 
-    /// <summary>Resolves the saved file, topic and expanded values against the latest validation results.</summary>
-    /// <remarks>If the file no longer participates in a check, return to batch scope. If the topic disappeared,
-    /// select the first remaining topic without transferring expansion state from a different check.</remarks>
+    /// <summary>
+    /// Resolves the saved file, topic and expanded values against the latest validation results.
+    /// </summary>
+    /// <remarks>
+    /// If the file no longer participates in a check, return to batch scope. If the topic disappeared,
+    /// select the first remaining topic without transferring expansion state from a different check.
+    /// </remarks>
     private void RestoreVisit()
     {
         var path = _visit.FilePath;
@@ -138,7 +145,10 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
         RestoreVisit();
     }
 
-    /// <summary>Removes only the unsupported inputs in the current scope from the batch, not from disk.</summary>
+    /// <summary>
+    /// Removes only the unsupported inputs in the current scope from the batch, not from disk.
+    /// </summary>
+    /// <returns>A task that completes when the files have been removed and the batch has been validated again.</returns>
     [RelayCommand(CanExecute = nameof(CanRemoveUnsupported))]
     private async Task RemoveUnsupportedAsync()
     {

@@ -8,7 +8,9 @@ public enum UnsupportedFormatKind
     WrongContainer
 }
 
-/// <summary>File eligibility evidence. The diagnostic is for logs; clients can localize the kind and its scanned detail.</summary>
+/// <summary>
+/// File eligibility evidence. The diagnostic is for logs; clients can localize the kind and its scanned detail.
+/// </summary>
 public sealed record UnsupportedFormatIssue(UnsupportedFormatKind Kind, string? Detail = null)
 {
     public string Diagnostic => Kind switch

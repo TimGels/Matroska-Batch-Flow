@@ -14,7 +14,9 @@ public sealed class FileCheckVisit(string? filePath = null)
     internal HashSet<string?> ExpandedValues { get; set; } = [];
 }
 
-/// <summary>Identifies one review topic across revalidation, even when the set of participating files changes.</summary>
+/// <summary>
+/// Identifies one review topic across revalidation, even when the set of participating files changes.
+/// </summary>
 /// <param name="Kind">The rule's structured identity.</param>
 /// <param name="Severity">The reported severity; findings of different severities remain separate.</param>
 /// <param name="TrackType">Track type for a comparison, or null for a file diagnostic.</param>
@@ -23,6 +25,8 @@ public sealed class FileCheckVisit(string? filePath = null)
 public sealed record FileCheckKey(ValidationCheckKind Kind, ValidationSeverity Severity,
     TrackType? TrackType, int? TrackPosition, string? Diagnostic);
 
-/// <summary>Opens a batch track editor from a validation check without narrowing the scope of edits.</summary>
+/// <summary>
+/// Opens a batch track editor from a validation check without narrowing the scope of edits.
+/// </summary>
 /// <param name="TrackPosition">One-based position to select, or null for a track-count check with no specific position.</param>
 public sealed record TrackCheckInspection(int? TrackPosition);

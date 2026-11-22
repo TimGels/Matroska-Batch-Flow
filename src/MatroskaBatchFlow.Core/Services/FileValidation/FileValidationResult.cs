@@ -47,14 +47,18 @@ public sealed record FileValidationResult(
     /// </summary>
     public ValidationCheckKind CheckKind { get; init; }
 
-    /// <summary>Structured reason for a format finding, independent of its diagnostic message.</summary>
+    /// <summary>
+    /// Gets the structured reason for a format finding, independent of its diagnostic message.
+    /// </summary>
     public UnsupportedFormatIssue? FormatIssue { get; init; }
 
     /// <summary>
     /// Gets structured comparison evidence for presentation without parsing <see cref="Message"/>.
     /// </summary>
-    /// <remarks>A file can differ in several track counts. Conversely, several results can describe the same
-    /// batch comparison; its files are participants, not additional mismatches.</remarks>
+    /// <remarks>
+    /// A file can differ in several track counts. Conversely, several results can describe the same
+    /// batch comparison; its files are participants, not additional mismatches.
+    /// </remarks>
     public IReadOnlyList<ValidationComparison> Comparisons { get; init; } = [];
 
     /// <summary>
