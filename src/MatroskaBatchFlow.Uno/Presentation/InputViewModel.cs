@@ -17,6 +17,9 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     [ObservableProperty]
     private ObservableCollection<ScannedFileViewModel> selectedFiles = [];
 
+    /// <summary>
+    /// The checks for the whole batch, summarized above the file list.
+    /// </summary>
     [ObservableProperty]
     private FileCheckSummary fileChecks = new(0, []);
 
@@ -37,6 +40,10 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
     public bool CanSelectAll => _batchConfig.FileList.Count > SelectedFiles.Count;
     public ObservableCollection<ScannedFileViewModel> FileList => _fileListAdapter.ScannedFileViewModels;
 
+    /// <summary>
+    /// Opens the Validation page with all checks, or filtered to one file.
+    /// </summary>
+    /// <param name="file">The file to filter to, or <see langword="null"/> to show all checks.</param>
     [RelayCommand]
     private void ReviewFileChecks(ScannedFileViewModel? file) =>
         _navigationService.NavigateTo(typeof(ValidationViewModel).FullName!, new FileCheckVisit(file?.FileInfo.Path));

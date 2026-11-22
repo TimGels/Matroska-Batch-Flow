@@ -20,10 +20,16 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
     private string? _focusedPath;
     private FileCheckVisit _visit = new();
 
+    /// <summary>
+    /// The checks for the whole batch, built from the latest validation results.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasNoFindings))]
     private FileCheckSummary fileChecks = new(0, []);
 
+    /// <summary>
+    /// The check whose details are shown, or null when there are no checks.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedCheck))]
     [NotifyPropertyChangedFor(nameof(CanReviewTrackSettings))]
@@ -37,10 +43,16 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
     [NotifyCanExecuteChangedFor(nameof(RemoveUnsupportedCommand))]
     private FileCheckGroup? selectedCheck;
 
+    /// <summary>
+    /// The checks in the list: all checks, or only those involving the filtered file.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CheckSections))]
     private IReadOnlyList<FileCheckGroup> visibleGroups = [];
 
+    /// <summary>
+    /// Gets the visible checks grouped for the list: Blocking before Advisory, then one section per family, ordered by track position.
+    /// </summary>
     public IReadOnlyList<FileCheckSection> CheckSections => VisibleGroups
         .GroupBy(check => check.IsBlocking)
         .SelectMany(category => category.GroupBy(check => check.FamilyKey)
@@ -48,19 +60,43 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
                 index == 0 ? category.Count() : 0, family.OrderBy(check => check.TrackPosition).ToArray())))
         .ToArray();
 
+    /// <summary>
+    /// Gets or sets the number of unsupported files that were just removed from the batch, or zero when there is nothing to confirm.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasRemovalNotice))]
     public partial int RemovedFileCount { get; set; }
 
+    /// <summary>
+    /// Gets whether the page confirms that unsupported files were removed.
+    /// </summary>
     public bool HasRemovalNotice => RemovedFileCount > 0;
 
+    /// <summary>
+    /// The scanned values of the selected check, one row per value, with their files.
+    /// </summary>
     [ObservableProperty]
     private IReadOnlyList<FileCheckValue> comparisonRows = [];
 
+    /// <summary>
+    /// Gets whether the page is filtered to one file.
+    /// </summary>
     public bool IsFileScoped => _focusedPath is not null;
+
+    /// <summary>
+    /// Gets the name of the file the page is filtered to, or null when it shows the whole batch.
+    /// </summary>
     public string? FocusedFileName => Path.GetFileName(_focusedPath);
+
+    /// <summary>
+    /// Gets the filtered file's entry in the selected check, or null when the page is not filtered.
+    /// </summary>
     public FileCheckFile? FocusedFile => IsFileScoped
         ? SelectedCheck?.Files.FirstOrDefault(file => file.FilePath == _focusedPath) : null;
+
+    /// <summary>
+    /// Gets whether the selected check lists a reason per file instead of comparing scanned values.
+    /// </summary>
     public bool ShowDiagnostics => SelectedCheck is { HasComparison: false };
 
     /// <summary>
@@ -69,16 +105,48 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
     public IReadOnlyList<FileCheckFile> VisibleFiles => IsFileScoped
         ? FocusedFile is { } file ? [file] : []
         : SelectedCheck?.Files ?? [];
+
+    /// <summary>
+    /// Gets whether the selected check is the unsupported file check, whose files can be removed from the batch.
+    /// </summary>
     public bool CanRemoveUnsupported => SelectedCheck?.IsFormatCheck == true;
+
+    /// <summary>
+    /// Gets the number of files the remove button would remove, or zero when it is not available.
+    /// </summary>
     public int RemovalCount => CanRemoveUnsupported ? VisibleFiles.Count : 0;
 
     partial void OnSelectedCheckChanged(FileCheckGroup? value) => ComparisonRows = value is null ? []
         : FileChecks.GetComparisonRows(value, _batchConfiguration.FileList.Select(file => file.Path));
 
+    /// <summary>
+    /// Gets whether a check is selected.
+    /// </summary>
     public bool HasSelectedCheck => SelectedCheck is not null;
+
+    /// <summary>
+    /// Gets whether no check has findings, so the page shows its empty state.
+    /// </summary>
     public bool HasNoFindings => !FileChecks.HasFindings;
+
+    /// <summary>
+    /// Gets whether the selected check compares audio, video or subtitle tracks, so its track settings can be opened.
+    /// </summary>
     public bool CanReviewTrackSettings => SelectedCheck?.TrackType is TrackType.Audio or TrackType.Video or TrackType.Text;
+
+    /// <summary>
+    /// Gets whether the page offers to open the validation settings, which it does for blocking track checks.
+    /// </summary>
     public bool ShowValidationSettings => CanReviewTrackSettings && SelectedCheck!.IsBlocking;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ValidationViewModel"/> class.
+    /// </summary>
+    /// <param name="batchConfiguration">The batch whose files are checked.</param>
+    /// <param name="validationState">Provides the latest validation results and reports when they change.</param>
+    /// <param name="languageProvider">Resolves scanned language tags to display names.</param>
+    /// <param name="navigationService">Opens the track and settings pages.</param>
+    /// <param name="orchestrator">Removes unsupported files from the batch and validates it again.</param>
     public ValidationViewModel(
         IBatchConfiguration batchConfiguration,
         IValidationStateService validationState,
@@ -95,6 +163,11 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
         OnValidationStateChanged(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// Rebuilds the checks from the latest validation results and restores the selection against them.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
     private void OnValidationStateChanged(object? sender, EventArgs e)
     {
         SaveVisit();
@@ -104,6 +177,9 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
         RestoreVisit();
     }
 
+    /// <summary>
+    /// Saves the file filter, selected check and expanded values, so they can be restored after the checks change.
+    /// </summary>
     private void SaveVisit()
     {
         _visit.FilePath = _focusedPath;
@@ -137,6 +213,9 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
         OnPropertyChanged(nameof(RemovalCount));
     }
 
+    /// <summary>
+    /// Clears the file filter and shows all checks, keeping the selected check and expanded values.
+    /// </summary>
     [RelayCommand]
     private void ShowAllChecks()
     {
@@ -165,6 +244,9 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
         }
     }
 
+    /// <summary>
+    /// Opens the Batch Validation section of the Settings page.
+    /// </summary>
     [RelayCommand]
     private void OpenValidationSettings() =>
         _navigationService.NavigateTo(typeof(SettingsViewModel).FullName!, SettingsViewModel.ValidationSection);
@@ -187,10 +269,17 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
         RestoreVisit();
     }
 
+    /// <summary>
+    /// Called when the page is left. The selection is kept for the next visit, so there is nothing to do.
+    /// </summary>
     public void OnNavigatedFrom()
     {
     }
 
+    /// <summary>
+    /// Opens the batch editor for the selected check's track type, with the check's track position selected.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The selected check has no audio, video or subtitle track type.</exception>
     [RelayCommand(CanExecute = nameof(CanReviewTrackSettings))]
     private void ReviewTrackSettings()
     {
@@ -204,5 +293,8 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
         _navigationService.NavigateTo(pageKey, new TrackCheckInspection(SelectedCheck!.TrackPosition));
     }
 
+    /// <summary>
+    /// Disposes of the resources used by the <see cref="ValidationViewModel"/> instance.
+    /// </summary>
     public void Dispose() => _validationState.StateChanged -= OnValidationStateChanged;
 }

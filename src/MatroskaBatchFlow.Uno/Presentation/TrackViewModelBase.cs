@@ -338,6 +338,9 @@ public abstract partial class TrackViewModelBase : ObservableObject, INavigation
         }
     }
 
+    /// <summary>
+    /// Called when the page is left. The selected track is kept, so there is nothing to do.
+    /// </summary>
     public void OnNavigatedFrom()
     {
     }
