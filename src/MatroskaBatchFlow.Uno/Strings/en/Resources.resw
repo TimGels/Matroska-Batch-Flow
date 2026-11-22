@@ -129,7 +129,7 @@
     <value>Show Arguments</value>
   </data>
   <data name="FooterApplyChanges.Label" xml:space="preserve">
-    <value>Apply changes</value>
+    <value>Apply Changes</value>
   </data>
   <data name="FooterNoFiles" xml:space="preserve">
     <value>Add files to get started.</value>
