@@ -25,7 +25,7 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasNoFindings))]
-    private FileCheckSummary fileChecks = new(0, []);
+    public partial FileCheckSummary FileChecks { get; set; } = new(0, []);
 
     /// <summary>
     /// The check whose details are shown, or null when there are no checks.
@@ -41,14 +41,14 @@ public sealed partial class ValidationViewModel : ObservableObject, INavigationA
     [NotifyPropertyChangedFor(nameof(RemovalCount))]
     [NotifyCanExecuteChangedFor(nameof(ReviewTrackSettingsCommand))]
     [NotifyCanExecuteChangedFor(nameof(RemoveUnsupportedCommand))]
-    private FileCheckGroup? selectedCheck;
+    public partial FileCheckGroup? SelectedCheck { get; set; }
 
     /// <summary>
     /// The checks in the list: all checks, or only those involving the filtered file.
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CheckSections))]
-    private IReadOnlyList<FileCheckGroup> visibleGroups = [];
+    public partial IReadOnlyList<FileCheckGroup> VisibleGroups { get; set; } = [];
 
     /// <summary>
     /// Gets the visible checks grouped for the list: Blocking before Advisory, then one section per family, ordered by track position.
