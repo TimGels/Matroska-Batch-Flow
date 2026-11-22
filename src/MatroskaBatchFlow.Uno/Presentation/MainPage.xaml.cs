@@ -16,7 +16,7 @@ public sealed partial class MainPage : Page
     private readonly SemaphoreSlim _dialogSemaphore = new(1, 1);
 
     /// <summary>
-    /// Gets the footer text that explains the batch state, for example "2 unsupported files block processing.".
+    /// Gets the text that explains the batch state, for example "2 unsupported files block processing.".
     /// </summary>
     /// <param name="status">The current batch state.</param>
     /// <returns>The localized explanation.</returns>
@@ -35,7 +35,7 @@ public sealed partial class MainPage : Page
     };
 
     /// <summary>
-    /// Gets the label of the footer button that opens the Validation page, for example "Review 2 unsupported files".
+    /// Gets the label of the review banner action that opens the Validation page, for example "Review 2 unsupported files".
     /// </summary>
     /// <param name="status">The current batch state.</param>
     /// <returns>The localized label.</returns>

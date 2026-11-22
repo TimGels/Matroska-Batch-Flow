@@ -56,7 +56,23 @@
                     <Grid.Clip>
                         <RectangleGeometry x:Name="ContentClip" />
                     </Grid.Clip>
-                    <Frame x:Name="contentFrame"
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <InfoBar Grid.Row="0"
+                             Margin="36,12,36,0"
+                             IsOpen="{x:Bind ViewModel.ShowReviewFileChecks, Mode=OneWay}"
+                             Severity="Warning"
+                             IsClosable="False"
+                             Message="{x:Bind AvailabilityText(ViewModel.Availability), Mode=OneWay}"
+                             AutomationProperties.LiveSetting="Polite">
+                        <InfoBar.ActionButton>
+                            <Button Content="{x:Bind ReviewActionText(ViewModel.Availability), Mode=OneWay}"
+                                    Command="{x:Bind ViewModel.ReviewFileChecksCommand}" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+                    <Frame x:Name="contentFrame" Grid.Row="1"
                            Padding="36"  />
                 </Grid>
             </NavigationView.Content>
@@ -71,33 +87,39 @@
         </skia:Grid>
 
         <toolkit:WrapPanel Grid.Row="1" HorizontalAlignment="Center">
-            <CommandBar DefaultLabelPosition="Right"
-                        IsEnabled="{x:Bind ViewModel.IsInteractionEnabled, Mode=OneWay}">
-                <CommandBar.PrimaryCommands>
-                    <AppBarButton x:Uid="FooterShowArguments"
-                                  Icon="ShowResults"
-                                  IsEnabled="{x:Bind ViewModel.CanProcessBatch, Mode=OneWay}"
-                                  Command="{x:Bind ViewModel.GenerateMkvpropeditArgumentsCommand}" />
-                    <AppBarSeparator />
-                    <AppBarButton x:Uid="FooterApplyChanges"
-                                  AutomationProperties.HelpText="{x:Bind AvailabilityText(ViewModel.Availability), Mode=OneWay}"
-                                  IsEnabled="{x:Bind ViewModel.CanProcessBatch, Mode=OneWay}"
-                                  Command="{x:Bind ViewModel.ProcessBatchCommand}">
-                        <FontIcon Glyph="&#xE9F5;" />
-                    </AppBarButton>
-                </CommandBar.PrimaryCommands>
-            </CommandBar>
-            <TextBlock Text="{x:Bind AvailabilityText(ViewModel.Availability), Mode=OneWay}"
-                       Visibility="{x:Bind ViewModel.ShowNoChangesHint, Mode=OneWay}"
-                       Margin="8,4" VerticalAlignment="Center"
-                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                       AutomationProperties.LiveSetting="Polite" />
-            <Button Content="{x:Bind ReviewActionText(ViewModel.Availability), Mode=OneWay}"
-                    Style="{StaticResource AccentButtonStyle}"
-                    Margin="8,4" VerticalAlignment="Center"
-                    IsEnabled="{x:Bind ViewModel.IsInteractionEnabled, Mode=OneWay}"
-                    Visibility="{x:Bind ViewModel.ShowReviewFileChecks, Mode=OneWay}"
-                    Command="{x:Bind ViewModel.ReviewFileChecksCommand}" />
+            <StackPanel Orientation="Horizontal">
+                <CommandBar DefaultLabelPosition="Right"
+                            IsEnabled="{x:Bind ViewModel.IsInteractionEnabled, Mode=OneWay}">
+                    <CommandBar.PrimaryCommands>
+                        <AppBarButton x:Uid="FooterShowArguments"
+                                      Icon="ShowResults"
+                                      IsEnabled="{x:Bind ViewModel.CanProcessBatch, Mode=OneWay}"
+                                      Command="{x:Bind ViewModel.GenerateMkvpropeditArgumentsCommand}" />
+                        <AppBarSeparator />
+                        <AppBarButton x:Uid="FooterApplyChanges"
+                                      AutomationProperties.HelpText="{x:Bind AvailabilityText(ViewModel.Availability), Mode=OneWay}"
+                                      IsEnabled="{x:Bind ViewModel.CanProcessBatch, Mode=OneWay}"
+                                      Command="{x:Bind ViewModel.ProcessBatchCommand}">
+                            <FontIcon Glyph="&#xE9F5;" />
+                        </AppBarButton>
+                    </CommandBar.PrimaryCommands>
+                </CommandBar>
+                <Grid Width="40">
+                    <Button Visibility="{x:Bind ViewModel.ShowNoChangesHint, Mode=OneWay}"
+                            VerticalAlignment="Center" HorizontalAlignment="Center"
+                            Padding="8" Background="Transparent" BorderThickness="0"
+                            AutomationProperties.Name="{x:Bind local:UiText.Get('FooterNoChanges')}"
+                            AutomationProperties.LiveSetting="Polite"
+                            ToolTipService.ToolTip="{x:Bind local:UiText.Get('FooterNoChanges')}">
+                        <Button.Flyout>
+                            <Flyout Placement="Top">
+                                <TextBlock Text="{x:Bind local:UiText.Get('FooterNoChanges')}" />
+                            </Flyout>
+                        </Button.Flyout>
+                        <FontIcon Glyph="&#xE946;" FontSize="16" />
+                    </Button>
+                </Grid>
+            </StackPanel>
         </toolkit:WrapPanel>
 
         <!--Covers the whole window while the batch is processed-->

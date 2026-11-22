@@ -63,7 +63,7 @@ public partial class MainViewModel : ObservableObject
     public partial bool HasFileCheckFindings { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the Validation page is shown, which hides the footer's review button.
+    /// Gets or sets whether the Validation page is shown, which hides the review banner.
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowReviewFileChecks))]
@@ -72,7 +72,7 @@ public partial class MainViewModel : ObservableObject
     private bool IsBlockedByValidation => !HasNoBlockingErrors;
 
     /// <summary>
-    /// Gets whether the footer shows the button that opens the Validation page: checks block the batch,
+    /// Gets whether the review banner with a button that opens the Validation page is shown: checks block the batch,
     /// the Validation page is not already shown and no batch operation is running.
     /// </summary>
     public bool ShowReviewFileChecks => HasFileCheckFindings && IsBlockedByValidation
@@ -80,7 +80,7 @@ public partial class MainViewModel : ObservableObject
 
     /// <summary>
     /// Gets or sets the number of unsupported files and of distinct blocking checks other than the file format,
-    /// used for the footer's availability text and review button.
+    /// used for the availability text and review banner action.
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Availability))]
