@@ -9,8 +9,19 @@ namespace MatroskaBatchFlow.Uno.Models;
 /// <param name="filePath">The file to focus, or null to review the whole batch.</param>
 public sealed class FileCheckVisit(string? filePath = null)
 {
+    /// <summary>
+    /// Gets the file that the page is filtered to, or null when it shows the whole batch.
+    /// </summary>
     public string? FilePath { get; internal set; } = filePath;
+
+    /// <summary>
+    /// Gets or sets the selected check, or null to select the first check.
+    /// </summary>
     internal FileCheckKey? Check { get; set; }
+
+    /// <summary>
+    /// Gets or sets the raw values of the expanded comparison rows.
+    /// </summary>
     internal HashSet<string?> ExpandedValues { get; set; } = [];
 }
 

@@ -15,6 +15,12 @@ public sealed partial class MainPage : Page
     private readonly ConcurrentQueue<object> _dialogQueue = new();
     private readonly SemaphoreSlim _dialogSemaphore = new(1, 1);
 
+    /// <summary>
+    /// Gets the footer text that explains the batch state, for example "2 unsupported files block processing.".
+    /// </summary>
+    /// <param name="status">The current batch state.</param>
+    /// <returns>The localized explanation.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="status"/> has an unknown reason.</exception>
     private string AvailabilityText(BatchAvailability status) => status.Reason switch
     {
         BatchAvailabilityReason.NoFiles => Get("FooterNoFiles"),
@@ -28,6 +34,11 @@ public sealed partial class MainPage : Page
         _ => throw new ArgumentOutOfRangeException(nameof(status), status.Reason, "Unknown batch availability reason.")
     };
 
+    /// <summary>
+    /// Gets the label of the footer button that opens the Validation page, for example "Review 2 unsupported files".
+    /// </summary>
+    /// <param name="status">The current batch state.</param>
+    /// <returns>The localized label.</returns>
     private string ReviewActionText(BatchAvailability status) => status.Reason switch
     {
         BatchAvailabilityReason.UnsupportedFiles => Counted("FooterReviewUnsupportedFiles", status.Count),

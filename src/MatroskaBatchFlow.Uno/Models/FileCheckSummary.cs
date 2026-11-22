@@ -11,11 +11,34 @@ namespace MatroskaBatchFlow.Uno.Models;
 /// <param name="Groups">Review topics, rather than one entry per file that triggered a rule.</param>
 public sealed record FileCheckSummary(int FileCount, IReadOnlyList<FileCheckGroup> Groups)
 {
+    /// <summary>
+    /// Gets whether the batch has files, so the checks summary is shown on the Input page.
+    /// </summary>
     public bool IsVisible => FileCount > 0;
+
+    /// <summary>
+    /// Gets whether any check has findings.
+    /// </summary>
     public bool HasFindings => Groups.Count > 0;
+
+    /// <summary>
+    /// Gets whether any check blocks batch edits.
+    /// </summary>
     public bool HasBlockingIssues => Groups.Any(group => group.IsBlocking);
+
+    /// <summary>
+    /// Gets the number of unsupported files.
+    /// </summary>
     public int UnsupportedCount => Groups.Where(group => group.IsFormatCheck).Sum(group => group.Files.Count);
+
+    /// <summary>
+    /// Gets the number of blocking checks, not counting the file format check.
+    /// </summary>
     public int BlockingCheckCount => Groups.Count(group => group.IsBlocking && !group.IsFormatCheck);
+
+    /// <summary>
+    /// Gets the number of checks that do not block batch edits.
+    /// </summary>
     public int AdvisoryCheckCount => Groups.Count(group => !group.IsBlocking);
 
     private static FileCheckKey KeyFor(FileValidationResult result, ValidationComparison? comparison) =>

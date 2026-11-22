@@ -54,20 +54,34 @@ public partial class MainViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(ShowNoChangesHint))]
     public partial bool HasNoBlockingErrors { get; set; } = true;
 
+    /// <summary>
+    /// Gets or sets whether validation has any findings, blocking or not.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Availability))]
     [NotifyPropertyChangedFor(nameof(ShowReviewFileChecks))]
     public partial bool HasFileCheckFindings { get; set; }
 
+    /// <summary>
+    /// Gets or sets whether the Validation page is shown, which hides the footer's review button.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowReviewFileChecks))]
     public partial bool IsViewingFileChecks { get; set; }
 
     private bool IsBlockedByValidation => !HasNoBlockingErrors;
 
+    /// <summary>
+    /// Gets whether the footer shows the button that opens the Validation page: checks block the batch,
+    /// the Validation page is not already shown and no batch operation is running.
+    /// </summary>
     public bool ShowReviewFileChecks => HasFileCheckFindings && IsBlockedByValidation
         && !IsViewingFileChecks && !IsBatchOperationRunning;
 
+    /// <summary>
+    /// Gets or sets the number of unsupported files and of distinct blocking checks other than the file format,
+    /// used for the footer's availability text and review button.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Availability))]
     public partial (int UnsupportedFiles, int OtherChecks) Blockers { get; set; }
@@ -83,6 +97,11 @@ public partial class MainViewModel : ObservableObject
     public partial bool IsBatchOperationRunning { get; set; }
 
     private bool IsBatchAvailable => HasFiles && HasNoBlockingErrors && !IsBatchOperationRunning;
+
+    /// <summary>
+    /// Gets whether the footer shows "No changes to apply": the batch has files, nothing blocks it,
+    /// no batch operation is running and no changes have been configured.
+    /// </summary>
     public bool ShowNoChangesHint => IsBatchAvailable && !HasConfiguredChanges;
 
     /// <summary>
@@ -134,6 +153,9 @@ public partial class MainViewModel : ObservableObject
         return new(BatchAvailabilityReason.ValidationBlocked);
     }
 
+    /// <summary>
+    /// Opens the Validation page with all checks, starting at the most important one.
+    /// </summary>
     [RelayCommand]
     private void ReviewFileChecks()
     {

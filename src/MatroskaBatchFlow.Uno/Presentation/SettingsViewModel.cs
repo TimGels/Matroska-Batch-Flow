@@ -11,6 +11,9 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 
 public partial class SettingsViewModel : ObservableObject
 {
+    /// <summary>
+    /// The navigation parameter that opens the Settings page at the Batch Validation section.
+    /// </summary>
     internal const string ValidationSection = "BatchValidation";
 
     private readonly IWritableSettings<UserSettings> _userSettings;

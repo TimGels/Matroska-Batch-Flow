@@ -8,6 +8,10 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 
 public sealed partial class SettingsPage : Page
 {
+    /// <summary>
+    /// Scrolls to the Batch Validation section when the page is opened with <see cref="SettingsViewModel.ValidationSection"/>.
+    /// </summary>
+    /// <param name="e">The navigation data. Its parameter selects the section to show.</param>
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
