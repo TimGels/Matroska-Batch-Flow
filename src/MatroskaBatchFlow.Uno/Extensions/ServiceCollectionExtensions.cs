@@ -140,7 +140,7 @@ public static class ServiceCollectionExtensions
         {
             // Register singleton view models
             services.AddSingleton<InputViewModel, InputViewModel>();
-            services.AddSingleton<FileChecksViewModel, FileChecksViewModel>();
+            services.AddSingleton<ValidationViewModel, ValidationViewModel>();
             services.AddSingleton<GeneralViewModel, GeneralViewModel>();
             services.AddSingleton<VideoViewModel, VideoViewModel>();
             services.AddSingleton<AudioViewModel, AudioViewModel>();
@@ -167,7 +167,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<Shell>();
             services.AddSingleton<MainPage>();
             services.AddSingleton<InputPage>();
-            services.AddSingleton<FileChecksPage>();
+            services.AddSingleton<ValidationPage>();
 
             return services;
         }

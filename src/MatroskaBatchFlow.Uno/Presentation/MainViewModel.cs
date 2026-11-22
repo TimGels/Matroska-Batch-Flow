@@ -134,7 +134,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void ReviewFileChecks()
     {
-        NavigationService.NavigateTo(typeof(FileChecksViewModel).FullName!, new FileCheckVisit());
+        NavigationService.NavigateTo(typeof(ValidationViewModel).FullName!, new FileCheckVisit());
     }
 
     [ObservableProperty]
@@ -497,7 +497,7 @@ public partial class MainViewModel : ObservableObject
     private void OnNavigated(object sender, NavigationEventArgs eventArgs)
     {
         IsBackEnabled = NavigationService.CanGoBack;
-        IsViewingFileChecks = eventArgs.SourcePageType == typeof(FileChecksPage);
+        IsViewingFileChecks = eventArgs.SourcePageType == typeof(ValidationPage);
         if (eventArgs.SourcePageType == typeof(SettingsPage))
         {
             Selected = NavigationViewService.SettingsItem;

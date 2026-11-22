@@ -10,7 +10,7 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 /// <summary>
 /// Presents one check at a time, with its scanned evidence and relevant navigation.
 /// </summary>
-public sealed partial class FileChecksViewModel : ObservableObject, INavigationAware, IDisposable
+public sealed partial class ValidationViewModel : ObservableObject, INavigationAware, IDisposable
 {
     private readonly IBatchConfiguration _batchConfiguration;
     private readonly IValidationStateService _validationState;
@@ -76,7 +76,7 @@ public sealed partial class FileChecksViewModel : ObservableObject, INavigationA
     public bool HasNoFindings => !FileChecks.HasFindings;
     public bool CanReviewTrackSettings => SelectedCheck?.TrackType is TrackType.Audio or TrackType.Video or TrackType.Text;
     public bool ShowValidationSettings => CanReviewTrackSettings && SelectedCheck!.IsBlocking;
-    public FileChecksViewModel(
+    public ValidationViewModel(
         IBatchConfiguration batchConfiguration,
         IValidationStateService validationState,
         ILanguageProvider languageProvider,

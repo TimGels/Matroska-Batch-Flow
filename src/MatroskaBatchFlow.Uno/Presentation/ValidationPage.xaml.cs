@@ -2,14 +2,14 @@ using MatroskaBatchFlow.Uno.Models;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
-public sealed partial class FileChecksPage : Page
+public sealed partial class ValidationPage : Page
 {
     private FileCheckKey? _displayedTopic;
-    public FileChecksViewModel ViewModel { get; }
+    public ValidationViewModel ViewModel { get; }
 
-    public FileChecksPage()
+    public ValidationPage()
     {
-        ViewModel = App.GetService<FileChecksViewModel>();
+        ViewModel = App.GetService<ValidationViewModel>();
         InitializeComponent();
     }
 

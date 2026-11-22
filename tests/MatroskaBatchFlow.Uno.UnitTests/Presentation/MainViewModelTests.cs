@@ -143,7 +143,7 @@ public class MainViewModelTests
 
         viewModel.ReviewFileChecksCommand.Execute(null);
 
-        _navigationService.Received(1).NavigateTo(typeof(FileChecksViewModel).FullName!,
+        _navigationService.Received(1).NavigateTo(typeof(ValidationViewModel).FullName!,
             Arg.Is<FileCheckVisit>(visit => visit.FilePath == null));
     }
 

@@ -39,7 +39,7 @@ public sealed partial class InputViewModel : ObservableObject, IFilesDropped, IN
 
     [RelayCommand]
     private void ReviewFileChecks(ScannedFileViewModel? file) =>
-        _navigationService.NavigateTo(typeof(FileChecksViewModel).FullName!, new FileCheckVisit(file?.FileInfo.Path));
+        _navigationService.NavigateTo(typeof(ValidationViewModel).FullName!, new FileCheckVisit(file?.FileInfo.Path));
 
     public ICommand RemoveSelected { get; }
     public ICommand RemoveAll { get; }

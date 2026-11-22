@@ -14,7 +14,7 @@ public class PageService : IPageService
         Configure<MainViewModel, MainPage>();
         Configure<InputViewModel, InputPage>();
         // A menu visit needs its own frame parameter so Back can restore the selected check and expanded rows.
-        Configure<FileChecksViewModel, FileChecksPage>(() => new FileCheckVisit());
+        Configure<ValidationViewModel, ValidationPage>(() => new FileCheckVisit());
         Configure<GeneralViewModel, GeneralPage>();
         Configure<VideoViewModel, VideoPage>();
         Configure<AudioViewModel, AudioPage>();
