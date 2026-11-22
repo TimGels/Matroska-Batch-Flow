@@ -1,7 +1,7 @@
 namespace MatroskaBatchFlow.Uno.Models;
 
 /// <summary>
-/// The batch state currently relevant to the Apply changes footer.
+/// The batch state currently relevant to the Apply Changes footer.
 /// </summary>
 public enum BatchAvailabilityReason
 {
