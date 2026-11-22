@@ -38,7 +38,9 @@ public sealed record ScannedFileInfo
     /// </summary>
     public int SubtitleTrackCount { get; }
 
-    /// <summary>Null when the scanned container is a supported input for a batch edit.</summary>
+    /// <summary>
+    /// The reason the file cannot be edited in a batch, or null when the scanned container is a supported input.
+    /// </summary>
     public UnsupportedFormatIssue? UnsupportedFormatReason { get; }
 
     /// <summary>

@@ -5,9 +5,11 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 /// <summary>
 /// Represents a view model for a scanned fileInfo, providing access to fileInfo details and its file check indicators.
 /// </summary>
-/// <remarks>This class is designed to be used in scenarios where a scanned fileInfo needs to be displayed and managed
+/// <remarks>
+/// This class is designed to be used in scenarios where a scanned fileInfo needs to be displayed and managed
 /// within a batch processing context, such as in a ListView or similar UI component. Removal goes through
-/// <see cref="InputViewModel"/>, so the batch is revalidated afterwards.</remarks>
+/// <see cref="InputViewModel"/>, so the batch is revalidated afterwards.
+/// </remarks>
 public partial class ScannedFileViewModel(ScannedFileInfo fileInfo) : ObservableObject
 {
     public ScannedFileInfo FileInfo { get; } = fileInfo;

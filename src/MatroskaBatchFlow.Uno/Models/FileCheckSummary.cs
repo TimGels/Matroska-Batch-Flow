@@ -22,7 +22,10 @@ public sealed record FileCheckSummary(int FileCount, IReadOnlyList<FileCheckGrou
         new(result.CheckKind, result.Severity, comparison?.TrackType, comparison?.TrackPosition,
             result.CheckKind == ValidationCheckKind.Other ? result.Message : null);
 
-    /// <summary>Counts blockers for the footer without building the display groups or formatting scanned values.</summary>
+    /// <summary>
+    /// Counts blockers for the footer without building the display groups or formatting scanned values.
+    /// </summary>
+    /// <param name="results">Findings from the same validation run.</param>
     /// <returns>Distinct unsupported file paths and distinct blocking topics other than file format.</returns>
     internal static (int UnsupportedFiles, int OtherChecks) CountBlockers(IReadOnlyList<FileValidationResult> results)
     {
@@ -43,7 +46,9 @@ public sealed record FileCheckSummary(int FileCount, IReadOnlyList<FileCheckGrou
         return (files.Count, checks.Count);
     }
 
-    /// <summary>Builds one review topic per enabled finding kind, severity, track type and track position.</summary>
+    /// <summary>
+    /// Builds one review topic per enabled finding kind, severity, track type and track position.
+    /// </summary>
     /// <param name="results">Findings from the same validation run. Several mismatches can describe the same comparison.</param>
     /// <param name="fileCount">Size of the batch that was validated, not the number of files with findings.</param>
     /// <param name="languageProvider">Resolves scanned language tags for display; the raw tag remains the grouping key for value rows.</param>
@@ -90,11 +95,15 @@ public sealed record FileCheckSummary(int FileCount, IReadOnlyList<FileCheckGrou
         return new FileCheckSummary(fileCount, groups);
     }
 
-    /// <summary>Groups participating files by raw scanned value for the expandable comparison rows.</summary>
+    /// <summary>
+    /// Groups participating files by raw scanned value for the expandable comparison rows.
+    /// </summary>
     /// <param name="check">A topic from this summary. File diagnostics have no comparison rows.</param>
     /// <param name="batchPaths">All paths in the corresponding batch, even when reviewing just one file.</param>
     /// <returns>One row per distinct value, plus a separate row for supported files missing the track position, if any.</returns>
-    /// <remarks>The missing-track row provides context only. Its files did not participate in this property check.</remarks>
+    /// <remarks>
+    /// The missing-track row provides context only. Its files did not participate in this property check.
+    /// </remarks>
     public IReadOnlyList<FileCheckValue> GetComparisonRows(FileCheckGroup check, IEnumerable<string> batchPaths)
     {
         if (!check.HasComparison)

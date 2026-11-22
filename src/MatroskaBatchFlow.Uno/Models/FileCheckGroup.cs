@@ -26,7 +26,9 @@ public sealed record FileCheckGroup(
         : (Kind, Kind == ValidationCheckKind.TrackCount ? null : TrackType);
 }
 
-/// <summary>Groups related checks within the Blocking or Advisory list. Only the first family carries the category heading.</summary>
+/// <summary>
+/// Groups related checks within the Blocking or Advisory list. Only the first family carries the category heading.
+/// </summary>
 public sealed class FileCheckSection(int categoryCount, IList<FileCheckGroup> checks)
     : ReadOnlyCollection<FileCheckGroup>(checks)
 {
@@ -47,16 +49,23 @@ public sealed record FileCheckFile(string FilePath, FileCheckEvidence Evidence)
     public string Directory => Path.GetDirectoryName(FilePath) ?? string.Empty;
 }
 
-/// <summary>Raw evidence shared by files in a value row. Only unknown/unstructured diagnostics use the message verbatim.</summary>
+/// <summary>
+/// Raw evidence shared by files in a value row. Only unknown/unstructured diagnostics use the message verbatim.
+/// </summary>
 public sealed record FileCheckEvidence(ValidationCheckKind Kind, string? RawValue = null, string? LanguageName = null,
     string? Diagnostic = null, UnsupportedFormatIssue? FormatIssue = null);
 
-/// <summary>An expandable row of files with the same scanned value, or files missing the selected track.</summary>
+/// <summary>
+/// An expandable row of files with the same scanned value, or files missing the selected track.
+/// </summary>
 public sealed partial class FileCheckValue(FileCheckEvidence evidence, IReadOnlyList<FileCheckFile> files) : ObservableObject
 {
     public FileCheckEvidence Evidence { get; } = evidence;
     public IReadOnlyList<FileCheckFile> Files { get; } = files;
-    /// <summary>Key used to restore expansion: null for an absent track, an empty string for a present track with no language tag.</summary>
+
+    /// <summary>
+    /// Key used to restore expansion: null for an absent track, an empty string for a present track with no language tag.
+    /// </summary>
     public string? RawValue => Evidence.RawValue;
 
     [ObservableProperty]
