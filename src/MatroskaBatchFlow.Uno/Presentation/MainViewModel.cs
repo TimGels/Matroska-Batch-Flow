@@ -38,20 +38,17 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanProcessBatch))]
     [NotifyPropertyChangedFor(nameof(Availability))]
-    [NotifyPropertyChangedFor(nameof(ShowNoChangesHint))]
     public partial bool HasFiles { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanProcessBatch))]
     [NotifyPropertyChangedFor(nameof(Availability))]
-    [NotifyPropertyChangedFor(nameof(ShowNoChangesHint))]
     public partial bool HasConfiguredChanges { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanProcessBatch))]
     [NotifyPropertyChangedFor(nameof(Availability))]
     [NotifyPropertyChangedFor(nameof(ShowReviewFileChecks))]
-    [NotifyPropertyChangedFor(nameof(ShowNoChangesHint))]
     public partial bool HasNoBlockingErrors { get; set; } = true;
 
     /// <summary>
@@ -93,16 +90,9 @@ public partial class MainViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(CanProcessBatch))]
     [NotifyPropertyChangedFor(nameof(Availability))]
     [NotifyPropertyChangedFor(nameof(ShowReviewFileChecks))]
-    [NotifyPropertyChangedFor(nameof(ShowNoChangesHint))]
     public partial bool IsBatchOperationRunning { get; set; }
 
     private bool IsBatchAvailable => HasFiles && HasNoBlockingErrors && !IsBatchOperationRunning;
-
-    /// <summary>
-    /// Gets whether the footer shows "No changes to apply": the batch has files, nothing blocks it,
-    /// no batch operation is running and no changes have been configured.
-    /// </summary>
-    public bool ShowNoChangesHint => IsBatchAvailable && !HasConfiguredChanges;
 
     /// <summary>
     /// Gets whether the batch can be processed. Requires files to be present, at least one
