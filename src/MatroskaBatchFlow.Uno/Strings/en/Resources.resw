@@ -226,25 +226,43 @@
   <data name="ChecksRemovedMultiple" xml:space="preserve"><value>Removed {0} unsupported files from the batch.</value></data>
   <data name="ChecksRemoveActionSingle" xml:space="preserve"><value>Remove file from batch</value></data>
   <data name="ChecksRemoveActionMultiple" xml:space="preserve"><value>Remove {0} unsupported files from batch</value></data>
-  <data name="ChecksBlocking" xml:space="preserve"><value>Blocking</value></data>
-  <data name="ChecksAdvisory" xml:space="preserve"><value>Advisory</value></data>
-  <data name="ChecksCategoryCount" xml:space="preserve"><value>{0} ({1})</value><comment>{0}: category; {1}: number of checks.</comment></data>
-  <data name="ChecksSelector" xml:space="preserve"><value>{0}: {1}</value><comment>{0}: category; {1}: check title.</comment></data>
-  <data name="ChecksAudio" xml:space="preserve"><value>Audio</value></data>
-  <data name="ChecksVideo" xml:space="preserve"><value>Video</value></data>
-  <data name="ChecksSubtitle" xml:space="preserve"><value>Subtitle</value></data>
+  <data name="ChecksBlockingHeading" xml:space="preserve"><value>Blocking ({0})</value><comment>Heading above all blocking checks. {0}: number of checks.</comment></data>
+  <data name="ChecksAdvisoryHeading" xml:space="preserve"><value>Advisory ({0})</value><comment>Heading above all advisory checks. {0}: number of checks.</comment></data>
+  <data name="ChecksBlockingSelector" xml:space="preserve"><value>Blocking: {0}</value><comment>Names one blocking check. {0}: check title.</comment></data>
+  <data name="ChecksAdvisorySelector" xml:space="preserve"><value>Advisory: {0}</value><comment>Names one advisory check. {0}: check title.</comment></data>
+  <data name="ChecksTrackCountLabelAudio" xml:space="preserve"><value>Audio</value><comment>List entry below the "Track counts" heading.</comment></data>
+  <data name="ChecksTrackCountLabelVideo" xml:space="preserve"><value>Video</value><comment>List entry below the "Track counts" heading.</comment></data>
+  <data name="ChecksTrackCountLabelSubtitle" xml:space="preserve"><value>Subtitle</value><comment>List entry below the "Track counts" heading.</comment></data>
   <data name="ChecksTrackCounts" xml:space="preserve"><value>Track counts</value></data>
-  <data name="ChecksLanguageFamily" xml:space="preserve"><value>{0} language tags</value></data>
-  <data name="ChecksDefaultFamily" xml:space="preserve"><value>{0} default flags</value></data>
-  <data name="ChecksForcedFamily" xml:space="preserve"><value>{0} forced flags</value></data>
-  <data name="ChecksOtherFamily" xml:space="preserve"><value>{0} scanned values</value></data>
+  <data name="ChecksLanguageFamilyAudio" xml:space="preserve"><value>Audio language tags</value></data>
+  <data name="ChecksLanguageFamilyVideo" xml:space="preserve"><value>Video language tags</value></data>
+  <data name="ChecksLanguageFamilySubtitle" xml:space="preserve"><value>Subtitle language tags</value></data>
+  <data name="ChecksDefaultFamilyAudio" xml:space="preserve"><value>Audio default flags</value></data>
+  <data name="ChecksDefaultFamilyVideo" xml:space="preserve"><value>Video default flags</value></data>
+  <data name="ChecksDefaultFamilySubtitle" xml:space="preserve"><value>Subtitle default flags</value></data>
+  <data name="ChecksForcedFamilyAudio" xml:space="preserve"><value>Audio forced flags</value></data>
+  <data name="ChecksForcedFamilyVideo" xml:space="preserve"><value>Video forced flags</value></data>
+  <data name="ChecksForcedFamilySubtitle" xml:space="preserve"><value>Subtitle forced flags</value></data>
+  <data name="ChecksOtherFamilyAudio" xml:space="preserve"><value>Audio scanned values</value></data>
+  <data name="ChecksOtherFamilyVideo" xml:space="preserve"><value>Video scanned values</value></data>
+  <data name="ChecksOtherFamilySubtitle" xml:space="preserve"><value>Subtitle scanned values</value></data>
   <data name="ChecksUnsupportedTitle" xml:space="preserve"><value>Unsupported files</value></data>
   <data name="ChecksDiagnosticTitle" xml:space="preserve"><value>File check</value></data>
-  <data name="ChecksTrackCountTitle" xml:space="preserve"><value>{0} track count</value></data>
-  <data name="ChecksLanguageTitle" xml:space="preserve"><value>{0} track {1} · Language tag</value></data>
-  <data name="ChecksDefaultTitle" xml:space="preserve"><value>{0} track {1} · Default flag</value></data>
-  <data name="ChecksForcedTitle" xml:space="preserve"><value>{0} track {1} · Forced flag</value></data>
-  <data name="ChecksOtherTitle" xml:space="preserve"><value>{0} track {1} · Scanned value</value></data>
+  <data name="ChecksTrackCountTitleAudio" xml:space="preserve"><value>Audio track count</value></data>
+  <data name="ChecksTrackCountTitleVideo" xml:space="preserve"><value>Video track count</value></data>
+  <data name="ChecksTrackCountTitleSubtitle" xml:space="preserve"><value>Subtitle track count</value></data>
+  <data name="ChecksLanguageTitleAudio" xml:space="preserve"><value>Audio track {0} · Language tag</value><comment>{0}: track position.</comment></data>
+  <data name="ChecksLanguageTitleVideo" xml:space="preserve"><value>Video track {0} · Language tag</value><comment>{0}: track position.</comment></data>
+  <data name="ChecksLanguageTitleSubtitle" xml:space="preserve"><value>Subtitle track {0} · Language tag</value><comment>{0}: track position.</comment></data>
+  <data name="ChecksDefaultTitleAudio" xml:space="preserve"><value>Audio track {0} · Default flag</value><comment>{0}: track position.</comment></data>
+  <data name="ChecksDefaultTitleVideo" xml:space="preserve"><value>Video track {0} · Default flag</value><comment>{0}: track position.</comment></data>
+  <data name="ChecksDefaultTitleSubtitle" xml:space="preserve"><value>Subtitle track {0} · Default flag</value><comment>{0}: track position.</comment></data>
+  <data name="ChecksForcedTitleAudio" xml:space="preserve"><value>Audio track {0} · Forced flag</value><comment>{0}: track position.</comment></data>
+  <data name="ChecksForcedTitleVideo" xml:space="preserve"><value>Video track {0} · Forced flag</value><comment>{0}: track position.</comment></data>
+  <data name="ChecksForcedTitleSubtitle" xml:space="preserve"><value>Subtitle track {0} · Forced flag</value><comment>{0}: track position.</comment></data>
+  <data name="ChecksOtherTitleAudio" xml:space="preserve"><value>Audio track {0} · Scanned value</value><comment>{0}: track position.</comment></data>
+  <data name="ChecksOtherTitleVideo" xml:space="preserve"><value>Video track {0} · Scanned value</value><comment>{0}: track position.</comment></data>
+  <data name="ChecksOtherTitleSubtitle" xml:space="preserve"><value>Subtitle track {0} · Scanned value</value><comment>{0}: track position.</comment></data>
   <data name="ChecksTrackPosition" xml:space="preserve"><value>Track {0}</value></data>
   <data name="ChecksAlwaysBlock" xml:space="preserve"><value>Blocks batch edits in every validation mode.</value></data>
   <data name="ChecksBlockBySettings" xml:space="preserve"><value>Blocks batch edits under your current validation settings.</value></data>
@@ -263,8 +281,12 @@
   <data name="ChecksFilesSingle" xml:space="preserve"><value>{0} file</value></data>
   <data name="ChecksFilesMultiple" xml:space="preserve"><value>{0} files</value></data>
   <data name="ChecksValueCount" xml:space="preserve"><value>{0}, {1}</value><comment>Accessible row name: {0}: scanned value; {1}: counted files phrase.</comment></data>
-  <data name="ChecksCoverageSingle" xml:space="preserve"><value>Batch-wide settings: {0} track {1} is present in {2} of {3} supported file.</value><comment>{0}: track type; {1}: track position; {2}: files containing the track; {3}: supported files.</comment></data>
-  <data name="ChecksCoverageMultiple" xml:space="preserve"><value>Batch-wide settings: {0} track {1} is present in {2} of {3} supported files.</value><comment>{0}: track type; {1}: track position; {2}: files containing the track; {3}: supported files.</comment></data>
+  <data name="ChecksCoverageAudioSingle" xml:space="preserve"><value>Batch-wide settings: Audio track {0} is present in {1} of {2} supported file.</value><comment>{0}: track position; {1}: files containing the track; {2}: supported files.</comment></data>
+  <data name="ChecksCoverageAudioMultiple" xml:space="preserve"><value>Batch-wide settings: Audio track {0} is present in {1} of {2} supported files.</value><comment>{0}: track position; {1}: files containing the track; {2}: supported files.</comment></data>
+  <data name="ChecksCoverageVideoSingle" xml:space="preserve"><value>Batch-wide settings: Video track {0} is present in {1} of {2} supported file.</value><comment>{0}: track position; {1}: files containing the track; {2}: supported files.</comment></data>
+  <data name="ChecksCoverageVideoMultiple" xml:space="preserve"><value>Batch-wide settings: Video track {0} is present in {1} of {2} supported files.</value><comment>{0}: track position; {1}: files containing the track; {2}: supported files.</comment></data>
+  <data name="ChecksCoverageSubtitleSingle" xml:space="preserve"><value>Batch-wide settings: Subtitle track {0} is present in {1} of {2} supported file.</value><comment>{0}: track position; {1}: files containing the track; {2}: supported files.</comment></data>
+  <data name="ChecksCoverageSubtitleMultiple" xml:space="preserve"><value>Batch-wide settings: Subtitle track {0} is present in {1} of {2} supported files.</value><comment>{0}: track position; {1}: files containing the track; {2}: supported files.</comment></data>
   <data name="ChecksBackToFileCheck" xml:space="preserve"><value>Back to this file's check</value></data>
   <data name="ChecksBackToCheck" xml:space="preserve"><value>Back to this check</value></data>
 </root>

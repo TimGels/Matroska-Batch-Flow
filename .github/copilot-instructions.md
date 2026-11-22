@@ -3,7 +3,7 @@
 > **Audience**: These instructions are for AI coding assistants, not for human developers.  
 > **Human developers**: See [README.md](../README.md) for setup and contribution guidelines.
 
-> **Last Updated**: 2026-11-21
+> **Last Updated**: 2026-11-22
 > **Next Review**: When architecture changes, new patterns are introduced, or build commands change
 > 
 > **Maintenance**: When making significant code changes, update this file and Serena memories to keep them in sync with the codebase.
@@ -98,7 +98,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 
 #### Presentation Layer (MVVM + Messaging)
 - **Architecture**: MVVM with CommunityToolkit.Mvvm (source generators for commands/properties)
-- **UI localization**: The footer and validation workflow expose reasons, counts, topics and raw evidence. Views bind dynamic wording through `UiText` / `ValidationText` and use `x:Uid` for fixed labels. English defaults live in `Strings/en/Resources.resw`; translations use matching keys in `Strings/<language>/`. Use complete counted phrases. Do not group, sort, restore selection or identify unsupported formats by localized strings.
+- **UI localization**: The footer and validation workflow expose reasons, counts, topics and raw evidence. Views bind dynamic wording through `UiText` / `ValidationText` and use `x:Uid` for fixed labels. English defaults live in `Strings/en/Resources.resw`; translations use matching keys in `Strings/<language>/`. Use complete counted phrases. Every phrase is one complete string: insert only numbers, file names, scanned values or complete phrases separated by punctuation, never a translated word into a sentence. Phrases that name a track type use one key per type (`<Key>Audio` / `<Key>Video` / `<Key>Subtitle`), and a word used in different contexts gets a separate key per context. Do not group, sort, restore selection or identify unsupported formats by localized strings.
 - **Messaging**: Uses `WeakReferenceMessenger` for loosely-coupled communication between ViewModels and Views
   - Message types in `Messages/` folder: `DialogMessage`, `ExceptionDialogMessage`, etc.
 - **Navigation**: `INavigationService` handles page navigation with `INavigationAware` interface for lifecycle hooks
