@@ -1,6 +1,6 @@
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using MatroskaBatchFlow.Core.Services.Processing;
+using MatroskaBatchFlow.Uno.Models;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
@@ -9,123 +9,189 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 /// </summary>
 public partial class BatchResultsViewModel : ObservableObject
 {
+    private static readonly FileResultFilter[] FilterOrder =
+    [
+        FileResultFilter.Failed,
+        FileResultFilter.Warnings,
+        FileResultFilter.Canceled,
+        FileResultFilter.Updated,
+        FileResultFilter.Unchanged
+    ];
+
     private readonly IBatchReportStore _batchReportStore;
+    private IReadOnlyList<FileResultItem> _files = Array.Empty<FileResultItem>();
 
-    public ReadOnlyObservableCollection<FileProcessingReport> FileReports => currentBatch.FileReports;
+    /// <summary>
+    /// The batch and counts that <see cref="_files"/> was built for.
+    /// </summary>
+    private (BatchExecutionReport? Batch, BatchResultCounts Counts) _filesSource;
 
+    /// <summary>
+    /// Gets the batch whose results are shown.
+    /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(FileReports))]
-    private BatchExecutionReport currentBatch;
+    public partial BatchExecutionReport CurrentBatch { get; private set; }
 
-    [ObservableProperty] 
-    private int total;
-
+    /// <summary>
+    /// Gets the number of files per result.
+    /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SucceededTotal))] 
-    private int succeeded;
+    [NotifyPropertyChangedFor(nameof(Outcome))]
+    [NotifyPropertyChangedFor(nameof(HasBatch))]
+    [NotifyPropertyChangedFor(nameof(HasNoBatch))]
+    [NotifyPropertyChangedFor(nameof(HasUnchanged))]
+    [NotifyPropertyChangedFor(nameof(HasCanceled))]
+    public partial BatchResultCounts Counts { get; private set; }
 
+    /// <summary>
+    /// Gets when the first file started, or <see langword="null"/> when no file started.
+    /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SucceededTotal))] 
-    private int warnings;
+    [NotifyPropertyChangedFor(nameof(HasTiming))]
+    public partial DateTimeOffset? StartedAt { get; private set; }
 
-    [ObservableProperty] 
-    private int failed;
+    /// <summary>
+    /// Gets the time from the start of the first file to the end of the last file, or <see langword="null"/> when no file finished.
+    /// </summary>
+    [ObservableProperty]
+    public partial TimeSpan? Elapsed { get; private set; }
 
-    [ObservableProperty] 
-    private int running;
+    /// <summary>
+    /// Gets the filters that show at least one file. The first option shows all files.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowFilter))]
+    public partial IReadOnlyList<FileResultFilterOption> FilterOptions { get; private set; } = Array.Empty<FileResultFilterOption>();
 
-    [ObservableProperty] 
-    private int pending;
+    /// <summary>
+    /// Gets or sets the filter that selects which files are listed.
+    /// </summary>
+    [ObservableProperty]
+    public partial FileResultFilterOption? SelectedFilter { get; set; }
 
-    [ObservableProperty] 
-    private int skipped;
+    /// <summary>
+    /// Gets the listed files: files that need attention first, then in processing order.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasFiles))]
+    public partial IReadOnlyList<FileResultItem> VisibleFiles { get; private set; } = Array.Empty<FileResultItem>();
 
-    [ObservableProperty] 
-    private int canceled;
+    public BatchOutcome Outcome => Counts.Outcome;
 
-    public int SucceededTotal => Succeeded + Warnings;
+    public bool HasBatch => Outcome != BatchOutcome.None;
+
+    public bool HasNoBatch => Outcome == BatchOutcome.None;
+
+    public bool HasUnchanged => Counts.Unchanged > 0;
+
+    public bool HasCanceled => Counts.Canceled > 0;
+
+    public bool HasTiming => StartedAt.HasValue;
+
+    public bool HasFiles => VisibleFiles.Count > 0;
+
+    /// <summary>
+    /// Gets whether the filter is useful: it is hidden when every file has the same result.
+    /// </summary>
+    public bool ShowFilter => FilterOptions.Count > 2;
 
     public BatchResultsViewModel(IBatchReportStore batchReportStore)
     {
         _batchReportStore = batchReportStore;
         CurrentBatch = _batchReportStore.ActiveBatch;
 
-        SetupEventHandlers();
-        RefreshAfterBatchSwap();
-    }
-
-    private void SetupEventHandlers()
-    {
         _batchReportStore.PropertyChanged += OnStorePropertyChanged;
         CurrentBatch.PropertyChanged += OnBatchReportPropertyChanged;
+        Refresh();
     }
 
     private void OnStorePropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
-        if (eventArgs.PropertyName == nameof(IBatchReportStore.ActiveBatch))
-        {
-            // Switch batch subscription.
-            CurrentBatch.PropertyChanged -= OnBatchReportPropertyChanged;
-            CurrentBatch = _batchReportStore.ActiveBatch;
-            CurrentBatch.PropertyChanged += OnBatchReportPropertyChanged;
+        if (eventArgs.PropertyName != nameof(IBatchReportStore.ActiveBatch))
+            return;
 
-            RefreshAfterBatchSwap();
-        }
+        CurrentBatch.PropertyChanged -= OnBatchReportPropertyChanged;
+        CurrentBatch = _batchReportStore.ActiveBatch;
+        CurrentBatch.PropertyChanged += OnBatchReportPropertyChanged;
+        Refresh();
     }
 
-    /// <summary>
-    /// Refreshes all properties after the active batch has been swapped in the store.
-    /// </summary>
-    private void RefreshAfterBatchSwap()
-    {
-        OnPropertyChanged(nameof(CurrentBatch));
-        OnPropertyChanged(nameof(FileReports));
-
-        // Copy all counters from the current batch.
-        Total = CurrentBatch.Total;
-        Succeeded = CurrentBatch.Succeeded;
-        Warnings = CurrentBatch.Warnings;
-        Failed = CurrentBatch.Failed;
-        Running = CurrentBatch.Running;
-        Pending = CurrentBatch.Pending;
-        Skipped = CurrentBatch.Skipped;
-        Canceled = CurrentBatch.Canceled;
-    }
-
-    /// <summary>
-    /// Handles the <see cref="BatchExecutionReport.PropertyChanged"/>. Updates the corresponding properties
-    /// of the current batch based on the property that changed. Synchronizes only the changed property to avoid unnecessary updates.
-    /// </summary>
-    /// <param name="sender">The source of the event. This parameter is typically the batch execution report.</param>
-    /// <param name="eventArgs">The event data containing the name of the property that changed.</param>
     private void OnBatchReportPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
-        switch (eventArgs.PropertyName)
+        // Progress of the running file does not change any result.
+        if (eventArgs.PropertyName is nameof(BatchExecutionReport.OverallProgress) or nameof(BatchExecutionReport.CurrentFile))
+            return;
+
+        Refresh();
+    }
+
+    partial void OnSelectedFilterChanged(FileResultFilterOption? value) => ApplyFilter();
+
+    /// <summary>
+    /// Recounts the results. Builds the file list once the batch finished, keeping the selected filter when it still applies.
+    /// </summary>
+    /// <remarks>
+    /// The processing overlay covers the page while the batch runs, so the list is not rebuilt for every file.
+    /// The batch raises several changes when a file finishes; the list is only rebuilt when the batch or its counts changed.
+    /// </remarks>
+    private void Refresh()
+    {
+        var counts = BatchResultCounts.From(CurrentBatch.FileReports);
+        Counts = counts;
+        UpdateTiming();
+
+        if (_filesSource == (CurrentBatch, counts))
+            return;
+
+        _filesSource = (CurrentBatch, counts);
+        var finished = counts.Outcome is not (BatchOutcome.None or BatchOutcome.InProgress);
+
+        _files = finished
+            ? CurrentBatch.FileReports.Select(report => new FileResultItem(report)).OrderBy(item => item.SortRank).ToArray()
+            : Array.Empty<FileResultItem>();
+
+        var selected = SelectedFilter?.Filter ?? FileResultFilter.All;
+        var options = new List<FileResultFilterOption>();
+        if (finished)
         {
-            case nameof(BatchExecutionReport.Total):
-                Total = CurrentBatch.Total;
-                break;
-            case nameof(BatchExecutionReport.Failed):
-                Failed = CurrentBatch.Failed;
-                break;
-            case nameof(BatchExecutionReport.Running):
-                Running = CurrentBatch.Running;
-                break;
-            case nameof(BatchExecutionReport.Pending):
-                Pending = CurrentBatch.Pending;
-                break;
-            case nameof(BatchExecutionReport.Skipped):
-                Skipped = CurrentBatch.Skipped;
-                break;
-            case nameof(BatchExecutionReport.Canceled):
-                Canceled = CurrentBatch.Canceled;
-                break;
-            case nameof(BatchExecutionReport.Succeeded):
-                Succeeded = CurrentBatch.Succeeded;
-                break;
-            case nameof(BatchExecutionReport.Warnings):
-                Warnings = CurrentBatch.Warnings;
-                break;
+            options.Add(new(FileResultFilter.All, counts.Total));
+            options.AddRange(FilterOrder.Where(f => counts.CountFor(f) > 0).Select(f => new FileResultFilterOption(f, counts.CountFor(f))));
         }
+
+        FilterOptions = options;
+
+        var nextSelection = FilterOptions.FirstOrDefault(option => option.Filter == selected) ?? FilterOptions.FirstOrDefault();
+        if (nextSelection == SelectedFilter)
+        {
+            ApplyFilter();
+        }
+        else
+        {
+            SelectedFilter = nextSelection;
+        }
+    }
+
+    private void ApplyFilter()
+    {
+        var filter = SelectedFilter?.Filter ?? FileResultFilter.All;
+        VisibleFiles = filter == FileResultFilter.All ? _files : _files.Where(item => item.Matches(filter)).ToArray();
+    }
+
+    private void UpdateTiming()
+    {
+        DateTimeOffset? started = null;
+        DateTimeOffset? finished = null;
+
+        foreach (var report in CurrentBatch.FileReports)
+        {
+            if (report.StartedAt is { } start && (started is null || start < started))
+                started = start;
+
+            if (report.FinishedAt is { } end && (finished is null || end > finished))
+                finished = end;
+        }
+
+        StartedAt = started;
+        Elapsed = started is { } from && finished is { } to && to >= from ? to - from : null;
     }
 }

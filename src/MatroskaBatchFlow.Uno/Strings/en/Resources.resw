@@ -307,4 +307,63 @@
   <data name="ChecksFilesSingle" xml:space="preserve"><value>{0} file</value></data>
   <data name="ChecksFilesMultiple" xml:space="preserve"><value>{0} files</value></data>
   <data name="ChecksValueCount" xml:space="preserve"><value>{0}, {1}</value><comment>Accessible row name: {0}: scanned value; {1}: counted files phrase.</comment></data>
+  <data name="ResultsPageTitle.Text" xml:space="preserve"><value>Results</value></data>
+  <data name="ResultsEmptyTitle.Text" xml:space="preserve"><value>No results yet</value></data>
+  <data name="ResultsEmptyDescription.Text" xml:space="preserve"><value>After you apply changes, this page shows what happened to each file.</value></data>
+  <data name="ResultsFilesHeading.Text" xml:space="preserve"><value>Files</value><comment>Heading above the list of processed files.</comment></data>
+  <data name="ResultsErrorsHeading.Text" xml:space="preserve"><value>Errors</value></data>
+  <data name="ResultsWarningsHeading.Text" xml:space="preserve"><value>Warnings</value></data>
+  <data name="ResultsCommandHeading.Text" xml:space="preserve"><value>mkvpropedit command</value></data>
+  <data name="ResultsLocationHeading.Text" xml:space="preserve"><value>Location</value><comment>Heading above the full path of a file.</comment></data>
+  <data name="ResultsCopyCommand.Content" xml:space="preserve"><value>Copy command</value></data>
+  <data name="ResultsFilterName" xml:space="preserve"><value>Show files</value><comment>Accessible name of the filter above the file list.</comment></data>
+  <data name="ResultsListName" xml:space="preserve"><value>File results</value></data>
+  <data name="ResultsTileFiles" xml:space="preserve"><value>Files</value></data>
+  <data name="ResultsTileUpdated" xml:space="preserve"><value>Updated</value></data>
+  <data name="ResultsTileWarnings" xml:space="preserve"><value>Warnings</value></data>
+  <data name="ResultsTileFailed" xml:space="preserve"><value>Failed</value></data>
+  <data name="ResultsTileUnchanged" xml:space="preserve"><value>No changes needed</value></data>
+  <data name="ResultsTileCanceled" xml:space="preserve"><value>Not processed</value></data>
+  <data name="ResultsInProgressTitle" xml:space="preserve"><value>Processing files</value></data>
+  <data name="ResultsInProgressMessage" xml:space="preserve"><value>{0} of {1} done</value><comment>{0}: finished files; {1}: files in the batch.</comment></data>
+  <data name="ResultsSucceededTitle" xml:space="preserve"><value>Batch completed</value></data>
+  <data name="ResultsSucceededAllSingle" xml:space="preserve"><value>The file was updated.</value></data>
+  <data name="ResultsSucceededAllMultiple" xml:space="preserve"><value>All {0} files were updated.</value></data>
+  <data name="ResultsSucceededSomeSingle" xml:space="preserve"><value>{0} of {1} files was updated. The others needed no changes.</value><comment>{0}: updated files; {1}: files in the batch.</comment></data>
+  <data name="ResultsSucceededSomeMultiple" xml:space="preserve"><value>{0} of {1} files were updated. The others needed no changes.</value><comment>{0}: updated files; {1}: files in the batch.</comment></data>
+  <data name="ResultsNoChangesTitle" xml:space="preserve"><value>No changes needed</value></data>
+  <data name="ResultsNoChangesMessageSingle" xml:space="preserve"><value>The file already matched your settings, so it was not modified.</value></data>
+  <data name="ResultsNoChangesMessageMultiple" xml:space="preserve"><value>All {0} files already matched your settings, so none were modified.</value></data>
+  <data name="ResultsWarningsTitle" xml:space="preserve"><value>Batch completed with warnings</value></data>
+  <data name="ResultsWarningsMessageSingle" xml:space="preserve"><value>{0} file was updated with warnings from mkvpropedit. Expand it below to read them.</value></data>
+  <data name="ResultsWarningsMessageMultiple" xml:space="preserve"><value>{0} files were updated with warnings from mkvpropedit. Expand them below to read the warnings.</value></data>
+  <data name="ResultsFailuresTitleSingle" xml:space="preserve"><value>{0} file could not be updated</value></data>
+  <data name="ResultsFailuresTitleMultiple" xml:space="preserve"><value>{0} files could not be updated</value></data>
+  <data name="ResultsFailuresMessageSingle" xml:space="preserve"><value>Expand the failed file below to read the error.</value></data>
+  <data name="ResultsFailuresMessageMultiple" xml:space="preserve"><value>Failed files are listed first. Expand a file to read its error.</value></data>
+  <data name="ResultsCanceledTitle" xml:space="preserve"><value>Processing canceled</value></data>
+  <data name="ResultsCanceledMessageSingle" xml:space="preserve"><value>{0} file was not processed. Files that finished before you canceled keep their changes.</value></data>
+  <data name="ResultsCanceledMessageMultiple" xml:space="preserve"><value>{0} files were not processed. Files that finished before you canceled keep their changes.</value></data>
+  <data name="ResultsTiming" xml:space="preserve"><value>Started {0:g} · Took {1}</value><comment>{0}: start date and time; {1}: duration phrase.</comment></data>
+  <data name="ResultsStarted" xml:space="preserve"><value>Started {0:g}</value><comment>{0}: start date and time.</comment></data>
+  <data name="ResultsDurationInstant" xml:space="preserve"><value>&lt; 0.1 s</value><comment>A duration shorter than a tenth of a second.</comment></data>
+  <data name="ResultsDurationSeconds" xml:space="preserve"><value>{0:0.0} s</value><comment>{0}: seconds.</comment></data>
+  <data name="ResultsDurationMinutes" xml:space="preserve"><value>{0} min {1} s</value><comment>{0}: minutes; {1}: seconds.</comment></data>
+  <data name="ResultsDurationHours" xml:space="preserve"><value>{0} h {1} min</value><comment>{0}: hours; {1}: minutes.</comment></data>
+  <data name="ResultsStatusPending" xml:space="preserve"><value>Waiting</value></data>
+  <data name="ResultsStatusRunning" xml:space="preserve"><value>Processing</value></data>
+  <data name="ResultsStatusUpdated" xml:space="preserve"><value>Updated</value></data>
+  <data name="ResultsStatusWarnings" xml:space="preserve"><value>Updated with warnings</value></data>
+  <data name="ResultsStatusFailed" xml:space="preserve"><value>Failed</value></data>
+  <data name="ResultsStatusUnchanged" xml:space="preserve"><value>No changes needed</value></data>
+  <data name="ResultsStatusCanceled" xml:space="preserve"><value>Not processed</value></data>
+  <data name="ResultsNoteUnchanged" xml:space="preserve"><value>The file already matched your settings, so mkvpropedit did not run.</value></data>
+  <data name="ResultsNoteCanceled" xml:space="preserve"><value>The batch was canceled before this file was processed. The file was not modified.</value></data>
+  <data name="ResultsRowName" xml:space="preserve"><value>{0}, {1}</value><comment>Accessible row name: {0}: file name; {1}: file result.</comment></data>
+  <data name="ResultsFilterAll" xml:space="preserve"><value>All files ({0})</value></data>
+  <data name="ResultsFilterFailed" xml:space="preserve"><value>Failed ({0})</value></data>
+  <data name="ResultsFilterWarnings" xml:space="preserve"><value>With warnings ({0})</value></data>
+  <data name="ResultsFilterUpdated" xml:space="preserve"><value>Updated ({0})</value></data>
+  <data name="ResultsFilterUnchanged" xml:space="preserve"><value>No changes needed ({0})</value></data>
+  <data name="ResultsFilterCanceled" xml:space="preserve"><value>Not processed ({0})</value></data>
 </root>
