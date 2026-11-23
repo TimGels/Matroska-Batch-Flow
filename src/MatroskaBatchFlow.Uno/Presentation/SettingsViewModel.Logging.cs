@@ -30,4 +30,7 @@ public partial class SettingsViewModel
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Failed to save log level setting")]
     private partial void LogSaveLogLevelFailed(Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to save batch history limit setting. Limit: {MaxRuns}")]
+    private partial void LogSaveBatchHistoryLimitFailed(int maxRuns, Exception ex);
 }

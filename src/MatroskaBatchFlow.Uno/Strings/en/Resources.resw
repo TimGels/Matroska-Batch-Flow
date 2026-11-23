@@ -210,6 +210,16 @@
   <data name="SupportCard.Description" xml:space="preserve">
     <value>Matroska Batch Flow is free and open source. If you find it useful, consider supporting its development.</value>
   </data>
+  <data name="BatchHistoryLimitCard.Header" xml:space="preserve">
+    <value>Saved results</value>
+    <comment>Settings card for how many finished batches the Results page keeps.</comment>
+  </data>
+  <data name="BatchHistoryLimitCard.Description" xml:space="preserve">
+    <value>The number of finished batches kept on the Results page. Lowering it removes the oldest results right away. Your files are not changed.</value>
+  </data>
+  <data name="BatchHistoryLimitBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Number of saved results</value>
+  </data>
   <data name="ChecksNavItem.Content" xml:space="preserve"><value>Validation</value></data>
   <data name="ChecksPageTitle.Text" xml:space="preserve"><value>Validation</value></data>
   <data name="ChecksSettingsSection.Text" xml:space="preserve"><value>Batch Validation</value></data>

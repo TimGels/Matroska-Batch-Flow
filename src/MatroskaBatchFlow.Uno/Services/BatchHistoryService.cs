@@ -1,8 +1,11 @@
 using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using MatroskaBatchFlow.Core.Models;
+using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Models;
+using static MatroskaBatchFlow.Core.Models.UserSettings;
 
 namespace MatroskaBatchFlow.Uno.Services;
 
@@ -11,11 +14,6 @@ namespace MatroskaBatchFlow.Uno.Services;
 /// </summary>
 public partial class BatchHistoryService : IBatchHistoryService
 {
-    /// <summary>
-    /// The number of runs that are kept; older runs are dropped.
-    /// </summary>
-    public const int MaxRuns = 20;
-
     /// <summary>
     /// The version of the file format. A file with another version is ignored.
     /// </summary>
@@ -29,6 +27,7 @@ public partial class BatchHistoryService : IBatchHistoryService
     private readonly ObservableCollection<BatchRunRecord> _runs = [];
     private readonly SemaphoreSlim _fileLock = new(1, 1);
     private readonly string _filePath;
+    private readonly IWritableSettings<UserSettings> _userSettings;
     private readonly ILogger<BatchHistoryService> _logger;
     private Task? _loadTask;
 
@@ -36,18 +35,39 @@ public partial class BatchHistoryService : IBatchHistoryService
     /// Initializes a new instance of the <see cref="BatchHistoryService"/> class.
     /// </summary>
     /// <param name="filePath">The path of the history file.</param>
+    /// <param name="userSettings">The user settings that hold how many runs are kept.</param>
     /// <param name="logger">The logger.</param>
-    public BatchHistoryService(string filePath, ILogger<BatchHistoryService> logger)
+    public BatchHistoryService(string filePath, IWritableSettings<UserSettings> userSettings, ILogger<BatchHistoryService> logger)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
 
         _filePath = filePath;
+        _userSettings = userSettings;
         _logger = logger;
         Runs = new ReadOnlyObservableCollection<BatchRunRecord>(_runs);
     }
 
     /// <inheritdoc/>
     public ReadOnlyObservableCollection<BatchRunRecord> Runs { get; }
+
+    /// <inheritdoc/>
+    public int MaxRuns => Math.Clamp(_userSettings.Value.BatchHistory.MaxRuns, BatchHistorySettings.MinMaxRuns, BatchHistorySettings.MaxMaxRuns);
+
+    /// <inheritdoc/>
+    public async Task SetMaxRunsAsync(int maxRuns)
+    {
+        maxRuns = Math.Clamp(maxRuns, BatchHistorySettings.MinMaxRuns, BatchHistorySettings.MaxMaxRuns);
+        if (maxRuns == _userSettings.Value.BatchHistory.MaxRuns)
+            return;
+
+        await _userSettings.UpdateAsync(settings => settings.BatchHistory.MaxRuns = maxRuns);
+
+        await LoadAsync();
+        if (TrimToLimit())
+        {
+            await SaveAsync();
+        }
+    }
 
     /// <inheritdoc/>
     public Task LoadAsync() => _loadTask ??= LoadCoreAsync();
@@ -58,10 +78,7 @@ public partial class BatchHistoryService : IBatchHistoryService
         ArgumentNullException.ThrowIfNull(run);
 
         _runs.Insert(0, run);
-        while (_runs.Count > MaxRuns)
-        {
-            _runs.RemoveAt(_runs.Count - 1);
-        }
+        TrimToLimit();
 
         // Saving before the saved runs are loaded would overwrite them.
         await LoadAsync();
@@ -74,6 +91,23 @@ public partial class BatchHistoryService : IBatchHistoryService
         await LoadAsync();
         _runs.Clear();
         await SaveAsync();
+    }
+
+    /// <summary>
+    /// Removes the oldest runs that exceed the limit.
+    /// </summary>
+    /// <returns><see langword="true"/> if any run was removed; otherwise, <see langword="false"/>.</returns>
+    private bool TrimToLimit()
+    {
+        var maxRuns = MaxRuns;
+        var trimmed = false;
+        while (_runs.Count > maxRuns)
+        {
+            _runs.RemoveAt(_runs.Count - 1);
+            trimmed = true;
+        }
+
+        return trimmed;
     }
 
     private async Task LoadCoreAsync()

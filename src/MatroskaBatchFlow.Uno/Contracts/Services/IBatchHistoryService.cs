@@ -18,6 +18,18 @@ public interface IBatchHistoryService
     ReadOnlyObservableCollection<BatchRunRecord> Runs { get; }
 
     /// <summary>
+    /// Gets how many runs are kept, as set in the user settings.
+    /// </summary>
+    int MaxRuns { get; }
+
+    /// <summary>
+    /// Saves how many runs are kept and removes the oldest runs beyond the new limit.
+    /// </summary>
+    /// <param name="maxRuns">The number of runs to keep. It is clamped to the allowed range.</param>
+    /// <returns>A task that completes when the setting and the history are saved.</returns>
+    Task SetMaxRunsAsync(int maxRuns);
+
+    /// <summary>
     /// Loads the saved runs from disk. Runs added before loading finished stay on top.
     /// </summary>
     /// <returns>A task that completes when the runs are loaded or loading failed.</returns>
