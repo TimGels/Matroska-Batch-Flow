@@ -57,13 +57,16 @@ public partial class BatchHistoryService : IBatchHistoryService
     public async Task SetMaxRunsAsync(int maxRuns)
     {
         maxRuns = Math.Clamp(maxRuns, BatchHistorySettings.MinMaxRuns, BatchHistorySettings.MaxMaxRuns);
-        if (maxRuns == _userSettings.Value.BatchHistory.MaxRuns)
+        var previousLimit = _userSettings.Value.BatchHistory.MaxRuns;
+        if (maxRuns == previousLimit)
             return;
 
         await _userSettings.UpdateAsync(settings => settings.BatchHistory.MaxRuns = maxRuns);
 
         await LoadAsync();
-        if (TrimToLimit())
+        var removed = TrimToLimit();
+        LogLimitChanged(previousLimit, maxRuns, removed);
+        if (removed > 0)
         {
             await SaveAsync();
         }
@@ -78,7 +81,11 @@ public partial class BatchHistoryService : IBatchHistoryService
         ArgumentNullException.ThrowIfNull(run);
 
         _runs.Insert(0, run);
-        TrimToLimit();
+        var removed = TrimToLimit();
+        if (removed > 0)
+        {
+            LogOldestRunsRemoved(removed, MaxRuns);
+        }
 
         // Saving before the saved runs are loaded would overwrite them.
         await LoadAsync();
@@ -89,25 +96,27 @@ public partial class BatchHistoryService : IBatchHistoryService
     public async Task ClearAsync()
     {
         await LoadAsync();
+        var removed = _runs.Count;
         _runs.Clear();
+        LogCleared(removed);
         await SaveAsync();
     }
 
     /// <summary>
     /// Removes the oldest runs that exceed the limit.
     /// </summary>
-    /// <returns><see langword="true"/> if any run was removed; otherwise, <see langword="false"/>.</returns>
-    private bool TrimToLimit()
+    /// <returns>The number of runs that were removed.</returns>
+    private int TrimToLimit()
     {
         var maxRuns = MaxRuns;
-        var trimmed = false;
+        var removed = 0;
         while (_runs.Count > maxRuns)
         {
             _runs.RemoveAt(_runs.Count - 1);
-            trimmed = true;
+            removed++;
         }
 
-        return trimmed;
+        return removed;
     }
 
     private async Task LoadCoreAsync()

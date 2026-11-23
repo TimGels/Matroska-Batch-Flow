@@ -16,4 +16,13 @@ public partial class BatchHistoryService
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to save the batch history to {FilePath}")]
     private partial void LogSaveFailed(Exception ex, string filePath);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Batch history limit changed from {PreviousLimit} to {NewLimit}; removed {RemovedCount} oldest batch runs")]
+    private partial void LogLimitChanged(int previousLimit, int newLimit, int removedCount);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Removed {RemovedCount} oldest batch runs beyond the limit of {Limit}")]
+    private partial void LogOldestRunsRemoved(int removedCount, int limit);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Batch history cleared; removed {RemovedCount} batch runs")]
+    private partial void LogCleared(int removedCount);
 }
