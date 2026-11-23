@@ -66,6 +66,10 @@ public class TrackCountConsistencyRule : IFileValidationRule
             foreach (var type in mismatches)
             {
                 // Include matching and zero-count files so the review can show the full distribution for this track type.
+                // The snapshot covers the whole batch, so build it once and share it with every later mismatch.
+                if (comparisons.ContainsKey(type))
+                    continue;
+
                 var fileValues = new List<ValidationFileValue>();
                 foreach (var scannedFile in scannedFiles)
                 {
