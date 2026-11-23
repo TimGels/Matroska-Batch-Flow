@@ -10,7 +10,38 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Spacing="20" Padding="0,0,8,8">
-            <TextBlock x:Uid="ResultsPageTitle" FontSize="28" FontWeight="SemiBold" />
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Uid="ResultsPageTitle" FontSize="28" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <ComboBox Grid.Column="1" MinWidth="280" VerticalAlignment="Center"
+                          Visibility="{x:Bind ViewModel.HasRuns, Mode=OneWay}"
+                          ItemsSource="{x:Bind ViewModel.Runs, Mode=OneWay}"
+                          SelectedItem="{x:Bind ViewModel.SelectedRun, Mode=TwoWay}"
+                          AutomationProperties.Name="{x:Bind local:UiText.Get('ResultsRunPickerName')}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:BatchRunSummary">
+                            <TextBlock Text="{x:Bind local:ResultsText.RunLabel(When, Counts)}" TextTrimming="CharacterEllipsis" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button x:Uid="ResultsClearHistory" Grid.Column="2" VerticalAlignment="Center"
+                        Visibility="{x:Bind ViewModel.HasRuns, Mode=OneWay}">
+                    <Button.Flyout>
+                        <Flyout x:Name="ClearHistoryFlyout">
+                            <StackPanel Spacing="12" MaxWidth="320">
+                                <TextBlock x:Uid="ResultsClearHistoryConfirmText" TextWrapping="Wrap" />
+                                <Button x:Uid="ResultsClearHistoryConfirm" Style="{StaticResource AccentButtonStyle}"
+                                        Command="{x:Bind ViewModel.ClearHistoryCommand}"
+                                        Click="OnClearHistoryConfirmClick" />
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+            </Grid>
 
             <!-- Before the first batch -->
             <StackPanel Spacing="12" MaxWidth="560" HorizontalAlignment="Center" Margin="0,24,0,0"
@@ -92,8 +123,6 @@
                                             <FontIcon Glyph="&#xE738;" FontSize="16" Visibility="{x:Bind IsUnchanged}"
                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                             <FontIcon Glyph="&#xE711;" FontSize="16" Visibility="{x:Bind IsCanceled}"
-                                                      Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                            <FontIcon Glyph="&#xE916;" FontSize="16" Visibility="{x:Bind IsUnfinished}"
                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                         </Grid>
                                         <StackPanel Grid.Column="1" ToolTipService.ToolTip="{x:Bind FilePath}">

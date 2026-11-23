@@ -8,6 +8,7 @@ namespace MatroskaBatchFlow.Uno.Services;
 public partial class ActivationService(
     ActivationHandler<LaunchActivatedEventArgs> defaultHandler,
     IEnumerable<IActivationHandler> activationHandlers,
+    IBatchHistoryService batchHistory,
     ILogger<ActivationService> logger) : IActivationService
 {
     public async Task ActivateAsync(object activationArgs)
@@ -84,8 +85,8 @@ public partial class ActivationService(
         await Task.CompletedTask;
     }
 
-    private static async Task StartupAsync()
+    private async Task StartupAsync()
     {
-        await Task.CompletedTask;
+        await batchHistory.LoadAsync();
     }
 }

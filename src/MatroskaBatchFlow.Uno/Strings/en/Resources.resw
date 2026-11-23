@@ -324,8 +324,6 @@
   <data name="ResultsTileFailed" xml:space="preserve"><value>Failed</value></data>
   <data name="ResultsTileUnchanged" xml:space="preserve"><value>No changes needed</value></data>
   <data name="ResultsTileCanceled" xml:space="preserve"><value>Not processed</value></data>
-  <data name="ResultsInProgressTitle" xml:space="preserve"><value>Processing files</value></data>
-  <data name="ResultsInProgressMessage" xml:space="preserve"><value>{0} of {1} done</value><comment>{0}: finished files; {1}: files in the batch.</comment></data>
   <data name="ResultsSucceededTitle" xml:space="preserve"><value>Batch completed</value></data>
   <data name="ResultsSucceededAllSingle" xml:space="preserve"><value>The file was updated.</value></data>
   <data name="ResultsSucceededAllMultiple" xml:space="preserve"><value>All {0} files were updated.</value></data>
@@ -366,4 +364,9 @@
   <data name="ResultsFilterUpdated" xml:space="preserve"><value>Updated ({0})</value></data>
   <data name="ResultsFilterUnchanged" xml:space="preserve"><value>No changes needed ({0})</value></data>
   <data name="ResultsFilterCanceled" xml:space="preserve"><value>Not processed ({0})</value></data>
+  <data name="ResultsRunLabel" xml:space="preserve"><value>{0:g} · {1}</value><comment>A saved batch in the run picker. {0}: start date and time; {1}: headline of the batch result.</comment></data>
+  <data name="ResultsRunPickerName" xml:space="preserve"><value>Batch</value><comment>Accessible name of the picker that selects which saved batch is shown.</comment></data>
+  <data name="ResultsClearHistory.Content" xml:space="preserve"><value>Clear history</value></data>
+  <data name="ResultsClearHistoryConfirmText.Text" xml:space="preserve"><value>Remove all saved results from this device? Your files are not changed.</value></data>
+  <data name="ResultsClearHistoryConfirm.Content" xml:space="preserve"><value>Clear history</value></data>
 </root>
