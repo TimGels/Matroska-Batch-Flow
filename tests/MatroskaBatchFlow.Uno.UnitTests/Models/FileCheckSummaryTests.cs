@@ -108,6 +108,27 @@ public class FileCheckSummaryTests
     }
 
     [Fact]
+    public void Create_RepeatedLanguageTags_ResolvesEachTagOnce()
+    {
+        var results = new[] { 1, 2 }.Select(position =>
+            Result(ValidationSeverity.Warning, ValidationCheckKind.Language, TrackType.Audio, position) with
+            {
+                Comparisons =
+                [
+                    new(TrackType.Audio, position,
+                        [new("first.mkv", "eng"), new("second.mkv", "eng"), new("third.mkv", "jpn")])
+                ]
+            }).ToArray();
+
+        var summary = FileCheckSummary.Create(results, 3, _languages);
+
+        Assert.All(summary.Groups, group => Assert.Equal(
+            ["English", "English", "Japanese"], group.Files.Select(file => file.Evidence.LanguageName)));
+        _languages.Received(1).Resolve("eng");
+        _languages.Received(1).Resolve("jpn");
+    }
+
+    [Fact]
     public void Create_UnstructuredFindings_KeepsDistinctDiagnosticsVisible()
     {
         FileValidationResult[] results =

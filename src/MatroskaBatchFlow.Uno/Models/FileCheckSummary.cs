@@ -81,6 +81,7 @@ public sealed record FileCheckSummary(int FileCount, IReadOnlyList<FileCheckGrou
         int fileCount,
         ILanguageProvider languageProvider)
     {
+        var languageNames = new Dictionary<string, string?>(StringComparer.Ordinal);
         var groups = results
             .Where(result => result.Severity != ValidationSeverity.Off)
             .SelectMany(result => result.Comparisons.DefaultIfEmpty()
@@ -98,7 +99,7 @@ public sealed record FileCheckSummary(int FileCount, IReadOnlyList<FileCheckGrou
                             new(kind, Diagnostic: item.Result.Message, FormatIssue: item.Result.FormatIssue)))
                         .DistinctBy(file => file.FilePath).ToArray()
                     : comparison.Files.Select(file => new FileCheckFile(
-                        file.FilePath, new(kind, file.Value, ResolveLanguageName(kind, file.Value, languageProvider)))).ToArray();
+                        file.FilePath, new(kind, file.Value, ResolveLanguageName(kind, file.Value, languageProvider, languageNames)))).ToArray();
                 return new FileCheckGroup(group.Key, files);
             })
             .OrderByDescending(group => group.Severity)
@@ -151,12 +152,26 @@ public sealed record FileCheckSummary(int FileCount, IReadOnlyList<FileCheckGrou
         return rows;
     }
 
-    private static string? ResolveLanguageName(ValidationCheckKind kind, string value, ILanguageProvider languageProvider)
+    /// <summary>
+    /// Resolves a scanned language tag to its display name, resolving each distinct tag only once per summary.
+    /// </summary>
+    /// <param name="kind">The check kind; only language checks have display names.</param>
+    /// <param name="value">The raw scanned tag.</param>
+    /// <param name="languageProvider">Resolves tags that are not cached yet.</param>
+    /// <param name="cache">Names resolved so far while building the current summary, keyed by raw tag.</param>
+    /// <returns>The language name, or null when the check is not a language check or the tag is unknown.</returns>
+    private static string? ResolveLanguageName(
+        ValidationCheckKind kind, string value, ILanguageProvider languageProvider, Dictionary<string, string?> cache)
     {
         if (kind != ValidationCheckKind.Language || string.IsNullOrWhiteSpace(value))
             return null;
 
-        var language = languageProvider.Resolve(value);
-        return language == MatroskaLanguageOption.Undetermined && value != "und" ? null : language.Name;
+        if (!cache.TryGetValue(value, out var name))
+        {
+            var language = languageProvider.Resolve(value);
+            name = language == MatroskaLanguageOption.Undetermined && value != "und" ? null : language.Name;
+            cache.Add(value, name);
+        }
+        return name;
     }
 }
