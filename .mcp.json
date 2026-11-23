@@ -1,0 +1,65 @@
+{
+	"mcpServers": {
+		"oraios/serena": {
+			"type": "stdio",
+			"command": "uvx",
+			"args": [
+				"--from",
+				"git+https://github.com/oraios/serena",
+				"serena",
+				"start-mcp-server",
+				"--context",
+				"ide",
+				"--project-from-cwd"
+			],
+			"tools": [
+				"*"
+			]
+		},
+		"time": {
+			"type": "stdio",
+			"command": "docker",
+			"args": [
+				"run",
+				"-i",
+				"--rm",
+				"mcp/time"
+			],
+			"tools": [
+				"*"
+			]
+		},
+		"context7": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"@upstash/context7-mcp"
+			],
+			"tools": [
+				"*"
+			],
+			"env": {
+				"CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:-}"
+			}
+		},
+		"github": {
+			"type": "stdio",
+			"command": "docker",
+			"args": [
+				"run",
+				"-i",
+				"--rm",
+				"-e",
+				"GITHUB_PERSONAL_ACCESS_TOKEN",
+				"ghcr.io/github/github-mcp-server"
+			],
+			"tools": [
+				"*"
+			],
+			"env": {
+				"GITHUB_PERSONAL_ACCESS_TOKEN": "${MCP_GITHUB_PERSONAL_ACCESS_TOKEN}"
+			}
+		}
+	}
+}
