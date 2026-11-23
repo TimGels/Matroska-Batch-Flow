@@ -121,6 +121,10 @@ These prerequisites are required to build the project:
 | **[Visual Studio 2022 or later](https://visualstudio.microsoft.com/)** | Recommended IDE for development |
 | **[Uno Platform Extension for Visual Studio](https://platform.uno/docs/articles/getting-started/installation.html)** | Helps with Uno Platform development |
 
+### Optional Copilot MCP servers
+
+The [MCP configuration](.mcp.json) uses `MCP_GITHUB_PERSONAL_ACCESS_TOKEN` for the GitHub server and, optionally, `CONTEXT7_API_KEY` for Context7. Set them in the environment where Copilot runs; do not commit credentials.
+
 ### Installation
 
 1. Clone the repository:
