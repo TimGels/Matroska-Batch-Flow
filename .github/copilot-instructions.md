@@ -257,6 +257,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 - **Wrong target framework**: Ensure `-f net10.0-windows10.0.19041` is specified
 - **Uno SDK version mismatch**: Check `global.json` for correct SDK version
 - **WinAppSDK issues**: Ensure Windows 11 SDK is installed
+- **Single-file exe crashes with `ClassFactory cannot supply requested class` at `Application.Start`**: The embedded app manifest lacks WinAppSDK's `loadFrom='%MICROSOFT_WINDOWSAPPRUNTIME_BASE_DIRECTORY%...'` DLL redirection, which is only generated when `PublishSingleFile=true`. WinAppSDK does not regenerate the manifest when that property changes, so the `InvalidateWindowsAppSDKManifestOnRedirectChange` target in the Uno csproj deletes it when the mode changes. Keep that target while publishing single-file
 - **MSB3073 `XamlCompiler.exe exited with code 1` without any message (WinAppSDK target)**: The incremental XAML compiler state in `obj` is stale, for example after renaming a XAML control or when IDE design-time builds ran at the same time. Run `dotnet build-server shutdown`, delete `src/MatroskaBatchFlow.Uno/obj/Debug/net10.0-windows10.0.19041` and the matching `bin` folder, then build again
 
 ### Runtime Issues

@@ -256,4 +256,24 @@
             <Generator>MSBuild:Compile</Generator>
         </Page>
     </ItemGroup>
+
+    <!--
+        A single-file app needs WinAppSDK's DLL redirection in its app manifest, because its DLLs are extracted to a
+        temporary folder. WinAppSDK only regenerates that manifest when the input manifests change, so publishing
+        single-file after any other build would embed a manifest without redirection and crash on startup.
+    -->
+    <Target Name="InvalidateWindowsAppSDKManifestOnRedirectChange"
+            BeforeTargets="CreateWinRTRegistration"
+            Condition="'$(WindowsAppSDKSelfContained)' == 'true' and '$(ApplicationManifest)' != ''">
+        <PropertyGroup>
+            <_WindowsAppSDKManifestModeFile>$(IntermediateOutputPath)WindowsAppSDKManifestMode.txt</_WindowsAppSDKManifestModeFile>
+            <_WindowsAppSDKManifestMode>RedirectDlls=false</_WindowsAppSDKManifestMode>
+            <_WindowsAppSDKManifestMode Condition="'$(PublishSingleFile)' == 'true'">RedirectDlls=true</_WindowsAppSDKManifestMode>
+        </PropertyGroup>
+        <ReadLinesFromFile File="$(_WindowsAppSDKManifestModeFile)" Condition="Exists('$(_WindowsAppSDKManifestModeFile)')">
+            <Output TaskParameter="Lines" PropertyName="_PreviousWindowsAppSDKManifestMode" />
+        </ReadLinesFromFile>
+        <Delete Files="$(ApplicationManifest)" Condition="'$(_PreviousWindowsAppSDKManifestMode)' != '$(_WindowsAppSDKManifestMode)'" />
+        <WriteLinesToFile File="$(_WindowsAppSDKManifestModeFile)" Lines="$(_WindowsAppSDKManifestMode)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    </Target>
 </Project>
