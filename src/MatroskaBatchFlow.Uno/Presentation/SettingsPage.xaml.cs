@@ -39,6 +39,16 @@ public sealed partial class SettingsPage : Page
 
     public SettingsViewModel ViewModel { get; }
 
+    /// <summary>
+    /// Gets the warning shown before a lower limit removes saved results, for example "Lowering the limit to 5 removes the 3 oldest saved results.".
+    /// </summary>
+    /// <param name="count">The number of saved results that would be removed.</param>
+    /// <param name="maxRuns">The entered limit.</param>
+    /// <returns>The localized warning.</returns>
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Binding requires instance member.")]
+    private string BatchHistoryRemovalText(int count, double maxRuns) =>
+        UiText.Format(UiText.CountedKey("BatchHistoryLimitRemoves", count), count, (int)maxRuns);
+
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Binding requires instance member.")]
     [SuppressMessage("CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "Suppression is necessary.")]
     public string AppVersion => $"Version {AppEnvironmentHelper.GetApplicationVersion().ToString(3)}";

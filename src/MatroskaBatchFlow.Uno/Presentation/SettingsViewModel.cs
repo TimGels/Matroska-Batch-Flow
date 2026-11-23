@@ -78,6 +78,16 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     public partial double BatchHistoryMaxRuns { get; set; }
 
+    /// <summary>
+    /// Gets how many saved results the entered limit would remove. While it is above zero, the limit is not saved yet
+    /// and the page asks to confirm it.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsBatchHistoryLimitPending))]
+    public partial int BatchHistoryRunsToRemove { get; private set; }
+
+    public bool IsBatchHistoryLimitPending => BatchHistoryRunsToRemove > 0;
+
     public double BatchHistoryMinRuns => UserSettings.BatchHistorySettings.MinMaxRuns;
 
     public double BatchHistoryMaxRunsLimit => UserSettings.BatchHistorySettings.MaxMaxRuns;
@@ -290,7 +300,9 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Saves how many finished batches are kept. An empty or out-of-range value is replaced by the kept limit.
+    /// Saves how many finished batches are kept, unless the new limit would remove saved results: then the limit waits
+    /// for <see cref="ConfirmBatchHistoryLimitCommand"/>. An empty value is replaced by the kept limit, and other values
+    /// are rounded and clamped to the allowed range.
     /// </summary>
     /// <param name="value">The new limit entered in the NumberBox.</param>
     async partial void OnBatchHistoryMaxRunsChanged(double value)
@@ -309,8 +321,47 @@ public partial class SettingsViewModel : ObservableObject
         }
 
         if (maxRuns == _batchHistory.MaxRuns)
+        {
+            BatchHistoryRunsToRemove = 0;
+            return;
+        }
+
+        // Count the saved runs only once they are loaded, otherwise the warning could be skipped.
+        await _batchHistory.LoadAsync();
+        if (maxRuns != BatchHistoryMaxRuns)
             return;
 
+        var runsToRemove = Math.Max(0, _batchHistory.Runs.Count - maxRuns);
+        BatchHistoryRunsToRemove = runsToRemove;
+        if (runsToRemove == 0)
+        {
+            await SaveBatchHistoryLimitAsync(maxRuns);
+        }
+    }
+
+    /// <summary>
+    /// Saves the pending lower limit and removes the oldest saved results beyond it.
+    /// </summary>
+    /// <returns>A task that completes when the limit and the history are saved.</returns>
+    [RelayCommand]
+    private Task ConfirmBatchHistoryLimitAsync()
+    {
+        BatchHistoryRunsToRemove = 0;
+        return SaveBatchHistoryLimitAsync((int)BatchHistoryMaxRuns);
+    }
+
+    /// <summary>
+    /// Discards the pending lower limit and keeps all saved results.
+    /// </summary>
+    [RelayCommand]
+    private void CancelBatchHistoryLimit()
+    {
+        BatchHistoryRunsToRemove = 0;
+        BatchHistoryMaxRuns = _batchHistory.MaxRuns;
+    }
+
+    private async Task SaveBatchHistoryLimitAsync(int maxRuns)
+    {
         try
         {
             await _batchHistory.SetMaxRunsAsync(maxRuns);
