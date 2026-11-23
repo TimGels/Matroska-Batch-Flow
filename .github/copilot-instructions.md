@@ -3,7 +3,7 @@
 > **Audience**: These instructions are for AI coding assistants, not for human developers.  
 > **Human developers**: See [README.md](../README.md) for setup and contribution guidelines.
 
-> **Last Updated**: 2026-11-22
+> **Last Updated**: 2026-11-23
 > **Next Review**: When architecture changes, new patterns are introduced, or build commands change
 > 
 > **Maintenance**: When making significant code changes, update this file and Serena memories to keep them in sync with the codebase.
@@ -94,6 +94,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 - **Configuration Management**: `IBatchConfiguration` tracks file-level settings and global per-slot `TrackIntent` collections
   - Like the other tabs, the Validation tab keeps its `FileCheckVisit` (file scope, topic and expanded raw value keys) when opened from the navigation bar; revalidation restores it against live results. Input's per-file shortcuts pass a file-scoped visit, and the Input toolbar and review banner pass a fresh batch-wide visit. Null identifies an absent slot; an empty string identifies an unspecified value on an existing track. `TrackCheckInspection` opens the batch-wide track editor at the check's position. The app has no Back navigation.
   - `IBatchTrackConfigurationInitializer`: Expands global track intent collections from scanned files
+  - Only supported files (`ScannedFileInfo.IsSupported`) create track slots or seed defaults through `IFileProcessingEngine` rules
   - `ITrackIntentFactory`: Creates `TrackIntent` instances from scanned track data
 
 #### Presentation Layer (MVVM + Messaging)

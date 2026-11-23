@@ -85,6 +85,30 @@ public class TrackLanguageRuleTests
         Assert.Same(japanese, batchConfig.AudioTracks[0].Language);
     }
 
+    [Fact]
+    public void Apply_WhenUnsupportedFilesHaveMajority_UsesSupportedFiles()
+    {
+        // Arrange
+        var english = new MatroskaLanguageOption("English", "en", "eng", "eng", "eng");
+        var japanese = new MatroskaLanguageOption("Japanese", "ja", "jpn", "jpn", "jpn");
+        var batchConfig = CreateBatchConfiguration();
+        var languageProvider = CreateLanguageProvider(english, japanese);
+
+        var unsupportedFile1 = CreateScannedFile("file1.mp4", "jpn");
+        var unsupportedFile2 = CreateScannedFile("file2.mp4", "jpn");
+        var englishFile = CreateScannedFile("file3.mkv", "eng");
+
+        AddAndInitializeTracks(batchConfig, languageProvider, unsupportedFile1, unsupportedFile2, englishFile);
+
+        var sut = new TrackLanguageRule(languageProvider);
+
+        // Act
+        sut.Apply(englishFile, batchConfig);
+
+        // Assert
+        Assert.Same(english, batchConfig.AudioTracks[0].Language);
+    }
+
     private static BatchConfiguration CreateBatchConfiguration()
     {
         var platformService = Substitute.For<IPlatformService>();
@@ -134,6 +158,7 @@ public class TrackLanguageRuleTests
     {
         var mediaInfoResult = new MediaInfoResultBuilder()
             .WithCreatingLibrary()
+            .AddMatroskaGeneralTrack()
             .AddTrack(new TrackInfoBuilder()
                 .WithType(TrackType.Audio)
                 .WithStreamKindID(0)

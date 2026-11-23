@@ -127,7 +127,7 @@ public class MkvPropeditArgumentsGeneratorTests
 
     private static ScannedFileInfo CreateScannedFile(string path, params MediaInfoResult.MediaInfo.TrackInfo[] tracks)
     {
-        var builder = new MediaInfoResultBuilder().WithCreatingLibrary();
+        var builder = new MediaInfoResultBuilder().WithCreatingLibrary().AddMatroskaGeneralTrack();
         foreach (var track in tracks)
         {
             builder.AddTrack(track);

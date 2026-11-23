@@ -154,8 +154,8 @@ public class BatchOperationOrchestratorTests
         var validationStateService = Substitute.For<IValidationStateService>();
         validationStateService.RevalidateAsync().Returns(Task.CompletedTask);
 
-        var firstPath = Path.GetTempFileName();
-        var secondPath = Path.GetTempFileName();
+        var firstPath = CreateTempMkvFile();
+        var secondPath = CreateTempMkvFile();
 
         try
         {
@@ -338,9 +338,17 @@ public class BatchOperationOrchestratorTests
         }
     }
 
+    private static string CreateTempMkvFile()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.mkv");
+        File.Create(path).Dispose();
+        return path;
+    }
+
     private static ScannedFileInfo CreateScannedFile(string path, bool audioDefault = false)
     {
         var builder = new MediaInfoResultBuilder()
+            .AddMatroskaGeneralTrack()
             .AddTrackOfType(TrackType.Video)
             .AddTrack(new TrackInfoBuilder()
                 .WithType(TrackType.Audio)

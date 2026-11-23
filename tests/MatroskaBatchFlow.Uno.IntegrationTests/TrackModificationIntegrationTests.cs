@@ -43,10 +43,11 @@ public class TrackModificationIntegrationTests
         // Build MediaInfo results - File1 has 1 subtitle track, File2 has 17 subtitle tracks
         var file1MediaInfo = new MediaInfoResultBuilder()
             .WithCreatingLibrary()
+            .AddMatroskaGeneralTrack()
             .AddTrackOfType(TrackType.Text)
             .Build();
 
-        var file2Builder = new MediaInfoResultBuilder().WithCreatingLibrary();
+        var file2Builder = new MediaInfoResultBuilder().WithCreatingLibrary().AddMatroskaGeneralTrack();
         for (int i = 0; i < 17; i++)
         {
             file2Builder.AddTrackOfType(TrackType.Text);

@@ -29,6 +29,7 @@ public class TrackForcedRule : IFileProcessingRule
                     continue;
 
                 var forcedFlags = batchConfig.FileList
+                    .Where(file => file.IsSupported)
                     .Select(f => f.GetTracks(trackType))
                     .Where(tracks => i < tracks.Count)
                     .Select(tracks => tracks[i].Forced)

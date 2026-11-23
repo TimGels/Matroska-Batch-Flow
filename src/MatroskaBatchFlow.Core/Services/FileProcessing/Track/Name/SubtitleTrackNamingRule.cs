@@ -32,6 +32,7 @@ public class SubtitleTrackNamingRule : IFileProcessingRule
                 continue;
 
             var names = batchConfig.FileList
+                .Where(file => file.IsSupported)
                 .Select(f => f.GetTracks(TrackType.Text))
                 .Where(tracks => i < tracks.Count)
                 .Select(tracks => tracks[i].Title ?? string.Empty)

@@ -64,6 +64,7 @@ public class BatchTrackConfigurationInitializerTests
 
         var mediaInfoResult = new MediaInfoResultBuilder()
             .WithCreatingLibrary()
+            .AddMatroskaGeneralTrack()
             .AddTrackOfType(TrackType.Audio)
             .AddTrackOfType(TrackType.Audio)
             .AddTrackOfType(TrackType.Audio)
@@ -87,6 +88,7 @@ public class BatchTrackConfigurationInitializerTests
 
         var mediaInfoResult = new MediaInfoResultBuilder()
             .WithCreatingLibrary()
+            .AddMatroskaGeneralTrack()
             .AddTrackOfType(TrackType.Audio)
             .AddTrackOfType(TrackType.Audio)
             .AddTrackOfType(TrackType.Video)
@@ -121,6 +123,7 @@ public class BatchTrackConfigurationInitializerTests
         var firstFile = new ScannedFileInfo(
             new MediaInfoResultBuilder()
                 .WithCreatingLibrary()
+                .AddMatroskaGeneralTrack()
                 .AddTrackOfType(TrackType.Audio)
                 .AddTrackOfType(TrackType.Audio)
                 .Build(),
@@ -133,6 +136,7 @@ public class BatchTrackConfigurationInitializerTests
         var secondFile = new ScannedFileInfo(
             new MediaInfoResultBuilder()
                 .WithCreatingLibrary()
+                .AddMatroskaGeneralTrack()
                 .AddTrackOfType(TrackType.Audio)
                 .AddTrackOfType(TrackType.Audio)
                 .AddTrackOfType(TrackType.Audio)
@@ -155,6 +159,7 @@ public class BatchTrackConfigurationInitializerTests
 
         var mediaInfoResult = new MediaInfoResultBuilder()
             .WithCreatingLibrary()
+            .AddMatroskaGeneralTrack()
             .AddTrackOfType(TrackType.Audio)
             .Build();
         var scannedFile = new ScannedFileInfo(mediaInfoResult, "file.mkv");
@@ -216,6 +221,26 @@ public class BatchTrackConfigurationInitializerTests
     }
 
     [Fact]
+    public void Initialize_UnsupportedFile_DoesNotAddTracks()
+    {
+        // Arrange
+        var (mockConfig, audioTracks, _, _) = CreateMockConfig();
+        var initializer = CreateInitializer(mockConfig);
+        var mediaInfoResult = new MediaInfoResultBuilder()
+            .WithCreatingLibrary()
+            .AddTrackOfType(TrackType.Audio)
+            .Build();
+        var scannedFile = new ScannedFileInfo(mediaInfoResult, "file.mkv");
+
+        // Act
+        initializer.Initialize(scannedFile, TrackType.Audio);
+
+        // Assert
+        Assert.False(scannedFile.IsSupported);
+        Assert.Empty(audioTracks);
+    }
+
+    [Fact]
     public void Initialize_GlobalTracksHaveCorrectScannedTrackInfo()
     {
         // Arrange
@@ -224,6 +249,7 @@ public class BatchTrackConfigurationInitializerTests
 
         var mediaInfoResult = new MediaInfoResultBuilder()
             .WithCreatingLibrary()
+            .AddMatroskaGeneralTrack()
             .AddTrackOfType(TrackType.Audio)
             .AddTrackOfType(TrackType.Audio)
             .Build();
@@ -256,6 +282,7 @@ public class BatchTrackConfigurationInitializerTests
         var firstFile = new ScannedFileInfo(
             new MediaInfoResultBuilder()
                 .WithCreatingLibrary()
+                .AddMatroskaGeneralTrack()
                 .AddTrackOfType(TrackType.Audio)
                 .AddTrackOfType(TrackType.Audio)
                 .AddTrackOfType(TrackType.Audio)
@@ -270,6 +297,7 @@ public class BatchTrackConfigurationInitializerTests
         var secondFile = new ScannedFileInfo(
             new MediaInfoResultBuilder()
                 .WithCreatingLibrary()
+                .AddMatroskaGeneralTrack()
                 .AddTrackOfType(TrackType.Audio)
                 .Build(),
             "file2.mkv"

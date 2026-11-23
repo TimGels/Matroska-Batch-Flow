@@ -92,6 +92,15 @@ public class MediaInfoResultBuilder
     }
 
     /// <summary>
+    /// Adds a general track that identifies the container as Matroska, so a .mkv file is a supported input.
+    /// </summary>
+    /// <returns>The current builder instance for method chaining.</returns>
+    public MediaInfoResultBuilder AddMatroskaGeneralTrack()
+    {
+        return AddTrack(new TrackInfoBuilder().WithType(TrackType.General).WithFormat("Matroska").Build());
+    }
+
+    /// <summary>
     /// Adds a track to the media.
     /// </summary>
     /// <param name="track">The track to add.</param>
