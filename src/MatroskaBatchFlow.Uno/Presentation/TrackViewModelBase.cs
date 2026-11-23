@@ -441,13 +441,15 @@ public abstract partial class TrackViewModelBase : ObservableObject, INavigation
     [RelayCommand]
     public void ResetProperty(TrackIntentProperty property)
     {
-        if (SelectedTrack is null || _batchConfiguration.FileList.Count == 0)
+        if (SelectedTrack is null)
+            return;
+
+        // The engine skips unsupported files, so only a supported file can re-seed the cleared property.
+        var referenceFile = _batchConfiguration.FileList.FirstOrDefault(file => file.IsSupported);
+        if (referenceFile is null)
             return;
 
         SelectedTrack.ResetUserSet(property);
-
-        // Re-run all processing rules so the cleared property gets re-seeded.
-        var referenceFile = _batchConfiguration.FileList[0];
         _fileProcessingEngine.Apply(referenceFile, _batchConfiguration);
     }
 

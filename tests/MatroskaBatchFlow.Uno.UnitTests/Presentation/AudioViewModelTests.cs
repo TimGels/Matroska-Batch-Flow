@@ -71,6 +71,65 @@ public class AudioViewModelTests
     }
 
     [Fact]
+    public void ResetProperty_Name_UnsupportedFirstFile_RestoresNameFromSupportedFile()
+    {
+        var config = new BatchConfiguration(
+            Substitute.For<IScannedFileInfoPathComparer>(),
+            Substitute.For<ILogger<BatchConfiguration>>());
+        config.FileList.Add(CreateAudioFile("unsupported.mkv", "Ignored", supported: false));
+        var supportedFile = CreateAudioFile("supported.mkv", "Original", supported: true);
+        config.FileList.Add(supportedFile);
+        var intent = new TrackIntent(supportedFile.GetTracks(TrackType.Audio)[0]) { Type = TrackType.Audio, Index = 0, Name = "Original" };
+        config.AudioTracks.Add(intent);
+        var engine = new FileProcessingEngine([new AudioTrackNamingRule()]);
+        var viewModel = new AudioViewModel(_logger, _languageProvider, config, engine, _uiPreferences);
+        viewModel.TrackName = "Edited";
+
+        viewModel.ResetPropertyCommand.Execute(TrackIntentProperty.Name);
+
+        Assert.Equal("Original", intent.Name);
+        Assert.False(intent.IsNameUserSet);
+    }
+
+    [Fact]
+    public void ResetProperty_Name_NoSupportedFiles_KeepsUserSetName()
+    {
+        var config = new BatchConfiguration(
+            Substitute.For<IScannedFileInfoPathComparer>(),
+            Substitute.For<ILogger<BatchConfiguration>>());
+        var file = CreateAudioFile("unsupported.mkv", "Original", supported: false);
+        config.FileList.Add(file);
+        var intent = new TrackIntent(file.GetTracks(TrackType.Audio)[0]) { Type = TrackType.Audio, Index = 0 };
+        config.AudioTracks.Add(intent);
+        var engine = new FileProcessingEngine([new AudioTrackNamingRule()]);
+        var viewModel = new AudioViewModel(_logger, _languageProvider, config, engine, _uiPreferences);
+        viewModel.TrackName = "Edited";
+
+        viewModel.ResetPropertyCommand.Execute(TrackIntentProperty.Name);
+
+        Assert.Equal("Edited", intent.Name);
+        Assert.True(intent.IsNameUserSet);
+    }
+
+    private static ScannedFileInfo CreateAudioFile(string path, string title, bool supported)
+    {
+        var builder = new MediaInfoResultBuilder().WithCreatingLibrary();
+        if (supported)
+        {
+            builder.AddMatroskaGeneralTrack();
+        }
+
+        var result = builder
+            .AddTrack(new TrackInfoBuilder()
+                .WithType(TrackType.Audio)
+                .WithStreamKindID(0)
+                .WithTitle(title)
+                .Build())
+            .Build();
+        return new ScannedFileInfo(result, path);
+    }
+
+    [Fact]
     public void Constructor_InitializesAudioTracksFromBatchConfiguration()
     {
         // Arrange
