@@ -44,6 +44,11 @@ public sealed record ScannedFileInfo
     public UnsupportedFormatIssue? UnsupportedFormatReason { get; }
 
     /// <summary>
+    /// Gets whether the file is a supported input that can be edited in a batch.
+    /// </summary>
+    public bool IsSupported => UnsupportedFormatReason is null;
+
+    /// <summary>
     /// Initializes a new instance with auto-computed track counts.
     /// </summary>
     /// <param name="result">The MediaInfo scan result.</param>

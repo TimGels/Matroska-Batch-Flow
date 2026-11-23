@@ -26,6 +26,7 @@ public class TrackLanguageRule(ILanguageProvider languageProvider) : IFileProces
                 // Resolve raw MediaInfo values before grouping so aliases such as "en" and "eng"
                 // are counted as the same canonical language.
                 var languages = batchConfig.FileList
+                    .Where(file => file.IsSupported)
                     .Select(f => f.GetTracks(trackType))
                     .Where(tracks => i < tracks.Count)
                     .Select(tracks => languageProvider.Resolve(tracks[i].Language))

@@ -21,6 +21,7 @@ public class VideoTrackNamingRule : IFileProcessingRule
                 continue;
 
             var names = batchConfig.FileList
+                .Where(file => file.IsSupported)
                 .Select(f => f.GetTracks(TrackType.Video))
                 .Where(tracks => i < tracks.Count)
                 .Select(tracks => tracks[i].Title ?? string.Empty)

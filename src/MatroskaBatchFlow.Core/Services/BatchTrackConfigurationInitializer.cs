@@ -8,7 +8,8 @@ namespace MatroskaBatchFlow.Core.Services;
 /// </summary>
 /// <remarks>
 /// This class ensures that the global <see cref="IBatchConfiguration"/> track collections
-/// (Audio, Video, Subtitle) are expanded to reflect the maximum track count across all files.
+/// (Audio, Video, Subtitle) are expanded to reflect the maximum track count across all supported files.
+/// Unsupported files cannot be edited, so they never add track slots.
 /// Per-file values are no longer stored — they are computed on demand via the transform pipeline.
 /// </remarks>
 /// <param name="batchConfig">The batch configuration to be modified.</param>
@@ -20,7 +21,7 @@ public class BatchTrackConfigurationInitializer(
     /// <inheritdoc/>
     public void Initialize(ScannedFileInfo scannedFile, params TrackType[] trackTypes)
     {
-        if (scannedFile?.Result?.Media?.Track == null || trackTypes.Length == 0)
+        if (scannedFile?.Result?.Media?.Track == null || !scannedFile.IsSupported || trackTypes.Length == 0)
             return;
 
         // Update global collections for UI display based on maximum track counts

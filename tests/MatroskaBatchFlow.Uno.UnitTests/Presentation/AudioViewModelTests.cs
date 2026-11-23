@@ -45,6 +45,7 @@ public class AudioViewModelTests
             .Build();
         var result = new MediaInfoResultBuilder()
             .WithCreatingLibrary()
+            .AddMatroskaGeneralTrack()
             .AddTrack(trackInfo)
             .Build();
         var file = new ScannedFileInfo(result, "file.mkv");

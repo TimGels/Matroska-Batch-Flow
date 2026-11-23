@@ -29,7 +29,7 @@ public class AudioTrackNamingRule : IFileProcessingRule
                 continue;
 
             // Gather all track names for this index across files to determine a common name.
-            var names = GetDistinctAudioTrackNames(batchConfig.FileList, i);
+            var names = GetDistinctAudioTrackNames(batchConfig.FileList.Where(file => file.IsSupported), i);
 
             if (names.Count == 1)
             {
