@@ -544,6 +544,7 @@ public class MainViewModelTests
             _pathComparer,
             _taskbarProgress,
             _operationGate,
+            Substitute.For<IExternalLinkService>(),
             logger);
     }
 

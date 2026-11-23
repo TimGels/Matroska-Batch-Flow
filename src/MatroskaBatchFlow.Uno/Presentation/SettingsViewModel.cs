@@ -5,6 +5,7 @@ using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Enums;
+using MatroskaBatchFlow.Uno.Helpers;
 using MatroskaBatchFlow.Uno.Utilities;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
@@ -21,6 +22,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IValidationStateService _validationStateService;
     private readonly IBatchOperationOrchestrator _orchestrator;
     private readonly IUIPreferencesService _uiPreferences;
+    private readonly IExternalLinkService _externalLinkService;
     private readonly ILogger<SettingsViewModel> _logger;
     private readonly ILogLevelService _logLevelService;
     private readonly LoggingOptions _loggingOptions;
@@ -96,6 +98,7 @@ public partial class SettingsViewModel : ObservableObject
         IUIPreferencesService uiPreferences,
         ILogLevelService logLevelService,
         IOptions<LoggingOptions> loggingOptions,
+        IExternalLinkService externalLinkService,
         ILogger<SettingsViewModel> logger)
     {
         _userSettings = userSettings;
@@ -105,6 +108,7 @@ public partial class SettingsViewModel : ObservableObject
         _uiPreferences = uiPreferences;
         _logLevelService = logLevelService;
         _loggingOptions = loggingOptions.Value;
+        _externalLinkService = externalLinkService;
         _logger = logger;
 
         customMkvPropeditPath = ExecutableLocator.FindExecutable(_userSettings.Value.MkvPropedit.CustomPath ?? string.Empty) ?? string.Empty;
@@ -127,6 +131,13 @@ public partial class SettingsViewModel : ObservableObject
         // Load batch validation settings
         LoadValidationSettings();
     }
+
+    /// <summary>
+    /// Opens the website page that explains how to support the project.
+    /// </summary>
+    /// <returns>A task that completes when the browser has been asked to open the page.</returns>
+    [RelayCommand]
+    private Task OpenSupportPageAsync() => _externalLinkService.OpenAsync(ProjectLinks.SupportPage);
 
     private async Task SaveSettingsAsync()
     {

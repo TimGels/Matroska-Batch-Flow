@@ -230,6 +230,7 @@ public class SettingsViewModelTests
             _uiPreferences,
             _logLevelService,
             _loggingOptions,
+            Substitute.For<IExternalLinkService>(),
             _logger);
     }
 }

@@ -10,6 +10,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:win="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:Converters="using:MatroskaBatchFlow.Uno.Converters"
+    xmlns:helpers="using:MatroskaBatchFlow.Uno.Helpers"
     xmlns:ui="using:CommunityToolkit.WinUI"
     mc:Ignorable="d">
 
@@ -358,6 +359,20 @@
                         <ComboBoxItem Content="Error" />
                         <ComboBoxItem Content="Fatal" />
                     </ComboBox>
+                </controls:SettingsCard>
+
+                <!--Support section-->
+                <TextBlock x:Uid="SupportSection"
+                           Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
+
+                <controls:SettingsCard x:Uid="SupportCard"
+                                       helpers:SupportHeart.Icon="{x:Bind SupportCardIcon}"
+                                       ActionIcon="{ui:FontIcon Glyph=&#xE8A7;}"
+                                       IsClickEnabled="True"
+                                       Command="{x:Bind ViewModel.OpenSupportPageCommand}">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon x:Name="SupportCardIcon" Glyph="&#xEB51;" />
+                    </controls:SettingsCard.HeaderIcon>
                 </controls:SettingsCard>
 
                 <!--About section-->

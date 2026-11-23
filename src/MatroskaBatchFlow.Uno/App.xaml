@@ -21,6 +21,9 @@
             <!-- Converters -->
             <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+
+            <!-- The pink of the heart used by SupportHeart -->
+            <SolidColorBrush x:Key="SupportHeartBrush" Color="#F6339A" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
