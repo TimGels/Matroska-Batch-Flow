@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Models.AppSettings;
@@ -6,6 +7,7 @@ using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Enums;
 using MatroskaBatchFlow.Uno.Helpers;
+using MatroskaBatchFlow.Uno.Models;
 using MatroskaBatchFlow.Uno.Presentation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -42,6 +44,7 @@ public class SettingsViewModelTests
         _externalLinkService = Substitute.For<IExternalLinkService>();
         _batchHistory = Substitute.For<IBatchHistoryService>();
         _batchHistory.MaxRuns.Returns(UserSettings.BatchHistorySettings.DefaultMaxRuns);
+        SetSavedRuns(0);
         _logger = Substitute.For<ILogger<SettingsViewModel>>();
 
         _userSettingsValue = new UserSettings();
@@ -263,6 +266,70 @@ public class SettingsViewModelTests
         {
             await _batchHistory.Received(1).SetMaxRunsAsync(expected);
         }
+    }
+
+    [Fact]
+    public async Task BatchHistoryMaxRuns_WaitsForConfirmation_WhenSavedResultsWouldBeRemoved()
+    {
+        // Arrange
+        SetSavedRuns(10);
+        var viewModel = CreateViewModel();
+
+        // Act
+        viewModel.BatchHistoryMaxRuns = 7;
+
+        // Assert
+        Assert.Equal(3, viewModel.BatchHistoryRunsToRemove);
+        Assert.True(viewModel.IsBatchHistoryLimitPending);
+        await _batchHistory.DidNotReceive().SetMaxRunsAsync(Arg.Any<int>());
+
+        // Act
+        await viewModel.ConfirmBatchHistoryLimitCommand.ExecuteAsync(null);
+
+        // Assert
+        Assert.False(viewModel.IsBatchHistoryLimitPending);
+        await _batchHistory.Received(1).SetMaxRunsAsync(7);
+    }
+
+    [Fact]
+    public async Task CancelBatchHistoryLimit_RestoresTheSavedLimit()
+    {
+        // Arrange
+        SetSavedRuns(10);
+        var viewModel = CreateViewModel();
+        viewModel.BatchHistoryMaxRuns = 7;
+
+        // Act
+        viewModel.CancelBatchHistoryLimitCommand.Execute(null);
+
+        // Assert
+        Assert.Equal(UserSettings.BatchHistorySettings.DefaultMaxRuns, viewModel.BatchHistoryMaxRuns);
+        Assert.False(viewModel.IsBatchHistoryLimitPending);
+        await _batchHistory.DidNotReceive().SetMaxRunsAsync(Arg.Any<int>());
+    }
+
+    [Fact]
+    public async Task BatchHistoryMaxRuns_SavesAtOnce_WhenRaisedAgainBeforeConfirming()
+    {
+        // Arrange
+        SetSavedRuns(10);
+        var viewModel = CreateViewModel();
+        viewModel.BatchHistoryMaxRuns = 7;
+
+        // Act
+        viewModel.BatchHistoryMaxRuns = 12;
+
+        // Assert
+        Assert.False(viewModel.IsBatchHistoryLimitPending);
+        await _batchHistory.Received(1).SetMaxRunsAsync(12);
+        await _batchHistory.DidNotReceive().SetMaxRunsAsync(7);
+    }
+
+    private void SetSavedRuns(int count)
+    {
+        var runs = Enumerable.Range(0, count)
+            .Select(_ => new BatchRunRecord(Guid.NewGuid(), DateTimeOffset.Now, Array.Empty<FileRunRecord>()));
+        _batchHistory.Runs.Returns(new ReadOnlyObservableCollection<BatchRunRecord>(new ObservableCollection<BatchRunRecord>(runs)));
     }
 
     private SettingsViewModel CreateViewModel()

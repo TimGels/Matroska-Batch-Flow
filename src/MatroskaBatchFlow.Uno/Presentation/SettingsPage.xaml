@@ -348,6 +348,23 @@
                                MinWidth="150" />
                 </controls:SettingsCard>
 
+                <InfoBar IsOpen="{x:Bind ViewModel.IsBatchHistoryLimitPending, Mode=OneWay}"
+                         Visibility="{x:Bind ViewModel.IsBatchHistoryLimitPending, Mode=OneWay}"
+                         Severity="Warning"
+                         IsClosable="False"
+                         Message="{x:Bind BatchHistoryRemovalText(ViewModel.BatchHistoryRunsToRemove, ViewModel.BatchHistoryMaxRuns), Mode=OneWay}"
+                         AutomationProperties.LiveSetting="Polite">
+                    <InfoBar.Content>
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+                            <Button x:Uid="BatchHistoryLimitConfirm"
+                                    Style="{StaticResource AccentButtonStyle}"
+                                    Command="{x:Bind ViewModel.ConfirmBatchHistoryLimitCommand}" />
+                            <Button x:Uid="BatchHistoryLimitCancel"
+                                    Command="{x:Bind ViewModel.CancelBatchHistoryLimitCommand}" />
+                        </StackPanel>
+                    </InfoBar.Content>
+                </InfoBar>
+
                 <!--Logging section-->
                 <TextBlock Text="Logging"
                            Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
