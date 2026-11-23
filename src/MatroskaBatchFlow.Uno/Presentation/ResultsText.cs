@@ -20,7 +20,6 @@ public static class ResultsText
     public static string Headline(BatchResultCounts counts) => counts.Outcome switch
     {
         BatchOutcome.None => string.Empty,
-        BatchOutcome.InProgress => Get("ResultsInProgressTitle"),
         BatchOutcome.Succeeded => Get("ResultsSucceededTitle"),
         BatchOutcome.NoChanges => Get("ResultsNoChangesTitle"),
         BatchOutcome.Warnings => Get("ResultsWarningsTitle"),
@@ -37,7 +36,6 @@ public static class ResultsText
     public static string Message(BatchResultCounts counts) => counts.Outcome switch
     {
         BatchOutcome.None => string.Empty,
-        BatchOutcome.InProgress => Format("ResultsInProgressMessage", counts.Finished, counts.Total),
         BatchOutcome.Succeeded when counts.Unchanged == 0 => Counted("ResultsSucceededAll", counts.Updated),
         BatchOutcome.Succeeded => Format(CountedKey("ResultsSucceededSome", counts.Updated), counts.Updated, counts.Total),
         BatchOutcome.NoChanges => Counted("ResultsNoChangesMessage", counts.Total),
@@ -73,6 +71,14 @@ public static class ResultsText
         { TotalHours: < 1 } d => Format("ResultsDurationMinutes", (int)d.TotalMinutes, d.Seconds),
         { } d => Format("ResultsDurationHours", (int)d.TotalHours, d.Minutes)
     };
+
+    /// <summary>
+    /// Gets the label of a saved run in the run picker.
+    /// </summary>
+    /// <param name="when">When the run started.</param>
+    /// <param name="counts">The number of files per result in the run.</param>
+    /// <returns>The label, for example "23-11-2026 19:40 · Batch completed".</returns>
+    public static string RunLabel(DateTimeOffset when, BatchResultCounts counts) => Format("ResultsRunLabel", when.LocalDateTime, Headline(counts));
 
     /// <summary>
     /// Gets the result of a file.

@@ -13,11 +13,6 @@ public enum BatchOutcome
     None,
 
     /// <summary>
-    /// Files are still waiting or being processed.
-    /// </summary>
-    InProgress,
-
-    /// <summary>
     /// Every file was updated or needed no changes, and at least one file was updated.
     /// </summary>
     Succeeded,
@@ -52,22 +47,15 @@ public enum BatchOutcome
 /// <param name="Failed">Files that could not be updated.</param>
 /// <param name="Unchanged">Files that needed no changes, so mkvpropedit did not run for them.</param>
 /// <param name="Canceled">Files that were not processed because the batch was canceled.</param>
-/// <param name="Remaining">Files that are still waiting or being processed.</param>
 public readonly record struct BatchResultCounts(
-    int Total, int Updated, int Warnings, int Failed, int Unchanged, int Canceled, int Remaining)
+    int Total, int Updated, int Warnings, int Failed, int Unchanged, int Canceled)
 {
-    /// <summary>
-    /// Gets the number of files that finished: updated, failed or unchanged.
-    /// </summary>
-    public int Finished => Updated + Failed + Unchanged;
-
     /// <summary>
     /// Gets the overall result. A cancellation takes precedence over failures, failures over warnings.
     /// </summary>
     public BatchOutcome Outcome => this switch
     {
         { Total: 0 } => BatchOutcome.None,
-        { Remaining: > 0 } => BatchOutcome.InProgress,
         { Canceled: > 0 } => BatchOutcome.Canceled,
         { Failed: > 0 } => BatchOutcome.Failures,
         { Warnings: > 0 } => BatchOutcome.Warnings,
@@ -76,18 +64,18 @@ public readonly record struct BatchResultCounts(
     };
 
     /// <summary>
-    /// Counts the files in a batch by their processing status.
+    /// Counts the files of a finished batch by their processing status.
     /// </summary>
-    /// <param name="reports">The reports of the files in the batch.</param>
-    /// <returns>The counts.</returns>
-    public static BatchResultCounts From(IEnumerable<FileProcessingReport> reports)
+    /// <param name="statuses">The processing status of every file in the batch.</param>
+    /// <returns>The counts. Files that never finished count as not processed.</returns>
+    public static BatchResultCounts From(IEnumerable<ProcessingStatus> statuses)
     {
-        int total = 0, succeeded = 0, warnings = 0, failed = 0, unchanged = 0, canceled = 0, remaining = 0;
+        int total = 0, succeeded = 0, warnings = 0, failed = 0, unchanged = 0, canceled = 0;
 
-        foreach (var report in reports)
+        foreach (var status in statuses)
         {
             total++;
-            switch (report.Status)
+            switch (status)
             {
                 case ProcessingStatus.Succeeded:
                     succeeded++;
@@ -101,16 +89,13 @@ public readonly record struct BatchResultCounts(
                 case ProcessingStatus.Skipped:
                     unchanged++;
                     break;
-                case ProcessingStatus.Canceled:
-                    canceled++;
-                    break;
                 default:
-                    remaining++;
+                    canceled++;
                     break;
             }
         }
 
-        return new BatchResultCounts(total, succeeded + warnings, warnings, failed, unchanged, canceled, remaining);
+        return new BatchResultCounts(total, succeeded + warnings, warnings, failed, unchanged, canceled);
     }
 
     /// <summary>
@@ -154,48 +139,48 @@ public sealed record FileResultFilterOption(FileResultFilter Filter, int Count);
 /// <summary>
 /// The result of one file on the Results page.
 /// </summary>
-/// <param name="Report">The processing report of the file.</param>
-public sealed record FileResultItem(FileProcessingReport Report)
+/// <param name="Record">The saved result of the file.</param>
+public sealed record FileResultItem(FileRunRecord Record)
 {
     /// <summary>
     /// Gets the full path of the file.
     /// </summary>
-    public string FilePath => Report.Path;
+    public string FilePath => Record.Path;
 
     /// <summary>
     /// Gets the file name with its extension, without the directory.
     /// </summary>
-    public string FileName => Path.GetFileName(Report.Path);
+    public string FileName => Path.GetFileName(Record.Path);
 
     /// <summary>
     /// Gets the directory that contains the file, or an empty string when the path has none.
     /// </summary>
-    public string Directory => Path.GetDirectoryName(Report.Path) ?? string.Empty;
+    public string Directory => Path.GetDirectoryName(Record.Path) ?? string.Empty;
 
     /// <summary>
     /// Gets the processing status of the file.
     /// </summary>
-    public ProcessingStatus Status => Report.Status;
+    public ProcessingStatus Status => Record.Status;
 
     /// <summary>
     /// Gets how long processing the file took, or <see langword="null"/> when it was not started.
     /// </summary>
-    public TimeSpan? Duration => Report.Duration;
+    public TimeSpan? Duration => Record.Duration;
 
     /// <summary>
     /// Gets the errors as reported by mkvpropedit or the exception, shown verbatim.
     /// </summary>
-    public IReadOnlyList<string> Errors => Report.Errors;
+    public IReadOnlyList<string> Errors => Record.Errors;
 
     /// <summary>
     /// Gets the warnings as reported by mkvpropedit, shown verbatim.
     /// </summary>
-    public IReadOnlyList<string> Warnings => Report.Warnings;
+    public IReadOnlyList<string> Warnings => Record.Warnings;
 
     /// <summary>
     /// Gets the mkvpropedit command line that ran for the file, or <see langword="null"/> when mkvpropedit did not run.
     /// </summary>
-    public string? Command => string.IsNullOrWhiteSpace(Report.ExecutedCommand) ? null : Report.ExecutedCommand;
+    public string? Command => Record.Command;
 
     public bool HasErrors => Errors.Count > 0;
 
@@ -218,8 +203,6 @@ public sealed record FileResultItem(FileProcessingReport Report)
 
     public bool IsCanceled => Status == ProcessingStatus.Canceled;
 
-    public bool IsUnfinished => Status is ProcessingStatus.Pending or ProcessingStatus.Running;
-
     /// <summary>
     /// Gets the position of the file in the list: files that need attention come first.
     /// </summary>
@@ -228,10 +211,8 @@ public sealed record FileResultItem(FileProcessingReport Report)
         ProcessingStatus.Failed => 0,
         ProcessingStatus.SucceededWithWarnings => 1,
         ProcessingStatus.Canceled => 2,
-        ProcessingStatus.Running => 3,
-        ProcessingStatus.Pending => 4,
-        ProcessingStatus.Succeeded => 5,
-        _ => 6
+        ProcessingStatus.Succeeded => 3,
+        _ => 4
     };
 
     /// <summary>

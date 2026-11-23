@@ -30,6 +30,8 @@ public sealed partial class BatchResultsPage : Page
         _ => InfoBarSeverity.Informational
     };
 
+    private void OnClearHistoryConfirmClick(object sender, RoutedEventArgs e) => ClearHistoryFlyout.Hide();
+
     private void OnCopyCommandClick(object sender, RoutedEventArgs e)
     {
         if ((sender as FrameworkElement)?.Tag is not string command)

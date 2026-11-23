@@ -28,6 +28,7 @@ public partial class MainViewModel : ObservableObject
     private readonly ITaskbarProgressService _taskbarProgress;
     private readonly IBatchOperationGate _operationGate;
     private readonly IExternalLinkService _externalLinkService;
+    private readonly IBatchHistoryService _batchHistory;
     private readonly ILogger<MainViewModel> _logger;
     private CancellationTokenSource _processingCts = new();
 
@@ -206,11 +207,13 @@ public partial class MainViewModel : ObservableObject
         ITaskbarProgressService taskbarProgress,
         IBatchOperationGate operationGate,
         IExternalLinkService externalLinkService,
+        IBatchHistoryService batchHistory,
         ILogger<MainViewModel> logger)
     {
         _batchConfiguration = batchConfiguration;
         _orchestrator = orchestrator;
         _batchReportStore = batchResultStore;
+        _batchHistory = batchHistory;
         _mkvPropeditArgumentsBuilder = argumentsService;
         _validationStateService = validationStateService;
         _uiPreferences = uiPreferences;
@@ -392,6 +395,9 @@ public partial class MainViewModel : ObservableObject
             IsCancelling = false;
             IsProcessing = false;
         }
+
+        if (batch.FileReports.Count > 0)
+            await _batchHistory.AddAsync(BatchRunRecord.From(batch, DateTimeOffset.Now));
 
         // Shown after the overlay is hidden, so the dialog is not briefly stacked on top of it.
         WeakReferenceMessenger.Default.Send(outcome);

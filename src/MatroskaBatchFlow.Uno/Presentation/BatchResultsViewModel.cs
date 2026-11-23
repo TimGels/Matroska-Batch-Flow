@@ -1,11 +1,11 @@
-using System.ComponentModel;
-using MatroskaBatchFlow.Core.Services.Processing;
+using System.Collections.Specialized;
+using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Models;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
 /// <summary>
-/// ViewModel for displaying batch processing results.
+/// ViewModel for displaying the results of the last batch and of earlier batches in the history.
 /// </summary>
 public partial class BatchResultsViewModel : ObservableObject
 {
@@ -18,43 +18,31 @@ public partial class BatchResultsViewModel : ObservableObject
         FileResultFilter.Unchanged
     ];
 
-    private readonly IBatchReportStore _batchReportStore;
+    private readonly IBatchHistoryService _history;
     private IReadOnlyList<FileResultItem> _files = Array.Empty<FileResultItem>();
 
     /// <summary>
-    /// The batch and counts that <see cref="_files"/> was built for.
-    /// </summary>
-    private (BatchExecutionReport? Batch, BatchResultCounts Counts) _filesSource;
-
-    /// <summary>
-    /// Gets the batch whose results are shown.
+    /// Gets the saved runs, newest first.
     /// </summary>
     [ObservableProperty]
-    public partial BatchExecutionReport CurrentBatch { get; private set; }
+    [NotifyPropertyChangedFor(nameof(HasRuns))]
+    [NotifyCanExecuteChangedFor(nameof(ClearHistoryCommand))]
+    public partial IReadOnlyList<BatchRunSummary> Runs { get; private set; } = Array.Empty<BatchRunSummary>();
 
     /// <summary>
-    /// Gets the number of files per result.
+    /// Gets or sets the run whose results are shown.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Counts))]
     [NotifyPropertyChangedFor(nameof(Outcome))]
     [NotifyPropertyChangedFor(nameof(HasBatch))]
     [NotifyPropertyChangedFor(nameof(HasNoBatch))]
     [NotifyPropertyChangedFor(nameof(HasUnchanged))]
     [NotifyPropertyChangedFor(nameof(HasCanceled))]
-    public partial BatchResultCounts Counts { get; private set; }
-
-    /// <summary>
-    /// Gets when the first file started, or <see langword="null"/> when no file started.
-    /// </summary>
-    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StartedAt))]
+    [NotifyPropertyChangedFor(nameof(Elapsed))]
     [NotifyPropertyChangedFor(nameof(HasTiming))]
-    public partial DateTimeOffset? StartedAt { get; private set; }
-
-    /// <summary>
-    /// Gets the time from the start of the first file to the end of the last file, or <see langword="null"/> when no file finished.
-    /// </summary>
-    [ObservableProperty]
-    public partial TimeSpan? Elapsed { get; private set; }
+    public partial BatchRunSummary? SelectedRun { get; set; }
 
     /// <summary>
     /// Gets the filters that show at least one file. The first option shows all files.
@@ -76,7 +64,24 @@ public partial class BatchResultsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasFiles))]
     public partial IReadOnlyList<FileResultItem> VisibleFiles { get; private set; } = Array.Empty<FileResultItem>();
 
+    /// <summary>
+    /// Gets the number of files per result in the selected run.
+    /// </summary>
+    public BatchResultCounts Counts => SelectedRun?.Counts ?? default;
+
+    /// <summary>
+    /// Gets when the first file of the selected run started, or <see langword="null"/> when no file started.
+    /// </summary>
+    public DateTimeOffset? StartedAt => SelectedRun?.StartedAt;
+
+    /// <summary>
+    /// Gets how long the selected run took, or <see langword="null"/> when no file finished.
+    /// </summary>
+    public TimeSpan? Elapsed => SelectedRun?.Elapsed;
+
     public BatchOutcome Outcome => Counts.Outcome;
+
+    public bool HasRuns => Runs.Count > 0;
 
     public bool HasBatch => Outcome != BatchOutcome.None;
 
@@ -95,72 +100,57 @@ public partial class BatchResultsViewModel : ObservableObject
     /// </summary>
     public bool ShowFilter => FilterOptions.Count > 2;
 
-    public BatchResultsViewModel(IBatchReportStore batchReportStore)
+    public BatchResultsViewModel(IBatchHistoryService history)
     {
-        _batchReportStore = batchReportStore;
-        CurrentBatch = _batchReportStore.ActiveBatch;
-
-        _batchReportStore.PropertyChanged += OnStorePropertyChanged;
-        CurrentBatch.PropertyChanged += OnBatchReportPropertyChanged;
-        Refresh();
+        _history = history;
+        ((INotifyCollectionChanged)_history.Runs).CollectionChanged += OnHistoryChanged;
+        RefreshRuns(selectNewest: true);
     }
 
-    private void OnStorePropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
+    private void OnHistoryChanged(object? sender, NotifyCollectionChangedEventArgs eventArgs)
     {
-        if (eventArgs.PropertyName != nameof(IBatchReportStore.ActiveBatch))
-            return;
-
-        CurrentBatch.PropertyChanged -= OnBatchReportPropertyChanged;
-        CurrentBatch = _batchReportStore.ActiveBatch;
-        CurrentBatch.PropertyChanged += OnBatchReportPropertyChanged;
-        Refresh();
+        var newRunAdded = eventArgs is { Action: NotifyCollectionChangedAction.Add, NewStartingIndex: 0 };
+        RefreshRuns(selectNewest: newRunAdded);
     }
-
-    private void OnBatchReportPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
-    {
-        // Progress of the running file does not change any result.
-        if (eventArgs.PropertyName is nameof(BatchExecutionReport.OverallProgress) or nameof(BatchExecutionReport.CurrentFile))
-            return;
-
-        Refresh();
-    }
-
-    partial void OnSelectedFilterChanged(FileResultFilterOption? value) => ApplyFilter();
 
     /// <summary>
-    /// Recounts the results. Builds the file list once the batch finished, keeping the selected filter when it still applies.
+    /// Rebuilds the run picker. Shows the newest run when it was just added; otherwise keeps the shown run while it is still saved.
     /// </summary>
-    /// <remarks>
-    /// The processing overlay covers the page while the batch runs, so the list is not rebuilt for every file.
-    /// The batch raises several changes when a file finishes; the list is only rebuilt when the batch or its counts changed.
-    /// </remarks>
-    private void Refresh()
+    private void RefreshRuns(bool selectNewest)
     {
-        var counts = BatchResultCounts.From(CurrentBatch.FileReports);
-        Counts = counts;
-        UpdateTiming();
+        var existing = Runs.ToDictionary<BatchRunSummary, BatchRunRecord>(summary => summary.Run, ReferenceEqualityComparer.Instance);
+        var runs = _history.Runs
+            .Select(run => existing.TryGetValue(run, out var summary) ? summary : new BatchRunSummary(run))
+            .ToArray();
 
-        if (_filesSource == (CurrentBatch, counts))
-            return;
+        var previous = SelectedRun;
+        var next = selectNewest || previous is null
+            ? runs.FirstOrDefault()
+            : runs.FirstOrDefault(summary => ReferenceEquals(summary, previous)) ?? runs.FirstOrDefault();
 
-        _filesSource = (CurrentBatch, counts);
-        var finished = counts.Outcome is not (BatchOutcome.None or BatchOutcome.InProgress);
+        // A ComboBox clears its selection through the two-way binding when its items change, so select afterwards.
+        Runs = runs;
+        SelectedRun = next;
+    }
 
-        _files = finished
-            ? CurrentBatch.FileReports.Select(report => new FileResultItem(report)).OrderBy(item => item.SortRank).ToArray()
-            : Array.Empty<FileResultItem>();
+    partial void OnSelectedRunChanged(BatchRunSummary? value)
+    {
+        _files = value is null
+            ? Array.Empty<FileResultItem>()
+            : value.Run.Files.Select(file => new FileResultItem(file)).OrderBy(item => item.SortRank).ToArray();
 
-        var selected = SelectedFilter?.Filter ?? FileResultFilter.All;
+        var counts = Counts;
         var options = new List<FileResultFilterOption>();
-        if (finished)
+        if (counts.Total > 0)
         {
             options.Add(new(FileResultFilter.All, counts.Total));
             options.AddRange(FilterOrder.Where(f => counts.CountFor(f) > 0).Select(f => new FileResultFilterOption(f, counts.CountFor(f))));
         }
 
+        var selected = SelectedFilter?.Filter ?? FileResultFilter.All;
         FilterOptions = options;
 
-        var nextSelection = FilterOptions.FirstOrDefault(option => option.Filter == selected) ?? FilterOptions.FirstOrDefault();
+        var nextSelection = options.FirstOrDefault(option => option.Filter == selected) ?? options.FirstOrDefault();
         if (nextSelection == SelectedFilter)
         {
             ApplyFilter();
@@ -171,27 +161,17 @@ public partial class BatchResultsViewModel : ObservableObject
         }
     }
 
+    partial void OnSelectedFilterChanged(FileResultFilterOption? value) => ApplyFilter();
+
+    /// <summary>
+    /// Removes all saved runs from this device.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(HasRuns))]
+    private Task ClearHistoryAsync() => _history.ClearAsync();
+
     private void ApplyFilter()
     {
         var filter = SelectedFilter?.Filter ?? FileResultFilter.All;
         VisibleFiles = filter == FileResultFilter.All ? _files : _files.Where(item => item.Matches(filter)).ToArray();
-    }
-
-    private void UpdateTiming()
-    {
-        DateTimeOffset? started = null;
-        DateTimeOffset? finished = null;
-
-        foreach (var report in CurrentBatch.FileReports)
-        {
-            if (report.StartedAt is { } start && (started is null || start < started))
-                started = start;
-
-            if (report.FinishedAt is { } end && (finished is null || end > finished))
-                finished = end;
-        }
-
-        StartedAt = started;
-        Elapsed = started is { } from && finished is { } to && to >= from ? to - from : null;
     }
 }

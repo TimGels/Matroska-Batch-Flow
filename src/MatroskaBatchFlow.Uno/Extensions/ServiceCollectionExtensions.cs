@@ -11,6 +11,7 @@ using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Presentation.Dialogs;
 using MatroskaBatchFlow.Uno.Services;
 using MatroskaBatchFlow.Uno.Services.Pipeline;
+using MatroskaBatchFlow.Uno.Utilities;
 using Serilog.Core;
 
 namespace MatroskaBatchFlow.Uno.Extensions;
@@ -66,6 +67,9 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<ITaskbarProgressService, TaskbarProgressService>();
             services.AddSingleton<IExternalLinkService, ExternalLinkService>();
             services.AddSingleton<IBatchReportStore, InMemoryBatchReportStore>();
+            services.AddSingleton<IBatchHistoryService>(sp => new BatchHistoryService(
+                Path.Combine(AppPathHelper.GetLocalAppDataFolder(), "BatchHistory.json"),
+                sp.GetRequiredService<ILogger<BatchHistoryService>>()));
             services.AddSingleton<IFileProcessingOrchestrator, FileProcessingOrchestrator>();
             services.AddSingleton<IMkvToolExecutor, MkvPropeditExecutor>();
             services.AddSingleton<IProcessRunner, ProcessRunner>();

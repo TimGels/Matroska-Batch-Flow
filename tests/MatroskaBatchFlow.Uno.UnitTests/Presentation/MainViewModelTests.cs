@@ -35,6 +35,7 @@ public class MainViewModelTests
     private readonly IScannedFileInfoPathComparer _pathComparer;
     private readonly ITaskbarProgressService _taskbarProgress;
     private readonly IExternalLinkService _externalLinkService;
+    private readonly IBatchHistoryService _batchHistory;
     private readonly BatchOperationGate _operationGate = new();
     private readonly UniqueObservableCollection<ScannedFileInfo> _fileList;
 
@@ -51,6 +52,7 @@ public class MainViewModelTests
         _pathComparer = Substitute.For<IScannedFileInfoPathComparer>();
         _taskbarProgress = Substitute.For<ITaskbarProgressService>();
         _externalLinkService = Substitute.For<IExternalLinkService>();
+        _batchHistory = Substitute.For<IBatchHistoryService>();
 
         _fileList = [];
         _batchConfiguration.FileList.Returns(_fileList);
@@ -413,6 +415,31 @@ public class MainViewModelTests
     }
 
     [Fact]
+    public async Task ProcessBatch_SavesFinishedRunInHistory()
+    {
+        // Arrange
+        var batch = SetupProcessableBatch();
+        var viewModel = CreateViewModel();
+        _orchestrator.ProcessAllAsync(Arg.Any<IEnumerable<ScannedFileInfo>>(), Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                var report = CreateReport("media/file1.mkv", ProcessingStatus.Failed);
+                batch.TryAddFileReport(report);
+                return Task.FromResult(new List<FileProcessingReport> { report });
+            });
+
+        // Act
+        await ((IAsyncRelayCommand)viewModel.ProcessBatchCommand).ExecuteAsync(null);
+
+        // Assert
+        await _batchHistory.Received(1).AddAsync(Arg.Is<BatchRunRecord>(run =>
+            run.Id == batch.Id
+            && run.Files.Count == 1
+            && run.Files[0].Path == "media/file1.mkv"
+            && run.Files[0].Status == ProcessingStatus.Failed));
+    }
+
+    [Fact]
     public async Task CancelProcessing_CancelsRun_AndReportsCancelledBatch()
     {
         // Arrange
@@ -562,6 +589,7 @@ public class MainViewModelTests
             _taskbarProgress,
             _operationGate,
             _externalLinkService,
+            _batchHistory,
             logger);
     }
 
