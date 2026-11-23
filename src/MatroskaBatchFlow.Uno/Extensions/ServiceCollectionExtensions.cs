@@ -64,6 +64,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IFileListAdapter, FileListAdapter>();
             services.AddSingleton<IFilePickerDialogService, FilePickerDialogService>();
             services.AddSingleton<ITaskbarProgressService, TaskbarProgressService>();
+            services.AddSingleton<IExternalLinkService, ExternalLinkService>();
             services.AddSingleton<IBatchReportStore, InMemoryBatchReportStore>();
             services.AddSingleton<IFileProcessingOrchestrator, FileProcessingOrchestrator>();
             services.AddSingleton<IMkvToolExecutor, MkvPropeditExecutor>();

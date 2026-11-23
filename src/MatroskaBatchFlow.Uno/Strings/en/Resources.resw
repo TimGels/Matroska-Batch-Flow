@@ -184,6 +184,32 @@
     <value>Review {0} blocking checks</value>
     <comment>Button label. {0} is the number of distinct blocking checks (2 or more).</comment>
   </data>
+  <data name="SupportNavItem" xml:space="preserve">
+    <value>Support the project</value>
+    <comment>Tooltip and accessible name of the heart icon next to Settings.</comment>
+  </data>
+  <data name="SupportFlyoutTitle.Text" xml:space="preserve">
+    <value>Support the project</value>
+    <comment>Title of the panel that opens from the heart icon next to Settings.</comment>
+  </data>
+  <data name="SupportFlyoutText.Text" xml:space="preserve">
+    <value>Matroska Batch Flow is free and open source. If you find it useful, consider supporting its development.</value>
+  </data>
+  <data name="SupportFlyoutButton" xml:space="preserve">
+    <value>Open support page</value>
+    <comment>Button label and accessible name in the heart icon's panel. It opens the support page in the browser.</comment>
+  </data>
+  <data name="SupportSection.Text" xml:space="preserve">
+    <value>Support</value>
+    <comment>Settings section header above the Support the project card. It means supporting the project financially, not getting help.</comment>
+  </data>
+  <data name="SupportCard.Header" xml:space="preserve">
+    <value>Support the project</value>
+    <comment>Settings card in the Support section. Clicking it opens the support page in the browser.</comment>
+  </data>
+  <data name="SupportCard.Description" xml:space="preserve">
+    <value>Matroska Batch Flow is free and open source. If you find it useful, consider supporting its development.</value>
+  </data>
   <data name="ChecksNavItem.Content" xml:space="preserve"><value>Validation</value></data>
   <data name="ChecksPageTitle.Text" xml:space="preserve"><value>Validation</value></data>
   <data name="ChecksSettingsSection.Text" xml:space="preserve"><value>Batch Validation</value></data>

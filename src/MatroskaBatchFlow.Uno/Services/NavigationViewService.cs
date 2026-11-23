@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Helpers;
+using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace MatroskaBatchFlow.Uno.Services;
 
@@ -54,6 +55,13 @@ public class NavigationViewService(INavigationService navigationService, IPageSe
             if (selectedItem?.GetValue(NavigationHelper.NavigateToProperty) is string pageKey)
             {
                 navigationService.NavigateTo(pageKey: pageKey, transitionInfo: args.RecommendedNavigationTransitionInfo);
+            }
+            else if (selectedItem is not null && FlyoutBase.GetAttachedFlyout(selectedItem) is not null)
+            {
+                // Items without a page, such as the support heart, show their attached flyout instead.
+                // A mouse click invokes the item while it still handles the pointer release, which sometimes closes
+                // a flyout opened right away. Open it after the input is processed, as WinUI does for child item flyouts.
+                selectedItem.DispatcherQueue.TryEnqueue(() => FlyoutBase.ShowAttachedFlyout(selectedItem));
             }
         }
     }

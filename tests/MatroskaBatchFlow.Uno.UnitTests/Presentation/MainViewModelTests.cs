@@ -8,6 +8,7 @@ using MatroskaBatchFlow.Core.Services.Processing;
 using MatroskaBatchFlow.Core.UnitTests.Builders;
 using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
+using MatroskaBatchFlow.Uno.Helpers;
 using MatroskaBatchFlow.Uno.Messages;
 using MatroskaBatchFlow.Uno.Models;
 using MatroskaBatchFlow.Uno.Presentation;
@@ -33,6 +34,7 @@ public class MainViewModelTests
     private readonly IUIPreferencesService _uiPreferences;
     private readonly IScannedFileInfoPathComparer _pathComparer;
     private readonly ITaskbarProgressService _taskbarProgress;
+    private readonly IExternalLinkService _externalLinkService;
     private readonly BatchOperationGate _operationGate = new();
     private readonly UniqueObservableCollection<ScannedFileInfo> _fileList;
 
@@ -48,6 +50,7 @@ public class MainViewModelTests
         _uiPreferences = Substitute.For<IUIPreferencesService>();
         _pathComparer = Substitute.For<IScannedFileInfoPathComparer>();
         _taskbarProgress = Substitute.For<ITaskbarProgressService>();
+        _externalLinkService = Substitute.For<IExternalLinkService>();
 
         _fileList = [];
         _batchConfiguration.FileList.Returns(_fileList);
@@ -507,6 +510,20 @@ public class MainViewModelTests
         Assert.False(_operationGate.IsBusy);
     }
 
+    [Fact]
+    public async Task OpenSupportPageCommand_OpensSupportPageOnce()
+    {
+        // Arrange
+        var viewModel = CreateViewModel();
+
+        // Act
+        await viewModel.OpenSupportPageCommand.ExecuteAsync(null);
+
+        // Assert
+        await _externalLinkService.Received(1).OpenAsync(Arg.Any<Uri>());
+        await _externalLinkService.Received(1).OpenAsync(ProjectLinks.SupportPage);
+    }
+
     private BatchExecutionReport SetupProcessableBatch()
     {
         _fileList.Add(CreateScannedFile("media/file1.mkv"));
@@ -544,6 +561,7 @@ public class MainViewModelTests
             _pathComparer,
             _taskbarProgress,
             _operationGate,
+            _externalLinkService,
             logger);
     }
 

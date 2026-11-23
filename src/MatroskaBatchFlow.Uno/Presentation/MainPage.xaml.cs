@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.Messaging;
+using MatroskaBatchFlow.Uno.Helpers;
 using MatroskaBatchFlow.Uno.Messages;
 using MatroskaBatchFlow.Uno.Models;
 using MatroskaBatchFlow.Uno.Presentation.Dialogs;
@@ -53,6 +54,12 @@ public sealed partial class MainPage : Page
 
         ViewModel.NavigationService.Frame = contentFrame;
         ViewModel.NavigationViewService.Initialize(NavigationView);
+
+#if !WINDOWS10_0_19041_0_OR_GREATER
+        // Uno does not apply the separator's line state, so its template falls back to a horizontal line.
+        // The separator only appears in the top footer, where WinUI draws it as a vertical line.
+        SupportSeparator.Loaded += (_, _) => VisualStateManager.GoToState(SupportSeparator, "VerticalLine", false);
+#endif
 
         WeakReferenceMessenger.Default.Register<DialogMessage>(this, async (r, m) =>
         {
@@ -179,6 +186,27 @@ public sealed partial class MainPage : Page
             XamlRoot = xamlRoot,
         }.ShowAsync();
     }
+
+    /// <summary>
+    /// Closes the support flyout when its button opens the support page.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="args">The event data.</param>
+    private void SupportFlyoutButton_Click(object sender, RoutedEventArgs args) => SupportFlyout.Hide();
+
+    /// <summary>
+    /// Keeps the support heart filled while its panel is open.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="args">The event data.</param>
+    private void SupportFlyout_Opened(object? sender, object args) => SupportHeart.SetIsHighlighted(SupportNavItem, true);
+
+    /// <summary>
+    /// Lets the support heart return to its outline once its panel is closed.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="args">The event data.</param>
+    private void SupportFlyout_Closed(object? sender, object args) => SupportHeart.SetIsHighlighted(SupportNavItem, false);
 
     /// <summary>
     /// Handles the Loaded event of the MainPage, initializing the default navigation view item.

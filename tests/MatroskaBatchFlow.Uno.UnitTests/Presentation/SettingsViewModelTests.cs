@@ -5,6 +5,7 @@ using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Enums;
+using MatroskaBatchFlow.Uno.Helpers;
 using MatroskaBatchFlow.Uno.Presentation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -24,6 +25,7 @@ public class SettingsViewModelTests
     private readonly IUIPreferencesService _uiPreferences;
     private readonly ILogLevelService _logLevelService;
     private readonly IOptions<LoggingOptions> _loggingOptions;
+    private readonly IExternalLinkService _externalLinkService;
     private readonly ILogger<SettingsViewModel> _logger;
     private readonly UserSettings _userSettingsValue;
 
@@ -36,6 +38,7 @@ public class SettingsViewModelTests
         _uiPreferences = Substitute.For<IUIPreferencesService>();
         _logLevelService = Substitute.For<ILogLevelService>();
         _loggingOptions = Substitute.For<IOptions<LoggingOptions>>();
+        _externalLinkService = Substitute.For<IExternalLinkService>();
         _logger = Substitute.For<ILogger<SettingsViewModel>>();
 
         _userSettingsValue = new UserSettings();
@@ -220,6 +223,20 @@ public class SettingsViewModelTests
         _orchestrator.Received(1).RevalidateAsync();
     }
 
+    [Fact]
+    public async Task OpenSupportPageCommand_OpensSupportPageOnce()
+    {
+        // Arrange
+        var viewModel = CreateViewModel();
+
+        // Act
+        await viewModel.OpenSupportPageCommand.ExecuteAsync(null);
+
+        // Assert
+        await _externalLinkService.Received(1).OpenAsync(Arg.Any<Uri>());
+        await _externalLinkService.Received(1).OpenAsync(ProjectLinks.SupportPage);
+    }
+
     private SettingsViewModel CreateViewModel()
     {
         return new SettingsViewModel(
@@ -230,6 +247,7 @@ public class SettingsViewModelTests
             _uiPreferences,
             _logLevelService,
             _loggingOptions,
+            _externalLinkService,
             _logger);
     }
 }

@@ -5,6 +5,7 @@ using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Core.Services.Processing;
 using MatroskaBatchFlow.Uno.Contracts.Services;
+using MatroskaBatchFlow.Uno.Helpers;
 using MatroskaBatchFlow.Uno.Messages;
 using MatroskaBatchFlow.Uno.Models;
 
@@ -26,6 +27,7 @@ public partial class MainViewModel : ObservableObject
     private readonly IScannedFileInfoPathComparer _pathComparer;
     private readonly ITaskbarProgressService _taskbarProgress;
     private readonly IBatchOperationGate _operationGate;
+    private readonly IExternalLinkService _externalLinkService;
     private readonly ILogger<MainViewModel> _logger;
     private CancellationTokenSource _processingCts = new();
 
@@ -203,6 +205,7 @@ public partial class MainViewModel : ObservableObject
         IScannedFileInfoPathComparer pathComparer,
         ITaskbarProgressService taskbarProgress,
         IBatchOperationGate operationGate,
+        IExternalLinkService externalLinkService,
         ILogger<MainViewModel> logger)
     {
         _batchConfiguration = batchConfiguration;
@@ -214,6 +217,7 @@ public partial class MainViewModel : ObservableObject
         _pathComparer = pathComparer;
         _taskbarProgress = taskbarProgress;
         _operationGate = operationGate;
+        _externalLinkService = externalLinkService;
         _logger = logger;
 
         NavigationService = navigationService;
@@ -241,6 +245,13 @@ public partial class MainViewModel : ObservableObject
     {
         IsBatchOperationRunning = _operationGate.IsBusy;
     }
+
+    /// <summary>
+    /// Opens the website page that explains how to support the project.
+    /// </summary>
+    /// <returns>A task that completes when the browser has been asked to open the page.</returns>
+    [RelayCommand]
+    private Task OpenSupportPageAsync() => _externalLinkService.OpenAsync(ProjectLinks.SupportPage);
 
     private void OnUIPreferencesChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {

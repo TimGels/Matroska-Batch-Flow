@@ -2,6 +2,7 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:controls="using:MatroskaBatchFlow.Uno.Presentation.Controls"
+      xmlns:local="using:MatroskaBatchFlow.Uno.Presentation"
       xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
       xmlns:utu="using:Uno.Toolkit.UI"
       xmlns:dialogs="using:MatroskaBatchFlow.Uno.Presentation.Dialogs"
@@ -50,6 +51,43 @@
                                     Visibility="{x:Bind ViewModel.EnableLoggingView, Mode=OneWay}"
                                     helpers:NavigationHelper.NavigateTo="MatroskaBatchFlow.Uno.Presentation.LogViewerViewModel" />
             </NavigationView.MenuItems>
+            <NavigationView.FooterMenuItems>
+                <!--Shows a panel about supporting the project; its button opens the support page in the browser-->
+                <NavigationViewItem x:Name="SupportNavItem"
+                                    SelectsOnInvoked="False"
+                                    helpers:SupportHeart.Icon="{x:Bind SupportIcon}"
+                                    AutomationProperties.Name="{x:Bind local:UiText.Get('SupportNavItem')}"
+                                    ToolTipService.ToolTip="{x:Bind local:UiText.Get('SupportNavItem')}">
+                    <NavigationViewItem.Icon>
+                        <FontIcon x:Name="SupportIcon" Glyph="&#xEB51;" />
+                    </NavigationViewItem.Icon>
+                    <FlyoutBase.AttachedFlyout>
+                        <Flyout x:Name="SupportFlyout" Placement="BottomEdgeAlignedRight"
+                                Opened="SupportFlyout_Opened"
+                                Closed="SupportFlyout_Closed">
+                            <StackPanel MaxWidth="300" Spacing="12">
+                                <TextBlock x:Uid="SupportFlyoutTitle"
+                                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                <TextBlock x:Uid="SupportFlyoutText"
+                                           TextWrapping="Wrap" />
+                                <Button Style="{StaticResource AccentButtonStyle}"
+                                        HorizontalAlignment="Stretch"
+                                        AutomationProperties.Name="{x:Bind local:UiText.Get('SupportFlyoutButton')}"
+                                        Command="{x:Bind ViewModel.OpenSupportPageCommand}"
+                                        Click="SupportFlyoutButton_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="{x:Bind local:UiText.Get('SupportFlyoutButton')}" />
+                                        <FontIcon Glyph="&#xE8A7;" FontSize="14"
+                                                  AutomationProperties.AccessibilityView="Raw" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Flyout>
+                    </FlyoutBase.AttachedFlyout>
+                </NavigationViewItem>
+                <!--Separates the support heart from Settings, which is a page-->
+                <NavigationViewItemSeparator x:Name="SupportSeparator" />
+            </NavigationView.FooterMenuItems>
             <NavigationView.Content>
                 <Grid x:Name="ContentHost">
                     <Grid.Clip>
