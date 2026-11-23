@@ -26,6 +26,7 @@ public class SettingsViewModelTests
     private readonly ILogLevelService _logLevelService;
     private readonly IOptions<LoggingOptions> _loggingOptions;
     private readonly IExternalLinkService _externalLinkService;
+    private readonly IBatchHistoryService _batchHistory;
     private readonly ILogger<SettingsViewModel> _logger;
     private readonly UserSettings _userSettingsValue;
 
@@ -39,6 +40,8 @@ public class SettingsViewModelTests
         _logLevelService = Substitute.For<ILogLevelService>();
         _loggingOptions = Substitute.For<IOptions<LoggingOptions>>();
         _externalLinkService = Substitute.For<IExternalLinkService>();
+        _batchHistory = Substitute.For<IBatchHistoryService>();
+        _batchHistory.MaxRuns.Returns(UserSettings.BatchHistorySettings.DefaultMaxRuns);
         _logger = Substitute.For<ILogger<SettingsViewModel>>();
 
         _userSettingsValue = new UserSettings();
@@ -237,6 +240,31 @@ public class SettingsViewModelTests
         await _externalLinkService.Received(1).OpenAsync(ProjectLinks.SupportPage);
     }
 
+    [Theory]
+    [InlineData(double.NaN, 20)]
+    [InlineData(0, 1)]
+    [InlineData(500, 100)]
+    [InlineData(7.4, 7)]
+    public async Task BatchHistoryMaxRuns_SavesAValidLimit(double entered, int expected)
+    {
+        // Arrange
+        var viewModel = CreateViewModel();
+
+        // Act
+        viewModel.BatchHistoryMaxRuns = entered;
+
+        // Assert
+        Assert.Equal(expected, viewModel.BatchHistoryMaxRuns);
+        if (expected == UserSettings.BatchHistorySettings.DefaultMaxRuns)
+        {
+            await _batchHistory.DidNotReceive().SetMaxRunsAsync(Arg.Any<int>());
+        }
+        else
+        {
+            await _batchHistory.Received(1).SetMaxRunsAsync(expected);
+        }
+    }
+
     private SettingsViewModel CreateViewModel()
     {
         return new SettingsViewModel(
@@ -248,6 +276,7 @@ public class SettingsViewModelTests
             _logLevelService,
             _loggingOptions,
             _externalLinkService,
+            _batchHistory,
             _logger);
     }
 }

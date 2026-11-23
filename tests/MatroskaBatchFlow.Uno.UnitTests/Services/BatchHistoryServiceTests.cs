@@ -1,7 +1,10 @@
 using MatroskaBatchFlow.Core.Enums;
+using MatroskaBatchFlow.Core.Models;
+using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Uno.Models;
 using MatroskaBatchFlow.Uno.Services;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 
 namespace MatroskaBatchFlow.Uno.UnitTests.Services;
 
@@ -9,10 +12,19 @@ public sealed class BatchHistoryServiceTests : IDisposable
 {
     private readonly string _directory = Directory.CreateTempSubdirectory("mbf-history-").FullName;
     private readonly string _filePath;
+    private readonly UserSettings _settings = new();
+    private readonly IWritableSettings<UserSettings> _userSettings = Substitute.For<IWritableSettings<UserSettings>>();
 
     public BatchHistoryServiceTests()
     {
         _filePath = Path.Combine(_directory, "BatchHistory.json");
+        _userSettings.Value.Returns(_settings);
+        _userSettings.UpdateAsync(Arg.Any<Action<UserSettings>>())
+            .Returns(call =>
+            {
+                call.Arg<Action<UserSettings>>()(_settings);
+                return Task.CompletedTask;
+            });
     }
 
     public void Dispose() => Directory.Delete(_directory, recursive: true);
@@ -41,8 +53,9 @@ public sealed class BatchHistoryServiceTests : IDisposable
     [Fact]
     public async Task AddAsync_KeepsOnlyTheNewestRuns()
     {
+        _settings.BatchHistory.MaxRuns = 3;
         var service = CreateService();
-        var runs = Enumerable.Range(0, BatchHistoryService.MaxRuns + 2).Select(i => Run(i)).ToArray();
+        var runs = Enumerable.Range(0, 5).Select(i => Run(i)).ToArray();
 
         foreach (var run in runs)
         {
@@ -52,9 +65,43 @@ public sealed class BatchHistoryServiceTests : IDisposable
         var restarted = CreateService();
         await restarted.LoadAsync();
 
-        var expected = runs.Reverse().Take(BatchHistoryService.MaxRuns).Select(run => run.Id).ToArray();
+        var expected = runs.Reverse().Take(3).Select(run => run.Id).ToArray();
         Assert.Equal(expected, service.Runs.Select(run => run.Id));
         Assert.Equal(expected, restarted.Runs.Select(run => run.Id));
+    }
+
+    [Fact]
+    public async Task SetMaxRunsAsync_SavesTheLimitAndRemovesTheOldestRuns()
+    {
+        var service = CreateService();
+        var runs = Enumerable.Range(0, 4).Select(i => Run(i)).ToArray();
+        foreach (var run in runs)
+        {
+            await service.AddAsync(run);
+        }
+
+        await service.SetMaxRunsAsync(2);
+
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+
+        var expected = new[] { runs[3].Id, runs[2].Id };
+        Assert.Equal(2, _settings.BatchHistory.MaxRuns);
+        Assert.Equal(expected, service.Runs.Select(run => run.Id));
+        Assert.Equal(expected, restarted.Runs.Select(run => run.Id));
+    }
+
+    [Theory]
+    [InlineData(0, UserSettings.BatchHistorySettings.MinMaxRuns)]
+    [InlineData(1000, UserSettings.BatchHistorySettings.MaxMaxRuns)]
+    public async Task SetMaxRunsAsync_ClampsTheLimit(int requested, int expected)
+    {
+        var service = CreateService();
+
+        await service.SetMaxRunsAsync(requested);
+
+        Assert.Equal(expected, _settings.BatchHistory.MaxRuns);
+        Assert.Equal(expected, service.MaxRuns);
     }
 
     [Fact]
@@ -97,7 +144,7 @@ public sealed class BatchHistoryServiceTests : IDisposable
         Assert.Empty(service.Runs);
     }
 
-    private BatchHistoryService CreateService() => new(_filePath, NullLogger<BatchHistoryService>.Instance);
+    private BatchHistoryService CreateService() => new(_filePath, _userSettings, NullLogger<BatchHistoryService>.Instance);
 
     private static BatchRunRecord Run(int minutes) => new(
         Guid.NewGuid(),

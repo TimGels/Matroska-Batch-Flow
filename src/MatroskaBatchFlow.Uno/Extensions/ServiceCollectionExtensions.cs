@@ -69,6 +69,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IBatchReportStore, InMemoryBatchReportStore>();
             services.AddSingleton<IBatchHistoryService>(sp => new BatchHistoryService(
                 Path.Combine(AppPathHelper.GetLocalAppDataFolder(), "BatchHistory.json"),
+                sp.GetRequiredService<IWritableSettings<UserSettings>>(),
                 sp.GetRequiredService<ILogger<BatchHistoryService>>()));
             services.AddSingleton<IFileProcessingOrchestrator, FileProcessingOrchestrator>();
             services.AddSingleton<IMkvToolExecutor, MkvPropeditExecutor>();

@@ -23,6 +23,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IBatchOperationOrchestrator _orchestrator;
     private readonly IUIPreferencesService _uiPreferences;
     private readonly IExternalLinkService _externalLinkService;
+    private readonly IBatchHistoryService _batchHistory;
     private readonly ILogger<SettingsViewModel> _logger;
     private readonly ILogLevelService _logLevelService;
     private readonly LoggingOptions _loggingOptions;
@@ -71,6 +72,16 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool isLogLevelControlEnabled;
 
+    /// <summary>
+    /// Gets or sets how many finished batches the Results page keeps. A double, because NumberBox binds to one.
+    /// </summary>
+    [ObservableProperty]
+    public partial double BatchHistoryMaxRuns { get; set; }
+
+    public double BatchHistoryMinRuns => UserSettings.BatchHistorySettings.MinMaxRuns;
+
+    public double BatchHistoryMaxRunsLimit => UserSettings.BatchHistorySettings.MaxMaxRuns;
+
     public string LogLevelDescription => IsLogLevelControlEnabled
         ? "Set the minimum logging level. Lower levels produce more detailed logs."
         : $"Currently set by appsettings.json to '{_loggingOptions.MinimumLevel}' and cannot be changed here.";
@@ -99,6 +110,7 @@ public partial class SettingsViewModel : ObservableObject
         ILogLevelService logLevelService,
         IOptions<LoggingOptions> loggingOptions,
         IExternalLinkService externalLinkService,
+        IBatchHistoryService batchHistory,
         ILogger<SettingsViewModel> logger)
     {
         _userSettings = userSettings;
@@ -109,7 +121,10 @@ public partial class SettingsViewModel : ObservableObject
         _logLevelService = logLevelService;
         _loggingOptions = loggingOptions.Value;
         _externalLinkService = externalLinkService;
+        _batchHistory = batchHistory;
         _logger = logger;
+
+        BatchHistoryMaxRuns = _batchHistory.MaxRuns;
 
         customMkvPropeditPath = ExecutableLocator.FindExecutable(_userSettings.Value.MkvPropedit.CustomPath ?? string.Empty) ?? string.Empty;
         // If Skia is being used, we force the custom path to be enabled since the bundled mkvpropedit executable is only for Windows.
@@ -272,6 +287,38 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnSelectedThemeIndexChanged(int value)
     {
         _uiPreferences.AppTheme = (AppThemePreference)value;
+    }
+
+    /// <summary>
+    /// Saves how many finished batches are kept. An empty or out-of-range value is replaced by the kept limit.
+    /// </summary>
+    /// <param name="value">The new limit entered in the NumberBox.</param>
+    async partial void OnBatchHistoryMaxRunsChanged(double value)
+    {
+        if (double.IsNaN(value))
+        {
+            BatchHistoryMaxRuns = _batchHistory.MaxRuns;
+            return;
+        }
+
+        var maxRuns = (int)Math.Clamp(Math.Round(value), BatchHistoryMinRuns, BatchHistoryMaxRunsLimit);
+        if (maxRuns != value)
+        {
+            BatchHistoryMaxRuns = maxRuns;
+            return;
+        }
+
+        if (maxRuns == _batchHistory.MaxRuns)
+            return;
+
+        try
+        {
+            await _batchHistory.SetMaxRunsAsync(maxRuns);
+        }
+        catch (Exception ex)
+        {
+            LogSaveBatchHistoryLimitFailed(maxRuns, ex);
+        }
     }
 
     /// <summary>

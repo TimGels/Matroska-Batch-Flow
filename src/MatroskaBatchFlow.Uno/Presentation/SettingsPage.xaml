@@ -336,6 +336,18 @@
                     <ToggleSwitch IsOn="{x:Bind ViewModel.ShowTrackAvailabilityText, Mode=TwoWay}" />
                 </controls:SettingsCard>
 
+                <controls:SettingsCard x:Uid="BatchHistoryLimitCard"
+                                       HeaderIcon="{ui:FontIcon Glyph=&#xE81C;}">
+                    <NumberBox x:Uid="BatchHistoryLimitBox"
+                               Value="{x:Bind ViewModel.BatchHistoryMaxRuns, Mode=TwoWay}"
+                               Minimum="{x:Bind ViewModel.BatchHistoryMinRuns}"
+                               Maximum="{x:Bind ViewModel.BatchHistoryMaxRunsLimit}"
+                               SmallChange="1"
+                               LargeChange="10"
+                               SpinButtonPlacementMode="Compact"
+                               MinWidth="150" />
+                </controls:SettingsCard>
+
                 <!--Logging section-->
                 <TextBlock Text="Logging"
                            Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />

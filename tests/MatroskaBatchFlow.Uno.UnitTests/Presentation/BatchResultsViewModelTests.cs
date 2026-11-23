@@ -1,8 +1,11 @@
 using MatroskaBatchFlow.Core.Enums;
+using MatroskaBatchFlow.Core.Models;
+using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Uno.Models;
 using MatroskaBatchFlow.Uno.Presentation;
 using MatroskaBatchFlow.Uno.Services;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 
 namespace MatroskaBatchFlow.Uno.UnitTests.Presentation;
 
@@ -15,7 +18,9 @@ public sealed class BatchResultsViewModelTests : IDisposable
 
     public BatchResultsViewModelTests()
     {
-        _history = new BatchHistoryService(Path.Combine(_directory, "BatchHistory.json"), NullLogger<BatchHistoryService>.Instance);
+        var userSettings = Substitute.For<IWritableSettings<UserSettings>>();
+        userSettings.Value.Returns(new UserSettings());
+        _history = new BatchHistoryService(Path.Combine(_directory, "BatchHistory.json"), userSettings, NullLogger<BatchHistoryService>.Instance);
     }
 
     public void Dispose() => Directory.Delete(_directory, recursive: true);

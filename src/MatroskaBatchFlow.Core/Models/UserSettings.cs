@@ -19,6 +19,33 @@ public sealed class UserSettings
     [JsonPropertyName("UI")]
     public UISettings UI { get; set; } = new UISettings();
 
+    [JsonPropertyName("BatchHistory")]
+    public BatchHistorySettings BatchHistory { get; set; } = new BatchHistorySettings();
+
+    public sealed class BatchHistorySettings
+    {
+        /// <summary>
+        /// The number of finished batches that is kept by default.
+        /// </summary>
+        public const int DefaultMaxRuns = 20;
+
+        /// <summary>
+        /// The lowest number of finished batches that can be kept, so the last batch can always be reviewed.
+        /// </summary>
+        public const int MinMaxRuns = 1;
+
+        /// <summary>
+        /// The highest number of finished batches that can be kept.
+        /// </summary>
+        public const int MaxMaxRuns = 100;
+
+        /// <summary>
+        /// Gets or sets how many finished batches the Results page keeps. Older batches are removed.
+        /// </summary>
+        [JsonPropertyName("MaxRuns")]
+        public int MaxRuns { get; set; } = DefaultMaxRuns;
+    }
+
     public sealed class MkvPropeditSettings
     {
         [JsonPropertyName("CustomPath")]
