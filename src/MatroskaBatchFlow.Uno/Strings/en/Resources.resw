@@ -215,7 +215,7 @@
     <comment>Settings card for how many finished batches the Results page keeps.</comment>
   </data>
   <data name="BatchHistoryLimitCard.Description" xml:space="preserve">
-    <value>The number of finished batches kept on the Results page. If a lower limit would remove saved results, you are asked first.</value>
+    <value>The number of finished batches kept on the Results page.</value>
   </data>
   <data name="BatchHistoryLimitBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Number of saved results</value>
