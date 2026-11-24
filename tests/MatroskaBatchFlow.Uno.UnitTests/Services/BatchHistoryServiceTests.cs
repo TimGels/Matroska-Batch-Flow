@@ -135,7 +135,11 @@ public sealed class BatchHistoryServiceTests : IDisposable
         Assert.True(await service.ClearAsync());
 
         Assert.Empty(service.Runs);
-        Assert.DoesNotContain("0.mkv", await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken));
+        var clearedContent = await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken);
+        using var document = System.Text.Json.JsonDocument.Parse(clearedContent);
+        Assert.Equal(2, document.RootElement.GetProperty("Version").GetInt32());
+        Assert.True(document.RootElement.GetProperty("ClearedAt").GetDateTimeOffset() > DateTimeOffset.MinValue);
+
         Assert.False(File.Exists(_filePath + ".tmp"));
         var restarted = CreateService();
         await restarted.LoadAsync();
@@ -160,11 +164,73 @@ public sealed class BatchHistoryServiceTests : IDisposable
         Assert.Equal(added.Id, Assert.Single(restarted.Runs).Id);
     }
 
+    [Fact]
+    public async Task AddAsync_DoesNotRestoreARunStartedBeforeAnotherInstanceClearsHistory()
+    {
+        var service = CreateService();
+        await service.AddAsync(Run(0));
+
+        using var storageLock = new FileStream(
+            _filePath + ".lock",
+            FileMode.OpenOrCreate,
+            FileAccess.ReadWrite,
+            FileShare.None);
+        var run = Run(1) with { RecordedAt = DateTimeOffset.UtcNow.AddMinutes(5) };
+        var addTask = service.AddAsync(run);
+
+        var clearedAt = DateTimeOffset.UtcNow;
+        var clearedDocument = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            Version = 2,
+            Runs = Array.Empty<BatchRunRecord>(),
+            ClearedAt = clearedAt
+        });
+        await File.WriteAllTextAsync(_filePath, clearedDocument, TestContext.Current.CancellationToken);
+
+        storageLock.Dispose();
+        await addTask.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Empty(service.Runs);
+        Assert.Empty(restarted.Runs);
+    }
+
+    [Fact]
+    public async Task LoadAsync_ReadsVersionOneHistory_AndAcceptsAnExplicitPendingStatus()
+    {
+        var run = new BatchRunRecord(
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow,
+            [new FileRunRecord("pending.mkv", ProcessingStatus.Pending, null, null, null, null, [], [])]);
+        var options = new System.Text.Json.JsonSerializerOptions();
+        options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        var legacyDocument = System.Text.Json.JsonSerializer.Serialize(
+            new { Version = 1, Runs = new[] { run } },
+            options);
+        await File.WriteAllTextAsync(_filePath, legacyDocument, TestContext.Current.CancellationToken);
+        var service = CreateService();
+
+        await service.LoadAsync();
+
+        var loadedRun = Assert.Single(service.Runs);
+        Assert.Equal(run.Id, loadedRun.Id);
+        Assert.Equal(ProcessingStatus.Pending, Assert.Single(loadedRun.Files).Status);
+
+        await service.AddAsync(Run(1));
+        var rewrittenContent = await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken);
+        using var rewrittenDocument = System.Text.Json.JsonDocument.Parse(rewrittenContent);
+        Assert.Equal(1, rewrittenDocument.RootElement.GetProperty("Version").GetInt32());
+    }
+
     [Theory]
     [InlineData("not json")]
     [InlineData("""{"Version":99,"Runs":[]}""")]
     [InlineData("""{"Version":1}""")]
     [InlineData("""{"Version":1,"Runs":[null]}""")]
+    [InlineData("""{"Version":1,"Runs":[{"Files":[]}]}""")]
+    [InlineData("""{"Version":1,"Runs":[{"Id":"8f0c1d6e-2b1e-4a57-9a43-5d0b8e3f0a11","Files":[]}]}""")]
+    [InlineData("""{"Version":1,"Runs":[{"Id":"8f0c1d6e-2b1e-4a57-9a43-5d0b8e3f0a11","RecordedAt":"2026-11-23T19:00:00Z","Files":[{"Path":"a.mkv"}]}]}""")]
     [InlineData("""{"Version":1,"Runs":[{"Id":"8f0c1d6e-2b1e-4a57-9a43-5d0b8e3f0a11","Files":null}]}""")]
     [InlineData("""{"Version":1,"Runs":[{"Id":"8f0c1d6e-2b1e-4a57-9a43-5d0b8e3f0a11","Files":[{"Status":"Succeeded"}]}]}""")]
     [InlineData("""{"Version":1,"Runs":[{"Id":"8f0c1d6e-2b1e-4a57-9a43-5d0b8e3f0a11","Files":[{"Path":"a.mkv","Status":99}]}]}""")]
@@ -205,6 +271,66 @@ public sealed class BatchHistoryServiceTests : IDisposable
         await restarted.LoadAsync();
 
         Assert.Equal(3, restarted.Runs.Count);
+    }
+
+    [Fact]
+    public async Task AddAsync_PreservesAllVisibleRuns_WhenTheLimitCannotBeRead()
+    {
+        _settings.BatchHistory.MaxRuns = 100;
+        var service = CreateService();
+        foreach (var run in Enumerable.Range(0, 25).Select(Run))
+        {
+            await service.AddAsync(run);
+        }
+
+        _settings.BatchHistory.MaxRuns = UserSettings.BatchHistorySettings.DefaultMaxRuns;
+        _userSettings.ReadFromDiskAsync().Returns(Task.FromException<UserSettings>(new IOException("settings file is locked")));
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+
+        Assert.Equal(25, restarted.Runs.Count);
+        await restarted.AddAsync(Run(25));
+
+        Assert.Equal(26, restarted.Runs.Count);
+    }
+
+    [Fact]
+    public async Task LoadAsync_ShowsAllSavedRuns_WhenTheHistorySettingsSectionIsNull()
+    {
+        var service = CreateService();
+        foreach (var run in Enumerable.Range(0, 3).Select(Run))
+        {
+            await service.AddAsync(run);
+        }
+
+        var invalidSettings = new UserSettings { BatchHistory = null! };
+        _userSettings.ReadFromDiskAsync().Returns(Task.FromResult(invalidSettings));
+        var restarted = CreateService();
+
+        await restarted.LoadAsync();
+
+        Assert.Equal(3, restarted.Runs.Count);
+    }
+
+    [Fact]
+    public async Task AddAsync_PreservesAllVisibleRuns_WhenTheHistorySettingsSectionIsNull()
+    {
+        _settings.BatchHistory.MaxRuns = 100;
+        var service = CreateService();
+        foreach (var run in Enumerable.Range(0, 25).Select(Run))
+        {
+            await service.AddAsync(run);
+        }
+
+        _settings.BatchHistory.MaxRuns = UserSettings.BatchHistorySettings.DefaultMaxRuns;
+        _userSettings.ReadFromDiskAsync().Returns(Task.FromResult(new UserSettings { BatchHistory = null! }));
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+
+        Assert.Equal(25, restarted.Runs.Count);
+        await restarted.AddAsync(Run(25));
+
+        Assert.Equal(26, restarted.Runs.Count);
     }
 
     [Fact]

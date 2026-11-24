@@ -17,9 +17,10 @@ namespace MatroskaBatchFlow.Uno.Services;
 public partial class BatchHistoryService : IBatchHistoryService
 {
     /// <summary>
-    /// The version of the file format. A file with another version must not be overwritten.
+    /// The current version of the file format. A file with an unsupported version must not be overwritten.
     /// </summary>
-    private const int FormatVersion = 1;
+    private const int LegacyFormatVersion = 1;
+    private const int FormatVersion = 2;
 
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
@@ -55,7 +56,10 @@ public partial class BatchHistoryService : IBatchHistoryService
     public ReadOnlyObservableCollection<BatchRunRecord> Runs { get; }
 
     /// <inheritdoc/>
-    public int MaxRuns => Math.Clamp(_userSettings.Value.BatchHistory.MaxRuns, BatchHistorySettings.MinMaxRuns, BatchHistorySettings.MaxMaxRuns);
+    public int MaxRuns => Math.Clamp(
+        _userSettings.Value.BatchHistory?.MaxRuns ?? BatchHistorySettings.DefaultMaxRuns,
+        BatchHistorySettings.MinMaxRuns,
+        BatchHistorySettings.MaxMaxRuns);
 
     /// <inheritdoc/>
     public async Task<int> SetMaxRunsAsync(int maxRuns, int confirmedRemovals = 0)
@@ -129,32 +133,41 @@ public partial class BatchHistoryService : IBatchHistoryService
     {
         ArgumentNullException.ThrowIfNull(run);
 
+        var addStartedAt = DateTimeOffset.UtcNow;
         await _fileLock.WaitAsync();
         try
         {
             _unsavedRuns.Insert(0, run);
+            int? maxRuns = null;
             try
             {
                 using var storageLock = await FileLock.AcquireAsync(_filePath);
-                var maxRuns = await ReadPersistedMaxRunsAsync();
-                var (runs, clearedAt) = await ReadMergedAsync(run);
-                var kept = runs.Take(maxRuns).ToArray();
+                var persistedLimit = await ReadPersistedMaxRunsAsync();
+                maxRuns = persistedLimit;
+                var (runs, clearedAt) = await ReadMergedAsync(run, addStartedAt);
+                var kept = runs.Take(persistedLimit).ToArray();
                 await Task.Run(() => Write(kept, clearedAt));
                 _unsavedRuns.Clear();
                 ReplaceRuns(kept);
                 if (runs.Length > kept.Length)
                 {
-                    LogOldestRunsRemoved(runs.Length - kept.Length, maxRuns);
+                    LogOldestRunsRemoved(runs.Length - kept.Length, persistedLimit);
                 }
             }
             catch (Exception ex) when (IsStorageFailure(ex))
             {
                 LogSaveFailed(ex, _filePath);
-                var maxRuns = MaxRuns;
-                ReplaceRuns(Merge(_runs).Take(maxRuns).ToArray());
-                if (_unsavedRuns.Count > maxRuns)
+                if (maxRuns is { } persistedLimit)
                 {
-                    _unsavedRuns.RemoveRange(maxRuns, _unsavedRuns.Count - maxRuns);
+                    ReplaceRuns(Merge(_runs).Take(persistedLimit).ToArray());
+                    if (_unsavedRuns.Count > persistedLimit)
+                    {
+                        _unsavedRuns.RemoveRange(persistedLimit, _unsavedRuns.Count - persistedLimit);
+                    }
+                }
+                else
+                {
+                    ReplaceRuns(Merge(_runs).ToArray());
                 }
             }
         }
@@ -250,16 +263,23 @@ public partial class BatchHistoryService : IBatchHistoryService
     /// Reads the saved runs and combines them with the runs this instance could not save yet.
     /// </summary>
     /// <remarks>
-    /// Unsaved runs from before the history was last cleared are dropped, except <paramref name="addedRun"/>.
+    /// Unsaved runs from before the history was last cleared are dropped. An added run is exempt only if its add
+    /// operation began after the clear.
     /// </remarks>
     /// <param name="addedRun">The run that is being added, or <see langword="null"/>.</param>
+    /// <param name="addStartedAt">When the add operation began, or <see langword="null"/>.</param>
     /// <returns>The runs, newest first, and when the history was last cleared.</returns>
-    private async Task<(BatchRunRecord[] Runs, DateTimeOffset? ClearedAt)> ReadMergedAsync(BatchRunRecord? addedRun = null)
+    private async Task<(BatchRunRecord[] Runs, DateTimeOffset? ClearedAt)> ReadMergedAsync(
+        BatchRunRecord? addedRun = null,
+        DateTimeOffset? addStartedAt = null)
     {
         var saved = await Task.Run(Read);
         if (saved.ClearedAt is { } clearedAt)
         {
-            _unsavedRuns.RemoveAll(run => !ReferenceEquals(run, addedRun) && run.RecordedAt <= clearedAt);
+            var addedBeforeClear = addedRun is not null && addStartedAt is { } startedAt && startedAt <= clearedAt;
+            _unsavedRuns.RemoveAll(run => ReferenceEquals(run, addedRun)
+                ? addedBeforeClear
+                : run.RecordedAt <= clearedAt);
         }
 
         return (Merge(saved.Runs!).ToArray(), saved.ClearedAt);
@@ -268,8 +288,17 @@ public partial class BatchHistoryService : IBatchHistoryService
     private async Task<int> ReadPersistedMaxRunsAsync()
     {
         var settings = await _userSettings.ReadFromDiskAsync();
+        if (settings.BatchHistory is null)
+        {
+            throw new InvalidDataException("The saved user settings have no batch history section.");
+        }
+
         var maxRuns = Math.Clamp(settings.BatchHistory.MaxRuns, BatchHistorySettings.MinMaxRuns, BatchHistorySettings.MaxMaxRuns);
-        _userSettings.Value.BatchHistory.MaxRuns = maxRuns;
+        if (_userSettings.Value.BatchHistory is { } cachedHistory)
+        {
+            cachedHistory.MaxRuns = maxRuns;
+        }
+
         return maxRuns;
     }
 
@@ -329,7 +358,7 @@ public partial class BatchHistoryService : IBatchHistoryService
         }
 
         var document = JsonSerializer.Deserialize<BatchHistoryDocument>(json, SerializerOptions);
-        if (document is null || document.Version != FormatVersion)
+        if (document is null || document.Version is not LegacyFormatVersion and not FormatVersion)
         {
             LogUnsupportedFile(document?.Version, _filePath);
             throw new InvalidDataException("Unsupported batch history format.");
@@ -352,17 +381,42 @@ public partial class BatchHistoryService : IBatchHistoryService
     /// </summary>
     /// <param name="runs">The runs as read from the file.</param>
     /// <returns>Whether the runs are complete.</returns>
-    private static bool IsComplete([NotNullWhen(true)] IReadOnlyList<BatchRunRecord>? runs) =>
-        runs is not null
-        && runs.All(run => run?.Files is not null
-            && run.Files.All(file => file?.Path is not null && Enum.IsDefined(file.Status)))
-        && runs.DistinctBy(run => run.Id).Count() == runs.Count;
+    private static bool IsComplete([NotNullWhen(true)] IReadOnlyList<BatchRunRecord>? runs)
+    {
+        if (runs is null)
+            return false;
+
+        var seenRunIds = new HashSet<Guid>();
+        foreach (var run in runs)
+        {
+            if (run is null
+                || run.Id == Guid.Empty
+                || run.RecordedAt == default
+                || run.Files is null)
+                return false;
+
+            if (!seenRunIds.Add(run.Id))
+                return false;
+
+            foreach (var file in run.Files)
+            {
+                if (file is null || file.Path is null)
+                    return false;
+
+                if (!Enum.IsDefined(file.Status))
+                    return false;
+            }
+        }
+
+        return true;
+    }
 
     private void Write(BatchRunRecord[] runs, DateTimeOffset? clearedAt)
     {
         // Write next to the file first, so a crash during the write cannot leave a truncated history.
         var temporaryPath = _filePath + ".tmp";
-        var document = new BatchHistoryDocument(FormatVersion, runs, clearedAt);
+        var version = clearedAt is null ? LegacyFormatVersion : FormatVersion;
+        var document = new BatchHistoryDocument(version, runs, clearedAt);
         File.WriteAllText(temporaryPath, JsonSerializer.Serialize(document, SerializerOptions));
         File.Move(temporaryPath, _filePath, overwrite: true);
     }

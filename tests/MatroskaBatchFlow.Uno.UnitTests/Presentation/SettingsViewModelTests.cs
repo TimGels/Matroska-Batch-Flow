@@ -46,6 +46,7 @@ public class SettingsViewModelTests
 
         _userSettingsValue = new UserSettings();
         _userSettings.Value.Returns(_userSettingsValue);
+        _userSettings.ReadFromDiskAsync().Returns(Task.FromResult(_userSettingsValue));
         _loggingOptions.Value.Returns(new LoggingOptions());
     }
 
@@ -372,29 +373,57 @@ public class SettingsViewModelTests
     }
 
     [Fact]
-    public async Task OnNavigatedTo_ShowsTheLimitReadFromAnotherInstance_WithoutSavingIt()
+    public async Task OnNavigatedTo_ShowsThePersistedLimit_WithoutSavingIt()
     {
+        var savedSettings = new UserSettings();
+        savedSettings.BatchHistory.MaxRuns = 50;
+        _userSettings.ReadFromDiskAsync().Returns(Task.FromResult(savedSettings));
         var viewModel = CreateViewModel();
-        _batchHistory.MaxRuns.Returns(50);
 
         viewModel.OnNavigatedTo(null!);
 
         Assert.Equal(50, viewModel.BatchHistoryMaxRuns);
+        Assert.Equal(50, _userSettingsValue.BatchHistory.MaxRuns);
         await _batchHistory.DidNotReceive().SetMaxRunsAsync(Arg.Any<int>(), Arg.Any<int>());
     }
 
     [Fact]
-    public void OnNavigatedTo_KeepsALimitThatWaitsForConfirmation()
+    public async Task OnNavigatedTo_KeepsALimitThatWaitsForConfirmation()
     {
         _batchHistory.SetMaxRunsAsync(7).Returns(3);
+        var savedSettings = new UserSettings();
+        savedSettings.BatchHistory.MaxRuns = 50;
+        _userSettings.ReadFromDiskAsync().Returns(Task.FromResult(savedSettings));
         var viewModel = CreateViewModel();
         viewModel.BatchHistoryMaxRuns = 7;
-        _batchHistory.MaxRuns.Returns(50);
 
         viewModel.OnNavigatedTo(null!);
 
         Assert.Equal(7, viewModel.BatchHistoryMaxRuns);
         Assert.Equal(3, viewModel.BatchHistoryRunsToRemove);
+        await _userSettings.DidNotReceive().ReadFromDiskAsync();
+    }
+
+    [Fact]
+    public async Task OnNavigatedTo_DoesNotRefreshWhileLimitSaveIsInProgress()
+    {
+        var saveStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var finishSave = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _batchHistory.SetMaxRunsAsync(22).Returns(async _ =>
+        {
+            saveStarted.TrySetResult();
+            await finishSave.Task;
+            return 0;
+        });
+        var viewModel = CreateViewModel();
+        viewModel.BatchHistoryMaxRuns = 22;
+        await saveStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        viewModel.OnNavigatedTo(null!);
+
+        Assert.Equal(22, viewModel.BatchHistoryMaxRuns);
+        await _userSettings.DidNotReceive().ReadFromDiskAsync();
+        finishSave.TrySetResult();
     }
 
     private SettingsViewModel CreateViewModel()

@@ -26,6 +26,8 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     private readonly IExternalLinkService _externalLinkService;
     private readonly IBatchHistoryService _batchHistory;
     private readonly SemaphoreSlim _historyLimitLock = new(1, 1);
+    private bool _suppressBatchHistoryLimitChanged;
+    private int _batchHistoryLimitEditVersion;
     private readonly ILogger<SettingsViewModel> _logger;
     private readonly ILogLevelService _logLevelService;
     private readonly LoggingOptions _loggingOptions;
@@ -170,21 +172,57 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     private Task OpenSupportPageAsync() => _externalLinkService.OpenAsync(ProjectLinks.SupportPage);
 
     /// <summary>
-    /// Shows the batch history limit in effect, which history operations may have read from another app instance's
-    /// settings since the page was last shown. A limit that waits for confirmation or failed to save is kept.
+    /// Refreshes the batch history limit from disk, unless the current value is being edited or saved.
     /// </summary>
     /// <param name="parameter">The navigation parameter. Not used.</param>
     public void OnNavigatedTo(object parameter)
     {
-        if (!IsBatchHistoryLimitPending && !BatchHistoryLimitSaveFailed)
-        {
-            BatchHistoryMaxRuns = _batchHistory.MaxRuns;
-        }
+        _ = RefreshBatchHistoryLimitAsync();
     }
 
     public void OnNavigatedFrom()
     {
     }
+
+    private async Task RefreshBatchHistoryLimitAsync()
+    {
+        if (!CanRefreshBatchHistoryLimit())
+            return;
+
+        var editVersion = _batchHistoryLimitEditVersion;
+        try
+        {
+            var settings = await _userSettings.ReadFromDiskAsync();
+            if (!CanRefreshBatchHistoryLimit() || editVersion != _batchHistoryLimitEditVersion)
+                return;
+
+            if (settings?.BatchHistory is null)
+                throw new InvalidDataException("The saved user settings have no batch history section.");
+
+            var maxRuns = Math.Clamp(settings.BatchHistory.MaxRuns, BatchHistoryMinRuns, BatchHistoryMaxRunsLimit);
+            _userSettings.Value.BatchHistory ??= new UserSettings.BatchHistorySettings();
+            _userSettings.Value.BatchHistory.MaxRuns = (int)maxRuns;
+
+            _suppressBatchHistoryLimitChanged = true;
+            try
+            {
+                BatchHistoryMaxRuns = maxRuns;
+            }
+            finally
+            {
+                _suppressBatchHistoryLimitChanged = false;
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException)
+        {
+            LogRefreshBatchHistoryLimitFailed(ex);
+        }
+    }
+
+    private bool CanRefreshBatchHistoryLimit() =>
+        _historyLimitLock.CurrentCount > 0
+        && !IsBatchHistoryLimitPending
+        && !BatchHistoryLimitSaveFailed;
 
     private async Task SaveSettingsAsync()
     {
@@ -329,6 +367,10 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     /// <param name="value">The new limit entered in the NumberBox.</param>
     async partial void OnBatchHistoryMaxRunsChanged(double value)
     {
+        if (_suppressBatchHistoryLimitChanged)
+            return;
+
+        _batchHistoryLimitEditVersion++;
         if (double.IsNaN(value))
         {
             BatchHistoryMaxRuns = _batchHistory.MaxRuns;

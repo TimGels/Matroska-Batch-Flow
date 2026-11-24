@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MatroskaBatchFlow.Core.Enums;
 
 namespace MatroskaBatchFlow.Uno.Models;
@@ -11,7 +12,10 @@ namespace MatroskaBatchFlow.Uno.Models;
 /// <param name="Id">The identifier of the batch.</param>
 /// <param name="RecordedAt">When the batch finished and was saved.</param>
 /// <param name="Files">The result of every file in the batch, in processing order.</param>
-public sealed partial record BatchRunRecord(Guid Id, DateTimeOffset RecordedAt, IReadOnlyList<FileRunRecord> Files)
+public sealed partial record BatchRunRecord(
+    [property: JsonRequired] Guid Id,
+    [property: JsonRequired] DateTimeOffset RecordedAt,
+    [property: JsonRequired] IReadOnlyList<FileRunRecord> Files)
 {
     /// <summary>
     /// Creates a record of a batch that finished.
@@ -38,8 +42,8 @@ public sealed partial record BatchRunRecord(Guid Id, DateTimeOffset RecordedAt, 
 /// <param name="Errors">The errors as reported by mkvpropedit or the exception.</param>
 /// <param name="Warnings">The warnings as reported by mkvpropedit.</param>
 public sealed record FileRunRecord(
-    string Path,
-    ProcessingStatus Status,
+    [property: JsonRequired] string Path,
+    [property: JsonRequired] ProcessingStatus Status,
     DateTimeOffset? StartedAt,
     DateTimeOffset? FinishedAt,
     TimeSpan? Duration,
