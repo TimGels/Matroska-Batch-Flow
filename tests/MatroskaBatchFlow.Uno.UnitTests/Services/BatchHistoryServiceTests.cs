@@ -235,6 +235,9 @@ public sealed class BatchHistoryServiceTests : IDisposable
     [InlineData("""{"Version":1,"Runs":[{"Id":"8f0c1d6e-2b1e-4a57-9a43-5d0b8e3f0a11","Files":[{"Status":"Succeeded"}]}]}""")]
     [InlineData("""{"Version":1,"Runs":[{"Id":"8f0c1d6e-2b1e-4a57-9a43-5d0b8e3f0a11","Files":[{"Path":"a.mkv","Status":99}]}]}""")]
     [InlineData("""{"Version":1,"Runs":[{"Id":"8f0c1d6e-2b1e-4a57-9a43-5d0b8e3f0a11","Files":[]},{"Id":"8f0c1d6e-2b1e-4a57-9a43-5d0b8e3f0a11","Files":[]}]}""")]
+    [InlineData("""{"Version":2,"Runs":[]}""")]
+    [InlineData("""{"Version":2,"ClearedAt":null,"Runs":[]}""")]
+    [InlineData("""{"Version":2,"ClearedAt":"0001-01-01T00:00:00+00:00","Runs":[]}""")]
     public async Task AddAsync_PreservesAnUnreadableFileUntilExplicitlyCleared(string content)
     {
         await File.WriteAllTextAsync(_filePath, content, TestContext.Current.CancellationToken);

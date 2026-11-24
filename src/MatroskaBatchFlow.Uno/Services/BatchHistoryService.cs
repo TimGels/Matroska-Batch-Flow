@@ -364,6 +364,13 @@ public partial class BatchHistoryService : IBatchHistoryService
             throw new InvalidDataException("Unsupported batch history format.");
         }
 
+        if (document.Version == FormatVersion
+            && (document.ClearedAt is null || document.ClearedAt.Value == default))
+        {
+            LogIncompleteFile(_filePath);
+            throw new InvalidDataException("The batch history file is incomplete.");
+        }
+
         if (!IsComplete(document.Runs))
         {
             LogIncompleteFile(_filePath);
