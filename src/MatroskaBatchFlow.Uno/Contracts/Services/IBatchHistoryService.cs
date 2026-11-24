@@ -23,14 +23,15 @@ public interface IBatchHistoryService
     int MaxRuns { get; }
 
     /// <summary>
-    /// Saves how many runs are kept and removes the oldest runs beyond the new limit.
+    /// Saves how many runs are kept, but only removes saved runs if the confirmed count still matches.
     /// </summary>
     /// <param name="maxRuns">The number of runs to keep. It is clamped to the allowed range.</param>
-    /// <returns>A task that completes when the setting and the history are saved.</returns>
-    Task SetMaxRunsAsync(int maxRuns);
+    /// <param name="confirmedRemovals">The number of removals the user confirmed, or zero without confirmation.</param>
+    /// <returns>Zero if applied, or the number of removals that now requires confirmation.</returns>
+    Task<int> SetMaxRunsAsync(int maxRuns, int confirmedRemovals = 0);
 
     /// <summary>
-    /// Loads the saved runs from disk. Runs added before loading finished stay on top.
+    /// Loads the saved runs from disk.
     /// </summary>
     /// <returns>A task that completes when the runs are loaded or loading failed.</returns>
     Task LoadAsync();
@@ -45,6 +46,6 @@ public interface IBatchHistoryService
     /// <summary>
     /// Removes all saved runs, including the file on disk. The media files themselves are not touched.
     /// </summary>
-    /// <returns>A task that completes when the history is removed or removing failed.</returns>
-    Task ClearAsync();
+    /// <returns>Whether the history was successfully removed.</returns>
+    Task<bool> ClearAsync();
 }

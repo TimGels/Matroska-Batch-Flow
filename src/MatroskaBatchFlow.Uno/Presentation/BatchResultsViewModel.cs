@@ -12,6 +12,7 @@ public partial class BatchResultsViewModel : ObservableObject
     private static readonly FileResultFilter[] FilterOrder =
     [
         FileResultFilter.Failed,
+        FileResultFilter.Interrupted,
         FileResultFilter.Warnings,
         FileResultFilter.Canceled,
         FileResultFilter.Updated,
@@ -19,14 +20,11 @@ public partial class BatchResultsViewModel : ObservableObject
     ];
 
     private readonly IBatchHistoryService _history;
-    private IReadOnlyList<FileResultItem> _files = Array.Empty<FileResultItem>();
-
     /// <summary>
     /// Gets the saved runs, newest first.
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasRuns))]
-    [NotifyCanExecuteChangedFor(nameof(ClearHistoryCommand))]
     public partial IReadOnlyList<BatchRunSummary> Runs { get; private set; } = Array.Empty<BatchRunSummary>();
 
     /// <summary>
@@ -39,6 +37,7 @@ public partial class BatchResultsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasNoBatch))]
     [NotifyPropertyChangedFor(nameof(HasUnchanged))]
     [NotifyPropertyChangedFor(nameof(HasCanceled))]
+    [NotifyPropertyChangedFor(nameof(HasInterrupted))]
     [NotifyPropertyChangedFor(nameof(StartedAt))]
     [NotifyPropertyChangedFor(nameof(Elapsed))]
     [NotifyPropertyChangedFor(nameof(HasTiming))]
@@ -63,6 +62,9 @@ public partial class BatchResultsViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasFiles))]
     public partial IReadOnlyList<FileResultItem> VisibleFiles { get; private set; } = Array.Empty<FileResultItem>();
+
+    [ObservableProperty]
+    public partial bool ClearHistoryFailed { get; private set; }
 
     /// <summary>
     /// Gets the number of files per result in the selected run.
@@ -90,6 +92,8 @@ public partial class BatchResultsViewModel : ObservableObject
     public bool HasUnchanged => Counts.Unchanged > 0;
 
     public bool HasCanceled => Counts.Canceled > 0;
+
+    public bool HasInterrupted => Counts.Interrupted > 0;
 
     public bool HasTiming => StartedAt.HasValue;
 
@@ -135,10 +139,6 @@ public partial class BatchResultsViewModel : ObservableObject
 
     partial void OnSelectedRunChanged(BatchRunSummary? value)
     {
-        _files = value is null
-            ? Array.Empty<FileResultItem>()
-            : value.Run.Files.Select(file => new FileResultItem(file)).OrderBy(item => item.SortRank).ToArray();
-
         var counts = Counts;
         var options = new List<FileResultFilterOption>();
         if (counts.Total > 0)
@@ -166,12 +166,17 @@ public partial class BatchResultsViewModel : ObservableObject
     /// <summary>
     /// Removes all saved runs from this device.
     /// </summary>
-    [RelayCommand(CanExecute = nameof(HasRuns))]
-    private Task ClearHistoryAsync() => _history.ClearAsync();
+    [RelayCommand]
+    private async Task ClearHistoryAsync()
+    {
+        ClearHistoryFailed = false;
+        ClearHistoryFailed = !await _history.ClearAsync();
+    }
 
     private void ApplyFilter()
     {
         var filter = SelectedFilter?.Filter ?? FileResultFilter.All;
-        VisibleFiles = filter == FileResultFilter.All ? _files : _files.Where(item => item.Matches(filter)).ToArray();
+        var files = SelectedRun?.Files ?? Array.Empty<FileResultItem>();
+        VisibleFiles = filter == FileResultFilter.All ? files : files.Where(item => item.Matches(filter)).ToArray();
     }
 }

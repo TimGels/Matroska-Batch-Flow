@@ -365,6 +365,10 @@
                     </InfoBar.Content>
                 </InfoBar>
 
+                <InfoBar x:Uid="BatchHistoryLimitSaveFailed"
+                         IsOpen="{x:Bind ViewModel.BatchHistoryLimitSaveFailed, Mode=OneWay}"
+                         Severity="Error" IsClosable="False" AutomationProperties.LiveSetting="Polite" />
+
                 <!--Logging section-->
                 <TextBlock Text="Logging"
                            Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />

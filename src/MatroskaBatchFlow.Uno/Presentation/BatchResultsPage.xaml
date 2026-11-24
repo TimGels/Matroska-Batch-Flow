@@ -28,8 +28,7 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <Button x:Uid="ResultsClearHistory" Grid.Column="2" VerticalAlignment="Center"
-                        Visibility="{x:Bind ViewModel.HasRuns, Mode=OneWay}">
+                <Button x:Uid="ResultsClearHistory" Grid.Column="2" VerticalAlignment="Center">
                     <Button.Flyout>
                         <Flyout x:Name="ClearHistoryFlyout">
                             <StackPanel Spacing="12" MaxWidth="320">
@@ -42,6 +41,10 @@
                     </Button.Flyout>
                 </Button>
             </Grid>
+
+            <InfoBar x:Uid="ResultsClearHistoryFailed"
+                     IsOpen="{x:Bind ViewModel.ClearHistoryFailed, Mode=OneWay}"
+                     Severity="Error" IsClosable="False" AutomationProperties.LiveSetting="Polite" />
 
             <!-- Before the first batch -->
             <StackPanel Spacing="12" MaxWidth="560" HorizontalAlignment="Center" Margin="0,24,0,0"
@@ -73,6 +76,8 @@
                                              Visibility="{x:Bind ViewModel.HasUnchanged, Mode=OneWay}" />
                 <Controls:SummaryTileControl MinWidth="140" Title="{x:Bind local:UiText.Get('ResultsTileCanceled')}" Value="{x:Bind ViewModel.Counts.Canceled, Mode=OneWay}"
                                              Visibility="{x:Bind ViewModel.HasCanceled, Mode=OneWay}" />
+                <Controls:SummaryTileControl MinWidth="140" Title="{x:Bind local:UiText.Get('ResultsTileInterrupted')}" Value="{x:Bind ViewModel.Counts.Interrupted, Mode=OneWay}"
+                                             Visibility="{x:Bind ViewModel.HasInterrupted, Mode=OneWay}" />
             </toolkit:WrapPanel>
 
             <!-- Files -->
@@ -104,6 +109,7 @@
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="models:FileResultItem">
                             <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                      IsExpanded="{x:Bind IsExpanded, Mode=TwoWay}"
                                       AutomationProperties.Name="{x:Bind local:ResultsText.RowName(FileName, Status)}">
                                 <Expander.Header>
                                     <Grid ColumnSpacing="12" Padding="0,8">
@@ -124,6 +130,8 @@
                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                             <FontIcon Glyph="&#xE711;" FontSize="16" Visibility="{x:Bind IsCanceled}"
                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <FontIcon Glyph="&#xE7BA;" FontSize="16" Visibility="{x:Bind IsInterrupted}"
+                                                      Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
                                         </Grid>
                                         <StackPanel Grid.Column="1" ToolTipService.ToolTip="{x:Bind FilePath}">
                                             <TextBlock Text="{x:Bind FileName}" TextTrimming="CharacterEllipsis" />

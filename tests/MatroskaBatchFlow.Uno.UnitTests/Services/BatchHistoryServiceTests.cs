@@ -80,7 +80,7 @@ public sealed class BatchHistoryServiceTests : IDisposable
             await service.AddAsync(run);
         }
 
-        await service.SetMaxRunsAsync(2);
+        Assert.Equal(0, await service.SetMaxRunsAsync(2, confirmedRemovals: 2));
 
         var restarted = CreateService();
         await restarted.LoadAsync();
@@ -119,22 +119,23 @@ public sealed class BatchHistoryServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task ClearAsync_RemovesTheFile()
+    public async Task ClearAsync_RemovesTheHistoryAndTemporaryFiles()
     {
         var service = CreateService();
         await service.AddAsync(Run(0));
-        Assert.True(File.Exists(_filePath));
+        File.Copy(_filePath, _filePath + ".tmp");
 
-        await service.ClearAsync();
+        Assert.True(await service.ClearAsync());
 
         Assert.Empty(service.Runs);
         Assert.False(File.Exists(_filePath));
+        Assert.False(File.Exists(_filePath + ".tmp"));
     }
 
     [Theory]
     [InlineData("not json")]
     [InlineData("""{"Version":99,"Runs":[]}""")]
-    public async Task LoadAsync_StartsEmpty_WhenFileCannotBeRead(string content)
+    public async Task AddAsync_PreservesAnUnreadableFileUntilExplicitlyCleared(string content)
     {
         await File.WriteAllTextAsync(_filePath, content, TestContext.Current.CancellationToken);
         var service = CreateService();
@@ -142,6 +143,56 @@ public sealed class BatchHistoryServiceTests : IDisposable
         await service.LoadAsync();
 
         Assert.Empty(service.Runs);
+        var run = Run(0);
+        await service.AddAsync(run);
+        Assert.Equal(run.Id, Assert.Single(service.Runs).Id);
+        Assert.Equal(content, await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken));
+
+        Assert.True(await service.ClearAsync());
+        Assert.False(File.Exists(_filePath));
+        await service.AddAsync(run);
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal(run.Id, Assert.Single(restarted.Runs).Id);
+    }
+
+    [Fact]
+    public async Task AddAsync_MergesConcurrentWrites_WithoutResurrectingClearedRuns()
+    {
+        var first = CreateService();
+        var second = CreateService();
+        await first.AddAsync(Run(0));
+        await second.LoadAsync();
+        Assert.True(await first.ClearAsync());
+
+        var firstRun = Run(1);
+        var secondRun = Run(2);
+        await Task.WhenAll(first.AddAsync(firstRun), second.AddAsync(secondRun));
+
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal([secondRun.Id, firstRun.Id], restarted.Runs.Select(run => run.Id));
+    }
+
+    [Fact]
+    public async Task SetMaxRunsAsync_RequiresFreshConfirmation_WhenAnotherInstanceAddsHistory()
+    {
+        var service = CreateService();
+        await service.AddAsync(Run(0));
+        await service.AddAsync(Run(1));
+        Assert.Equal(1, await service.SetMaxRunsAsync(1));
+
+        var second = CreateService();
+        await second.AddAsync(Run(2));
+
+        Assert.Equal(2, await service.SetMaxRunsAsync(1, confirmedRemovals: 1));
+        Assert.Equal(UserSettings.BatchHistorySettings.DefaultMaxRuns, service.MaxRuns);
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal(3, restarted.Runs.Count);
+
+        Assert.Equal(0, await service.SetMaxRunsAsync(1, confirmedRemovals: 2));
+        Assert.Single(service.Runs);
     }
 
     private BatchHistoryService CreateService() => new(_filePath, _userSettings, NullLogger<BatchHistoryService>.Instance);

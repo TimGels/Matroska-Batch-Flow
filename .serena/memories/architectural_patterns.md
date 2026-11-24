@@ -187,4 +187,11 @@ A running mkvpropedit is never stopped. It edits the file in place, and its prog
 - `MainViewModel` subscribes to the active `BatchExecutionReport` while processing and builds an `OperationOverlayState` (`ProcessingOverlay`); `MainPage` shows the shared `OperationOverlay` over the whole window, with Cancel bound to `CancelProcessingCommand`. `IsInteractionEnabled` disables the `NavigationView` and command bar, because arguments are built per file from the live configuration
 - `IBatchOperationGate` serializes batch processing with pipeline runs (import, removal, revalidation), which change files and track intents. `PipelineRunner` waits for the gate; `MainViewModel.ProcessBatchAsync` uses `TryEnter` and refuses to start while an import is running (it does not wait, so it never processes changes the user has not reviewed), then checks files, blocking validation errors and arguments while holding the gate. `CanProcessBatch` (Apply Changes and Show Arguments) is false while the gate is busy
 - The result dialog is sent after the overlay is hidden; a run with canceled files shows "Batch Cancelled"
+
+## Batch Results and History
+
+- `BatchHistoryService` serializes writes across instances with a persistent, empty `.lock` sidecar. Under that lock, reload and merge `BatchHistory.json` before saving, and do not overwrite unreadable or unsupported history. Explicit clear removes both the main file and `.tmp`, retaining the visible runs on deletion failure.
+- Retention edits are serialized in `SettingsViewModel`. The history service checks the confirmed removal count against disk while it holds the storage lock; an outdated confirmation never removes more results than the user saw.
+- Keep pending and running status in finished snapshots: the batch was interrupted, not canceled. A pending file was not started; an interrupted running file may have changed. Skipped only means no requested changes applied. Copying command diagnostics does not produce a shell-ready command.
+- Each `BatchRunSummary` retains the `FileResultItem` instances for that run. Use the row's observable `IsExpanded` with a two-way binding so repeater recycling does not mix up file expansion state.
 - `ITaskbarProgressService` mirrors `OverallProgress` on the taskbar button (paused while cancelling) via `ITaskbarList3` on WinAppSDK and on Skia Desktop running on Windows
