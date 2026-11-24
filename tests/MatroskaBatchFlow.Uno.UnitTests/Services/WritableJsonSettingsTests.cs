@@ -61,6 +61,50 @@ public sealed class WritableJsonSettingsTests : IDisposable
     }
 
     [Fact]
+    public async Task UpdateAsync_DoesNotPersistCacheRefreshesAlongsidePendingChanges()
+    {
+        var settings = CreateSettings();
+        await settings.UpdateAsync(value => value.UI.Theme = "System");
+        var temporaryPath = _filePath + ".tmp";
+        Directory.CreateDirectory(temporaryPath);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => settings.UpdateAsync(value => value.UI.Theme = "Dark"));
+
+        Directory.Delete(temporaryPath);
+        settings.Value.BatchHistory.MaxRuns = 50;
+        var otherInstance = CreateSettings();
+        await otherInstance.UpdateAsync(value => value.BatchHistory.MaxRuns = 100);
+
+        await settings.UpdateAsync(value => value.UI.Theme = "Dark");
+
+        var saved = await CreateSettings().ReadFromDiskAsync();
+        Assert.Equal("Dark", saved.UI.Theme);
+        Assert.Equal(100, saved.BatchHistory.MaxRuns);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_PersistsARevertedValue_WhenAnotherInstanceChangedIt()
+    {
+        var settings = CreateSettings();
+        await settings.UpdateAsync(value => value.UI.Theme = "System");
+        var temporaryPath = _filePath + ".tmp";
+        Directory.CreateDirectory(temporaryPath);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => settings.UpdateAsync(value => value.UI.Theme = "Dark"));
+
+        Directory.Delete(temporaryPath);
+        var otherInstance = CreateSettings();
+        await otherInstance.UpdateAsync(value => value.UI.Theme = "Light");
+
+        await settings.UpdateAsync(value => value.UI.Theme = "System");
+
+        var saved = await CreateSettings().ReadFromDiskAsync();
+        Assert.Equal("System", saved.UI.Theme);
+    }
+
+    [Fact]
     public async Task ReadFromDiskAsync_Throws_WhenThePathCannotBeRead()
     {
         // File.Exists reports an inaccessible path as missing, which must not be read as default settings.

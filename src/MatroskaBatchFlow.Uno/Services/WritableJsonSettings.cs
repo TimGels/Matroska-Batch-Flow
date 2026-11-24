@@ -23,7 +23,7 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
     private static readonly JsonSerializerOptions SerializerOptions = new() { WriteIndented = true };
     [SuppressMessage("Style", "IDE0044:Add readonly modifier", Justification = "Is modified in UpdateAsync method.")]
     private T _value;
-    private JsonObject? _pendingChangesBaseline;
+    private JsonObject? _pendingChanges;
 
     /// <summary>
     /// Initializes a new instance of <see cref="WritableJsonSettings{T}"/> using the specified file path.
@@ -89,6 +89,9 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
             applyChanges(_value);
             var after = JsonSerializer.SerializeToNode(_value, SerializerOptions)!.AsObject();
 
+            var pendingChanges = _pendingChanges?.DeepClone().AsObject() ?? new JsonObject();
+            CopyChanges(pendingChanges, before, after);
+
             try
             {
                 using var fileLock = await FileLock.AcquireAsync(_filePath);
@@ -99,15 +102,15 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
                 }
                 else
                 {
-                    CopyChanges(saved, _pendingChangesBaseline ?? before, after);
+                    ApplyChanges(saved, pendingChanges);
                     await WriteAsync(saved);
                 }
 
-                _pendingChangesBaseline = null;
+                _pendingChanges = null;
             }
             catch
             {
-                _pendingChangesBaseline ??= before;
+                _pendingChanges = pendingChanges;
                 throw;
             }
         }
@@ -215,11 +218,11 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
     }
 
     /// <summary>
-    /// Copies the values that differ between <paramref name="before"/> and <paramref name="after"/> into <paramref name="target"/>.
+    /// Copies the values changed by the update into the pending changes object.
     /// </summary>
-    /// <param name="target">The saved settings to update.</param>
-    /// <param name="before">The cached settings before the update.</param>
-    /// <param name="after">The cached settings after the update.</param>
+    /// <param name="target">The pending changes to update.</param>
+    /// <param name="before">The cached settings before the delegate ran.</param>
+    /// <param name="after">The cached settings after the delegate ran.</param>
     private static void CopyChanges(JsonObject target, JsonObject before, JsonObject after)
     {
         foreach (var (name, value) in after)
@@ -228,9 +231,48 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
             if (JsonNode.DeepEquals(previous, value))
                 continue;
 
-            if (value is JsonObject changed && previous is JsonObject original && target[name] is JsonObject saved)
+            if (value is JsonObject changed && previous is JsonObject original)
             {
-                CopyChanges(saved, original, changed);
+                if (target[name] is JsonObject pending)
+                {
+                    CopyChanges(pending, original, changed);
+                }
+                else if (target.ContainsKey(name))
+                {
+                    target[name] = value.DeepClone();
+                }
+                else
+                {
+                    var pendingObject = new JsonObject();
+                    CopyChanges(pendingObject, original, changed);
+                    target[name] = pendingObject;
+                }
+            }
+            else
+            {
+                target[name] = value?.DeepClone();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Applies the pending changed values over the settings read from disk.
+    /// </summary>
+    /// <param name="target">The saved settings to update.</param>
+    /// <param name="changes">The pending changes to apply.</param>
+    private static void ApplyChanges(JsonObject target, JsonObject changes)
+    {
+        foreach (var (name, value) in changes)
+        {
+            if (value is JsonObject changed)
+            {
+                if (target[name] is not JsonObject saved)
+                {
+                    saved = new JsonObject();
+                    target[name] = saved;
+                }
+
+                ApplyChanges(saved, changed);
             }
             else
             {
