@@ -23,6 +23,7 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
     private static readonly JsonSerializerOptions SerializerOptions = new() { WriteIndented = true };
     [SuppressMessage("Style", "IDE0044:Add readonly modifier", Justification = "Is modified in UpdateAsync method.")]
     private T _value;
+    private JsonObject? _pendingChangesBaseline;
 
     /// <summary>
     /// Initializes a new instance of <see cref="WritableJsonSettings{T}"/> using the specified file path.
@@ -64,7 +65,8 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
     /// </summary>
     /// <remarks>
     /// Only the values that the changes modify are written over the saved file, so values saved by another app
-    /// instance are kept. A missing or unreadable file is replaced by the current value.
+    /// instance are kept. A missing or unreadable file is replaced by the current value. If persistence fails,
+    /// the change is retained for the next update attempt.
     /// <code>
     /// await userSettingsOptions.UpdateAsync(settings =>
     /// {
@@ -87,16 +89,26 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
             applyChanges(_value);
             var after = JsonSerializer.SerializeToNode(_value, SerializerOptions)!.AsObject();
 
-            using var fileLock = await FileLock.AcquireAsync(_filePath);
-            var saved = await ReadSavedObjectAsync();
-            if (saved is null)
+            try
             {
-                await WriteAsync(after);
+                using var fileLock = await FileLock.AcquireAsync(_filePath);
+                var saved = await ReadSavedObjectAsync();
+                if (saved is null)
+                {
+                    await WriteAsync(after);
+                }
+                else
+                {
+                    CopyChanges(saved, _pendingChangesBaseline ?? before, after);
+                    await WriteAsync(saved);
+                }
+
+                _pendingChangesBaseline = null;
             }
-            else
+            catch
             {
-                CopyChanges(saved, before, after);
-                await WriteAsync(saved);
+                _pendingChangesBaseline ??= before;
+                throw;
             }
         }
         finally
