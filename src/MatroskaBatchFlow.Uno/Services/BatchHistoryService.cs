@@ -81,7 +81,7 @@ public partial class BatchHistoryService : IBatchHistoryService
                 }
                 catch
                 {
-                    _userSettings.Value.BatchHistory.MaxRuns = previousLimit;
+                    await _userSettings.DiscardPendingChanges(settings => settings.BatchHistory.MaxRuns = previousLimit);
                     throw;
                 }
             }
@@ -242,8 +242,7 @@ public partial class BatchHistoryService : IBatchHistoryService
         {
             LogLimitRestoreFailed(ex, previousLimit, failedLimit);
 
-            // The lower limit is still saved, so keep using it.
-            _userSettings.Value.BatchHistory.MaxRuns = failedLimit;
+            await _userSettings.DiscardPendingChanges(settings => settings.BatchHistory.MaxRuns = failedLimit);
         }
     }
 

@@ -26,6 +26,12 @@ public sealed class BatchHistoryServiceTests : IDisposable
                 call.Arg<Action<UserSettings>>()(_settings);
                 return Task.CompletedTask;
             });
+        _userSettings.DiscardPendingChanges(Arg.Any<Action<UserSettings>>())
+            .Returns(call =>
+            {
+                call.Arg<Action<UserSettings>>()(_settings);
+                return Task.CompletedTask;
+            });
     }
 
     public void Dispose() => Directory.Delete(_directory, recursive: true);
@@ -362,6 +368,35 @@ public sealed class BatchHistoryServiceTests : IDisposable
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.SetMaxRunsAsync(2, confirmedRemovals: 2));
 
         Assert.Equal(2, service.MaxRuns);
+        Assert.Equal(4, service.Runs.Count);
+    }
+
+    [Fact]
+    public async Task SetMaxRunsAsync_DiscardsFailedLimit_WhenAnUnrelatedSettingsUpdateFollows()
+    {
+        var settingsPath = Path.Combine(_directory, "UserSettings.json");
+        var userSettings = new WritableJsonSettings<UserSettings>(
+            NullLogger<WritableJsonSettings<UserSettings>>.Instance,
+            settingsPath);
+        await userSettings.UpdateAsync(settings => settings.BatchHistory.MaxRuns = 20);
+        var service = new BatchHistoryService(_filePath, userSettings, NullLogger<BatchHistoryService>.Instance);
+        foreach (var run in Enumerable.Range(0, 4).Select(Run))
+        {
+            await service.AddAsync(run);
+        }
+
+        var temporaryPath = settingsPath + ".tmp";
+        Directory.CreateDirectory(temporaryPath);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => service.SetMaxRunsAsync(2, confirmedRemovals: 2));
+        Assert.Equal(20, userSettings.Value.BatchHistory.MaxRuns);
+
+        Directory.Delete(temporaryPath);
+        await userSettings.UpdateAsync(settings => settings.UI.Theme = "Dark");
+
+        var savedSettings = await userSettings.ReadFromDiskAsync();
+        Assert.Equal(20, savedSettings.BatchHistory.MaxRuns);
+        Assert.Equal("Dark", savedSettings.UI.Theme);
         Assert.Equal(4, service.Runs.Count);
     }
 
