@@ -44,6 +44,23 @@ public sealed class WritableJsonSettingsTests : IDisposable
     }
 
     [Fact]
+    public async Task UpdateAsync_RetriesAChange_WhenThePreviousSaveFailed()
+    {
+        var settings = CreateSettings();
+        var temporaryPath = _filePath + ".tmp";
+        Directory.CreateDirectory(temporaryPath);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => settings.UpdateAsync(value => value.UI.Theme = "Dark"));
+
+        Directory.Delete(temporaryPath);
+        await settings.UpdateAsync(value => value.UI.Theme = "Dark");
+
+        var saved = await CreateSettings().ReadFromDiskAsync();
+        Assert.Equal("Dark", saved.UI.Theme);
+    }
+
+    [Fact]
     public async Task ReadFromDiskAsync_Throws_WhenThePathCannotBeRead()
     {
         // File.Exists reports an inaccessible path as missing, which must not be read as default settings.
