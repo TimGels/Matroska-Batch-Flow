@@ -1,5 +1,6 @@
 using System.Collections.Specialized;
 using MatroskaBatchFlow.Uno.Contracts.Services;
+using MatroskaBatchFlow.Uno.Contracts.ViewModels;
 using MatroskaBatchFlow.Uno.Models;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
@@ -7,7 +8,7 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 /// <summary>
 /// ViewModel for displaying the results of the last batch and of earlier batches in the history.
 /// </summary>
-public partial class BatchResultsViewModel : ObservableObject
+public partial class BatchResultsViewModel : ObservableObject, INavigationAware
 {
     private static readonly FileResultFilter[] FilterOrder =
     [
@@ -109,6 +110,16 @@ public partial class BatchResultsViewModel : ObservableObject
         _history = history;
         ((INotifyCollectionChanged)_history.Runs).CollectionChanged += OnHistoryChanged;
         RefreshRuns(selectNewest: true);
+    }
+
+    /// <summary>
+    /// Loads the saved runs again if loading them failed before, for example while the file was locked.
+    /// </summary>
+    /// <param name="parameter">The navigation parameter. Not used.</param>
+    public void OnNavigatedTo(object parameter) => _ = _history.LoadAsync();
+
+    public void OnNavigatedFrom()
+    {
     }
 
     private void OnHistoryChanged(object? sender, NotifyCollectionChangedEventArgs eventArgs)

@@ -120,7 +120,7 @@ public sealed class BatchHistoryServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task ClearAsync_RemovesTheHistoryAndTemporaryFiles()
+    public async Task ClearAsync_RemovesTheSavedRunsAndTemporaryFiles()
     {
         var service = CreateService();
         await service.AddAsync(Run(0));
@@ -129,13 +129,40 @@ public sealed class BatchHistoryServiceTests : IDisposable
         Assert.True(await service.ClearAsync());
 
         Assert.Empty(service.Runs);
-        Assert.False(File.Exists(_filePath));
+        Assert.DoesNotContain("0.mkv", await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken));
         Assert.False(File.Exists(_filePath + ".tmp"));
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Empty(restarted.Runs);
+    }
+
+    [Fact]
+    public async Task ClearAsync_DropsUnsavedRunsFromBeforeTheClear_InOtherInstances()
+    {
+        var first = CreateService();
+        Directory.CreateDirectory(_filePath + ".tmp");
+        await first.AddAsync(Run(0) with { RecordedAt = DateTimeOffset.UtcNow.AddMinutes(-1) });
+        Directory.Delete(_filePath + ".tmp");
+        Assert.True(await CreateService().ClearAsync());
+
+        var added = Run(1);
+        await first.AddAsync(added);
+
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal(added.Id, Assert.Single(first.Runs).Id);
+        Assert.Equal(added.Id, Assert.Single(restarted.Runs).Id);
     }
 
     [Theory]
     [InlineData("not json")]
     [InlineData("""{"Version":99,"Runs":[]}""")]
+    [InlineData("""{"Version":1}""")]
+    [InlineData("""{"Version":1,"Runs":[null]}""")]
+    [InlineData("""{"Version":1,"Runs":[{"Id":"8f0c1d6e-2b1e-4a57-9a43-5d0b8e3f0a11","Files":null}]}""")]
+    [InlineData("""{"Version":1,"Runs":[{"Id":"8f0c1d6e-2b1e-4a57-9a43-5d0b8e3f0a11","Files":[{"Status":"Succeeded"}]}]}""")]
+    [InlineData("""{"Version":1,"Runs":[{"Id":"8f0c1d6e-2b1e-4a57-9a43-5d0b8e3f0a11","Files":[{"Path":"a.mkv","Status":99}]}]}""")]
+    [InlineData("""{"Version":1,"Runs":[{"Id":"8f0c1d6e-2b1e-4a57-9a43-5d0b8e3f0a11","Files":[]},{"Id":"8f0c1d6e-2b1e-4a57-9a43-5d0b8e3f0a11","Files":[]}]}""")]
     public async Task AddAsync_PreservesAnUnreadableFileUntilExplicitlyCleared(string content)
     {
         await File.WriteAllTextAsync(_filePath, content, TestContext.Current.CancellationToken);
@@ -150,11 +177,45 @@ public sealed class BatchHistoryServiceTests : IDisposable
         Assert.Equal(content, await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken));
 
         Assert.True(await service.ClearAsync());
-        Assert.False(File.Exists(_filePath));
+        Assert.Empty(service.Runs);
         await service.AddAsync(run);
         var restarted = CreateService();
         await restarted.LoadAsync();
         Assert.Equal(run.Id, Assert.Single(restarted.Runs).Id);
+    }
+
+    [Fact]
+    public async Task LoadAsync_ShowsAllSavedRuns_WhenTheLimitCannotBeRead()
+    {
+        var service = CreateService();
+        foreach (var run in Enumerable.Range(0, 3).Select(Run))
+        {
+            await service.AddAsync(run);
+        }
+
+        _settings.BatchHistory.MaxRuns = 1;
+        _userSettings.ReadFromDiskAsync().Returns(Task.FromException<UserSettings>(new IOException("settings file is locked")));
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+
+        Assert.Equal(3, restarted.Runs.Count);
+    }
+
+    [Fact]
+    public async Task LoadAsync_TriesAgain_AfterAFailedLoad()
+    {
+        var run = Run(0);
+        await CreateService().AddAsync(run);
+        var service = CreateService();
+
+        using (new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            await service.LoadAsync();
+        }
+
+        Assert.Empty(service.Runs);
+        await service.LoadAsync();
+        Assert.Equal(run.Id, Assert.Single(service.Runs).Id);
     }
 
     [Fact]
@@ -252,6 +313,56 @@ public sealed class BatchHistoryServiceTests : IDisposable
         Assert.Equal(0, await service.SetMaxRunsAsync(2, confirmedRemovals: 2));
         Assert.Equal(2, service.MaxRuns);
         Assert.Equal(2, service.Runs.Count);
+    }
+
+    [Fact]
+    public async Task SetMaxRunsAsync_RestoresTheSavedLimit_WhenTheHistoryCannotBeTrimmed()
+    {
+        var service = CreateService();
+        foreach (var run in Enumerable.Range(0, 4).Select(Run))
+        {
+            await service.AddAsync(run);
+        }
+
+        Directory.CreateDirectory(_filePath + ".tmp");
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.SetMaxRunsAsync(2, confirmedRemovals: 2));
+
+        Assert.Equal(UserSettings.BatchHistorySettings.DefaultMaxRuns, _settings.BatchHistory.MaxRuns);
+        Assert.Equal(UserSettings.BatchHistorySettings.DefaultMaxRuns, service.MaxRuns);
+        Directory.Delete(_filePath + ".tmp");
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal(4, restarted.Runs.Count);
+    }
+
+    [Fact]
+    public async Task SetMaxRunsAsync_KeepsUsingTheSavedLowerLimit_WhenRestoringTheLimitFails()
+    {
+        var service = CreateService();
+        foreach (var run in Enumerable.Range(0, 4).Select(Run))
+        {
+            await service.AddAsync(run);
+        }
+
+        Directory.CreateDirectory(_filePath + ".tmp");
+        _userSettings.UpdateAsync(Arg.Any<Action<UserSettings>>())
+            .Returns(
+                call =>
+                {
+                    call.Arg<Action<UserSettings>>()(_settings);
+                    return Task.CompletedTask;
+                },
+                call =>
+                {
+                    call.Arg<Action<UserSettings>>()(_settings);
+                    throw new IOException("settings file is read-only");
+                });
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.SetMaxRunsAsync(2, confirmedRemovals: 2));
+
+        Assert.Equal(2, service.MaxRuns);
+        Assert.Equal(4, service.Runs.Count);
     }
 
     private BatchHistoryService CreateService() => new(_filePath, _userSettings, NullLogger<BatchHistoryService>.Instance);

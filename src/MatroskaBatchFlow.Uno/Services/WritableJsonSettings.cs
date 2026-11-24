@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Uno.Utilities;
 
@@ -9,6 +10,10 @@ namespace MatroskaBatchFlow.Uno.Services;
 /// Provides read/write access to a JSON-backed settings file for a specified type.
 /// Allows thread-safe updates and persistence of settings.
 /// </summary>
+/// <remarks>
+/// Several app instances can share the file: each update only writes the values it changes, under a lock shared
+/// with the other instances, so an instance never restores settings that another instance changed in the meantime.
+/// </remarks>
 /// <typeparam name="T">The settings type. Must be a class with a parameterless constructor.</typeparam>
 public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : class, new()
 {
@@ -58,6 +63,8 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
     /// Updates the current value by applying the specified changes and persists the updated value asynchronously.
     /// </summary>
     /// <remarks>
+    /// Only the values that the changes modify are written over the saved file, so values saved by another app
+    /// instance are kept. A missing or unreadable file is replaced by the current value.
     /// <code>
     /// await userSettingsOptions.UpdateAsync(settings =>
     /// {
@@ -76,8 +83,21 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
         await _lock.WaitAsync();
         try
         {
+            var before = JsonSerializer.SerializeToNode(_value, SerializerOptions)!.AsObject();
             applyChanges(_value);
-            await SaveAsync();
+            var after = JsonSerializer.SerializeToNode(_value, SerializerOptions)!.AsObject();
+
+            using var fileLock = await FileLock.AcquireAsync(_filePath);
+            var saved = await ReadSavedObjectAsync();
+            if (saved is null)
+            {
+                await WriteAsync(after);
+            }
+            else
+            {
+                CopyChanges(saved, before, after);
+                await WriteAsync(saved);
+            }
         }
         finally
         {
@@ -91,12 +111,17 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
         await _lock.WaitAsync();
         try
         {
-            if (!File.Exists(_filePath))
+            using var fileLock = await FileLock.AcquireAsync(_filePath);
+            string json;
+            try
+            {
+                json = await File.ReadAllTextAsync(_filePath);
+            }
+            catch (FileNotFoundException)
             {
                 return new T();
             }
 
-            var json = await File.ReadAllTextAsync(_filePath);
             return JsonSerializer.Deserialize<T>(json, SerializerOptions)
                 ?? throw new JsonException($"Settings file '{_filePath}' contains no settings object.");
         }
@@ -140,17 +165,77 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
     }
 
     /// <summary>
-    /// Saves the current settings value to the JSON file asynchronously.
+    /// Reads the saved settings as a JSON object.
     /// </summary>
-    /// <returns>A <see cref="Task"/> that represents the asynchronous save operation.</returns>
-    private async Task SaveAsync()
+    /// <returns>The saved settings, or <see langword="null"/> when the file is missing or does not contain valid settings.</returns>
+    private async Task<JsonObject?> ReadSavedObjectAsync()
     {
-        var json = JsonSerializer.Serialize(_value, SerializerOptions);
-        var directoryPath = Path.GetDirectoryName(_filePath);
-        if (!string.IsNullOrEmpty(directoryPath))
+        string json;
+        try
         {
-            Directory.CreateDirectory(directoryPath);
+            json = await File.ReadAllTextAsync(_filePath);
         }
-        await File.WriteAllTextAsync(_filePath, json);
+        catch (FileNotFoundException)
+        {
+            return null;
+        }
+
+        JsonObject? saved;
+        try
+        {
+            saved = JsonNode.Parse(json) as JsonObject;
+            if (saved?.Deserialize<T>(SerializerOptions) is null)
+            {
+                saved = null;
+            }
+        }
+        catch (JsonException)
+        {
+            saved = null;
+        }
+
+        if (saved is null)
+        {
+            LogReplacingUnreadableFile(_filePath);
+        }
+
+        return saved;
+    }
+
+    /// <summary>
+    /// Copies the values that differ between <paramref name="before"/> and <paramref name="after"/> into <paramref name="target"/>.
+    /// </summary>
+    /// <param name="target">The saved settings to update.</param>
+    /// <param name="before">The cached settings before the update.</param>
+    /// <param name="after">The cached settings after the update.</param>
+    private static void CopyChanges(JsonObject target, JsonObject before, JsonObject after)
+    {
+        foreach (var (name, value) in after)
+        {
+            var previous = before[name];
+            if (JsonNode.DeepEquals(previous, value))
+                continue;
+
+            if (value is JsonObject changed && previous is JsonObject original && target[name] is JsonObject saved)
+            {
+                CopyChanges(saved, original, changed);
+            }
+            else
+            {
+                target[name] = value?.DeepClone();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Writes the settings next to the file first and then replaces it, so a crash cannot leave a truncated file.
+    /// </summary>
+    /// <param name="settings">The settings to write.</param>
+    /// <returns>A <see cref="Task"/> that represents the asynchronous write operation.</returns>
+    private async Task WriteAsync(JsonObject settings)
+    {
+        var temporaryPath = _filePath + ".tmp";
+        await File.WriteAllTextAsync(temporaryPath, settings.ToJsonString(SerializerOptions));
+        File.Move(temporaryPath, _filePath, overwrite: true);
     }
 }

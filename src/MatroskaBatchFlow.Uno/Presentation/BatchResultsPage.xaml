@@ -14,21 +14,14 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Uid="ResultsPageTitle" FontSize="28" FontWeight="SemiBold" VerticalAlignment="Center" />
-                <ComboBox Grid.Column="1" MinWidth="280" VerticalAlignment="Center"
-                          Visibility="{x:Bind ViewModel.HasRuns, Mode=OneWay}"
-                          ItemsSource="{x:Bind ViewModel.Runs, Mode=OneWay}"
-                          SelectedItem="{x:Bind ViewModel.SelectedRun, Mode=TwoWay}"
-                          AutomationProperties.Name="{x:Bind local:UiText.Get('ResultsRunPickerName')}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="models:BatchRunSummary">
-                            <TextBlock Text="{x:Bind local:ResultsText.RunLabel(When, Counts)}" TextTrimming="CharacterEllipsis" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                <Button x:Uid="ResultsClearHistory" Grid.Column="2" VerticalAlignment="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock x:Uid="ResultsPageTitle" FontSize="28" FontWeight="SemiBold" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" />
+                <Button x:Uid="ResultsClearHistory" Grid.Column="1" VerticalAlignment="Center">
                     <Button.Flyout>
                         <Flyout x:Name="ClearHistoryFlyout">
                             <StackPanel Spacing="12" MaxWidth="320">
@@ -40,6 +33,24 @@
                         </Flyout>
                     </Button.Flyout>
                 </Button>
+
+                <!-- The run picker has its own row and narrows with the window instead of being clipped. -->
+                <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12,0,0"
+                      Visibility="{x:Bind ViewModel.HasRuns, Mode=OneWay}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MaxWidth="480" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.Runs, Mode=OneWay}"
+                              SelectedItem="{x:Bind ViewModel.SelectedRun, Mode=TwoWay}"
+                              AutomationProperties.Name="{x:Bind local:UiText.Get('ResultsRunPickerName')}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:BatchRunSummary">
+                                <TextBlock Text="{x:Bind local:ResultsText.RunLabel(When, Counts)}" TextTrimming="CharacterEllipsis" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Grid>
             </Grid>
 
             <InfoBar x:Uid="ResultsClearHistoryFailed"
