@@ -85,6 +85,27 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
         }
     }
 
+    /// <inheritdoc/>
+    public async Task<T> ReadFromDiskAsync()
+    {
+        await _lock.WaitAsync();
+        try
+        {
+            if (!File.Exists(_filePath))
+            {
+                return new T();
+            }
+
+            var json = await File.ReadAllTextAsync(_filePath);
+            return JsonSerializer.Deserialize<T>(json, SerializerOptions)
+                ?? throw new JsonException($"Settings file '{_filePath}' contains no settings object.");
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
     /// <summary>
     /// Loads the settings from the JSON file, or returns a new instance if the file does not exist or is invalid.
     /// </summary>

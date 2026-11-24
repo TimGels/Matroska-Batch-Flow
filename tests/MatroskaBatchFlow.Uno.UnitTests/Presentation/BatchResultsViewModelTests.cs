@@ -22,6 +22,7 @@ public sealed class BatchResultsViewModelTests : IDisposable
     {
         var userSettings = Substitute.For<IWritableSettings<UserSettings>>();
         userSettings.Value.Returns(new UserSettings());
+        userSettings.ReadFromDiskAsync().Returns(_ => Task.FromResult(userSettings.Value));
         _historyPath = Path.Combine(_directory, "BatchHistory.json");
         _history = new BatchHistoryService(_historyPath, userSettings, NullLogger<BatchHistoryService>.Instance);
     }
