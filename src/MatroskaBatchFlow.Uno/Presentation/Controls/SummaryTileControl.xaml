@@ -9,9 +9,7 @@
     <Border Padding="12,8"
             CornerRadius="4"
             Background="{ThemeResource SystemControlBackgroundBaseLowBrush}"
-            ToolTipService.ToolTip="{x:Bind Description, Mode=OneWay}"
-            AutomationProperties.Name="{x:Bind local:SummaryTileControl.GetAutomationName(Title, Value), Mode=OneWay}"
-            AutomationProperties.HelpText="{x:Bind Description, Mode=OneWay}">
+            ToolTipService.ToolTip="{x:Bind Description, Mode=OneWay}">
         <Grid ColumnSpacing="8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -23,7 +21,9 @@
                            Opacity="0.75" />
                 <TextBlock Text="{x:Bind Value, Mode=OneWay}"
                            FontSize="20"
-                           FontWeight="SemiBold" />
+                           FontWeight="SemiBold"
+                           AutomationProperties.Name="{x:Bind local:SummaryTileControl.GetAutomationName(Title, Value), Mode=OneWay}"
+                           AutomationProperties.HelpText="{x:Bind Description, Mode=OneWay}" />
             </StackPanel>
             <FontIcon Grid.Column="1" Glyph="&#xE946;" FontSize="12" VerticalAlignment="Top"
                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
