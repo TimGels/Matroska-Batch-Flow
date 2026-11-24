@@ -19,6 +19,7 @@ public sealed class BatchHistoryServiceTests : IDisposable
     {
         _filePath = Path.Combine(_directory, "BatchHistory.json");
         _userSettings.Value.Returns(_settings);
+        _userSettings.ReadFromDiskAsync().Returns(Task.FromResult(_settings));
         _userSettings.UpdateAsync(Arg.Any<Action<UserSettings>>())
             .Returns(call =>
             {
@@ -193,6 +194,64 @@ public sealed class BatchHistoryServiceTests : IDisposable
 
         Assert.Equal(0, await service.SetMaxRunsAsync(1, confirmedRemovals: 2));
         Assert.Single(service.Runs);
+    }
+
+    [Fact]
+    public async Task AddAsync_UsesPersistedLimitFromAnotherSettingsInstance()
+    {
+        var settingsPath = Path.Combine(_directory, "UserSettings.json");
+        var firstSettings = new WritableJsonSettings<UserSettings>(NullLogger<WritableJsonSettings<UserSettings>>.Instance, settingsPath);
+        await firstSettings.UpdateAsync(settings => settings.BatchHistory.MaxRuns = 20);
+        var secondSettings = new WritableJsonSettings<UserSettings>(NullLogger<WritableJsonSettings<UserSettings>>.Instance, settingsPath);
+        var first = new BatchHistoryService(_filePath, firstSettings, NullLogger<BatchHistoryService>.Instance);
+        var second = new BatchHistoryService(_filePath, secondSettings, NullLogger<BatchHistoryService>.Instance);
+
+        Assert.Equal(0, await first.SetMaxRunsAsync(100));
+        foreach (var run in Enumerable.Range(0, 25).Select(Run))
+        {
+            await first.AddAsync(run);
+        }
+
+        await second.AddAsync(Run(25));
+
+        var restarted = new BatchHistoryService(_filePath, firstSettings, NullLogger<BatchHistoryService>.Instance);
+        await restarted.LoadAsync();
+        Assert.Equal(26, restarted.Runs.Count);
+        Assert.Equal(100, second.MaxRuns);
+    }
+
+    [Fact]
+    public async Task SetMaxRunsAsync_RestoresCachedLimitAndHistory_WhenSettingsSaveFails()
+    {
+        var service = CreateService();
+        foreach (var run in Enumerable.Range(0, 4).Select(Run))
+        {
+            await service.AddAsync(run);
+        }
+
+        _userSettings.UpdateAsync(Arg.Any<Action<UserSettings>>())
+            .Returns(call =>
+            {
+                call.Arg<Action<UserSettings>>()(_settings);
+                throw new IOException("settings file is read-only");
+            });
+
+        await Assert.ThrowsAsync<IOException>(() => service.SetMaxRunsAsync(2, confirmedRemovals: 2));
+
+        Assert.Equal(UserSettings.BatchHistorySettings.DefaultMaxRuns, service.MaxRuns);
+        var afterFailure = CreateService();
+        await afterFailure.LoadAsync();
+        Assert.Equal(4, afterFailure.Runs.Count);
+
+        _userSettings.UpdateAsync(Arg.Any<Action<UserSettings>>())
+            .Returns(call =>
+            {
+                call.Arg<Action<UserSettings>>()(_settings);
+                return Task.CompletedTask;
+            });
+        Assert.Equal(0, await service.SetMaxRunsAsync(2, confirmedRemovals: 2));
+        Assert.Equal(2, service.MaxRuns);
+        Assert.Equal(2, service.Runs.Count);
     }
 
     private BatchHistoryService CreateService() => new(_filePath, _userSettings, NullLogger<BatchHistoryService>.Instance);

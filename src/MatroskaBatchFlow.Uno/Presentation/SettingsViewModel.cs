@@ -355,10 +355,14 @@ public partial class SettingsViewModel : ObservableObject
             if (maxRuns != BatchHistoryMaxRuns)
                 return;
 
+            if (maxRuns == _batchHistory.MaxRuns && confirmedRemovals == 0)
+            {
+                BatchHistoryRunsToRemove = 0;
+                return;
+            }
+
             BatchHistoryLimitSaveFailed = false;
-            var runsToRemove = maxRuns == _batchHistory.MaxRuns
-                ? 0
-                : await _batchHistory.SetMaxRunsAsync(maxRuns, confirmedRemovals);
+            var runsToRemove = await _batchHistory.SetMaxRunsAsync(maxRuns, confirmedRemovals);
             if (maxRuns == BatchHistoryMaxRuns)
             {
                 BatchHistoryRunsToRemove = runsToRemove;

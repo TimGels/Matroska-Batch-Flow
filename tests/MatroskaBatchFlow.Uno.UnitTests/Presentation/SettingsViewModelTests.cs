@@ -357,7 +357,7 @@ public class SettingsViewModelTests
         _batchHistory.SetMaxRunsAsync(21).Returns(_ =>
         {
             savedLimit = 21;
-            latestSaved.SetResult();
+            latestSaved.TrySetResult();
             return Task.FromResult(0);
         });
         var viewModel = CreateViewModel();

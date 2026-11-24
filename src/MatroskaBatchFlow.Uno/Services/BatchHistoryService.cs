@@ -61,17 +61,27 @@ public partial class BatchHistoryService : IBatchHistoryService
         await _fileLock.WaitAsync();
         try
         {
-            var previousLimit = _userSettings.Value.BatchHistory.MaxRuns;
-            if (maxRuns == previousLimit)
-                return 0;
-
             using var storageLock = await AcquireStorageLockAsync();
+            var previousLimit = await ReadPersistedMaxRunsAsync();
             var runs = await ReadMergedAsync();
             var removed = Math.Max(0, runs.Length - maxRuns);
             if (removed > 0 && removed != confirmedRemovals)
                 return removed;
 
             var kept = runs.Take(maxRuns).ToArray();
+            if (maxRuns != previousLimit)
+            {
+                try
+                {
+                    await _userSettings.UpdateAsync(settings => settings.BatchHistory.MaxRuns = maxRuns);
+                }
+                catch
+                {
+                    _userSettings.Value.BatchHistory.MaxRuns = previousLimit;
+                    throw;
+                }
+            }
+
             if (removed > 0)
             {
                 await Task.Run(() => Write(kept));
@@ -79,7 +89,6 @@ public partial class BatchHistoryService : IBatchHistoryService
             }
 
             ReplaceRuns(kept);
-            await _userSettings.UpdateAsync(settings => settings.BatchHistory.MaxRuns = maxRuns);
             LogLimitChanged(previousLimit, maxRuns, removed);
             return 0;
         }
@@ -104,23 +113,25 @@ public partial class BatchHistoryService : IBatchHistoryService
             try
             {
                 using var storageLock = await AcquireStorageLockAsync();
+                var maxRuns = await ReadPersistedMaxRunsAsync();
                 var runs = await ReadMergedAsync();
-                var kept = runs.Take(MaxRuns).ToArray();
+                var kept = runs.Take(maxRuns).ToArray();
                 await Task.Run(() => Write(kept));
                 _unsavedRuns.Clear();
                 ReplaceRuns(kept);
                 if (runs.Length > kept.Length)
                 {
-                    LogOldestRunsRemoved(runs.Length - kept.Length, MaxRuns);
+                    LogOldestRunsRemoved(runs.Length - kept.Length, maxRuns);
                 }
             }
             catch (Exception ex) when (IsStorageFailure(ex))
             {
                 LogSaveFailed(ex, _filePath);
-                ReplaceRuns(Merge(_runs).Take(MaxRuns).ToArray());
-                if (_unsavedRuns.Count > MaxRuns)
+                var maxRuns = MaxRuns;
+                ReplaceRuns(Merge(_runs).Take(maxRuns).ToArray());
+                if (_unsavedRuns.Count > maxRuns)
                 {
-                    _unsavedRuns.RemoveRange(MaxRuns, _unsavedRuns.Count - MaxRuns);
+                    _unsavedRuns.RemoveRange(maxRuns, _unsavedRuns.Count - maxRuns);
                 }
             }
         }
@@ -166,8 +177,9 @@ public partial class BatchHistoryService : IBatchHistoryService
         try
         {
             using var storageLock = await AcquireStorageLockAsync();
+            var maxRuns = await ReadPersistedMaxRunsAsync();
             var runs = await ReadMergedAsync();
-            ReplaceRuns(runs.Take(MaxRuns).ToArray());
+            ReplaceRuns(runs.Take(maxRuns).ToArray());
             LogLoaded(_runs.Count, _filePath);
         }
         catch (Exception ex) when (IsStorageFailure(ex))
@@ -199,6 +211,14 @@ public partial class BatchHistoryService : IBatchHistoryService
     }
 
     private async Task<BatchRunRecord[]> ReadMergedAsync() => Merge(await Task.Run(Read)).ToArray();
+
+    private async Task<int> ReadPersistedMaxRunsAsync()
+    {
+        var settings = await _userSettings.ReadFromDiskAsync();
+        var maxRuns = Math.Clamp(settings.BatchHistory.MaxRuns, BatchHistorySettings.MinMaxRuns, BatchHistorySettings.MaxMaxRuns);
+        _userSettings.Value.BatchHistory.MaxRuns = maxRuns;
+        return maxRuns;
+    }
 
     private IEnumerable<BatchRunRecord> Merge(IEnumerable<BatchRunRecord> saved) =>
         _unsavedRuns.Concat(saved).DistinctBy(run => run.Id).OrderByDescending(run => run.RecordedAt);
