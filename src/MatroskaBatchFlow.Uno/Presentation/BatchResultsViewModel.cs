@@ -35,9 +35,6 @@ public partial class BatchResultsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(Outcome))]
     [NotifyPropertyChangedFor(nameof(HasBatch))]
     [NotifyPropertyChangedFor(nameof(HasNoBatch))]
-    [NotifyPropertyChangedFor(nameof(HasUnchanged))]
-    [NotifyPropertyChangedFor(nameof(HasCanceled))]
-    [NotifyPropertyChangedFor(nameof(HasInterrupted))]
     [NotifyPropertyChangedFor(nameof(StartedAt))]
     [NotifyPropertyChangedFor(nameof(Elapsed))]
     [NotifyPropertyChangedFor(nameof(HasTiming))]
@@ -88,12 +85,6 @@ public partial class BatchResultsViewModel : ObservableObject
     public bool HasBatch => Outcome != BatchOutcome.None;
 
     public bool HasNoBatch => Outcome == BatchOutcome.None;
-
-    public bool HasUnchanged => Counts.Unchanged > 0;
-
-    public bool HasCanceled => Counts.Canceled > 0;
-
-    public bool HasInterrupted => Counts.Interrupted > 0;
 
     public bool HasTiming => StartedAt.HasValue;
 

@@ -68,16 +68,20 @@
 
             <!-- Summary tiles -->
             <toolkit:WrapPanel HorizontalSpacing="8" VerticalSpacing="8" Visibility="{x:Bind ViewModel.HasBatch, Mode=OneWay}">
-                <Controls:SummaryTileControl MinWidth="140" Title="{x:Bind local:UiText.Get('ResultsTileFiles')}" Value="{x:Bind ViewModel.Counts.Total, Mode=OneWay}" />
-                <Controls:SummaryTileControl MinWidth="140" Title="{x:Bind local:UiText.Get('ResultsTileUpdated')}" Value="{x:Bind ViewModel.Counts.Updated, Mode=OneWay}" />
-                <Controls:SummaryTileControl MinWidth="140" Title="{x:Bind local:UiText.Get('ResultsTileWarnings')}" Value="{x:Bind ViewModel.Counts.Warnings, Mode=OneWay}" />
-                <Controls:SummaryTileControl MinWidth="140" Title="{x:Bind local:UiText.Get('ResultsTileFailed')}" Value="{x:Bind ViewModel.Counts.Failed, Mode=OneWay}" />
+                <Controls:SummaryTileControl MinWidth="140" Title="{x:Bind local:UiText.Get('ResultsTileFiles')}" Value="{x:Bind ViewModel.Counts.Total, Mode=OneWay}"
+                                             Description="{x:Bind local:UiText.Get('ResultsTileFilesDescription')}" />
+                <Controls:SummaryTileControl MinWidth="140" Title="{x:Bind local:UiText.Get('ResultsTileUpdated')}" Value="{x:Bind ViewModel.Counts.Updated, Mode=OneWay}"
+                                             Description="{x:Bind local:UiText.Get('ResultsTileUpdatedDescription')}" />
+                <Controls:SummaryTileControl MinWidth="140" Title="{x:Bind local:UiText.Get('ResultsTileWarnings')}" Value="{x:Bind ViewModel.Counts.Warnings, Mode=OneWay}"
+                                             Description="{x:Bind local:UiText.Get('ResultsTileWarningsDescription')}" />
+                <Controls:SummaryTileControl MinWidth="140" Title="{x:Bind local:UiText.Get('ResultsTileFailed')}" Value="{x:Bind ViewModel.Counts.Failed, Mode=OneWay}"
+                                             Description="{x:Bind local:UiText.Get('ResultsTileFailedDescription')}" />
                 <Controls:SummaryTileControl MinWidth="140" Title="{x:Bind local:UiText.Get('ResultsTileUnchanged')}" Value="{x:Bind ViewModel.Counts.Unchanged, Mode=OneWay}"
-                                             Visibility="{x:Bind ViewModel.HasUnchanged, Mode=OneWay}" />
+                                             Description="{x:Bind local:UiText.Get('ResultsTileUnchangedDescription')}" />
                 <Controls:SummaryTileControl MinWidth="140" Title="{x:Bind local:UiText.Get('ResultsTileCanceled')}" Value="{x:Bind ViewModel.Counts.Canceled, Mode=OneWay}"
-                                             Visibility="{x:Bind ViewModel.HasCanceled, Mode=OneWay}" />
+                                             Description="{x:Bind local:UiText.Get('ResultsTileCanceledDescription')}" />
                 <Controls:SummaryTileControl MinWidth="140" Title="{x:Bind local:UiText.Get('ResultsTileInterrupted')}" Value="{x:Bind ViewModel.Counts.Interrupted, Mode=OneWay}"
-                                             Visibility="{x:Bind ViewModel.HasInterrupted, Mode=OneWay}" />
+                                             Description="{x:Bind local:UiText.Get('ResultsTileInterruptedDescription')}" />
             </toolkit:WrapPanel>
 
             <!-- Files -->

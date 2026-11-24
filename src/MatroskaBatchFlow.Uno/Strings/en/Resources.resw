@@ -351,6 +351,14 @@
   <data name="ResultsTileUnchanged" xml:space="preserve"><value>No applicable changes</value></data>
   <data name="ResultsTileCanceled" xml:space="preserve"><value>Not processed</value></data>
   <data name="ResultsTileInterrupted" xml:space="preserve"><value>Interrupted</value></data>
+  <data name="ResultsTileFilesDescription" xml:space="preserve"><value>All files in this batch, including files that were not changed or processed.</value></data>
+  <data name="ResultsTileUpdatedDescription" xml:space="preserve"><value>Files that mkvpropedit updated successfully, including files with warnings.</value></data>
+  <data name="ResultsTileWarningsDescription" xml:space="preserve"><value>Files that mkvpropedit updated with one or more warnings. These files are also counted under Updated.</value></data>
+  <data name="ResultsTileFailedDescription" xml:space="preserve"><value>Files that could not be updated because an error occurred.</value></data>
+  <data name="ResultsTileUnchangedDescription" xml:space="preserve"><value>Files with no applicable edits. For example, a file may already have the requested value or may not have the selected track.</value></data>
+  <data name="ResultsTileCanceledDescription" xml:space="preserve"><value>Files left unchanged because you canceled the batch before their edits started.</value></data>
+  <data name="ResultsTileInterruptedDescription" xml:space="preserve"><value>Files without a final result because the batch stopped unexpectedly. A file may have changed if its edit had already started.</value></data>
+  <data name="ResultsTileAutomationName" xml:space="preserve"><value>{0}: {1}</value><comment>Accessible name of a summary tile. {0}: counter label; {1}: number of files.</comment></data>
   <data name="ResultsSucceededTitle" xml:space="preserve"><value>Batch completed</value></data>
   <data name="ResultsSucceededAllSingle" xml:space="preserve"><value>The file was updated.</value></data>
   <data name="ResultsSucceededAllMultiple" xml:space="preserve"><value>All {0} files were updated.</value></data>
