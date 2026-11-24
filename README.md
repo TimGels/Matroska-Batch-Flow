@@ -118,7 +118,7 @@ These prerequisites are required to build the project:
 
 | Recommended | Notes |
 | ------------- | ------- |
-| **[Visual Studio 2022 or later](https://visualstudio.microsoft.com/)** | Recommended IDE for development |
+| **[Visual Studio 2026 version 18.0 or later](https://visualstudio.microsoft.com/)** | Minimum version for .NET 10 development in Visual Studio |
 | **[Uno Platform Extension for Visual Studio](https://platform.uno/docs/articles/getting-started/installation.html)** | Helps with Uno Platform development |
 
 ### Installation
