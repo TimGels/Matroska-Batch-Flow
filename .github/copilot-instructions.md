@@ -168,7 +168,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 
 ### Settings and Configuration
 - `appsettings.json` for app configuration with DataAnnotations validation via `ConfigurationValidator`
-- User settings persisted via `WritableJsonSettings<T>` (writes to local app data as `UserSettings.json`). `UpdateAsync` runs its delegate once and writes only the values it changed over the saved file, under a `.lock` sidecar, so app instances keep each other's settings; a missing or unreadable file is replaced. If persistence fails, only delegate changes remain pending for retry; unrelated cache refreshes are not written. Make every change inside the delegate. `ReadFromDiskAsync` returns defaults only for a missing file and throws when the file cannot be read
+- User settings persisted via `WritableJsonSettings<T>` (writes to local app data as `UserSettings.json`). `UpdateAsync` runs its delegate once and writes only the values it changed over the saved file, under a `.lock` sidecar, so app instances keep each other's settings; a missing or unreadable file is replaced. If persistence fails, only delegate changes remain pending for retry; unrelated cache refreshes are not written. If an operation abandons a failed update, use `DiscardPendingChanges` to restore the cache and remove those pending values. Make every change inside the delegate. `ReadFromDiskAsync` returns defaults only for a missing file and throws when the file cannot be read
 - Settings/configuration models use `sealed class` with mutable properties for JSON serialization
 - Use `record` types for immutable data transfer objects (e.g., `MatroskaLanguageOption`)
 - Configuration validation failures show custom error window before app launch

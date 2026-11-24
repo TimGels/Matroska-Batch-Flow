@@ -121,6 +121,28 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
     }
 
     /// <inheritdoc/>
+    public async Task DiscardPendingChanges(Action<T> restoreChanges)
+    {
+        await _lock.WaitAsync();
+        try
+        {
+            var before = JsonSerializer.SerializeToNode(_value, SerializerOptions)!.AsObject();
+            restoreChanges(_value);
+            var after = JsonSerializer.SerializeToNode(_value, SerializerOptions)!.AsObject();
+            if (_pendingChanges is null)
+                return;
+
+            var pendingChanges = _pendingChanges.DeepClone().AsObject();
+            RemoveChanges(pendingChanges, before, after);
+            _pendingChanges = pendingChanges.Count == 0 ? null : pendingChanges;
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    /// <inheritdoc/>
     public async Task<T> ReadFromDiskAsync()
     {
         await _lock.WaitAsync();
@@ -251,6 +273,35 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
             else
             {
                 target[name] = value?.DeepClone();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Removes pending values changed by <paramref name="after"/> from the pending changes object.
+    /// </summary>
+    /// <param name="target">The pending changes to update.</param>
+    /// <param name="before">The cached settings before the rollback.</param>
+    /// <param name="after">The cached settings after the rollback.</param>
+    private static void RemoveChanges(JsonObject target, JsonObject before, JsonObject after)
+    {
+        foreach (var (name, value) in after)
+        {
+            var previous = before[name];
+            if (JsonNode.DeepEquals(previous, value))
+                continue;
+
+            if (previous is JsonObject original && value is JsonObject changed && target[name] is JsonObject pending)
+            {
+                RemoveChanges(pending, original, changed);
+                if (pending.Count == 0)
+                {
+                    target.Remove(name);
+                }
+            }
+            else
+            {
+                target.Remove(name);
             }
         }
     }
