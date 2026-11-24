@@ -4,13 +4,14 @@ using MatroskaBatchFlow.Core.Services;
 using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Core.Utilities;
 using MatroskaBatchFlow.Uno.Contracts.Services;
+using MatroskaBatchFlow.Uno.Contracts.ViewModels;
 using MatroskaBatchFlow.Uno.Enums;
 using MatroskaBatchFlow.Uno.Helpers;
 using MatroskaBatchFlow.Uno.Utilities;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
 
-public partial class SettingsViewModel : ObservableObject
+public partial class SettingsViewModel : ObservableObject, INavigationAware
 {
     /// <summary>
     /// The navigation parameter that opens the Settings page at the Batch Validation section.
@@ -167,6 +168,23 @@ public partial class SettingsViewModel : ObservableObject
     /// <returns>A task that completes when the browser has been asked to open the page.</returns>
     [RelayCommand]
     private Task OpenSupportPageAsync() => _externalLinkService.OpenAsync(ProjectLinks.SupportPage);
+
+    /// <summary>
+    /// Shows the batch history limit in effect, which history operations may have read from another app instance's
+    /// settings since the page was last shown. A limit that waits for confirmation or failed to save is kept.
+    /// </summary>
+    /// <param name="parameter">The navigation parameter. Not used.</param>
+    public void OnNavigatedTo(object parameter)
+    {
+        if (!IsBatchHistoryLimitPending && !BatchHistoryLimitSaveFailed)
+        {
+            BatchHistoryMaxRuns = _batchHistory.MaxRuns;
+        }
+    }
+
+    public void OnNavigatedFrom()
+    {
+    }
 
     private async Task SaveSettingsAsync()
     {

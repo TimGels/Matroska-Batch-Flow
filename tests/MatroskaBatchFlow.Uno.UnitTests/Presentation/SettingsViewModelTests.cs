@@ -371,6 +371,32 @@ public class SettingsViewModelTests
         Assert.Equal(savedLimit, viewModel.BatchHistoryMaxRuns);
     }
 
+    [Fact]
+    public async Task OnNavigatedTo_ShowsTheLimitReadFromAnotherInstance_WithoutSavingIt()
+    {
+        var viewModel = CreateViewModel();
+        _batchHistory.MaxRuns.Returns(50);
+
+        viewModel.OnNavigatedTo(null!);
+
+        Assert.Equal(50, viewModel.BatchHistoryMaxRuns);
+        await _batchHistory.DidNotReceive().SetMaxRunsAsync(Arg.Any<int>(), Arg.Any<int>());
+    }
+
+    [Fact]
+    public void OnNavigatedTo_KeepsALimitThatWaitsForConfirmation()
+    {
+        _batchHistory.SetMaxRunsAsync(7).Returns(3);
+        var viewModel = CreateViewModel();
+        viewModel.BatchHistoryMaxRuns = 7;
+        _batchHistory.MaxRuns.Returns(50);
+
+        viewModel.OnNavigatedTo(null!);
+
+        Assert.Equal(7, viewModel.BatchHistoryMaxRuns);
+        Assert.Equal(3, viewModel.BatchHistoryRunsToRemove);
+    }
+
     private SettingsViewModel CreateViewModel()
     {
         return new SettingsViewModel(

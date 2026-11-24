@@ -19,4 +19,7 @@ public partial class WritableJsonSettings<T>
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Failed to load settings from {FilePath}, using defaults")]
     private partial void LogSettingsLoadFailed(Exception ex, string filePath);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Replacing unreadable settings file {FilePath} with the current settings")]
+    private partial void LogReplacingUnreadableFile(string filePath);
 }

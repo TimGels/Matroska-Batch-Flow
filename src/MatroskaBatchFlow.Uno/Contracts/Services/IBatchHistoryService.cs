@@ -31,7 +31,7 @@ public interface IBatchHistoryService
     Task<int> SetMaxRunsAsync(int maxRuns, int confirmedRemovals = 0);
 
     /// <summary>
-    /// Loads the saved runs from disk.
+    /// Loads the saved runs from disk. After a failed load, the next call tries again.
     /// </summary>
     /// <returns>A task that completes when the runs are loaded or loading failed.</returns>
     Task LoadAsync();
@@ -44,8 +44,12 @@ public interface IBatchHistoryService
     Task AddAsync(BatchRunRecord run);
 
     /// <summary>
-    /// Removes all saved runs, including the file on disk. The media files themselves are not touched.
+    /// Removes all saved runs from this device. The media files themselves are not touched.
     /// </summary>
+    /// <remarks>
+    /// The history file is kept without runs, but with the time it was cleared, so other app instances do not save
+    /// their earlier runs again.
+    /// </remarks>
     /// <returns>Whether the history was successfully removed.</returns>
     Task<bool> ClearAsync();
 }
