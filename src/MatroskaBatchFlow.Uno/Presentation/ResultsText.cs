@@ -25,6 +25,7 @@ public static class ResultsText
         BatchOutcome.Warnings => Get("ResultsWarningsTitle"),
         BatchOutcome.Failures => Counted("ResultsFailuresTitle", counts.Failed),
         BatchOutcome.Canceled => Get("ResultsCanceledTitle"),
+        BatchOutcome.Interrupted => Get("ResultsInterruptedTitle"),
         _ => throw new ArgumentOutOfRangeException(nameof(counts), counts.Outcome, "Unknown batch outcome.")
     };
 
@@ -42,6 +43,7 @@ public static class ResultsText
         BatchOutcome.Warnings => Counted("ResultsWarningsMessage", counts.Warnings),
         BatchOutcome.Failures => Counted("ResultsFailuresMessage", counts.Failed),
         BatchOutcome.Canceled => Counted("ResultsCanceledMessage", counts.Canceled),
+        BatchOutcome.Interrupted => Counted("ResultsInterruptedMessage", counts.Interrupted),
         _ => throw new ArgumentOutOfRangeException(nameof(counts), counts.Outcome, "Unknown batch outcome.")
     };
 
@@ -99,14 +101,16 @@ public static class ResultsText
     };
 
     /// <summary>
-    /// Gets why mkvpropedit did not run for a file.
+    /// Gets why processing was skipped or did not finish.
     /// </summary>
     /// <param name="status">The processing status of the file.</param>
-    /// <returns>The explanation for a file without changes or a canceled file; otherwise, an empty string.</returns>
+    /// <returns>The explanation for a skipped, canceled or interrupted file; otherwise, an empty string.</returns>
     public static string Note(ProcessingStatus status) => status switch
     {
         ProcessingStatus.Skipped => Get("ResultsNoteUnchanged"),
         ProcessingStatus.Canceled => Get("ResultsNoteCanceled"),
+        ProcessingStatus.Pending => Get("ResultsNotePending"),
+        ProcessingStatus.Running => Get("ResultsNoteRunning"),
         _ => string.Empty
     };
 
@@ -133,6 +137,7 @@ public static class ResultsText
         FileResultFilter.Updated => Format("ResultsFilterUpdated", count),
         FileResultFilter.Unchanged => Format("ResultsFilterUnchanged", count),
         FileResultFilter.Canceled => Format("ResultsFilterCanceled", count),
+        FileResultFilter.Interrupted => Format("ResultsFilterInterrupted", count),
         _ => throw new ArgumentOutOfRangeException(nameof(filter), filter, "Unknown file result filter.")
     };
 }

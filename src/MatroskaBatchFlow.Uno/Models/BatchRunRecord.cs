@@ -30,11 +30,11 @@ public sealed partial record BatchRunRecord(Guid Id, DateTimeOffset RecordedAt, 
 /// The saved result of one file in a batch.
 /// </summary>
 /// <param name="Path">The full path of the file.</param>
-/// <param name="Status">The final processing status.</param>
+/// <param name="Status">The processing status when the batch ended.</param>
 /// <param name="StartedAt">When processing the file started, or <see langword="null"/> when it was not started.</param>
 /// <param name="FinishedAt">When processing the file finished, or <see langword="null"/> when it was not started.</param>
 /// <param name="Duration">How long processing the file took, or <see langword="null"/> when it was not started.</param>
-/// <param name="Command">The mkvpropedit command line that ran, or <see langword="null"/> when mkvpropedit did not run.</param>
+/// <param name="Command">The display-only mkvpropedit command line, if available.</param>
 /// <param name="Errors">The errors as reported by mkvpropedit or the exception.</param>
 /// <param name="Warnings">The warnings as reported by mkvpropedit.</param>
 public sealed record FileRunRecord(
@@ -51,8 +51,7 @@ public sealed record FileRunRecord(
     /// Creates a record of a file's processing report.
     /// </summary>
     /// <remarks>
-    /// A file that is still waiting or running when the batch ends, which only happens after an unexpected error,
-    /// is recorded as not processed.
+    /// Pending and running statuses are retained so interrupted processing is distinguishable from cancellation.
     /// </remarks>
     /// <param name="report">The processing report.</param>
     /// <returns>The record.</returns>
@@ -60,13 +59,9 @@ public sealed record FileRunRecord(
     {
         ArgumentNullException.ThrowIfNull(report);
 
-        var status = report.Status is ProcessingStatus.Pending or ProcessingStatus.Running
-            ? ProcessingStatus.Canceled
-            : report.Status;
-
         return new FileRunRecord(
             report.Path,
-            status,
+            report.Status,
             report.StartedAt,
             report.FinishedAt,
             report.Duration,
@@ -81,6 +76,8 @@ public sealed record FileRunRecord(
 /// </summary>
 public sealed class BatchRunSummary
 {
+    private IReadOnlyList<FileResultItem>? _files;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BatchRunSummary"/> class.
     /// </summary>
@@ -111,6 +108,12 @@ public sealed class BatchRunSummary
     /// Gets the saved run.
     /// </summary>
     public BatchRunRecord Run { get; }
+
+    /// <summary>
+    /// Gets the rows for this run, with their expansion state retained while switching runs.
+    /// </summary>
+    public IReadOnlyList<FileResultItem> Files =>
+        _files ??= Run.Files.Select(file => new FileResultItem(file)).OrderBy(item => item.SortRank).ToArray();
 
     /// <summary>
     /// Gets the number of files per result.

@@ -24,6 +24,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IUIPreferencesService _uiPreferences;
     private readonly IExternalLinkService _externalLinkService;
     private readonly IBatchHistoryService _batchHistory;
+    private readonly SemaphoreSlim _historyLimitLock = new(1, 1);
     private readonly ILogger<SettingsViewModel> _logger;
     private readonly ILogLevelService _logLevelService;
     private readonly LoggingOptions _loggingOptions;
@@ -87,6 +88,9 @@ public partial class SettingsViewModel : ObservableObject
     public partial int BatchHistoryRunsToRemove { get; private set; }
 
     public bool IsBatchHistoryLimitPending => BatchHistoryRunsToRemove > 0;
+
+    [ObservableProperty]
+    public partial bool BatchHistoryLimitSaveFailed { get; private set; }
 
     public double BatchHistoryMinRuns => UserSettings.BatchHistorySettings.MinMaxRuns;
 
@@ -320,23 +324,8 @@ public partial class SettingsViewModel : ObservableObject
             return;
         }
 
-        if (maxRuns == _batchHistory.MaxRuns)
-        {
-            BatchHistoryRunsToRemove = 0;
-            return;
-        }
-
-        // Count the saved runs only once they are loaded, otherwise the warning could be skipped.
-        await _batchHistory.LoadAsync();
-        if (maxRuns != BatchHistoryMaxRuns)
-            return;
-
-        var runsToRemove = Math.Max(0, _batchHistory.Runs.Count - maxRuns);
-        BatchHistoryRunsToRemove = runsToRemove;
-        if (runsToRemove == 0)
-        {
-            await SaveBatchHistoryLimitAsync(maxRuns);
-        }
+        BatchHistoryRunsToRemove = 0;
+        await SaveBatchHistoryLimitAsync(maxRuns, confirmedRemovals: 0);
     }
 
     /// <summary>
@@ -344,11 +333,9 @@ public partial class SettingsViewModel : ObservableObject
     /// </summary>
     /// <returns>A task that completes when the limit and the history are saved.</returns>
     [RelayCommand]
-    private Task ConfirmBatchHistoryLimitAsync()
-    {
-        BatchHistoryRunsToRemove = 0;
-        return SaveBatchHistoryLimitAsync((int)BatchHistoryMaxRuns);
-    }
+    private Task ConfirmBatchHistoryLimitAsync() => BatchHistoryRunsToRemove > 0
+        ? SaveBatchHistoryLimitAsync((int)BatchHistoryMaxRuns, BatchHistoryRunsToRemove)
+        : Task.CompletedTask;
 
     /// <summary>
     /// Discards the pending lower limit and keeps all saved results.
@@ -360,15 +347,34 @@ public partial class SettingsViewModel : ObservableObject
         BatchHistoryMaxRuns = _batchHistory.MaxRuns;
     }
 
-    private async Task SaveBatchHistoryLimitAsync(int maxRuns)
+    private async Task SaveBatchHistoryLimitAsync(int maxRuns, int confirmedRemovals)
     {
+        await _historyLimitLock.WaitAsync();
         try
         {
-            await _batchHistory.SetMaxRunsAsync(maxRuns);
+            if (maxRuns != BatchHistoryMaxRuns)
+                return;
+
+            BatchHistoryLimitSaveFailed = false;
+            var runsToRemove = maxRuns == _batchHistory.MaxRuns
+                ? 0
+                : await _batchHistory.SetMaxRunsAsync(maxRuns, confirmedRemovals);
+            if (maxRuns == BatchHistoryMaxRuns)
+            {
+                BatchHistoryRunsToRemove = runsToRemove;
+            }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException)
         {
             LogSaveBatchHistoryLimitFailed(maxRuns, ex);
+            if (maxRuns == BatchHistoryMaxRuns)
+            {
+                BatchHistoryLimitSaveFailed = true;
+            }
+        }
+        finally
+        {
+            _historyLimitLock.Release();
         }
     }
 

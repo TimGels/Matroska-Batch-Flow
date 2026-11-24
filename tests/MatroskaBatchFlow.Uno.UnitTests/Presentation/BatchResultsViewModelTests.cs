@@ -1,6 +1,7 @@
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Core.UnitTests.Builders;
 using MatroskaBatchFlow.Uno.Models;
 using MatroskaBatchFlow.Uno.Presentation;
 using MatroskaBatchFlow.Uno.Services;
@@ -14,13 +15,15 @@ public sealed class BatchResultsViewModelTests : IDisposable
     private static readonly DateTimeOffset Start = new(2026, 11, 23, 19, 0, 0, TimeSpan.Zero);
 
     private readonly string _directory = Directory.CreateTempSubdirectory("mbf-results-").FullName;
+    private readonly string _historyPath;
     private readonly BatchHistoryService _history;
 
     public BatchResultsViewModelTests()
     {
         var userSettings = Substitute.For<IWritableSettings<UserSettings>>();
         userSettings.Value.Returns(new UserSettings());
-        _history = new BatchHistoryService(Path.Combine(_directory, "BatchHistory.json"), userSettings, NullLogger<BatchHistoryService>.Instance);
+        _historyPath = Path.Combine(_directory, "BatchHistory.json");
+        _history = new BatchHistoryService(_historyPath, userSettings, NullLogger<BatchHistoryService>.Instance);
     }
 
     public void Dispose() => Directory.Delete(_directory, recursive: true);
@@ -40,7 +43,7 @@ public sealed class BatchResultsViewModelTests : IDisposable
 
         Assert.True(viewModel.HasRuns);
         Assert.Equal(BatchOutcome.Failures, viewModel.Outcome);
-        Assert.Equal(new BatchResultCounts(4, 2, 1, 1, 1, 0), viewModel.Counts);
+        Assert.Equal(new BatchResultCounts(4, 2, 1, 1, 1, 0, 0), viewModel.Counts);
         Assert.Equal(["failed.mkv", "warned.mkv", "updated.mkv", "unchanged.mkv"], viewModel.VisibleFiles.Select(f => f.FileName));
         Assert.Equal(
             [FileResultFilter.All, FileResultFilter.Failed, FileResultFilter.Warnings, FileResultFilter.Updated, FileResultFilter.Unchanged],
@@ -93,7 +96,68 @@ public sealed class BatchResultsViewModelTests : IDisposable
         Assert.Null(viewModel.SelectedRun);
         Assert.True(viewModel.HasNoBatch);
         Assert.Empty(viewModel.VisibleFiles);
-        Assert.False(viewModel.ClearHistoryCommand.CanExecute(null));
+        Assert.False(viewModel.ClearHistoryFailed);
+    }
+
+    [Fact]
+    public async Task ClearHistory_WhenDeletionFails_KeepsTheRunsAndShowsAnErrorUntilRetry()
+    {
+        await _history.AddAsync(Run(File("file.mkv", ProcessingStatus.Succeeded)));
+        var viewModel = new BatchResultsViewModel(_history);
+        // A directory at the temporary file path makes deletion fail on both Windows and Unix.
+        var blockedPath = Directory.CreateDirectory(_historyPath + ".tmp");
+
+        await viewModel.ClearHistoryCommand.ExecuteAsync(null);
+
+        Assert.True(viewModel.ClearHistoryFailed);
+        Assert.Single(viewModel.Runs);
+        Assert.True(System.IO.File.Exists(_historyPath));
+
+        blockedPath.Delete();
+        await viewModel.ClearHistoryCommand.ExecuteAsync(null);
+
+        Assert.False(viewModel.ClearHistoryFailed);
+        Assert.Empty(viewModel.Runs);
+    }
+
+    [Fact]
+    public async Task FileExpansion_StaysWithItsRowAcrossFiltersAndRunSelection()
+    {
+        await _history.AddAsync(Run(File("old.mkv", ProcessingStatus.Succeeded)));
+        await _history.AddAsync(Run(File("ok.mkv", ProcessingStatus.Succeeded), File("bad.mkv", ProcessingStatus.Failed)));
+        var viewModel = new BatchResultsViewModel(_history);
+        var originalRun = viewModel.SelectedRun;
+        var expanded = viewModel.VisibleFiles.First();
+        Assert.Equal("bad.mkv", expanded.FileName);
+        expanded.IsExpanded = true;
+
+        viewModel.SelectedFilter = viewModel.FilterOptions.Single(o => o.Filter == FileResultFilter.Updated);
+        Assert.False(Assert.Single(viewModel.VisibleFiles).IsExpanded);
+        viewModel.SelectedRun = viewModel.Runs[1];
+        Assert.False(Assert.Single(viewModel.VisibleFiles).IsExpanded);
+        viewModel.SelectedRun = originalRun;
+        viewModel.SelectedFilter = viewModel.FilterOptions.Single(o => o.Filter == FileResultFilter.Failed);
+
+        Assert.Same(expanded, Assert.Single(viewModel.VisibleFiles));
+        Assert.True(expanded.IsExpanded);
+    }
+
+    [Fact]
+    public async Task InterruptedReports_AreNotShownAsCanceled()
+    {
+        var source = new ScannedFileInfo(new MediaInfoResultBuilder().Build(), "file.mkv");
+        var pending = FileRunRecord.From(new FileProcessingReport { SourceFile = source, Status = ProcessingStatus.Pending });
+        var running = FileRunRecord.From(new FileProcessingReport { SourceFile = source, Status = ProcessingStatus.Running });
+        await _history.AddAsync(Run(pending, running, File("canceled.mkv", ProcessingStatus.Canceled)));
+        var viewModel = new BatchResultsViewModel(_history);
+
+        Assert.Equal(ProcessingStatus.Pending, pending.Status);
+        Assert.Equal(ProcessingStatus.Running, running.Status);
+        Assert.Equal(BatchOutcome.Interrupted, viewModel.Outcome);
+        Assert.Equal(1, viewModel.Counts.Canceled);
+        viewModel.SelectedFilter = viewModel.FilterOptions.Single(o => o.Filter == FileResultFilter.Interrupted);
+        Assert.Equal(2, viewModel.VisibleFiles.Count);
+        Assert.All(viewModel.VisibleFiles, row => Assert.True(row.HasNote));
     }
 
     [Fact]

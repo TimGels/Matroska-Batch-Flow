@@ -26,7 +26,7 @@ public sealed partial class BatchResultsPage : Page
     {
         BatchOutcome.Succeeded => InfoBarSeverity.Success,
         BatchOutcome.Warnings or BatchOutcome.Canceled => InfoBarSeverity.Warning,
-        BatchOutcome.Failures => InfoBarSeverity.Error,
+        BatchOutcome.Failures or BatchOutcome.Interrupted => InfoBarSeverity.Error,
         _ => InfoBarSeverity.Informational
     };
 
