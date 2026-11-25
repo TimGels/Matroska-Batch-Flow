@@ -23,6 +23,17 @@ public interface IBatchHistoryService
     int MaxRuns { get; }
 
     /// <summary>
+    /// Gets whether <see cref="Runs"/> lists runs that could not be saved yet. Saving them is tried again the next time
+    /// the history is saved; they are lost if the app closes first.
+    /// </summary>
+    bool HasUnsavedRuns { get; }
+
+    /// <summary>
+    /// Raised after <see cref="HasUnsavedRuns"/> changes.
+    /// </summary>
+    event EventHandler? HasUnsavedRunsChanged;
+
+    /// <summary>
     /// Saves how many runs are kept, but only removes saved runs if the confirmed count still matches.
     /// </summary>
     /// <remarks>

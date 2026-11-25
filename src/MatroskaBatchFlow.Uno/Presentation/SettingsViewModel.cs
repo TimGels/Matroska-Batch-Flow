@@ -179,11 +179,18 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     private Task OpenSupportPageAsync() => _externalLinkService.OpenAsync(ProjectLinks.SupportPage);
 
     /// <summary>
-    /// Refreshes the batch history limit from disk, unless the current value is being edited or saved.
+    /// Refreshes the batch history limit from disk, unless a lower limit waits for confirmation or a save is in
+    /// progress. A limit that could not be saved is discarded first, so the page shows the limit that applies.
     /// </summary>
     /// <param name="parameter">The navigation parameter. Not used.</param>
     public void OnNavigatedTo(object parameter)
     {
+        if (BatchHistoryLimitSaveFailed && !IsBatchHistoryLimitPending && _historyLimitLock.CurrentCount > 0)
+        {
+            BatchHistoryLimitSaveFailed = false;
+            ShowBatchHistoryLimit(_batchHistory.MaxRuns);
+        }
+
         _ = RefreshBatchHistoryLimitAsync();
     }
 
@@ -209,20 +216,28 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
             var maxRuns = Math.Clamp(settings.BatchHistory.MaxRuns, BatchHistoryMinRuns, BatchHistoryMaxRunsLimit);
             _userSettings.Value.BatchHistory ??= new UserSettings.BatchHistorySettings();
             _userSettings.Value.BatchHistory.MaxRuns = (int)maxRuns;
-
-            _suppressBatchHistoryLimitChanged = true;
-            try
-            {
-                BatchHistoryMaxRuns = maxRuns;
-            }
-            finally
-            {
-                _suppressBatchHistoryLimitChanged = false;
-            }
+            ShowBatchHistoryLimit(maxRuns);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException)
         {
             LogRefreshBatchHistoryLimitFailed(ex);
+        }
+    }
+
+    /// <summary>
+    /// Shows a limit in the NumberBox without saving it.
+    /// </summary>
+    /// <param name="maxRuns">The limit to show.</param>
+    private void ShowBatchHistoryLimit(double maxRuns)
+    {
+        _suppressBatchHistoryLimitChanged = true;
+        try
+        {
+            BatchHistoryMaxRuns = maxRuns;
+        }
+        finally
+        {
+            _suppressBatchHistoryLimitChanged = false;
         }
     }
 
@@ -411,6 +426,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     private void CancelBatchHistoryLimit()
     {
         BatchHistoryRunsToRemove = 0;
+        BatchHistoryLimitSaveFailed = false;
         BatchHistoryMaxRuns = _batchHistory.MaxRuns;
     }
 
@@ -424,9 +440,11 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
             if (maxRuns != BatchHistoryMaxRuns)
                 return;
 
+            // The limit in effect needs no save, so the error of an abandoned edit is closed.
             if (maxRuns == _batchHistory.MaxRuns && confirmedRemovals == 0)
             {
                 BatchHistoryRunsToRemove = 0;
+                BatchHistoryLimitSaveFailed = false;
                 return;
             }
 

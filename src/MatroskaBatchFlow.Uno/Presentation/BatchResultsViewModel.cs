@@ -68,6 +68,12 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
     public partial bool ClearHistoryFailed { get; private set; }
 
     /// <summary>
+    /// Gets whether the listed runs include runs that could not be saved on this device yet.
+    /// </summary>
+    [ObservableProperty]
+    public partial bool HasUnsavedRuns { get; private set; }
+
+    /// <summary>
     /// Gets the number of files per result in the selected run.
     /// </summary>
     public BatchResultCounts Counts => SelectedRun?.Counts ?? default;
@@ -109,6 +115,8 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
     {
         _history = history;
         ((INotifyCollectionChanged)_history.Runs).CollectionChanged += OnHistoryChanged;
+        _history.HasUnsavedRunsChanged += OnUnsavedRunsChanged;
+        HasUnsavedRuns = _history.HasUnsavedRuns;
         RefreshRuns(selectNewest: true);
     }
 
@@ -127,6 +135,8 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
         var newRunAdded = eventArgs is { Action: NotifyCollectionChangedAction.Add, NewStartingIndex: 0 };
         RefreshRuns(selectNewest: newRunAdded);
     }
+
+    private void OnUnsavedRunsChanged(object? sender, EventArgs eventArgs) => HasUnsavedRuns = _history.HasUnsavedRuns;
 
     /// <summary>
     /// Rebuilds the run picker. Shows the newest run when it was just added; otherwise keeps the shown run while it is still saved.

@@ -309,6 +309,39 @@ public class SettingsViewModelTests
     }
 
     [Fact]
+    public async Task CancelBatchHistoryLimit_ClosesTheSaveError_SoTheLimitIsRefreshedAgain()
+    {
+        _batchHistory.SetMaxRunsAsync(7).Returns(3);
+        _batchHistory.SetMaxRunsAsync(7, 3).Returns(Task.FromException<int>(new IOException("history file is read-only")));
+        var viewModel = CreateViewModel();
+        viewModel.BatchHistoryMaxRuns = 7;
+        await viewModel.ConfirmBatchHistoryLimitCommand.ExecuteAsync(null);
+        Assert.True(viewModel.BatchHistoryLimitSaveFailed);
+
+        viewModel.CancelBatchHistoryLimitCommand.Execute(null);
+        _userSettingsValue.BatchHistory.MaxRuns = 50;
+        viewModel.OnNavigatedTo(null!);
+
+        Assert.False(viewModel.BatchHistoryLimitSaveFailed);
+        Assert.Equal(50, viewModel.BatchHistoryMaxRuns);
+    }
+
+    [Fact]
+    public async Task BatchHistoryMaxRuns_ClosesTheSaveError_WhenTheLimitInEffectIsEnteredAgain()
+    {
+        _batchHistory.SetMaxRunsAsync(30).Returns(Task.FromException<int>(
+            new BatchHistoryLimitSaveException(false, new IOException("settings file is read-only"))));
+        var viewModel = CreateViewModel();
+        viewModel.BatchHistoryMaxRuns = 30;
+        Assert.True(viewModel.BatchHistoryLimitSaveFailed);
+
+        viewModel.BatchHistoryMaxRuns = UserSettings.BatchHistorySettings.DefaultMaxRuns;
+
+        Assert.False(viewModel.BatchHistoryLimitSaveFailed);
+        await _batchHistory.DidNotReceive().SetMaxRunsAsync(UserSettings.BatchHistorySettings.DefaultMaxRuns, Arg.Any<int>());
+    }
+
+    [Fact]
     public async Task CancelBatchHistoryLimit_IsUnavailable_WhileTheLimitIsConfirmed()
     {
         var finishConfirm = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -487,6 +520,38 @@ public class SettingsViewModelTests
         Assert.Equal(22, viewModel.BatchHistoryMaxRuns);
         await _userSettings.DidNotReceive().ReadFromDiskAsync();
         finishSave.TrySetResult();
+    }
+
+    [Fact]
+    public async Task OnNavigatedTo_DiscardsALimitThatCouldNotBeSaved_AndShowsThePersistedLimit()
+    {
+        _batchHistory.SetMaxRunsAsync(30).Returns(Task.FromException<int>(
+            new BatchHistoryLimitSaveException(false, new IOException("settings file is read-only"))));
+        var viewModel = CreateViewModel();
+        viewModel.BatchHistoryMaxRuns = 30;
+        _userSettingsValue.BatchHistory.MaxRuns = 50;
+
+        viewModel.OnNavigatedTo(null!);
+
+        Assert.False(viewModel.BatchHistoryLimitSaveFailed);
+        Assert.Equal(50, viewModel.BatchHistoryMaxRuns);
+        await _batchHistory.DidNotReceive().SetMaxRunsAsync(50, Arg.Any<int>());
+    }
+
+    [Fact]
+    public async Task OnNavigatedTo_KeepsAFailedConfirmation_ThatStillWaits()
+    {
+        _batchHistory.SetMaxRunsAsync(7).Returns(3);
+        _batchHistory.SetMaxRunsAsync(7, 3).Returns(Task.FromException<int>(new IOException("history file is read-only")));
+        var viewModel = CreateViewModel();
+        viewModel.BatchHistoryMaxRuns = 7;
+        await viewModel.ConfirmBatchHistoryLimitCommand.ExecuteAsync(null);
+
+        viewModel.OnNavigatedTo(null!);
+
+        Assert.True(viewModel.BatchHistoryLimitSaveFailed);
+        Assert.True(viewModel.IsBatchHistoryLimitPending);
+        Assert.Equal(7, viewModel.BatchHistoryMaxRuns);
     }
 
     private SettingsViewModel CreateViewModel()
