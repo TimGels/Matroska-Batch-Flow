@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Models.AppSettings;
@@ -6,6 +7,7 @@ using MatroskaBatchFlow.Core.Services.FileValidation;
 using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Enums;
 using MatroskaBatchFlow.Uno.Helpers;
+using MatroskaBatchFlow.Uno.Models;
 using MatroskaBatchFlow.Uno.Presentation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -304,6 +306,46 @@ public class SettingsViewModelTests
         Assert.Equal(UserSettings.BatchHistorySettings.DefaultMaxRuns, viewModel.BatchHistoryMaxRuns);
         Assert.False(viewModel.IsBatchHistoryLimitPending);
         await _batchHistory.DidNotReceive().SetMaxRunsAsync(7, Arg.Is<int>(count => count > 0));
+    }
+
+    [Fact]
+    public async Task CancelBatchHistoryLimit_IsUnavailable_WhileTheLimitIsConfirmed()
+    {
+        var finishConfirm = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _batchHistory.SetMaxRunsAsync(7).Returns(3);
+        _batchHistory.SetMaxRunsAsync(7, 3).Returns(async _ =>
+        {
+            await finishConfirm.Task;
+            return 0;
+        });
+        var viewModel = CreateViewModel();
+        viewModel.BatchHistoryMaxRuns = 7;
+
+        var confirm = viewModel.ConfirmBatchHistoryLimitCommand.ExecuteAsync(null);
+
+        Assert.False(viewModel.CancelBatchHistoryLimitCommand.CanExecute(null));
+        finishConfirm.SetResult();
+        await confirm;
+        Assert.True(viewModel.CancelBatchHistoryLimitCommand.CanExecute(null));
+    }
+
+    [Theory]
+    [InlineData(7, false)]
+    [InlineData(10, true)]
+    public async Task ConfirmBatchHistoryLimit_AsksAgainOnlyIfTheRunsAreKept_WhenSavingFails(int runsAfterFailure, bool expectedPending)
+    {
+        var runs = Enumerable.Range(0, runsAfterFailure)
+            .Select(_ => new BatchRunRecord(Guid.NewGuid(), DateTimeOffset.UnixEpoch, []));
+        _batchHistory.Runs.Returns(new ReadOnlyObservableCollection<BatchRunRecord>(new ObservableCollection<BatchRunRecord>(runs)));
+        _batchHistory.SetMaxRunsAsync(7).Returns(3);
+        _batchHistory.SetMaxRunsAsync(7, 3).Returns(Task.FromException<int>(new IOException("settings file is read-only")));
+        var viewModel = CreateViewModel();
+        viewModel.BatchHistoryMaxRuns = 7;
+
+        await viewModel.ConfirmBatchHistoryLimitCommand.ExecuteAsync(null);
+
+        Assert.True(viewModel.BatchHistoryLimitSaveFailed);
+        Assert.Equal(expectedPending, viewModel.IsBatchHistoryLimitPending);
     }
 
     [Fact]

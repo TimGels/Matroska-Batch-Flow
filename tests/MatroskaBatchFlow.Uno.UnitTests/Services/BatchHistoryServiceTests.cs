@@ -417,7 +417,7 @@ public sealed class BatchHistoryServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task SetMaxRunsAsync_RestoresCachedLimitAndHistory_WhenSettingsSaveFails()
+    public async Task SetMaxRunsAsync_KeepsThePreviousLimit_WhenItCannotBeSavedAfterTrimming()
     {
         var service = CreateService();
         foreach (var run in Enumerable.Range(0, 4).Select(Run))
@@ -435,23 +435,15 @@ public sealed class BatchHistoryServiceTests : IDisposable
         await Assert.ThrowsAsync<IOException>(() => service.SetMaxRunsAsync(2, confirmedRemovals: 2));
 
         Assert.Equal(UserSettings.BatchHistorySettings.DefaultMaxRuns, service.MaxRuns);
-        var afterFailure = CreateService();
-        await afterFailure.LoadAsync();
-        Assert.Equal(4, afterFailure.Runs.Count);
-
-        _userSettings.UpdateAsync(Arg.Any<Action<UserSettings>>())
-            .Returns(call =>
-            {
-                call.Arg<Action<UserSettings>>()(_settings);
-                return Task.CompletedTask;
-            });
-        Assert.Equal(0, await service.SetMaxRunsAsync(2, confirmedRemovals: 2));
-        Assert.Equal(2, service.MaxRuns);
         Assert.Equal(2, service.Runs.Count);
+        await service.AddAsync(Run(4));
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal(3, restarted.Runs.Count);
     }
 
     [Fact]
-    public async Task SetMaxRunsAsync_RestoresTheSavedLimit_WhenTheHistoryCannotBeTrimmed()
+    public async Task SetMaxRunsAsync_KeepsTheLimitAndHistory_WhenTheHistoryCannotBeTrimmed()
     {
         var service = CreateService();
         foreach (var run in Enumerable.Range(0, 4).Select(Run))
@@ -460,44 +452,16 @@ public sealed class BatchHistoryServiceTests : IDisposable
         }
 
         Directory.CreateDirectory(_filePath + ".tmp");
+        _userSettings.ClearReceivedCalls();
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.SetMaxRunsAsync(2, confirmedRemovals: 2));
 
-        Assert.Equal(UserSettings.BatchHistorySettings.DefaultMaxRuns, _settings.BatchHistory.MaxRuns);
+        await _userSettings.DidNotReceiveWithAnyArgs().UpdateAsync(default!);
         Assert.Equal(UserSettings.BatchHistorySettings.DefaultMaxRuns, service.MaxRuns);
         Directory.Delete(_filePath + ".tmp");
         var restarted = CreateService();
         await restarted.LoadAsync();
         Assert.Equal(4, restarted.Runs.Count);
-    }
-
-    [Fact]
-    public async Task SetMaxRunsAsync_KeepsUsingTheSavedLowerLimit_WhenRestoringTheLimitFails()
-    {
-        var service = CreateService();
-        foreach (var run in Enumerable.Range(0, 4).Select(Run))
-        {
-            await service.AddAsync(run);
-        }
-
-        Directory.CreateDirectory(_filePath + ".tmp");
-        _userSettings.UpdateAsync(Arg.Any<Action<UserSettings>>())
-            .Returns(
-                call =>
-                {
-                    call.Arg<Action<UserSettings>>()(_settings);
-                    return Task.CompletedTask;
-                },
-                call =>
-                {
-                    call.Arg<Action<UserSettings>>()(_settings);
-                    throw new IOException("settings file is read-only");
-                });
-
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.SetMaxRunsAsync(2, confirmedRemovals: 2));
-
-        Assert.Equal(2, service.MaxRuns);
-        Assert.Equal(4, service.Runs.Count);
     }
 
     [Fact]
@@ -526,7 +490,7 @@ public sealed class BatchHistoryServiceTests : IDisposable
         var savedSettings = await userSettings.ReadFromDiskAsync();
         Assert.Equal(20, savedSettings.BatchHistory.MaxRuns);
         Assert.Equal("Dark", savedSettings.UI.Theme);
-        Assert.Equal(4, service.Runs.Count);
+        Assert.Equal(2, service.Runs.Count);
     }
 
     private BatchHistoryService CreateService() => new(_filePath, _userSettings, NullLogger<BatchHistoryService>.Instance);

@@ -75,9 +75,17 @@ public partial class BatchHistoryService : IBatchHistoryService
             if (removed > 0 && removed != confirmedRemovals)
                 return removed;
 
+            // Trim before saving the lower limit: a saved limit without the trimmed history would remove runs the next
+            // time the history is saved, even though the change failed.
             var kept = runs.Take(maxRuns).ToArray();
-            var limitChanged = maxRuns != previousLimit;
-            if (limitChanged)
+            if (removed > 0)
+            {
+                await Task.Run(() => Write(kept, clearedAt));
+                _unsavedRuns.Clear();
+            }
+
+            ReplaceRuns(kept);
+            if (maxRuns != previousLimit)
             {
                 try
                 {
@@ -90,24 +98,6 @@ public partial class BatchHistoryService : IBatchHistoryService
                 }
             }
 
-            if (removed > 0)
-            {
-                try
-                {
-                    await Task.Run(() => Write(kept, clearedAt));
-                }
-                catch (Exception ex) when (limitChanged && IsStorageFailure(ex))
-                {
-                    // Without the trimmed history, the lower limit would remove the runs without the user's
-                    // confirmation the next time the history is saved.
-                    await RestoreLimitAsync(previousLimit, maxRuns);
-                    throw;
-                }
-
-                _unsavedRuns.Clear();
-            }
-
-            ReplaceRuns(kept);
             LogLimitChanged(previousLimit, maxRuns, removed);
             return 0;
         }
@@ -236,26 +226,6 @@ public partial class BatchHistoryService : IBatchHistoryService
         finally
         {
             _fileLock.Release();
-        }
-    }
-
-    /// <summary>
-    /// Saves the previous limit again after the history could not be trimmed to a lower one.
-    /// </summary>
-    /// <param name="previousLimit">The limit before the change.</param>
-    /// <param name="failedLimit">The lower limit that is saved in the settings.</param>
-    /// <returns>A task that completes when the limit is restored or restoring failed.</returns>
-    private async Task RestoreLimitAsync(int previousLimit, int failedLimit)
-    {
-        try
-        {
-            await _userSettings.UpdateAsync(settings => settings.BatchHistory.MaxRuns = previousLimit);
-        }
-        catch (Exception ex) when (IsStorageFailure(ex))
-        {
-            LogLimitRestoreFailed(ex, previousLimit, failedLimit);
-
-            await _userSettings.DiscardPendingChanges(settings => settings.BatchHistory.MaxRuns = failedLimit);
         }
     }
 

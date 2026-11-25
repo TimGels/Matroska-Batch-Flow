@@ -142,6 +142,13 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         _logger = logger;
 
         BatchHistoryMaxRuns = _batchHistory.MaxRuns;
+        ConfirmBatchHistoryLimitCommand.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(IAsyncRelayCommand.IsRunning))
+            {
+                CancelBatchHistoryLimitCommand.NotifyCanExecuteChanged();
+            }
+        };
 
         customMkvPropeditPath = ExecutableLocator.FindExecutable(_userSettings.Value.MkvPropedit.CustomPath ?? string.Empty) ?? string.Empty;
         // If Skia is being used, we force the custom path to be enabled since the bundled mkvpropedit executable is only for Windows.
@@ -398,14 +405,16 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         : Task.CompletedTask;
 
     /// <summary>
-    /// Discards the pending lower limit and keeps all saved results.
+    /// Discards the pending lower limit and keeps all saved results. Not available while the limit is being confirmed.
     /// </summary>
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanCancelBatchHistoryLimit))]
     private void CancelBatchHistoryLimit()
     {
         BatchHistoryRunsToRemove = 0;
         BatchHistoryMaxRuns = _batchHistory.MaxRuns;
     }
+
+    private bool CanCancelBatchHistoryLimit() => !ConfirmBatchHistoryLimitCommand.IsRunning;
 
     private async Task SaveBatchHistoryLimitAsync(int maxRuns, int confirmedRemovals)
     {
@@ -434,6 +443,12 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
             if (maxRuns == BatchHistoryMaxRuns)
             {
                 BatchHistoryLimitSaveFailed = true;
+
+                // The confirmed runs are already removed when only the limit could not be saved.
+                if (confirmedRemovals > 0 && _batchHistory.Runs.Count <= maxRuns)
+                {
+                    BatchHistoryRunsToRemove = 0;
+                }
             }
         }
         finally
