@@ -226,7 +226,7 @@ If you encounter a bug or have a feature suggestion, you're welcome to [open an 
 - Check bug reports yourself before submitting them.
 - Only submit content you have the right to contribute under the project's license.
 
-Submissions that look like unreviewed AI output fall under the low-effort policy above and may be closed without action. Keep in mind that AI tools are meant to assist, not replace, human judgment and review. Always review and understand the output before submitting it.
+Submissions that don't meet these expectations are treated like other low-effort submissions and may be closed without action.
 
 **The app:** Matroska Batch Flow currently contains no AI features.
 
