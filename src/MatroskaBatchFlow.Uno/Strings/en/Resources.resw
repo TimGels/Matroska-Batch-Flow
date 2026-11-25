@@ -417,11 +417,15 @@
   <data name="HistoryRemoveAll" xml:space="preserve"><value>Remove all</value></data>
   <data name="HistoryMediaNote.Text" xml:space="preserve"><value>Removing saved results won't change your media files.</value></data>
   <data name="HistoryConfirmRemoveSingle" xml:space="preserve"><value>Permanently remove this batch result from history?</value></data>
-  <data name="HistoryRecoveryNotice.Title" xml:space="preserve"><value>Saved history could not be read.</value></data>
-  <data name="HistoryRecoveryNotice.Message" xml:space="preserve"><value>Reset unreadable history before removing batch results. The results listed here will be kept.</value></data>
-  <data name="HistoryResetUnreadable.Content" xml:space="preserve"><value>Reset unreadable history…</value></data>
-  <data name="HistoryConfirmReset" xml:space="preserve"><value>Reset the unreadable history file? The batch results listed here will be kept. Results that cannot be read will be permanently lost.</value></data>
-  <data name="HistoryReset" xml:space="preserve"><value>Reset unreadable history</value></data>
+  <data name="HistoryRecoveryNotice.Title" xml:space="preserve"><value>History needs recovery.</value></data>
+  <data name="HistoryRecoveryNotice.Message" xml:space="preserve"><value>History could not be read earlier. Recover it to save pending results and check for changes made elsewhere.</value></data>
+  <data name="HistoryResetUnreadable.Content" xml:space="preserve"><value>Recover history…</value></data>
+  <data name="HistoryConfirmReset" xml:space="preserve"><value>Recover saved history? If the file is still unreadable, it will be rebuilt from the listed results. Results that cannot be read will be lost.</value></data>
+  <data name="HistoryReset" xml:space="preserve"><value>Recover history</value></data>
+  <data name="HistoryRecoveryConflictSingle" xml:space="preserve"><value>Saved history has changed. One previously saved result listed here is missing from disk. Leave it out or restore it? New results from this session will be saved either way.</value></data>
+  <data name="HistoryRecoveryConflictMultiple" xml:space="preserve"><value>Saved history has changed. {0} previously saved results listed here are missing from disk. Leave them out or restore them? New results from this session will be saved either way.</value></data>
+  <data name="HistoryKeepSaved" xml:space="preserve"><value>Keep saved history</value></data>
+  <data name="HistoryRestoreMissing.Content" xml:space="preserve"><value>Restore missing results</value></data>
   <data name="HistoryRemove" xml:space="preserve"><value>Remove from history</value></data>
   <data name="HistoryCancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="HistoryConfirmationActionName" xml:space="preserve"><value>{0}. {1}</value><comment>Accessible name. {0}: visible action label; {1}: confirmation question, including the count or followed by the specific result label.</comment></data>

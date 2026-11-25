@@ -68,11 +68,16 @@
                                 <StackPanel x:Name="PickerConfirmation" Visibility="Collapsed" Spacing="8">
                                     <TextBlock x:Name="ConfirmationQuestion" TextWrapping="Wrap"
                                                Style="{StaticResource BodyStrongTextBlockStyle}" />
-                                    <TextBlock x:Name="RemovalDescription" TextWrapping="Wrap" />
+                                    <ScrollViewer x:Name="ConfirmationDetails" MaxHeight="144" VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled">
+                                        <TextBlock x:Name="RemovalDescription" TextWrapping="Wrap" />
+                                    </ScrollViewer>
                                     <TextBlock x:Uid="HistoryMediaNote" TextWrapping="Wrap" />
                                     <toolkit:WrapPanel HorizontalSpacing="8" VerticalSpacing="8">
                                         <Button x:Name="CancelRemoval" Content="{x:Bind local:UiText.Get('HistoryCancel')}" Click="OnCancelRemoval" />
                                         <Button x:Name="ConfirmRemoval" Click="OnConfirmHistoryAction" />
+                                        <Button x:Name="RestoreMissingButton" x:Uid="HistoryRestoreMissing" Visibility="Collapsed"
+                                                Click="OnConfirmHistoryAction" />
                                     </toolkit:WrapPanel>
                                 </StackPanel>
                                 <InfoBar x:Name="PickerError" Severity="Error" IsClosable="False" AutomationProperties.LiveSetting="Polite" />

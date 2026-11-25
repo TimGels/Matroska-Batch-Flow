@@ -12,6 +12,7 @@ namespace MatroskaBatchFlow.Uno.Presentation;
 public sealed partial class BatchResultsPage : Page
 {
     private Func<Task>? _pendingAction;
+    private Func<Task>? _restoreMissing;
 
     public BatchResultsViewModel ViewModel { get; }
 
@@ -104,23 +105,32 @@ public sealed partial class BatchResultsPage : Page
             () => RemoveResultsAsync(removal));
     }
 
-    private void OnResetHistoryClick(object sender, RoutedEventArgs args) =>
-        ShowConfirmation(UiText.Get("HistoryConfirmReset"), UiText.Get("HistoryReset"), ResetHistoryAsync);
+    private void OnResetHistoryClick(object sender, RoutedEventArgs args) => ShowResetConfirmation();
+
+    private void ShowResetConfirmation() =>
+        ShowConfirmation(UiText.Get("HistoryConfirmReset"), UiText.Get("HistoryReset"), () => ResetHistoryAsync());
 
     private void ShowConfirmation(string question, string button, Func<Task> action, string? detail = null)
     {
         _pendingAction = action;
+        _restoreMissing = null;
+        RestoreMissingButton.Visibility = Visibility.Collapsed;
         PickerError.IsOpen = HistoryFeedback.IsOpen = false;
         ConfirmationQuestion.Text = question;
         ConfirmRemoval.Content = button;
-        RemovalDescription.Text = detail ?? string.Empty;
-        RemovalDescription.Visibility = detail is null ? Visibility.Collapsed : Visibility.Visible;
+        SetConfirmationDetails(detail);
         var prompt = detail is null ? question : string.Join(Environment.NewLine, question, detail);
         AutomationProperties.SetName(CancelRemoval, UiText.Format("HistoryConfirmationActionName", UiText.Get("HistoryCancel"), prompt));
         AutomationProperties.SetName(ConfirmRemoval, UiText.Format("HistoryConfirmationActionName", button, prompt));
         PickerBrowse.Visibility = Visibility.Collapsed;
         PickerConfirmation.Visibility = Visibility.Visible;
         CancelRemoval.Focus(FocusState.Programmatic);
+    }
+
+    private void SetConfirmationDetails(string? detail)
+    {
+        RemovalDescription.Text = detail ?? string.Empty;
+        ConfirmationDetails.Visibility = string.IsNullOrEmpty(detail) ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void OnCancelRemoval(object sender, RoutedEventArgs args)
@@ -132,19 +142,20 @@ public sealed partial class BatchResultsPage : Page
 
     private async void OnConfirmHistoryAction(object sender, RoutedEventArgs args)
     {
-        if (_pendingAction is not { } action || ViewModel.IsChangingHistory)
+        var action = sender == RestoreMissingButton ? _restoreMissing : _pendingAction;
+        if (action is null || ViewModel.IsChangingHistory)
             return;
 
         PickerError.IsOpen = false;
-        CancelRemoval.IsEnabled = ConfirmRemoval.IsEnabled = false;
+        CancelRemoval.IsEnabled = ConfirmRemoval.IsEnabled = RestoreMissingButton.IsEnabled = false;
         try
         {
             await action();
         }
         finally
         {
-            CancelRemoval.IsEnabled = ConfirmRemoval.IsEnabled = true;
-            if (PickerError.IsOpen)
+            CancelRemoval.IsEnabled = ConfirmRemoval.IsEnabled = RestoreMissingButton.IsEnabled = true;
+            if (PickerConfirmation.Visibility == Visibility.Visible && RunFlyout.IsOpen)
             {
                 CancelRemoval.Focus(FocusState.Programmatic);
             }
@@ -169,15 +180,34 @@ public sealed partial class BatchResultsPage : Page
         }
     }
 
-    private async Task ResetHistoryAsync()
+    private async Task ResetHistoryAsync(HistoryRecoveryDecision? decision = null)
     {
-        if (await ViewModel.ResetUnreadableHistoryAsync())
+        var result = await ViewModel.ResetUnreadableHistoryAsync(decision);
+        switch (result.Status)
         {
-            FinishHistoryAction(UiText.Get("HistoryRecoverySucceeded"));
-        }
-        else
-        {
-            ShowPickerError(UiText.Get("HistoryRecoveryFailed"));
+            case HistoryRecoveryStatus.Recovered:
+                FinishHistoryAction(UiText.Get("HistoryRecoverySucceeded"));
+                break;
+            case HistoryRecoveryStatus.Failed:
+                ShowPickerError(UiText.Get("HistoryRecoveryFailed"));
+                break;
+            case HistoryRecoveryStatus.ConfirmUnreadableReset:
+                ShowResetConfirmation();
+                break;
+            case HistoryRecoveryStatus.ChooseMissingResults:
+                var question = UiText.Counted("HistoryRecoveryConflict", result.MissingIds.Count);
+                var details = string.Join(Environment.NewLine,
+                    ViewModel.Runs.Where(run => result.MissingIds.Contains(run.Run.Id)).Select(run => run.PickerLabel));
+                ShowConfirmation(question, UiText.Get("HistoryKeepSaved"),
+                    () => ResetHistoryAsync(new(result.MissingIds, RestoreMissing: false)));
+                SetConfirmationDetails(details);
+                _restoreMissing = () => ResetHistoryAsync(new(result.MissingIds, RestoreMissing: true));
+                AutomationProperties.SetName(RestoreMissingButton,
+                    UiText.Format("HistoryConfirmationActionName", RestoreMissingButton.Content, question));
+                RestoreMissingButton.Visibility = Visibility.Visible;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(result), result.Status, "Unknown history recovery status.");
         }
     }
 
@@ -191,6 +221,7 @@ public sealed partial class BatchResultsPage : Page
     private void ShowPickerList()
     {
         _pendingAction = null;
+        _restoreMissing = null;
         PickerConfirmation.Visibility = Visibility.Collapsed;
         PickerBrowse.Visibility = Visibility.Visible;
         RunList.SelectedItem = ViewModel.SelectedRun;

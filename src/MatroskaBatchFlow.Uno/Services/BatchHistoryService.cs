@@ -80,7 +80,7 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
         {
             using var storageLock = await FileLock.AcquireAsync(_filePath);
             var previousLimit = await ReadPersistedMaxRunsAsync();
-            var (runs, header) = await ReadMergedAsync();
+            var (runs, header) = await ReadForUpdateAsync();
             var removed = Math.Max(0, runs.Length - maxRuns);
             var kept = runs.Take(maxRuns).ToArray();
             if (removed > 0)
@@ -92,6 +92,7 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
                 // Trim before saving the lower limit, so a failed trim cannot take effect on the next save.
                 await Task.Run(() => Write(kept, header));
                 _unsavedRuns.RemoveAll(pending => pending.Order == ClearOrder.Known);
+                HasUnreadableHistory = false;
             }
 
             ReplaceRuns(kept);
@@ -150,10 +151,11 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
                 // Save every run when the limit cannot be read: an unknown limit must not remove runs, and runs kept
                 // only in memory would be lost when the app closes.
                 var maxRuns = await TryReadPersistedMaxRunsAsync();
-                var (runs, header) = await ReadMergedAsync();
+                var (runs, header) = await ReadForUpdateAsync();
                 kept = runs.Take(maxRuns ?? runs.Length).ToArray();
                 await Task.Run(() => Write(kept, header));
                 _unsavedRuns.RemoveAll(pending => pending.Order == ClearOrder.Known);
+                HasUnreadableHistory = false;
                 ReplaceRuns(kept);
                 if (maxRuns is { } limit && runs.Length > limit)
                 {
@@ -185,13 +187,14 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
         try
         {
             using var storageLock = await FileLock.AcquireAsync(_filePath);
-            var (runs, header) = await ReadMergedAsync();
+            var (runs, header) = await ReadForUpdateAsync();
             var kept = runs.Where(run => !removal.RunIds.Contains(run.Id)).ToArray();
             var visibleIds = runs.Select(run => run.Id).Concat(_unsavedRuns.Select(pending => pending.Run.Id)).ToHashSet();
             var removed = visibleIds.Count(removal.RunIds.Contains);
             await Task.Run(() => Write(kept, header));
             _unsavedRuns.RemoveAll(pending => removal.RunIds.Contains(pending.Run.Id) || pending.Order == ClearOrder.Known);
             ReplaceRuns(kept);
+            HasUnreadableHistory = false;
             LogRunRemoved(removed);
             return new(HistoryRemovalStatus.Removed, removed);
         }
@@ -207,7 +210,7 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ResetUnreadableHistoryAsync()
+    public async Task<HistoryRecoveryResult> ResetUnreadableHistoryAsync(HistoryRecoveryDecision? decision = null)
     {
         await _fileLock.WaitAsync();
         try
@@ -218,10 +221,14 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
             HistoryHeader header;
             try
             {
-                (runs, header) = await ReadMergedAsync(markReadable: false);
+                (runs, header) = await ReadMergedAsync();
             }
             catch (Exception ex) when (previouslyUnreadable && ex is JsonException or InvalidDataException)
             {
+                // A decision about a readable file never authorizes overwriting an unreadable one.
+                if (decision is not null)
+                    return new(HistoryRecoveryStatus.ConfirmUnreadableReset);
+
                 LogResettingUnreadableHistory(ex, _filePath);
                 var recoveredRuns = _runs.Concat(_unsavedRuns.Select(pending => pending.Run))
                     .DistinctBy(run => run.Id)
@@ -229,24 +236,41 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
                     .ToArray();
                 var resetHeader = new HistoryHeader(FormatVersion, ClearId: Guid.NewGuid());
                 await SaveRemainingAsync(recoveredRuns, resetHeader, clearAllPending: true);
-                HasUnreadableHistory = false;
-                return true;
+                return new(HistoryRecoveryStatus.Recovered);
             }
-            if (_unsavedRuns.Any(pending => pending.Order == ClearOrder.Known))
+
+            var missing = MissingListedIds(runs);
+            var restore = false;
+            if (missing.Count > 0)
+            {
+                if (decision is null || !missing.SetEquals(decision.MissingIds))
+                    return new(HistoryRecoveryStatus.ChooseMissingResults) { MissingIds = missing.ToImmutableHashSet() };
+
+                restore = decision.RestoreMissing;
+                if (restore)
+                {
+                    runs = runs.Concat(_runs.Where(run => missing.Contains(run.Id)))
+                        .OrderByDescending(run => run.RecordedAt)
+                        .ToArray();
+                }
+            }
+
+            if (restore || _unsavedRuns.Any(pending => pending.Order == ClearOrder.Known))
             {
                 await SaveRemainingAsync(runs, header);
             }
             else
             {
                 ReplaceRuns(runs);
+                HasUnreadableHistory = false;
             }
-            HasUnreadableHistory = false;
-            return true;
+
+            return new(HistoryRecoveryStatus.Recovered);
         }
         catch (Exception ex) when (IsStorageFailure(ex))
         {
             LogResetFailed(ex, _filePath);
-            return false;
+            return new(HistoryRecoveryStatus.Failed);
         }
         finally
         {
@@ -289,7 +313,7 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
         try
         {
             using var storageLock = await FileLock.AcquireAsync(_filePath);
-            var (runs, _) = await ReadMergedAsync();
+            var (runs, _) = await ReadForUpdateAsync();
             _loaded = true;
 
             // Show every saved run when the limit cannot be read, rather than hiding runs behind a default limit.
@@ -330,6 +354,25 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
         }
     }
 
+    private HashSet<Guid> MissingListedIds(BatchRunRecord[] merged)
+    {
+        var unsavedIds = _unsavedRuns.Select(pending => pending.Run.Id).ToHashSet();
+        return _runs.Select(run => run.Id).Where(id => !unsavedIds.Contains(id))
+            .Except(merged.Select(run => run.Id)).ToHashSet();
+    }
+
+    private async Task<(BatchRunRecord[] Runs, HistoryHeader Header)> ReadForUpdateAsync()
+    {
+        var merged = await ReadMergedAsync();
+        if (HasUnreadableHistory && MissingListedIds(merged.Runs).Count > 0)
+        {
+            throw new InvalidDataException(
+                "Repaired history omits listed results. Resolve the conflict in Results before changing history.");
+        }
+
+        return merged;
+    }
+
     private async Task SaveRemainingAsync(BatchRunRecord[] runs, HistoryHeader header, bool clearAllPending = false)
     {
         await Task.Run(() => Write(runs, header));
@@ -344,18 +387,14 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
         }
 
         ReplaceRuns(runs);
+        HasUnreadableHistory = false;
     }
 
-    private async Task<(BatchRunRecord[] Runs, HistoryHeader Header)> ReadMergedAsync(bool markReadable = true)
+    private async Task<(BatchRunRecord[] Runs, HistoryHeader Header)> ReadMergedAsync()
     {
         try
         {
             var (saved, header) = await Task.Run(Read);
-            // Recovery is not complete until any pending session results have been persisted.
-            if (markReadable)
-            {
-                HasUnreadableHistory = false;
-            }
             _lastSeenHeader = header;
             _unsavedRuns.RemoveAll(pending => pending.Order != ClearOrder.Unknown && pending.Header != header);
             for (var index = 0; index < _unsavedRuns.Count; index++)
