@@ -339,6 +339,7 @@
                 <controls:SettingsCard x:Uid="BatchHistoryLimitCard"
                                        HeaderIcon="{ui:FontIcon Glyph=&#xE81C;}">
                     <NumberBox x:Uid="BatchHistoryLimitBox"
+                               IsEnabled="{x:Bind ViewModel.CanEditBatchHistoryLimit, Mode=OneWay}"
                                Value="{x:Bind ViewModel.BatchHistoryMaxRuns, Mode=TwoWay}"
                                Minimum="{x:Bind ViewModel.BatchHistoryMinRuns}"
                                Maximum="{x:Bind ViewModel.BatchHistoryMaxRunsLimit}"
@@ -364,6 +365,10 @@
                         </StackPanel>
                     </InfoBar.Content>
                 </InfoBar>
+
+                <InfoBar x:Uid="BatchHistoryLimitRecoveryRequired"
+                         IsOpen="{x:Bind ViewModel.IsHistoryRecoveryRequired, Mode=OneWay}"
+                         Severity="Warning" IsClosable="False" AutomationProperties.LiveSetting="Polite" />
 
                 <InfoBar x:Uid="BatchHistoryLimitSaveFailed"
                          IsOpen="{x:Bind ViewModel.BatchHistoryLimitSaveFailed, Mode=OneWay}"

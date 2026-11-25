@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Models.AppSettings;
@@ -436,6 +437,60 @@ public class SettingsViewModelTests
         await viewModel.ConfirmBatchHistoryLimitCommand.ExecuteAsync(null);
         Assert.False(viewModel.IsBatchHistoryLimitPending);
         await _batchHistory.Received(1).SetMaxRunsAsync(7, 4);
+    }
+
+    [Fact]
+    public async Task BatchHistoryMaxRuns_DiscoveredRecoveryDuringConfirmation_ResetsEditUntilRecoveryFinishes()
+    {
+        var recoveryRequired = false;
+        _batchHistory.HasUnreadableHistory.Returns(_ => recoveryRequired);
+        _batchHistory.SetMaxRunsAsync(7).Returns(3);
+        _batchHistory.SetMaxRunsAsync(7, 3).Returns(_ =>
+        {
+            recoveryRequired = true;
+            _batchHistory.PropertyChanged += Raise.Event<PropertyChangedEventHandler>(
+                _batchHistory, new PropertyChangedEventArgs(nameof(IBatchHistoryService.HasUnreadableHistory)));
+            return Task.FromException<int>(new InvalidDataException("History needs recovery."));
+        });
+        var viewModel = CreateViewModel();
+        viewModel.BatchHistoryMaxRuns = 7;
+
+        await viewModel.ConfirmBatchHistoryLimitCommand.ExecuteAsync(null);
+
+        Assert.True(viewModel.IsHistoryRecoveryRequired);
+        Assert.False(viewModel.CanEditBatchHistoryLimit);
+        Assert.False(viewModel.BatchHistoryLimitSaveFailed);
+        Assert.False(viewModel.IsBatchHistoryLimitPending);
+        Assert.Equal(_batchHistory.MaxRuns, viewModel.BatchHistoryMaxRuns);
+        viewModel.BatchHistoryMaxRuns = 12;
+        await _batchHistory.DidNotReceive().SetMaxRunsAsync(12);
+        Assert.True(CreateViewModel().IsHistoryRecoveryRequired);
+
+        await Assert.PropertyChangedAsync(viewModel, nameof(viewModel.CanEditBatchHistoryLimit), () =>
+        {
+            recoveryRequired = false;
+            _batchHistory.PropertyChanged += Raise.Event<PropertyChangedEventHandler>(
+                _batchHistory, new PropertyChangedEventArgs(nameof(IBatchHistoryService.HasUnreadableHistory)));
+            return Task.CompletedTask;
+        });
+        Assert.False(viewModel.IsHistoryRecoveryRequired);
+        Assert.True(viewModel.CanEditBatchHistoryLimit);
+        Assert.Equal(_batchHistory.MaxRuns, viewModel.BatchHistoryMaxRuns);
+        viewModel.BatchHistoryMaxRuns = 12;
+        await _batchHistory.Received(1).SetMaxRunsAsync(12);
+    }
+
+    [Fact]
+    public void BatchHistoryMaxRuns_StorageFailureWithoutHistoryRecovery_ShowsSaveError()
+    {
+        _batchHistory.SetMaxRunsAsync(12).Returns(Task.FromException<int>(new UnauthorizedAccessException()));
+        var viewModel = CreateViewModel();
+
+        viewModel.BatchHistoryMaxRuns = 12;
+
+        Assert.True(viewModel.BatchHistoryLimitSaveFailed);
+        Assert.False(viewModel.IsHistoryRecoveryRequired);
+        Assert.True(viewModel.CanEditBatchHistoryLimit);
     }
 
     [Fact]

@@ -95,6 +95,10 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     [ObservableProperty]
     public partial bool BatchHistoryLimitSaveFailed { get; private set; }
 
+    public bool IsHistoryRecoveryRequired => _batchHistory.HasUnreadableHistory;
+
+    public bool CanEditBatchHistoryLimit => !IsHistoryRecoveryRequired;
+
     public double BatchHistoryMinRuns => UserSettings.BatchHistorySettings.MinMaxRuns;
 
     public double BatchHistoryMaxRunsLimit => UserSettings.BatchHistorySettings.MaxMaxRuns;
@@ -142,6 +146,17 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         _logger = logger;
 
         BatchHistoryMaxRuns = _batchHistory.MaxRuns;
+        _batchHistory.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName != nameof(IBatchHistoryService.HasUnreadableHistory))
+                return;
+
+            BatchHistoryRunsToRemove = 0;
+            BatchHistoryLimitSaveFailed = false;
+            ShowBatchHistoryLimit(_batchHistory.MaxRuns);
+            OnPropertyChanged(nameof(IsHistoryRecoveryRequired));
+            OnPropertyChanged(nameof(CanEditBatchHistoryLimit));
+        };
         ConfirmBatchHistoryLimitCommand.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(IAsyncRelayCommand.IsRunning))
@@ -392,6 +407,12 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         if (_suppressBatchHistoryLimitChanged)
             return;
 
+        if (IsHistoryRecoveryRequired)
+        {
+            ShowBatchHistoryLimit(_batchHistory.MaxRuns);
+            return;
+        }
+
         _batchHistoryLimitEditVersion++;
         if (double.IsNaN(value))
         {
@@ -437,7 +458,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         await _historyLimitLock.WaitAsync();
         try
         {
-            if (maxRuns != BatchHistoryMaxRuns)
+            if (maxRuns != BatchHistoryMaxRuns || IsHistoryRecoveryRequired)
                 return;
 
             // The limit in effect needs no save, so the error of an abandoned edit is closed.
@@ -450,7 +471,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
 
             BatchHistoryLimitSaveFailed = false;
             var runsToRemove = await _batchHistory.SetMaxRunsAsync(maxRuns, confirmedRemovals);
-            if (maxRuns == BatchHistoryMaxRuns)
+            if (maxRuns == BatchHistoryMaxRuns && !IsHistoryRecoveryRequired)
             {
                 BatchHistoryRunsToRemove = runsToRemove;
             }
@@ -458,7 +479,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException or BatchHistoryLimitSaveException)
         {
             LogSaveBatchHistoryLimitFailed(maxRuns, ex);
-            if (maxRuns == BatchHistoryMaxRuns)
+            if (maxRuns == BatchHistoryMaxRuns && !IsHistoryRecoveryRequired)
             {
                 BatchHistoryLimitSaveFailed = true;
 
