@@ -91,10 +91,20 @@ public partial class BatchHistoryService : IBatchHistoryService
                 {
                     await _userSettings.UpdateAsync(settings => settings.BatchHistory.MaxRuns = maxRuns);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    await _userSettings.DiscardPendingChanges(settings => settings.BatchHistory.MaxRuns = previousLimit);
-                    throw;
+                    try
+                    {
+                        await _userSettings.DiscardPendingChanges(settings => settings.BatchHistory.MaxRuns = previousLimit);
+                    }
+                    catch (Exception discardException)
+                    {
+                        throw new BatchHistoryLimitSaveException(
+                            removed > 0,
+                            new AggregateException(ex, discardException));
+                    }
+
+                    throw new BatchHistoryLimitSaveException(removed > 0, ex);
                 }
             }
 

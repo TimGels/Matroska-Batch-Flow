@@ -437,15 +437,14 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
                 BatchHistoryRunsToRemove = runsToRemove;
             }
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException or BatchHistoryLimitSaveException)
         {
             LogSaveBatchHistoryLimitFailed(maxRuns, ex);
             if (maxRuns == BatchHistoryMaxRuns)
             {
                 BatchHistoryLimitSaveFailed = true;
 
-                // The confirmed runs are already removed when only the limit could not be saved.
-                if (confirmedRemovals > 0 && _batchHistory.Runs.Count <= maxRuns)
+                if (ex is BatchHistoryLimitSaveException { HistoryTrimmed: true })
                 {
                     BatchHistoryRunsToRemove = 0;
                 }
