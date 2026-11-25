@@ -138,7 +138,7 @@ public sealed class BatchResultsViewModelTests : IDisposable
         Assert.True(viewModel.HasUnreadableHistory);
         Assert.False(viewModel.CanClearResultHistory);
         Assert.Empty(viewModel.Runs);
-        Assert.True(await viewModel.ResetUnreadableHistoryAsync());
+        Assert.Equal(HistoryRecoveryStatus.Recovered, (await viewModel.ResetUnreadableHistoryAsync()).Status);
 
         Assert.Equal([true, false], pickerAvailability);
         Assert.False(viewModel.HasUnreadableHistory);
@@ -373,7 +373,11 @@ public sealed class BatchResultsViewModelTests : IDisposable
         var history = Substitute.For<IBatchHistoryService>();
         history.Runs.Returns(_history.Runs);
         var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        history.ResetUnreadableHistoryAsync().Returns(completion.Task);
+        history.ResetUnreadableHistoryAsync().Returns(async _ =>
+        {
+            await completion.Task;
+            return new HistoryRecoveryResult(HistoryRecoveryStatus.Recovered);
+        });
         history.RemoveAsync(Arg.Any<HistoryRemoval>()).Returns(async _ =>
         {
             await completion.Task;
@@ -386,7 +390,7 @@ public sealed class BatchResultsViewModelTests : IDisposable
 
         Assert.True(viewModel.IsChangingHistory);
         await Assert.ThrowsAsync<InvalidOperationException>(() => viewModel.RemoveHistoryAsync(removal));
-        await Assert.ThrowsAsync<InvalidOperationException>(viewModel.ResetUnreadableHistoryAsync);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => viewModel.ResetUnreadableHistoryAsync());
         completion.SetResult(true);
         await operation;
         Assert.False(viewModel.IsChangingHistory);

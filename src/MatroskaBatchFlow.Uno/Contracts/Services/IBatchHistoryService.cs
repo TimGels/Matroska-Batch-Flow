@@ -69,11 +69,11 @@ public interface IBatchHistoryService : INotifyPropertyChanged
     /// </summary>
     Task<HistoryRemovalResult> RemoveAsync(HistoryRemoval removal);
 
-    /// <summary>Whether reading the saved history detected an invalid or unsupported format.</summary>
+    /// <summary>Whether an unreadable history file or its pending reconciliation still requires recovery.</summary>
     bool HasUnreadableHistory { get; }
 
-    /// <summary>Rechecks the file and persists any pending session results alongside readable history, or rebuilds it if still unreadable.</summary>
-    Task<bool> ResetUnreadableHistoryAsync();
+    /// <summary>Rechecks history under the lock. A readable file missing previously listed results requires a decision about those exact IDs.</summary>
+    Task<HistoryRecoveryResult> ResetUnreadableHistoryAsync(HistoryRecoveryDecision? decision = null);
 
     /// <summary>
     /// Removes all saved runs from this device. The media files themselves are not touched.

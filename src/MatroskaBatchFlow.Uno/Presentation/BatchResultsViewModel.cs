@@ -222,7 +222,8 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
 
     public bool CanClearResultHistory => HasRuns && !HasUnreadableHistory;
 
-    public Task<bool> ResetUnreadableHistoryAsync() => ChangeHistoryAsync(_history.ResetUnreadableHistoryAsync);
+    public Task<HistoryRecoveryResult> ResetUnreadableHistoryAsync(HistoryRecoveryDecision? decision = null) =>
+        ChangeHistoryAsync(() => _history.ResetUnreadableHistoryAsync(decision));
 
     private async Task<T> ChangeHistoryAsync<T>(Func<Task<T>> change)
     {
