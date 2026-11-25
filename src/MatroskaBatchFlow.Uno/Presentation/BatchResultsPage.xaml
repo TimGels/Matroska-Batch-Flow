@@ -44,12 +44,12 @@
                                                         <ColumnDefinition Width="Auto" />
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock VerticalAlignment="Center" TextWrapping="Wrap"
-                                                               Text="{x:Bind local:ResultsText.RunLabel(When, Counts)}" />
+                                                               Text="{x:Bind PickerLabel, Mode=OneWay}" />
                                                     <Button Grid.Column="1" Width="32" Height="32" Padding="0"
                                                             Background="Transparent" BorderThickness="0"
                                                             Tag="{x:Bind}" Click="OnRemoveRunClick"
                                                             ToolTipService.ToolTip="{x:Bind local:UiText.Get('HistoryRemove')}"
-                                                            AutomationProperties.Name="{x:Bind local:ResultsText.RemoveRunName(When, Counts)}">
+                                                            AutomationProperties.Name="{x:Bind local:ResultsText.RemoveRunName(PickerLabel), Mode=OneWay}">
                                                         <FontIcon Glyph="&#xE74D;" FontSize="16" AutomationProperties.AccessibilityView="Raw" />
                                                     </Button>
                                                 </Grid>

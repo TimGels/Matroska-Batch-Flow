@@ -72,7 +72,7 @@ public interface IBatchHistoryService : INotifyPropertyChanged
     /// <summary>Whether reading the saved history detected an invalid or unsupported format.</summary>
     bool HasUnreadableHistory { get; }
 
-    /// <summary>Rechecks the file and, only if still unreadable, rebuilds it from the results available in this session.</summary>
+    /// <summary>Rechecks the file and persists any pending session results alongside readable history, or rebuilds it if still unreadable.</summary>
     Task<bool> ResetUnreadableHistoryAsync();
 
     /// <summary>

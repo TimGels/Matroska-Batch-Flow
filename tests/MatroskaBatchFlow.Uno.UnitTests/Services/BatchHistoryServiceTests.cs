@@ -809,6 +809,48 @@ public sealed class BatchHistoryServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task ResetUnreadableHistory_PersistsPendingRunsAfterUnreadableFileIsRepaired_AndCanRetry()
+    {
+        await File.WriteAllTextAsync(_filePath, "invalid", TestContext.Current.CancellationToken);
+        var first = CreateService();
+        var pending = Run(1);
+        await first.AddAsync(pending);
+        Assert.True(first.HasUnreadableHistory);
+
+        File.Delete(_filePath);
+        var repaired = Run(2);
+        await CreateService().AddAsync(repaired);
+        var blockedPath = Directory.CreateDirectory(_filePath + ".tmp");
+
+        Assert.False(await first.ResetUnreadableHistoryAsync());
+        Assert.True(first.HasUnreadableHistory);
+        Assert.Equal(pending.Id, Assert.Single(first.Runs).Id);
+        blockedPath.Delete();
+        Assert.True(await first.ResetUnreadableHistoryAsync());
+        Assert.False(first.HasUnreadableHistory);
+
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal([repaired.Id, pending.Id], restarted.Runs.Select(run => run.Id));
+    }
+
+    [Fact]
+    public async Task ResetUnreadableHistory_PersistsPendingRunsAfterAnotherInstanceDeletesTheFile()
+    {
+        await File.WriteAllTextAsync(_filePath, "invalid", TestContext.Current.CancellationToken);
+        var first = CreateService();
+        var pending = Run(1);
+        await first.AddAsync(pending);
+        File.Delete(_filePath);
+
+        Assert.True(await first.ResetUnreadableHistoryAsync());
+
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal(pending.Id, Assert.Single(restarted.Runs).Id);
+    }
+
+    [Fact]
     public async Task ResetUnreadableHistory_FailureKeepsRecoveryAvailableForRetry()
     {
         var service = CreateService();

@@ -317,6 +317,32 @@ public sealed class BatchResultsViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task PickerLabels_DisambiguateMatchingLocalMinutesAndOutcomes_UntilTheCollisionIsGone()
+    {
+        var first = Run(File("one.mkv", ProcessingStatus.Succeeded)) with { Id = Guid.Parse("abcde100-0000-0000-0000-000000000000") };
+        var second = Run(File("two.mkv", ProcessingStatus.Succeeded, startSeconds: 59)) with { Id = Guid.Parse("abcde200-0000-0000-0000-000000000000") };
+        var different = Run(File("failed.mkv", ProcessingStatus.Failed));
+        await _history.AddAsync(first);
+        await _history.AddAsync(different);
+        var viewModel = new BatchResultsViewModel(_history);
+        var original = viewModel.Runs.Single(run => run.Run.Id == first.Id);
+        Assert.Null(original.PickerId);
+
+        await _history.AddAsync(second);
+
+        var added = viewModel.Runs.Single(run => run.Run.Id == second.Id);
+        Assert.NotNull(original.PickerId);
+        Assert.NotNull(added.PickerId);
+        Assert.NotEqual(original.PickerId, added.PickerId);
+        Assert.StartsWith(original.PickerId, first.Id.ToString("N"));
+        Assert.StartsWith(added.PickerId, second.Id.ToString("N"));
+        Assert.Null(viewModel.Runs.Single(run => run.Run.Id == different.Id).PickerId);
+
+        await viewModel.RemoveHistoryAsync(new([second.Id]));
+        Assert.Null(original.PickerId);
+    }
+
+    [Fact]
     public async Task BulkRemoval_KeepsTheViewedRunFilterAndExpansion_WhenCheckingOtherRuns()
     {
         await _history.AddAsync(Run(File("older.mkv", ProcessingStatus.Succeeded)));

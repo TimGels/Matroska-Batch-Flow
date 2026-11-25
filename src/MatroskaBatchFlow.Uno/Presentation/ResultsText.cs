@@ -79,16 +79,20 @@ public static class ResultsText
     /// </summary>
     /// <param name="when">When the run started.</param>
     /// <param name="counts">The number of files per result in the run.</param>
+    /// <param name="pickerId">A distinguishing run ID prefix, or null when the label is already unique.</param>
     /// <returns>The label, for example "23-11-2026 19:40 · Batch completed".</returns>
-    public static string RunLabel(DateTimeOffset when, BatchResultCounts counts) => Format("ResultsRunLabel", when.LocalDateTime, Headline(counts));
+    public static string RunLabel(DateTimeOffset when, BatchResultCounts counts, string? pickerId)
+    {
+        var label = Format("ResultsRunLabel", when.LocalDateTime, Headline(counts));
+        return pickerId is null ? label : Format("ResultsRunLabelWithId", label, pickerId);
+    }
 
     public static string PickerLabel(BatchRunSummary? run) =>
-        run is null ? Get("ResultsPickerEmpty") : RunLabel(run.When, run.Counts);
+        run?.PickerLabel ?? Get("ResultsPickerEmpty");
 
     public static string PickerName(BatchRunSummary? run) => Format("ResultsPickerNameWithValue", PickerLabel(run));
 
-    public static string RemoveRunName(DateTimeOffset when, BatchResultCounts counts) =>
-        Format("ResultsRemoveNamedRun", RunLabel(when, counts));
+    public static string RemoveRunName(string label) => Format("ResultsRemoveNamedRun", label);
 
     /// <summary>
     /// Gets the result of a file.

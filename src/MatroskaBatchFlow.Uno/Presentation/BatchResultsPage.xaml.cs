@@ -1,6 +1,7 @@
 using MatroskaBatchFlow.Uno.Models;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Data;
 using Windows.ApplicationModel.DataTransfer;
 
 namespace MatroskaBatchFlow.Uno.Presentation;
@@ -70,7 +71,12 @@ public sealed partial class BatchResultsPage : Page
     {
         if (!args.InRecycleQueue && args.Item is BatchRunSummary run)
         {
-            AutomationProperties.SetName(args.ItemContainer, ResultsText.RunLabel(run.When, run.Counts));
+            args.ItemContainer.SetBinding(AutomationProperties.NameProperty, new Binding
+            {
+                Source = run,
+                Path = new PropertyPath(nameof(BatchRunSummary.PickerLabel)),
+                Mode = BindingMode.OneWay
+            });
         }
     }
 
@@ -85,7 +91,7 @@ public sealed partial class BatchResultsPage : Page
         var run = (BatchRunSummary)((Button)sender).Tag;
         var removal = new HistoryRemoval([run.Run.Id]);
         ShowConfirmation(UiText.Get("HistoryConfirmRemoveSingle"), UiText.Get("HistoryRemove"),
-            () => RemoveResultsAsync(removal), ResultsText.RunLabel(run.When, run.Counts));
+            () => RemoveResultsAsync(removal), run.PickerLabel);
     }
 
     private void OnClearHistoryClick(object sender, RoutedEventArgs args)
@@ -109,6 +115,9 @@ public sealed partial class BatchResultsPage : Page
         ConfirmRemoval.Content = button;
         RemovalDescription.Text = detail ?? string.Empty;
         RemovalDescription.Visibility = detail is null ? Visibility.Collapsed : Visibility.Visible;
+        var prompt = detail is null ? question : string.Join(Environment.NewLine, question, detail);
+        AutomationProperties.SetName(CancelRemoval, UiText.Format("HistoryConfirmationActionName", UiText.Get("HistoryCancel"), prompt));
+        AutomationProperties.SetName(ConfirmRemoval, UiText.Format("HistoryConfirmationActionName", button, prompt));
         PickerBrowse.Visibility = Visibility.Collapsed;
         PickerConfirmation.Visibility = Visibility.Visible;
         CancelRemoval.Focus(FocusState.Programmatic);
