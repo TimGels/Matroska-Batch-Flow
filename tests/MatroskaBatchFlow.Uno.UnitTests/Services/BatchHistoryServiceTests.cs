@@ -166,6 +166,21 @@ public sealed class BatchHistoryServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task AddAsync_DoesNotShowRunsAnotherInstanceCleared_WhenSavingFails()
+    {
+        var service = CreateService();
+        await service.AddAsync(Run(0));
+        await service.AddAsync(Run(1));
+        Assert.True(await CreateService().ClearAsync());
+
+        Directory.CreateDirectory(_filePath + ".tmp");
+        var added = Run(2);
+        await service.AddAsync(added);
+
+        Assert.Equal(added.Id, Assert.Single(service.Runs).Id);
+    }
+
+    [Fact]
     public async Task AddAsync_DoesNotRestoreARunStartedBeforeAnotherInstanceClearsHistory()
     {
         var service = CreateService();
@@ -278,7 +293,7 @@ public sealed class BatchHistoryServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task AddAsync_PreservesAllVisibleRuns_WhenTheLimitCannotBeRead()
+    public async Task AddAsync_SavesAllRunsWithoutTrimming_WhenTheLimitCannotBeRead()
     {
         _settings.BatchHistory.MaxRuns = 100;
         var service = CreateService();
@@ -296,6 +311,9 @@ public sealed class BatchHistoryServiceTests : IDisposable
         await restarted.AddAsync(Run(25));
 
         Assert.Equal(26, restarted.Runs.Count);
+        var reloaded = CreateService();
+        await reloaded.LoadAsync();
+        Assert.Equal(26, reloaded.Runs.Count);
     }
 
     [Fact]
@@ -317,7 +335,7 @@ public sealed class BatchHistoryServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task AddAsync_PreservesAllVisibleRuns_WhenTheHistorySettingsSectionIsNull()
+    public async Task AddAsync_SavesAllRunsWithoutTrimming_WhenTheHistorySettingsSectionIsNull()
     {
         _settings.BatchHistory.MaxRuns = 100;
         var service = CreateService();
@@ -335,6 +353,9 @@ public sealed class BatchHistoryServiceTests : IDisposable
         await restarted.AddAsync(Run(25));
 
         Assert.Equal(26, restarted.Runs.Count);
+        var reloaded = CreateService();
+        await reloaded.LoadAsync();
+        Assert.Equal(26, reloaded.Runs.Count);
     }
 
     [Fact]

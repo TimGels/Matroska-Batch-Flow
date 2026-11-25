@@ -14,7 +14,7 @@ public partial class BatchHistoryService
     [LoggerMessage(Level = LogLevel.Warning, Message = "Preserving incomplete batch history file {FilePath}")]
     private partial void LogIncompleteFile(string filePath);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to read the batch history limit; showing all saved batch runs")]
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to read the batch history limit; keeping all batch runs")]
     private partial void LogLimitReadFailed(Exception ex);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to load the batch history from {FilePath}")]

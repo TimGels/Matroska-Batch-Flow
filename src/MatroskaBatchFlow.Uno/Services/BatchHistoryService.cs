@@ -139,27 +139,34 @@ public partial class BatchHistoryService : IBatchHistoryService
         {
             _unsavedRuns.Insert(0, run);
             int? maxRuns = null;
+            BatchRunRecord[]? merged = null;
             try
             {
                 using var storageLock = await FileLock.AcquireAsync(_filePath);
-                var persistedLimit = await ReadPersistedMaxRunsAsync();
-                maxRuns = persistedLimit;
+
+                // Save every run when the limit cannot be read: an unknown limit must not remove runs, and runs kept
+                // only in memory would be lost when the app closes.
+                maxRuns = await TryReadPersistedMaxRunsAsync();
                 var (runs, clearedAt) = await ReadMergedAsync(run, addStartedAt);
-                var kept = runs.Take(persistedLimit).ToArray();
+                merged = runs;
+                var kept = runs.Take(maxRuns ?? runs.Length).ToArray();
                 await Task.Run(() => Write(kept, clearedAt));
                 _unsavedRuns.Clear();
                 ReplaceRuns(kept);
-                if (runs.Length > kept.Length)
+                if (maxRuns is { } limit && runs.Length > limit)
                 {
-                    LogOldestRunsRemoved(runs.Length - kept.Length, persistedLimit);
+                    LogOldestRunsRemoved(runs.Length - limit, limit);
                 }
             }
             catch (Exception ex) when (IsStorageFailure(ex))
             {
                 LogSaveFailed(ex, _filePath);
+
+                // Show the history that was just read when possible, so runs another instance removed do not reappear.
+                var runs = merged ?? Merge(_runs).ToArray();
                 if (maxRuns is { } persistedLimit)
                 {
-                    ReplaceRuns(Merge(_runs).Take(persistedLimit).ToArray());
+                    ReplaceRuns(runs.Take(persistedLimit).ToArray());
                     if (_unsavedRuns.Count > persistedLimit)
                     {
                         _unsavedRuns.RemoveRange(persistedLimit, _unsavedRuns.Count - persistedLimit);
@@ -167,7 +174,7 @@ public partial class BatchHistoryService : IBatchHistoryService
                 }
                 else
                 {
-                    ReplaceRuns(Merge(_runs).ToArray());
+                    ReplaceRuns(runs);
                 }
             }
         }
@@ -216,16 +223,7 @@ public partial class BatchHistoryService : IBatchHistoryService
             _loaded = true;
 
             // Show every saved run when the limit cannot be read, rather than hiding runs behind a default limit.
-            var maxRuns = runs.Length;
-            try
-            {
-                maxRuns = await ReadPersistedMaxRunsAsync();
-            }
-            catch (Exception ex) when (IsStorageFailure(ex))
-            {
-                LogLimitReadFailed(ex);
-            }
-
+            var maxRuns = await TryReadPersistedMaxRunsAsync() ?? runs.Length;
             ReplaceRuns(runs.Take(maxRuns).ToArray());
             LogLoaded(_runs.Count, _filePath);
         }
@@ -263,6 +261,23 @@ public partial class BatchHistoryService : IBatchHistoryService
         }
 
         return (Merge(saved.Runs!).ToArray(), saved.ClearedAt);
+    }
+
+    /// <summary>
+    /// Reads the saved history limit.
+    /// </summary>
+    /// <returns>The limit, or <see langword="null"/> when it cannot be read.</returns>
+    private async Task<int?> TryReadPersistedMaxRunsAsync()
+    {
+        try
+        {
+            return await ReadPersistedMaxRunsAsync();
+        }
+        catch (Exception ex) when (IsStorageFailure(ex))
+        {
+            LogLimitReadFailed(ex);
+            return null;
+        }
     }
 
     private async Task<int> ReadPersistedMaxRunsAsync()
