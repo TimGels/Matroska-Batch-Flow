@@ -17,9 +17,6 @@ public partial class BatchHistoryService
     [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to read the batch history limit; showing all saved batch runs")]
     private partial void LogLimitReadFailed(Exception ex);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to restore the batch history limit of {PreviousLimit}; the limit of {Limit} stays saved")]
-    private partial void LogLimitRestoreFailed(Exception ex, int previousLimit, int limit);
-
     [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to load the batch history from {FilePath}")]
     private partial void LogLoadFailed(Exception ex, string filePath);
 

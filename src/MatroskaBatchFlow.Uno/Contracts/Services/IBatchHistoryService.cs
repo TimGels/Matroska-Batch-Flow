@@ -25,6 +25,10 @@ public interface IBatchHistoryService
     /// <summary>
     /// Saves how many runs are kept, but only removes saved runs if the confirmed count still matches.
     /// </summary>
+    /// <remarks>
+    /// The runs are removed before the limit is saved. If saving the limit then fails, the confirmed runs stay
+    /// removed from the history and <see cref="Runs"/>, and the previous limit stays in effect.
+    /// </remarks>
     /// <param name="maxRuns">The number of runs to keep. It is clamped to the allowed range.</param>
     /// <param name="confirmedRemovals">The number of removals the user confirmed, or zero without confirmation.</param>
     /// <returns>Zero if applied, or the number of removals that now requires confirmation.</returns>
