@@ -26,6 +26,8 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasRuns))]
+    [NotifyPropertyChangedFor(nameof(HasHistoryPicker))]
+    [NotifyPropertyChangedFor(nameof(CanClearResultHistory))]
     public partial IReadOnlyList<BatchRunSummary> Runs { get; private set; } = Array.Empty<BatchRunSummary>();
 
     /// <summary>
@@ -62,7 +64,7 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
     public partial IReadOnlyList<FileResultItem> VisibleFiles { get; private set; } = Array.Empty<FileResultItem>();
 
     [ObservableProperty]
-    public partial bool ClearHistoryFailed { get; private set; }
+    public partial bool IsChangingHistory { get; private set; }
 
     /// <summary>
     /// Gets whether the listed runs include runs that could not be saved on this device yet.
@@ -106,13 +108,22 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
     {
         _history = history;
         ((INotifyCollectionChanged)_history.Runs).CollectionChanged += OnHistoryChanged;
+        _history.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(IBatchHistoryService.HasUnreadableHistory))
+            {
+                OnPropertyChanged(nameof(HasUnreadableHistory));
+                OnPropertyChanged(nameof(HasHistoryPicker));
+                OnPropertyChanged(nameof(CanClearResultHistory));
+            }
+        };
         _history.HasUnsavedRunsChanged += OnUnsavedRunsChanged;
         HasUnsavedRuns = _history.HasUnsavedRuns;
         RefreshRuns(selectNewest: true);
     }
 
     /// <summary>
-    /// Loads the saved runs again if loading them failed before, for example while the file was locked.
+    /// Retries loading saved runs when returning to the Results page after a previous load failed.
     /// </summary>
     /// <param name="parameter">The navigation parameter. Not used.</param>
     public void OnNavigatedTo(object parameter) => _ = _history.LoadAsync();
@@ -121,16 +132,20 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
     {
     }
 
+    private void OnUnsavedRunsChanged(object? sender, EventArgs eventArgs) => HasUnsavedRuns = _history.HasUnsavedRuns;
+
     private void OnHistoryChanged(object? sender, NotifyCollectionChangedEventArgs eventArgs)
     {
+        // A single removal can raise several collection events. Reconcile the picker once after storage.
+        if (IsChangingHistory)
+            return;
+
         var newRunAdded = eventArgs is { Action: NotifyCollectionChangedAction.Add, NewStartingIndex: 0 };
         RefreshRuns(selectNewest: newRunAdded);
     }
 
-    private void OnUnsavedRunsChanged(object? sender, EventArgs eventArgs) => HasUnsavedRuns = _history.HasUnsavedRuns;
-
     /// <summary>
-    /// Rebuilds the run picker. Shows the newest run when it was just added; otherwise keeps the shown run while it is still saved.
+    /// Rebuilds the run picker, keeping the selected run or choosing its next neighbour when removed.
     /// </summary>
     private void RefreshRuns(bool selectNewest)
     {
@@ -139,14 +154,28 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
             .Select(run => existing.TryGetValue(run, out var summary) ? summary : new BatchRunSummary(run))
             .ToArray();
 
-        var previous = SelectedRun;
-        var next = selectNewest || previous is null
-            ? runs.FirstOrDefault()
-            : runs.FirstOrDefault(summary => ReferenceEquals(summary, previous)) ?? runs.FirstOrDefault();
+        if (Runs.SequenceEqual(runs))
+            return;
 
-        // A ComboBox clears its selection through the two-way binding when its items change, so select afterwards.
+        var previous = SelectedRun;
+        var next = runs.FirstOrDefault();
+        if (!selectNewest && previous is not null)
+        {
+            var survivors = runs.ToHashSet();
+            next = Runs.SkipWhile(run => run != previous).FirstOrDefault(survivors.Contains)
+                ?? Runs.LastOrDefault(survivors.Contains) ?? next;
+        }
+
         Runs = runs;
-        SelectedRun = next;
+        if (SelectedRun == next)
+        {
+            // Reapply the one-way selection after the picker receives a new ItemsSource.
+            OnPropertyChanged(nameof(SelectedRun));
+        }
+        else
+        {
+            SelectedRun = next;
+        }
     }
 
     partial void OnSelectedRunChanged(BatchRunSummary? value)
@@ -176,13 +205,39 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
     partial void OnSelectedFilterChanged(FileResultFilterOption? value) => ApplyFilter();
 
     /// <summary>
-    /// Removes all saved runs from this device.
+    /// Captures the listed IDs before showing the clear-history confirmation.
     /// </summary>
-    [RelayCommand]
-    private async Task ClearHistoryAsync()
+    public HistoryRemoval CaptureListedResults() => new(Runs.Select(summary => summary.Run.Id).ToImmutableHashSet());
+
+    /// <summary>
+    /// Applies the flyout's confirmed removal without changing the viewed run if it survives.
+    /// </summary>
+    public Task<HistoryRemovalResult> RemoveHistoryAsync(HistoryRemoval removal) =>
+        ChangeHistoryAsync(() => _history.RemoveAsync(removal));
+
+    public bool HasUnreadableHistory => _history.HasUnreadableHistory;
+
+    public bool HasHistoryPicker => HasRuns || HasUnreadableHistory;
+
+    public bool CanClearResultHistory => HasRuns && !HasUnreadableHistory;
+
+    public Task<bool> ResetUnreadableHistoryAsync() => ChangeHistoryAsync(_history.ResetUnreadableHistoryAsync);
+
+    private async Task<T> ChangeHistoryAsync<T>(Func<Task<T>> change)
     {
-        ClearHistoryFailed = false;
-        ClearHistoryFailed = !await _history.ClearAsync();
+        if (IsChangingHistory)
+            throw new InvalidOperationException("A history change is already in progress.");
+
+        IsChangingHistory = true;
+        try
+        {
+            return await change();
+        }
+        finally
+        {
+            IsChangingHistory = false;
+            RefreshRuns(selectNewest: false);
+        }
     }
 
     private void ApplyFilter()

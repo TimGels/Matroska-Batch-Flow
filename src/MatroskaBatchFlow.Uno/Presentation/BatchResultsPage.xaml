@@ -10,58 +10,85 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Spacing="20" Padding="0,0,8,8">
-            <Grid ColumnSpacing="8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <TextBlock x:Uid="ResultsPageTitle" FontSize="28" FontWeight="SemiBold" VerticalAlignment="Center"
-                           TextTrimming="CharacterEllipsis" />
-                <Button x:Uid="ResultsClearHistory" Grid.Column="1" VerticalAlignment="Center">
-                    <Button.Flyout>
-                        <Flyout x:Name="ClearHistoryFlyout">
-                            <StackPanel Spacing="12" MaxWidth="320">
-                                <TextBlock x:Uid="ResultsClearHistoryConfirmText" TextWrapping="Wrap" />
-                                <Button x:Uid="ResultsClearHistoryConfirm" Style="{StaticResource AccentButtonStyle}"
-                                        Command="{x:Bind ViewModel.ClearHistoryCommand}"
-                                        Click="OnClearHistoryConfirmClick" />
+            <TextBlock x:Uid="ResultsPageTitle" FontSize="28" FontWeight="SemiBold" />
+
+            <StackPanel Spacing="4" HorizontalAlignment="Left" MaxWidth="400"
+                        Visibility="{x:Bind ViewModel.HasHistoryPicker, Mode=OneWay}">
+                <TextBlock Text="{x:Bind local:UiText.Get('ResultsRunPickerName')}" />
+                <DropDownButton MinWidth="280" HorizontalContentAlignment="Stretch"
+                                AutomationProperties.Name="{x:Bind local:ResultsText.PickerName(ViewModel.SelectedRun), Mode=OneWay}">
+                    <TextBlock Text="{x:Bind local:ResultsText.PickerLabel(ViewModel.SelectedRun), Mode=OneWay}"
+                               TextTrimming="CharacterEllipsis" />
+                    <DropDownButton.Flyout>
+                        <Flyout x:Name="RunFlyout" Placement="BottomEdgeAlignedLeft"
+                                Opening="OnRunFlyoutOpening" Closing="OnRunFlyoutClosing">
+                            <StackPanel MinWidth="280" MaxWidth="400" Spacing="8">
+                                <StackPanel x:Name="PickerBrowse" Spacing="8">
+                                    <ListView x:Name="RunList" MaxHeight="300" SelectionMode="Single"
+                                              SingleSelectionFollowsFocus="False" IsItemClickEnabled="True" ItemClick="OnRunPicked"
+                                              SelectionChanged="OnPickerSelectionChanged" ContainerContentChanging="OnPickerContainerChanging"
+                                              ItemsSource="{x:Bind ViewModel.Runs, Mode=OneWay}"
+                                              SelectedItem="{x:Bind ViewModel.SelectedRun, Mode=OneWay}"
+                                              Visibility="{x:Bind ViewModel.HasRuns, Mode=OneWay}"
+                                              AutomationProperties.Name="{x:Bind local:UiText.Get('ResultsRunPickerName')}">
+                                        <ListView.ItemContainerStyle>
+                                            <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                            </Style>
+                                        </ListView.ItemContainerStyle>
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate x:DataType="models:BatchRunSummary">
+                                                <Grid ColumnSpacing="8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock VerticalAlignment="Center" TextWrapping="Wrap"
+                                                               Text="{x:Bind local:ResultsText.RunLabel(When, Counts)}" />
+                                                    <Button Grid.Column="1" Width="32" Height="32" Padding="0"
+                                                            Background="Transparent" BorderThickness="0"
+                                                            Tag="{x:Bind}" Click="OnRemoveRunClick"
+                                                            ToolTipService.ToolTip="{x:Bind local:UiText.Get('HistoryRemove')}"
+                                                            AutomationProperties.Name="{x:Bind local:ResultsText.RemoveRunName(When, Counts)}">
+                                                        <FontIcon Glyph="&#xE74D;" FontSize="16" AutomationProperties.AccessibilityView="Raw" />
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                    <Button x:Uid="HistoryClear" HorizontalAlignment="Stretch" Click="OnClearHistoryClick"
+                                            Visibility="{x:Bind ViewModel.CanClearResultHistory, Mode=OneWay}" />
+                                    <InfoBar x:Uid="HistoryRecoveryNotice" IsClosable="False" Severity="Warning"
+                                             IsOpen="{x:Bind ViewModel.HasUnreadableHistory, Mode=OneWay}">
+                                        <InfoBar.ActionButton>
+                                            <Button x:Name="ResetHistoryButton" x:Uid="HistoryResetUnreadable" Click="OnResetHistoryClick" />
+                                        </InfoBar.ActionButton>
+                                    </InfoBar>
+                                </StackPanel>
+                                <StackPanel x:Name="PickerConfirmation" Visibility="Collapsed" Spacing="8">
+                                    <TextBlock x:Name="ConfirmationQuestion" TextWrapping="Wrap"
+                                               Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                    <TextBlock x:Name="RemovalDescription" TextWrapping="Wrap" />
+                                    <TextBlock x:Uid="HistoryMediaNote" TextWrapping="Wrap" />
+                                    <toolkit:WrapPanel HorizontalSpacing="8" VerticalSpacing="8">
+                                        <Button x:Name="CancelRemoval" Content="{x:Bind local:UiText.Get('HistoryCancel')}" Click="OnCancelRemoval" />
+                                        <Button x:Name="ConfirmRemoval" Click="OnConfirmHistoryAction" />
+                                    </toolkit:WrapPanel>
+                                </StackPanel>
+                                <InfoBar x:Name="PickerError" Severity="Error" IsClosable="False" AutomationProperties.LiveSetting="Polite" />
                             </StackPanel>
                         </Flyout>
-                    </Button.Flyout>
-                </Button>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+            </StackPanel>
 
-                <!-- The run picker has its own row and narrows with the window instead of being clipped. -->
-                <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12,0,0"
-                      Visibility="{x:Bind ViewModel.HasRuns, Mode=OneWay}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" MaxWidth="480" />
-                    </Grid.ColumnDefinitions>
-                    <ComboBox HorizontalAlignment="Stretch"
-                              ItemsSource="{x:Bind ViewModel.Runs, Mode=OneWay}"
-                              SelectedItem="{x:Bind ViewModel.SelectedRun, Mode=TwoWay}"
-                              AutomationProperties.Name="{x:Bind local:UiText.Get('ResultsRunPickerName')}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="models:BatchRunSummary">
-                                <TextBlock Text="{x:Bind local:ResultsText.RunLabel(When, Counts)}" TextTrimming="CharacterEllipsis" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                </Grid>
-            </Grid>
-
-            <InfoBar x:Uid="ResultsClearHistoryFailed"
-                     IsOpen="{x:Bind ViewModel.ClearHistoryFailed, Mode=OneWay}"
-                     Severity="Error" IsClosable="False" AutomationProperties.LiveSetting="Polite" />
+            <InfoBar x:Name="HistoryFeedback" Severity="Success" AutomationProperties.LiveSetting="Polite" />
 
             <InfoBar x:Uid="ResultsUnsavedRuns"
                      IsOpen="{x:Bind ViewModel.HasUnsavedRuns, Mode=OneWay}"
                      Severity="Warning" IsClosable="False" AutomationProperties.LiveSetting="Polite" />
 
-            <!-- Before the first batch -->
+            <!-- No saved batches -->
             <StackPanel Spacing="12" MaxWidth="560" HorizontalAlignment="Center" Margin="0,24,0,0"
                         Visibility="{x:Bind ViewModel.HasNoBatch, Mode=OneWay}">
                 <FontIcon Glyph="&#xE9D9;" FontSize="40" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
