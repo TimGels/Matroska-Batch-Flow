@@ -62,6 +62,12 @@ public partial class BatchHistoryService : IBatchHistoryService
         BatchHistorySettings.MaxMaxRuns);
 
     /// <inheritdoc/>
+    public bool HasUnsavedRuns { get; private set; }
+
+    /// <inheritdoc/>
+    public event EventHandler? HasUnsavedRunsChanged;
+
+    /// <inheritdoc/>
     public async Task<int> SetMaxRunsAsync(int maxRuns, int confirmedRemovals = 0)
     {
         maxRuns = Math.Clamp(maxRuns, BatchHistorySettings.MinMaxRuns, BatchHistorySettings.MaxMaxRuns);
@@ -104,7 +110,7 @@ public partial class BatchHistoryService : IBatchHistoryService
         }
         finally
         {
-            _fileLock.Release();
+            ReleaseFileLock();
         }
     }
 
@@ -171,7 +177,7 @@ public partial class BatchHistoryService : IBatchHistoryService
         }
         finally
         {
-            _fileLock.Release();
+            ReleaseFileLock();
         }
     }
 
@@ -200,7 +206,7 @@ public partial class BatchHistoryService : IBatchHistoryService
         }
         finally
         {
-            _fileLock.Release();
+            ReleaseFileLock();
         }
     }
 
@@ -224,7 +230,7 @@ public partial class BatchHistoryService : IBatchHistoryService
         }
         finally
         {
-            _fileLock.Release();
+            ReleaseFileLock();
         }
     }
 
@@ -290,6 +296,27 @@ public partial class BatchHistoryService : IBatchHistoryService
 
     private IEnumerable<BatchRunRecord> Merge(IEnumerable<BatchRunRecord> saved) =>
         _unsavedRuns.Concat(saved).DistinctBy(run => run.Id).OrderByDescending(run => run.RecordedAt);
+
+    /// <summary>
+    /// Updates <see cref="HasUnsavedRuns"/> for the runs an operation left behind, then lets the next operation start.
+    /// </summary>
+    private void ReleaseFileLock()
+    {
+        try
+        {
+            var unsavedIds = _unsavedRuns.Select(run => run.Id).ToHashSet();
+            var hasUnsavedRuns = _runs.Any(run => unsavedIds.Contains(run.Id));
+            if (hasUnsavedRuns != HasUnsavedRuns)
+            {
+                HasUnsavedRuns = hasUnsavedRuns;
+                HasUnsavedRunsChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
+    }
 
     private void ReplaceRuns(IReadOnlyList<BatchRunRecord> runs)
     {

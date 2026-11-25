@@ -57,6 +57,10 @@
                      IsOpen="{x:Bind ViewModel.ClearHistoryFailed, Mode=OneWay}"
                      Severity="Error" IsClosable="False" AutomationProperties.LiveSetting="Polite" />
 
+            <InfoBar x:Uid="ResultsUnsavedRuns"
+                     IsOpen="{x:Bind ViewModel.HasUnsavedRuns, Mode=OneWay}"
+                     Severity="Warning" IsClosable="False" AutomationProperties.LiveSetting="Polite" />
+
             <!-- Before the first batch -->
             <StackPanel Spacing="12" MaxWidth="560" HorizontalAlignment="Center" Margin="0,24,0,0"
                         Visibility="{x:Bind ViewModel.HasNoBatch, Mode=OneWay}">

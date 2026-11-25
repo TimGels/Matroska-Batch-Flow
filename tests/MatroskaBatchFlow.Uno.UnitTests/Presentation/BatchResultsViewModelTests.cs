@@ -175,6 +175,21 @@ public sealed class BatchResultsViewModelTests : IDisposable
         Assert.Equal(TimeSpan.FromSeconds(7), viewModel.Elapsed);
     }
 
+    [Fact]
+    public async Task HasUnsavedRuns_IsSetWhileARunIsNotSaved_UntilTheNextBatchSavesIt()
+    {
+        var viewModel = new BatchResultsViewModel(_history);
+        Directory.CreateDirectory(_historyPath + ".tmp");
+
+        await _history.AddAsync(Run(File("unsaved.mkv", ProcessingStatus.Succeeded)));
+        Assert.True(viewModel.HasUnsavedRuns);
+
+        Directory.Delete(_historyPath + ".tmp");
+        await _history.AddAsync(Run(File("next.mkv", ProcessingStatus.Succeeded)));
+        Assert.False(viewModel.HasUnsavedRuns);
+        Assert.Equal(2, viewModel.Runs.Count);
+    }
+
     [Theory]
     [InlineData(BatchOutcome.Canceled, ProcessingStatus.Failed, ProcessingStatus.Canceled)]
     [InlineData(BatchOutcome.Failures, ProcessingStatus.Failed, ProcessingStatus.SucceededWithWarnings)]
