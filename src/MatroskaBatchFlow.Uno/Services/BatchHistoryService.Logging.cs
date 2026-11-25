@@ -29,6 +29,18 @@ public partial class BatchHistoryService
     [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to clear the batch history at {FilePath}")]
     private partial void LogClearFailed(Exception ex, string filePath);
 
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Resetting unreadable batch history at {FilePath} after confirmation")]
+    private partial void LogResettingUnreadableHistory(Exception ex, string filePath);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to reset unreadable batch history at {FilePath}")]
+    private partial void LogResetFailed(Exception ex, string filePath);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to remove saved batches from the history at {FilePath}")]
+    private partial void LogRemoveFailed(Exception ex, string filePath);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Removed {RemovedCount} selected batch runs from history")]
+    private partial void LogRunRemoved(int removedCount);
+
     [LoggerMessage(Level = LogLevel.Information, Message = "Batch history limit changed from {PreviousLimit} to {NewLimit}; removed {RemovedCount} oldest batch runs")]
     private partial void LogLimitChanged(int previousLimit, int newLimit, int removedCount);
 

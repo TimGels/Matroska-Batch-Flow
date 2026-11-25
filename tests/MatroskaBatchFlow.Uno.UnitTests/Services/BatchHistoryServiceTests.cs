@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
@@ -127,13 +128,14 @@ public sealed class BatchHistoryServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task ClearAsync_RemovesTheSavedRunsAndTemporaryFiles()
+    public async Task RemoveAsync_SelectingAllListedRuns_PreservesTheClearMarker()
     {
         var service = CreateService();
+        Assert.True(await service.ClearAsync());
         await service.AddAsync(Run(0));
         File.Copy(_filePath, _filePath + ".tmp");
 
-        Assert.True(await service.ClearAsync());
+        Assert.Equal(HistoryRemovalStatus.Removed, (await service.RemoveAsync(SelectAll(service))).Status);
 
         Assert.Empty(service.Runs);
         var clearedContent = await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken);
@@ -347,6 +349,7 @@ public sealed class BatchHistoryServiceTests : IDisposable
         await service.LoadAsync();
 
         Assert.Empty(service.Runs);
+        Assert.True(service.HasUnreadableHistory);
         var run = Run(0);
         await service.AddAsync(run);
         Assert.Equal(run.Id, Assert.Single(service.Runs).Id);
@@ -355,6 +358,26 @@ public sealed class BatchHistoryServiceTests : IDisposable
         Assert.True(await service.ClearAsync());
         Assert.Empty(service.Runs);
         await service.AddAsync(run);
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal(run.Id, Assert.Single(restarted.Runs).Id);
+    }
+
+    [Theory]
+    [InlineData("not json")]
+    [InlineData("""{"Version":99,"Runs":[]}""")]
+    public async Task ResetUnreadableHistory_PreservesSessionRuns_WhenRebuildingAnUnreadableFile(string content)
+    {
+        await File.WriteAllTextAsync(_filePath, content, TestContext.Current.CancellationToken);
+        var service = CreateService();
+        await service.LoadAsync();
+        var run = Run(0);
+        await service.AddAsync(run);
+
+        Assert.Equal(content, await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken));
+        Assert.True(await service.ResetUnreadableHistoryAsync());
+        Assert.False(service.HasUnreadableHistory);
+
         var restarted = CreateService();
         await restarted.LoadAsync();
         Assert.Equal(run.Id, Assert.Single(restarted.Runs).Id);
@@ -467,7 +490,7 @@ public sealed class BatchHistoryServiceTests : IDisposable
         var second = CreateService();
         await first.AddAsync(Run(0));
         await second.LoadAsync();
-        Assert.True(await first.ClearAsync());
+        Assert.Equal(HistoryRemovalStatus.Removed, (await first.RemoveAsync(SelectAll(first))).Status);
 
         var firstRun = Run(1);
         var secondRun = Run(2);
@@ -605,6 +628,206 @@ public sealed class BatchHistoryServiceTests : IDisposable
         Assert.Equal("Dark", savedSettings.UI.Theme);
         Assert.Equal(2, service.Runs.Count);
     }
+
+    [Fact]
+    public async Task RemoveAsync_PreservesOtherInstancesChanges_WithoutTrimmingOrResurrectingRuns()
+    {
+        var first = CreateService();
+        var older = Run(0);
+        var removed = Run(1);
+        var alsoRemoved = Run(4);
+        await first.AddAsync(older);
+        await first.AddAsync(removed);
+        await first.AddAsync(alsoRemoved);
+
+        var second = CreateService();
+        var recent = Run(2);
+        await second.AddAsync(recent);
+        _settings.BatchHistory.MaxRuns = 1;
+
+        var result = await first.RemoveAsync(new([removed.Id, alsoRemoved.Id, Guid.NewGuid()]));
+        Assert.Equal(new HistoryRemovalResult(HistoryRemovalStatus.Removed, 2), result);
+        Assert.Equal([recent.Id, older.Id], first.Runs.Select(run => run.Id));
+
+        _settings.BatchHistory.MaxRuns = 20;
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal([recent.Id, older.Id], restarted.Runs.Select(run => run.Id));
+
+        var newest = Run(3);
+        await second.AddAsync(newest);
+        Assert.Equal([newest.Id, recent.Id, older.Id], second.Runs.Select(run => run.Id));
+    }
+
+    [Fact]
+    public async Task RemoveAsync_LastRunKeepsTheClearMarker_AndCanBeRepeated()
+    {
+        var service = CreateService();
+        var run = Run(0);
+        await service.AddAsync(run);
+        var stale = CreateService();
+        await stale.LoadAsync();
+        File.Copy(_filePath, _filePath + ".tmp");
+
+        Assert.Equal(new HistoryRemovalResult(HistoryRemovalStatus.Removed, 1), await service.RemoveAsync(new([run.Id])));
+        Assert.Equal(new HistoryRemovalResult(HistoryRemovalStatus.Removed, 0), await stale.RemoveAsync(new([run.Id])));
+
+        Assert.Empty(service.Runs);
+        Assert.Empty(stale.Runs);
+        Assert.True(File.Exists(_filePath));
+        Assert.False(File.Exists(_filePath + ".tmp"));
+        Assert.True(File.Exists(_filePath + ".lock"));
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Empty(restarted.Runs);
+    }
+
+    [Fact]
+    public async Task RemoveAsync_WhenWriteFails_PreservesDiskAndListedRuns_UntilRetry()
+    {
+        var service = CreateService();
+        var kept = Run(0);
+        var removed = Run(1);
+        var other = Run(2);
+        await service.AddAsync(kept);
+        await service.AddAsync(removed);
+        await service.AddAsync(other);
+        var content = await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken);
+        var blockedPath = Directory.CreateDirectory(_filePath + ".tmp");
+
+        var removal = new HistoryRemoval([removed.Id, other.Id]);
+        Assert.Equal(HistoryRemovalStatus.Failed, (await service.RemoveAsync(removal)).Status);
+
+        Assert.Equal([other.Id, removed.Id, kept.Id], service.Runs.Select(run => run.Id));
+        Assert.Equal(content, await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken));
+        blockedPath.Delete();
+
+        Assert.Equal(new HistoryRemovalResult(HistoryRemovalStatus.Removed, 2), await service.RemoveAsync(removal));
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal(kept.Id, Assert.Single(restarted.Runs).Id);
+    }
+
+    [Theory]
+    [InlineData("not json")]
+    [InlineData("""{"Version":99,"Runs":[]}""")]
+    public async Task RemoveAsync_DoesNotOverwriteUnreadableHistory(string content)
+    {
+        await File.WriteAllTextAsync(_filePath, content, TestContext.Current.CancellationToken);
+        var service = CreateService();
+        var unsaved = Run(0);
+        await service.AddAsync(unsaved);
+
+        Assert.Equal(HistoryRemovalStatus.Failed, (await service.RemoveAsync(new([unsaved.Id]))).Status);
+
+        Assert.Equal(unsaved.Id, Assert.Single(service.Runs).Id);
+        Assert.Equal(content, await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task RemoveAsync_RemovesAnUnsavedRun_AndPersistsOtherUnsavedRuns()
+    {
+        var service = CreateService();
+        var saved = Run(0);
+        var unsaved = Run(1);
+        var removed = Run(2);
+        await service.AddAsync(saved);
+        var blockedPath = Directory.CreateDirectory(_filePath + ".tmp");
+        await service.AddAsync(unsaved);
+        await service.AddAsync(removed);
+        blockedPath.Delete();
+
+        Assert.Equal(new HistoryRemovalResult(HistoryRemovalStatus.Removed, 1), await service.RemoveAsync(new([removed.Id])));
+
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal([unsaved.Id, saved.Id], restarted.Runs.Select(run => run.Id));
+        var newest = Run(3);
+        await service.AddAsync(newest);
+        Assert.Equal([newest.Id, unsaved.Id, saved.Id], service.Runs.Select(run => run.Id));
+    }
+
+    [Fact]
+    public async Task RemoveAsync_SerializesConcurrentRemovals()
+    {
+        var first = CreateService();
+        var second = CreateService();
+        var runs = Enumerable.Range(0, 3).Select(Run).ToArray();
+        foreach (var run in runs)
+        {
+            await first.AddAsync(run);
+        }
+        await second.LoadAsync();
+
+        var results = await Task.WhenAll(first.RemoveAsync(new([runs[0].Id])), second.RemoveAsync(new([runs[1].Id])));
+
+        Assert.All(results, result => Assert.Equal(new HistoryRemovalResult(HistoryRemovalStatus.Removed, 1), result));
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal(runs[2].Id, Assert.Single(restarted.Runs).Id);
+    }
+
+    [Fact]
+    public async Task SelectAll_DoesNotRemoveANewRun_WhenAnotherInstanceReplacesASelectedRun()
+    {
+        var first = CreateService();
+        var original = Run(0);
+        await first.AddAsync(original);
+        var confirmed = SelectAll(first);
+        var second = CreateService();
+        await second.RemoveAsync(new([original.Id]));
+        var replacement = Run(1);
+        await second.AddAsync(replacement);
+
+        Assert.Equal(new HistoryRemovalResult(HistoryRemovalStatus.Removed, 0), await first.RemoveAsync(confirmed));
+        Assert.Equal(replacement.Id, Assert.Single(first.Runs).Id);
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal(replacement.Id, Assert.Single(restarted.Runs).Id);
+    }
+
+    [Fact]
+    public async Task ResetUnreadableHistory_LeavesAConcurrentlyRepairedFileUntouched()
+    {
+        var first = CreateService();
+        await File.WriteAllTextAsync(_filePath, "invalid", TestContext.Current.CancellationToken);
+        await first.LoadAsync();
+        Assert.True(first.HasUnreadableHistory);
+
+        var second = CreateService();
+        await second.LoadAsync();
+        Assert.True(await second.ResetUnreadableHistoryAsync());
+        Assert.True(File.Exists(_filePath));
+        var saved = Run(1);
+        await second.AddAsync(saved);
+        var content = await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken);
+
+        Assert.True(await first.ResetUnreadableHistoryAsync());
+        Assert.False(first.HasUnreadableHistory);
+        Assert.Equal(saved.Id, Assert.Single(first.Runs).Id);
+        Assert.Equal(content, await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task ResetUnreadableHistory_FailureKeepsRecoveryAvailableForRetry()
+    {
+        var service = CreateService();
+        await File.WriteAllTextAsync(_filePath, "invalid", TestContext.Current.CancellationToken);
+        await service.LoadAsync();
+        var blockedPath = Directory.CreateDirectory(_filePath + ".tmp");
+
+        Assert.False(await service.ResetUnreadableHistoryAsync());
+        Assert.True(service.HasUnreadableHistory);
+        Assert.Equal("invalid", await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken));
+
+        blockedPath.Delete();
+        Assert.True(await service.ResetUnreadableHistoryAsync());
+        Assert.False(service.HasUnreadableHistory);
+        Assert.True(File.Exists(_filePath));
+    }
+
+    private static HistoryRemoval SelectAll(BatchHistoryService service) =>
+        new(service.Runs.Select(run => run.Id).ToImmutableHashSet());
 
     private BatchHistoryService CreateService() => new(_filePath, _userSettings, NullLogger<BatchHistoryService>.Instance);
 

@@ -82,6 +82,14 @@ public static class ResultsText
     /// <returns>The label, for example "23-11-2026 19:40 · Batch completed".</returns>
     public static string RunLabel(DateTimeOffset when, BatchResultCounts counts) => Format("ResultsRunLabel", when.LocalDateTime, Headline(counts));
 
+    public static string PickerLabel(BatchRunSummary? run) =>
+        run is null ? Get("ResultsPickerEmpty") : RunLabel(run.When, run.Counts);
+
+    public static string PickerName(BatchRunSummary? run) => Format("ResultsPickerNameWithValue", PickerLabel(run));
+
+    public static string RemoveRunName(DateTimeOffset when, BatchResultCounts counts) =>
+        Format("ResultsRemoveNamedRun", RunLabel(when, counts));
+
     /// <summary>
     /// Gets the result of a file.
     /// </summary>

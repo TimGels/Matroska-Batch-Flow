@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using MatroskaBatchFlow.Uno.Models;
 
 namespace MatroskaBatchFlow.Uno.Contracts.Services;
@@ -10,7 +11,7 @@ namespace MatroskaBatchFlow.Uno.Contracts.Services;
 /// Members must be called on the UI thread, because <see cref="Runs"/> is bound by the Results page.
 /// Saving is best effort: a run stays listed for this session when it cannot be written to disk.
 /// </remarks>
-public interface IBatchHistoryService
+public interface IBatchHistoryService : INotifyPropertyChanged
 {
     /// <summary>
     /// Gets the saved runs, newest first.
@@ -62,6 +63,17 @@ public interface IBatchHistoryService
     /// <param name="run">The finished run.</param>
     /// <returns>A task that completes when the history is saved or saving failed.</returns>
     Task AddAsync(BatchRunRecord run);
+
+    /// <summary>
+    /// Removes only the confirmed runs in one write, even if every listed run was selected.
+    /// </summary>
+    Task<HistoryRemovalResult> RemoveAsync(HistoryRemoval removal);
+
+    /// <summary>Whether reading the saved history detected an invalid or unsupported format.</summary>
+    bool HasUnreadableHistory { get; }
+
+    /// <summary>Rechecks the file and, only if still unreadable, rebuilds it from the results available in this session.</summary>
+    Task<bool> ResetUnreadableHistoryAsync();
 
     /// <summary>
     /// Removes all saved runs from this device. The media files themselves are not touched.

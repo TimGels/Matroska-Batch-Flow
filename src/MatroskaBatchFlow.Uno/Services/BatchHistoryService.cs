@@ -14,7 +14,7 @@ namespace MatroskaBatchFlow.Uno.Services;
 /// <summary>
 /// Keeps the results of finished batches in a JSON file in the local application data folder.
 /// </summary>
-public partial class BatchHistoryService : IBatchHistoryService
+public partial class BatchHistoryService : ObservableObject, IBatchHistoryService
 {
     private const int LegacyFormatVersion = 1;
     private const int TimestampFormatVersion = 2;
@@ -54,6 +54,10 @@ public partial class BatchHistoryService : IBatchHistoryService
 
     /// <inheritdoc/>
     public ReadOnlyObservableCollection<BatchRunRecord> Runs { get; }
+
+    /// <inheritdoc/>
+    [ObservableProperty]
+    public partial bool HasUnreadableHistory { get; private set; }
 
     /// <inheritdoc/>
     public int MaxRuns => Math.Clamp(
@@ -171,6 +175,75 @@ public partial class BatchHistoryService : IBatchHistoryService
     }
 
     /// <inheritdoc/>
+    public async Task<HistoryRemovalResult> RemoveAsync(HistoryRemoval removal)
+    {
+        ArgumentNullException.ThrowIfNull(removal);
+        if (removal.RunIds.IsEmpty)
+            throw new ArgumentException("Select at least one run to remove.", nameof(removal));
+
+        await _fileLock.WaitAsync();
+        try
+        {
+            using var storageLock = await FileLock.AcquireAsync(_filePath);
+            var (runs, header) = await ReadMergedAsync();
+            var kept = runs.Where(run => !removal.RunIds.Contains(run.Id)).ToArray();
+            var visibleIds = runs.Select(run => run.Id).Concat(_unsavedRuns.Select(pending => pending.Run.Id)).ToHashSet();
+            var removed = visibleIds.Count(removal.RunIds.Contains);
+            await Task.Run(() => Write(kept, header));
+            _unsavedRuns.RemoveAll(pending => removal.RunIds.Contains(pending.Run.Id) || pending.Order == ClearOrder.Known);
+            ReplaceRuns(kept);
+            LogRunRemoved(removed);
+            return new(HistoryRemovalStatus.Removed, removed);
+        }
+        catch (Exception ex) when (IsStorageFailure(ex))
+        {
+            LogRemoveFailed(ex, _filePath);
+            return new(HistoryRemovalStatus.Failed);
+        }
+        finally
+        {
+            ReleaseFileLock();
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> ResetUnreadableHistoryAsync()
+    {
+        await _fileLock.WaitAsync();
+        try
+        {
+            using var storageLock = await FileLock.AcquireAsync(_filePath);
+            var previouslyUnreadable = HasUnreadableHistory;
+            try
+            {
+                // Another instance may already have repaired the file. Never overwrite its results.
+                ReplaceRuns((await ReadMergedAsync()).Runs);
+            }
+            catch (Exception ex) when (previouslyUnreadable && ex is JsonException or InvalidDataException)
+            {
+                LogResettingUnreadableHistory(ex, _filePath);
+                var recoveredRuns = _runs.Concat(_unsavedRuns.Select(pending => pending.Run))
+                    .DistinctBy(run => run.Id)
+                    .OrderByDescending(run => run.RecordedAt)
+                    .ToArray();
+                var resetHeader = new HistoryHeader(FormatVersion, ClearId: Guid.NewGuid());
+                await SaveRemainingAsync(recoveredRuns, resetHeader, clearAllPending: true);
+                HasUnreadableHistory = false;
+            }
+            return true;
+        }
+        catch (Exception ex) when (IsStorageFailure(ex))
+        {
+            LogResetFailed(ex, _filePath);
+            return false;
+        }
+        finally
+        {
+            ReleaseFileLock();
+        }
+    }
+
+    /// <inheritdoc/>
     public async Task<bool> ClearAsync()
     {
         await _fileLock.WaitAsync();
@@ -184,6 +257,7 @@ public partial class BatchHistoryService : IBatchHistoryService
             var removed = _runs.Count;
             _unsavedRuns.Clear();
             _runs.Clear();
+            HasUnreadableHistory = false;
             LogCleared(removed);
             return true;
         }
@@ -245,24 +319,49 @@ public partial class BatchHistoryService : IBatchHistoryService
         }
     }
 
-    private async Task<(BatchRunRecord[] Runs, HistoryHeader Header)> ReadMergedAsync()
+    private async Task SaveRemainingAsync(BatchRunRecord[] runs, HistoryHeader header, bool clearAllPending = false)
     {
-        var (saved, header) = await Task.Run(Read);
+        await Task.Run(() => Write(runs, header));
         _lastSeenHeader = header;
-        _unsavedRuns.RemoveAll(pending => pending.Order != ClearOrder.Unknown && pending.Header != header);
-        for (var index = 0; index < _unsavedRuns.Count; index++)
+        if (clearAllPending)
         {
-            var pending = _unsavedRuns[index];
-            if (pending.Order != ClearOrder.Unknown)
-                continue;
-
-            // An unreadable snapshot followed by an unfamiliar clear proves neither order. Keep the result
-            // visible, but never write it back across that clear. A subsequent clear can safely remove it.
-            var order = header == NeverCleared || pending.Header == header ? ClearOrder.Known : ClearOrder.SessionOnly;
-            _unsavedRuns[index] = pending with { Header = header, Order = order };
+            _unsavedRuns.Clear();
+        }
+        else
+        {
+            _unsavedRuns.RemoveAll(pending => pending.Order == ClearOrder.Known);
         }
 
-        return (Merge(_unsavedRuns.Where(pending => pending.Order == ClearOrder.Known), saved), header);
+        ReplaceRuns(runs);
+    }
+
+    private async Task<(BatchRunRecord[] Runs, HistoryHeader Header)> ReadMergedAsync()
+    {
+        try
+        {
+            var (saved, header) = await Task.Run(Read);
+            HasUnreadableHistory = false;
+            _lastSeenHeader = header;
+            _unsavedRuns.RemoveAll(pending => pending.Order != ClearOrder.Unknown && pending.Header != header);
+            for (var index = 0; index < _unsavedRuns.Count; index++)
+            {
+                var pending = _unsavedRuns[index];
+                if (pending.Order != ClearOrder.Unknown)
+                    continue;
+
+                // An unreadable snapshot followed by an unfamiliar clear proves neither order. Keep the result
+                // visible, but never write it back across that clear. A subsequent clear can safely remove it.
+                var order = header == NeverCleared || pending.Header == header ? ClearOrder.Known : ClearOrder.SessionOnly;
+                _unsavedRuns[index] = pending with { Header = header, Order = order };
+            }
+
+            return (Merge(_unsavedRuns.Where(pending => pending.Order == ClearOrder.Known), saved), header);
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidDataException)
+        {
+            HasUnreadableHistory = true;
+            throw;
+        }
     }
 
     /// <summary>
