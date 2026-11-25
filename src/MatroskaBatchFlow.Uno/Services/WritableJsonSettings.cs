@@ -80,7 +80,24 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
     /// <returns>
     /// A <see cref="Task"/> that represents the asynchronous operation.
     /// </returns>
-    public async Task UpdateAsync(Action<T> applyChanges)
+    public Task UpdateAsync(Action<T> applyChanges) => UpdateCoreAsync(applyChanges, restoreOnFailure: null);
+
+    /// <summary>
+    /// Updates the current value like <see cref="UpdateAsync(Action{T})"/>, but abandons the change if it cannot be
+    /// persisted.
+    /// </summary>
+    /// <remarks>
+    /// If persistence fails, <paramref name="restoreOnFailure"/> restores the cached values and the values it restores
+    /// are not retried. Both happen before the next update can start, so a queued update cannot persist the abandoned
+    /// change.
+    /// </remarks>
+    /// <param name="applyChanges">A delegate that defines the changes to apply to the current value.</param>
+    /// <param name="restoreOnFailure">A delegate that restores the values changed by <paramref name="applyChanges"/>.</param>
+    /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
+    public Task UpdateAsync(Action<T> applyChanges, Action<T> restoreOnFailure) =>
+        UpdateCoreAsync(applyChanges, restoreOnFailure);
+
+    private async Task UpdateCoreAsync(Action<T> applyChanges, Action<T>? restoreOnFailure)
     {
         await _lock.WaitAsync();
         try
@@ -108,9 +125,22 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
 
                 _pendingChanges = null;
             }
-            catch
+            catch (Exception ex)
             {
-                _pendingChanges = pendingChanges;
+                // Restore before releasing the lock, so a queued update cannot persist the rejected values.
+                if (restoreOnFailure is not null)
+                {
+                    try
+                    {
+                        RestoreValues(pendingChanges, restoreOnFailure);
+                    }
+                    catch (Exception restoreException)
+                    {
+                        throw new AggregateException(ex, restoreException);
+                    }
+                }
+
+                _pendingChanges = pendingChanges.Count == 0 ? null : pendingChanges;
                 throw;
             }
         }
@@ -120,26 +150,17 @@ public partial class WritableJsonSettings<T> : IWritableSettings<T> where T : cl
         }
     }
 
-    /// <inheritdoc/>
-    public async Task DiscardPendingChanges(Action<T> restoreChanges)
+    /// <summary>
+    /// Restores cached values after a failed update and removes them from the pending changes.
+    /// </summary>
+    /// <param name="pendingChanges">The pending changes to update.</param>
+    /// <param name="restoreChanges">A delegate that restores the cached values.</param>
+    private void RestoreValues(JsonObject pendingChanges, Action<T> restoreChanges)
     {
-        await _lock.WaitAsync();
-        try
-        {
-            var before = JsonSerializer.SerializeToNode(_value, SerializerOptions)!.AsObject();
-            restoreChanges(_value);
-            var after = JsonSerializer.SerializeToNode(_value, SerializerOptions)!.AsObject();
-            if (_pendingChanges is null)
-                return;
-
-            var pendingChanges = _pendingChanges.DeepClone().AsObject();
-            RemoveChanges(pendingChanges, before, after);
-            _pendingChanges = pendingChanges.Count == 0 ? null : pendingChanges;
-        }
-        finally
-        {
-            _lock.Release();
-        }
+        var before = JsonSerializer.SerializeToNode(_value, SerializerOptions)!.AsObject();
+        restoreChanges(_value);
+        var after = JsonSerializer.SerializeToNode(_value, SerializerOptions)!.AsObject();
+        RemoveChanges(pendingChanges, before, after);
     }
 
     /// <inheritdoc/>
