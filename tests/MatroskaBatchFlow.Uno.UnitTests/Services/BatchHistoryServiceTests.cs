@@ -27,10 +27,10 @@ public sealed class BatchHistoryServiceTests : IDisposable
                 call.Arg<Action<UserSettings>>()(_settings);
                 return Task.CompletedTask;
             });
-        _userSettings.DiscardPendingChanges(Arg.Any<Action<UserSettings>>())
+        _userSettings.UpdateAsync(Arg.Any<Action<UserSettings>>(), Arg.Any<Action<UserSettings>>())
             .Returns(call =>
             {
-                call.Arg<Action<UserSettings>>()(_settings);
+                call.ArgAt<Action<UserSettings>>(0)(_settings);
                 return Task.CompletedTask;
             });
     }
@@ -447,10 +447,11 @@ public sealed class BatchHistoryServiceTests : IDisposable
             await service.AddAsync(run);
         }
 
-        _userSettings.UpdateAsync(Arg.Any<Action<UserSettings>>())
+        _userSettings.UpdateAsync(Arg.Any<Action<UserSettings>>(), Arg.Any<Action<UserSettings>>())
             .Returns(call =>
             {
-                call.Arg<Action<UserSettings>>()(_settings);
+                call.ArgAt<Action<UserSettings>>(0)(_settings);
+                call.ArgAt<Action<UserSettings>>(1)(_settings);
                 throw new IOException("settings file is read-only");
             });
 
@@ -481,7 +482,7 @@ public sealed class BatchHistoryServiceTests : IDisposable
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.SetMaxRunsAsync(2, confirmedRemovals: 2));
 
-        await _userSettings.DidNotReceiveWithAnyArgs().UpdateAsync(default!);
+        await _userSettings.DidNotReceiveWithAnyArgs().UpdateAsync(default!, default!);
         Assert.Equal(UserSettings.BatchHistorySettings.DefaultMaxRuns, service.MaxRuns);
         Directory.Delete(_filePath + ".tmp");
         var restarted = CreateService();

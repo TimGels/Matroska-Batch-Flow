@@ -105,6 +105,28 @@ public sealed class WritableJsonSettingsTests : IDisposable
     }
 
     [Fact]
+    public async Task UpdateAsync_DoesNotPersistARestoredChange_WhenAnUpdateIsQueuedBehindTheFailure()
+    {
+        var settings = CreateSettings();
+        await settings.UpdateAsync(value => value.BatchHistory.MaxRuns = 20);
+        var otherInstance = new FileStream(_filePath + ".lock", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+
+        var rejected = settings.UpdateAsync(
+            value => value.BatchHistory.MaxRuns = 10,
+            value => value.BatchHistory.MaxRuns = 20);
+        var queued = settings.UpdateAsync(value => value.UI.Theme = "Dark");
+        _ = rejected.ContinueWith(_ => otherInstance.Dispose(), TaskContinuationOptions.ExecuteSynchronously);
+
+        await Assert.ThrowsAsync<IOException>(() => rejected);
+        await queued;
+
+        var saved = await CreateSettings().ReadFromDiskAsync();
+        Assert.Equal(20, saved.BatchHistory.MaxRuns);
+        Assert.Equal("Dark", saved.UI.Theme);
+        Assert.Equal(20, settings.Value.BatchHistory.MaxRuns);
+    }
+
+    [Fact]
     public async Task ReadFromDiskAsync_Throws_WhenThePathCannotBeRead()
     {
         // File.Exists reports an inaccessible path as missing, which must not be read as default settings.

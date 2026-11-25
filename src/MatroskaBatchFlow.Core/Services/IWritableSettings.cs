@@ -6,7 +6,7 @@ public interface IWritableSettings<T> : IOptions<T> where T : class, new()
 {
     Task UpdateAsync(Action<T> applyChanges);
 
-    Task DiscardPendingChanges(Action<T> restoreChanges);
+    Task UpdateAsync(Action<T> applyChanges, Action<T> restoreOnFailure);
 
     Task<T> ReadFromDiskAsync();
 }
