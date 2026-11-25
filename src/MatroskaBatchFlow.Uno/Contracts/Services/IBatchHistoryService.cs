@@ -45,7 +45,8 @@ public interface IBatchHistoryService
     Task LoadAsync();
 
     /// <summary>
-    /// Adds a finished run as the newest, drops the oldest runs beyond the limit and saves the history.
+    /// Adds a finished run as the newest, drops the oldest runs beyond the saved limit and saves the history.
+    /// If the limit cannot be read, every run is saved.
     /// </summary>
     /// <param name="run">The finished run.</param>
     /// <returns>A task that completes when the history is saved or saving failed.</returns>
