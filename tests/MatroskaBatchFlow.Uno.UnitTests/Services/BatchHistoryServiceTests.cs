@@ -1,6 +1,7 @@
 using MatroskaBatchFlow.Core.Enums;
 using MatroskaBatchFlow.Core.Models;
 using MatroskaBatchFlow.Core.Services;
+using MatroskaBatchFlow.Uno.Contracts.Services;
 using MatroskaBatchFlow.Uno.Models;
 using MatroskaBatchFlow.Uno.Services;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -432,8 +433,11 @@ public sealed class BatchHistoryServiceTests : IDisposable
                 throw new IOException("settings file is read-only");
             });
 
-        await Assert.ThrowsAsync<IOException>(() => service.SetMaxRunsAsync(2, confirmedRemovals: 2));
+        var exception = await Assert.ThrowsAsync<BatchHistoryLimitSaveException>(
+            () => service.SetMaxRunsAsync(2, confirmedRemovals: 2));
 
+        Assert.True(exception.HistoryTrimmed);
+        Assert.IsType<IOException>(exception.InnerException);
         Assert.Equal(UserSettings.BatchHistorySettings.DefaultMaxRuns, service.MaxRuns);
         Assert.Equal(2, service.Runs.Count);
         await service.AddAsync(Run(4));
@@ -480,8 +484,10 @@ public sealed class BatchHistoryServiceTests : IDisposable
 
         var temporaryPath = settingsPath + ".tmp";
         Directory.CreateDirectory(temporaryPath);
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+        var exception = await Assert.ThrowsAsync<BatchHistoryLimitSaveException>(
             () => service.SetMaxRunsAsync(2, confirmedRemovals: 2));
+        Assert.True(exception.HistoryTrimmed);
+        Assert.IsType<UnauthorizedAccessException>(exception.InnerException);
         Assert.Equal(20, userSettings.Value.BatchHistory.MaxRuns);
 
         Directory.Delete(temporaryPath);

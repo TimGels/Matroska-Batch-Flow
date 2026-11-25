@@ -330,15 +330,19 @@ public class SettingsViewModelTests
     }
 
     [Theory]
-    [InlineData(7, false)]
-    [InlineData(10, true)]
-    public async Task ConfirmBatchHistoryLimit_AsksAgainOnlyIfTheRunsAreKept_WhenSavingFails(int runsAfterFailure, bool expectedPending)
+    [InlineData(2, false, true)]
+    [InlineData(10, true, false)]
+    public async Task ConfirmBatchHistoryLimit_ClosesOnlyWhenTheServiceReportsThatTheTrimCommitted(
+        int runsAfterFailure,
+        bool historyTrimmed,
+        bool expectedPending)
     {
         var runs = Enumerable.Range(0, runsAfterFailure)
             .Select(_ => new BatchRunRecord(Guid.NewGuid(), DateTimeOffset.UnixEpoch, []));
         _batchHistory.Runs.Returns(new ReadOnlyObservableCollection<BatchRunRecord>(new ObservableCollection<BatchRunRecord>(runs)));
         _batchHistory.SetMaxRunsAsync(7).Returns(3);
-        _batchHistory.SetMaxRunsAsync(7, 3).Returns(Task.FromException<int>(new IOException("settings file is read-only")));
+        _batchHistory.SetMaxRunsAsync(7, 3).Returns(Task.FromException<int>(
+            new BatchHistoryLimitSaveException(historyTrimmed, new IOException("settings file is read-only"))));
         var viewModel = CreateViewModel();
         viewModel.BatchHistoryMaxRuns = 7;
 
@@ -346,6 +350,23 @@ public class SettingsViewModelTests
 
         Assert.True(viewModel.BatchHistoryLimitSaveFailed);
         Assert.Equal(expectedPending, viewModel.IsBatchHistoryLimitPending);
+    }
+
+    [Fact]
+    public async Task ConfirmBatchHistoryLimit_StaysPending_WhenHistoryWriteFailsDespiteLocalRunsBeingWithinLimit()
+    {
+        var runs = Enumerable.Range(0, 2)
+            .Select(_ => new BatchRunRecord(Guid.NewGuid(), DateTimeOffset.UnixEpoch, []));
+        _batchHistory.Runs.Returns(new ReadOnlyObservableCollection<BatchRunRecord>(new ObservableCollection<BatchRunRecord>(runs)));
+        _batchHistory.SetMaxRunsAsync(7).Returns(3);
+        _batchHistory.SetMaxRunsAsync(7, 3).Returns(Task.FromException<int>(new IOException("history file is read-only")));
+        var viewModel = CreateViewModel();
+        viewModel.BatchHistoryMaxRuns = 7;
+
+        await viewModel.ConfirmBatchHistoryLimitCommand.ExecuteAsync(null);
+
+        Assert.True(viewModel.BatchHistoryLimitSaveFailed);
+        Assert.True(viewModel.IsBatchHistoryLimitPending);
     }
 
     [Fact]
