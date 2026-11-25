@@ -214,10 +214,11 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
         {
             using var storageLock = await FileLock.AcquireAsync(_filePath);
             var previouslyUnreadable = HasUnreadableHistory;
+            BatchRunRecord[] runs;
+            HistoryHeader header;
             try
             {
-                // Another instance may already have repaired the file. Never overwrite its results.
-                ReplaceRuns((await ReadMergedAsync()).Runs);
+                (runs, header) = await ReadMergedAsync(markReadable: false);
             }
             catch (Exception ex) when (previouslyUnreadable && ex is JsonException or InvalidDataException)
             {
@@ -229,7 +230,17 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
                 var resetHeader = new HistoryHeader(FormatVersion, ClearId: Guid.NewGuid());
                 await SaveRemainingAsync(recoveredRuns, resetHeader, clearAllPending: true);
                 HasUnreadableHistory = false;
+                return true;
             }
+            if (_unsavedRuns.Any(pending => pending.Order == ClearOrder.Known))
+            {
+                await SaveRemainingAsync(runs, header);
+            }
+            else
+            {
+                ReplaceRuns(runs);
+            }
+            HasUnreadableHistory = false;
             return true;
         }
         catch (Exception ex) when (IsStorageFailure(ex))
@@ -335,12 +346,16 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
         ReplaceRuns(runs);
     }
 
-    private async Task<(BatchRunRecord[] Runs, HistoryHeader Header)> ReadMergedAsync()
+    private async Task<(BatchRunRecord[] Runs, HistoryHeader Header)> ReadMergedAsync(bool markReadable = true)
     {
         try
         {
             var (saved, header) = await Task.Run(Read);
-            HasUnreadableHistory = false;
+            // Recovery is not complete until any pending session results have been persisted.
+            if (markReadable)
+            {
+                HasUnreadableHistory = false;
+            }
             _lastSeenHeader = header;
             _unsavedRuns.RemoveAll(pending => pending.Order != ClearOrder.Unknown && pending.Header != header);
             for (var index = 0; index < _unsavedRuns.Count; index++)

@@ -157,6 +157,7 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
         if (Runs.SequenceEqual(runs))
             return;
 
+        BatchRunSummary.DisambiguatePickerLabels(runs);
         var previous = SelectedRun;
         var next = runs.FirstOrDefault();
         if (!selectNewest && previous is not null)

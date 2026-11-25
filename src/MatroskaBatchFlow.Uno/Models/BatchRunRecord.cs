@@ -78,7 +78,7 @@ public sealed record FileRunRecord(
 /// <summary>
 /// A saved run as offered in the run picker of the Results page, with its counts and timing.
 /// </summary>
-public sealed class BatchRunSummary
+public sealed partial class BatchRunSummary : ObservableObject
 {
     private IReadOnlyList<FileResultItem>? _files;
 
@@ -138,4 +138,36 @@ public sealed class BatchRunSummary
     /// Gets when the run started, or when it was saved if no file started.
     /// </summary>
     public DateTimeOffset When => StartedAt ?? Run.RecordedAt;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PickerLabel))]
+    public partial string? PickerId { get; private set; }
+
+    public string PickerLabel => ResultsText.RunLabel(When, Counts, PickerId);
+
+    internal static void DisambiguatePickerLabels(IEnumerable<BatchRunSummary> runs)
+    {
+        // The picker displays local time to the minute. Only a failure headline includes a count.
+        var groups = runs.GroupBy(run => (run.When.LocalDateTime.Ticks / TimeSpan.TicksPerMinute,
+            run.Counts.Outcome, run.Counts.Outcome == BatchOutcome.Failures ? run.Counts.Failed : 0));
+        foreach (var group in groups)
+        {
+            var entries = group.Select(run => (Run: run, Id: run.Run.Id.ToString("N"))).ToArray();
+            if (entries.Length == 1)
+            {
+                entries[0].Run.PickerId = null;
+                continue;
+            }
+
+            var length = 4;
+            while (entries.DistinctBy(entry => entry.Id[..length]).Count() != entries.Length)
+            {
+                length++;
+            }
+            foreach (var (run, id) in entries)
+            {
+                run.PickerId = id[..length];
+            }
+        }
+    }
 }

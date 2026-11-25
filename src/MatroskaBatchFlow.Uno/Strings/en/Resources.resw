@@ -406,6 +406,7 @@
   <data name="ResultsFilterCanceled" xml:space="preserve"><value>Not processed ({0})</value></data>
   <data name="ResultsFilterInterrupted" xml:space="preserve"><value>Interrupted ({0})</value></data>
   <data name="ResultsRunLabel" xml:space="preserve"><value>{0:g} · {1}</value><comment>A saved batch result in the run picker. {0}: start date and time; {1}: headline of the batch result.</comment></data>
+  <data name="ResultsRunLabelWithId" xml:space="preserve"><value>{0} · #{1}</value><comment>{0}: complete picker label; {1}: unique prefix of the saved result ID when labels would otherwise match.</comment></data>
   <data name="ResultsRunPickerName" xml:space="preserve"><value>Saved batch result</value><comment>Accessible name of the picker that selects which saved batch result is shown.</comment></data>
   <data name="ResultsPickerNameWithValue" xml:space="preserve"><value>Saved batch result: {0}</value><comment>{0}: date and outcome, or the empty-state label.</comment></data>
   <data name="ResultsPickerEmpty" xml:space="preserve"><value>No saved batch results</value></data>
@@ -423,6 +424,7 @@
   <data name="HistoryReset" xml:space="preserve"><value>Reset unreadable history</value></data>
   <data name="HistoryRemove" xml:space="preserve"><value>Remove from history</value></data>
   <data name="HistoryCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="HistoryConfirmationActionName" xml:space="preserve"><value>{0}. {1}</value><comment>Accessible name. {0}: visible action label; {1}: confirmation question, including the count or followed by the specific result label.</comment></data>
   <data name="HistoryRemovalFailed" xml:space="preserve"><value>Could not remove the saved results. Check that the history file is accessible, then try again.</value></data>
   <data name="HistoryRecoverySucceeded" xml:space="preserve"><value>History is ready to use again.</value></data>
   <data name="HistoryRecoveryFailed" xml:space="preserve"><value>Could not reset saved history. Check that the history file is accessible, then try again.</value></data>
