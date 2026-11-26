@@ -38,8 +38,8 @@ public interface IBatchHistoryService : INotifyPropertyChanged
     /// Saves how many runs are kept, but only removes saved runs if the confirmed count still matches.
     /// </summary>
     /// <remarks>
-    /// The runs are removed before the limit is saved. If saving the limit then fails, the confirmed runs stay
-    /// removed from the history and <see cref="Runs"/>, and the previous limit stays in effect.
+    /// The history is trimmed before the limit is saved. If saving the limit then fails, the prior history is
+    /// restored when possible and the previous limit stays in effect.
     /// </remarks>
     /// <exception cref="BatchHistoryLimitSaveException">
     /// The limit could not be saved; <see cref="BatchHistoryLimitSaveException.HistoryTrimmed"/> reports whether

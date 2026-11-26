@@ -106,7 +106,21 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
                 }
                 catch (Exception ex)
                 {
-                    throw new BatchHistoryLimitSaveException(removed > 0, ex);
+                    if (removed > 0)
+                    {
+                        try
+                        {
+                            await SaveRemainingAsync(runs, header);
+                        }
+                        catch (Exception rollbackException)
+                        {
+                            throw new BatchHistoryLimitSaveException(
+                                true,
+                                new AggregateException(ex, rollbackException));
+                        }
+                    }
+
+                    throw new BatchHistoryLimitSaveException(false, ex);
                 }
             }
 
@@ -224,6 +238,7 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
         {
             using var storageLock = await FileLock.AcquireAsync(_filePath);
             var previouslyUnreadable = HasUnreadableHistory;
+            var maxRuns = await ReadPersistedMaxRunsAsync();
             BatchRunRecord[] runs;
             HistoryHeader header;
             try
@@ -240,6 +255,7 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
                 var recoveredRuns = _runs.Concat(_unsavedRuns.Select(pending => pending.Run))
                     .DistinctBy(run => run.Id)
                     .OrderByDescending(run => run.RecordedAt)
+                    .Take(maxRuns)
                     .ToArray();
                 var resetHeader = new HistoryHeader(FormatVersion, ClearId: Guid.NewGuid());
                 await SaveRemainingAsync(recoveredRuns, resetHeader, clearAllPending: true);
@@ -262,13 +278,14 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
                 }
             }
 
-            if (restore || _unsavedRuns.Any(pending => pending.Order == ClearOrder.Known))
+            var kept = runs.Take(maxRuns).ToArray();
+            if (restore || _unsavedRuns.Any(pending => pending.Order == ClearOrder.Known) || kept.Length < runs.Length)
             {
-                await SaveRemainingAsync(runs, header);
+                await SaveRemainingAsync(kept, header);
             }
             else
             {
-                ReplaceRuns(runs);
+                ReplaceRuns(kept);
                 HasUnreadableHistory = false;
             }
 
