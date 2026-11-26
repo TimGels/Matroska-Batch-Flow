@@ -128,11 +128,14 @@
             <CommandBar DefaultLabelPosition="Right"
                         IsEnabled="{x:Bind ViewModel.IsInteractionEnabled, Mode=OneWay}">
                 <CommandBar.PrimaryCommands>
-                    <AppBarButton x:Uid="FooterShowArguments"
+                    <AppBarButton x:Name="ShowArgumentsButton"
+                                  x:Uid="FooterShowArguments"
                                   Icon="ShowResults"
+                                  SizeChanged="ShowArgumentsButton_SizeChanged"
+                                  Visibility="{x:Bind ViewModel.ShowMkvpropeditArguments, Mode=OneWay}"
                                   IsEnabled="{x:Bind ViewModel.CanProcessBatch, Mode=OneWay}"
                                   Command="{x:Bind ViewModel.GenerateMkvpropeditArgumentsCommand}" />
-                    <AppBarSeparator />
+                    <AppBarSeparator Visibility="{x:Bind ViewModel.ShowMkvpropeditArguments, Mode=OneWay}" />
                     <AppBarButton x:Uid="FooterApplyChanges"
                                   AutomationProperties.HelpText="{x:Bind AvailabilityText(ViewModel.Availability), Mode=OneWay}"
                                   IsEnabled="{x:Bind ViewModel.CanProcessBatch, Mode=OneWay}"

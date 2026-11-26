@@ -119,6 +119,12 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         set => _uiPreferences.ShowTrackAvailabilityText = value;
     }
 
+    public bool ShowMkvpropeditArguments
+    {
+        get => _uiPreferences.ShowMkvpropeditArguments;
+        set => _uiPreferences.ShowMkvpropeditArguments = value;
+    }
+
     public bool EnableLoggingView
     {
         get => _uiPreferences.EnableLoggingView;

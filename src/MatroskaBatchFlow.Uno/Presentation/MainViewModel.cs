@@ -188,6 +188,12 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     public bool EnableLoggingView => _uiPreferences.EnableLoggingView;
 
+
+    /// <summary>
+    /// Gets whether the command preview button should be shown.
+    /// </summary>
+    public bool ShowMkvpropeditArguments => _uiPreferences.ShowMkvpropeditArguments;
+
     public INavigationService NavigationService { get; }
     public INavigationViewService NavigationViewService { get; }
     public ICommand GenerateMkvpropeditArgumentsCommand { get; }
@@ -261,6 +267,10 @@ public partial class MainViewModel : ObservableObject
         if (e.PropertyName == nameof(IUIPreferencesService.EnableLoggingView))
         {
             OnPropertyChanged(nameof(EnableLoggingView));
+        }
+        else if (e.PropertyName == nameof(IUIPreferencesService.ShowMkvpropeditArguments))
+        {
+            OnPropertyChanged(nameof(ShowMkvpropeditArguments));
         }
     }
 

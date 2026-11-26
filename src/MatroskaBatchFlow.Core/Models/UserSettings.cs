@@ -83,5 +83,11 @@ public sealed class UserSettings
         /// </summary>
         [JsonPropertyName("EnableLoggingView")]
         public bool EnableLoggingView { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets whether the command preview button is shown in the main window.
+        /// </summary>
+        [JsonPropertyName("ShowMkvpropeditArguments")]
+        public bool ShowMkvpropeditArguments { get; set; } = false;
     }
 }
