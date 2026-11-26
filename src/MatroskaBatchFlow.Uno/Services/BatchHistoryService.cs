@@ -191,6 +191,13 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
             var kept = runs.Where(run => !removal.RunIds.Contains(run.Id)).ToArray();
             var visibleIds = runs.Select(run => run.Id).Concat(_unsavedRuns.Select(pending => pending.Run.Id)).ToHashSet();
             var removed = visibleIds.Count(removal.RunIds.Contains);
+            if (removed == 0 && _unsavedRuns.Count == 0)
+            {
+                ReplaceRuns(runs);
+                LogRunRemoved(removed);
+                return new(HistoryRemovalStatus.Removed, removed);
+            }
+
             await Task.Run(() => Write(kept, header));
             _unsavedRuns.RemoveAll(pending => removal.RunIds.Contains(pending.Run.Id) || pending.Order == ClearOrder.Known);
             ReplaceRuns(kept);

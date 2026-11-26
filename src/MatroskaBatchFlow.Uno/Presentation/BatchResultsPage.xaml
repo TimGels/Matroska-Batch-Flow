@@ -6,7 +6,8 @@
     xmlns:Controls="using:MatroskaBatchFlow.Uno.Presentation.Controls"
     xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
     xmlns:models="using:MatroskaBatchFlow.Uno.Models"
-    NavigationCacheMode="Enabled">
+    NavigationCacheMode="Enabled"
+    x:Name="PageRoot">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Spacing="20" Padding="0,0,8,8">
@@ -47,6 +48,7 @@
                                                                Text="{x:Bind PickerLabel, Mode=OneWay}" />
                                                     <Button Grid.Column="1" Width="32" Height="32" Padding="0"
                                                             Background="Transparent" BorderThickness="0"
+                                                            IsEnabled="{Binding ViewModel.CanRemoveResultHistory, ElementName=PageRoot}"
                                                             Tag="{x:Bind}" Click="OnRemoveRunClick"
                                                             ToolTipService.ToolTip="{x:Bind local:UiText.Get('HistoryRemove')}"
                                                             AutomationProperties.Name="{x:Bind local:ResultsText.RemoveRunName(PickerLabel), Mode=OneWay}">

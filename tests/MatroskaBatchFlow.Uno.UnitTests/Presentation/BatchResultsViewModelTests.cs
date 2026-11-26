@@ -136,12 +136,14 @@ public sealed class BatchResultsViewModelTests : IDisposable
         await _history.LoadAsync();
 
         Assert.True(viewModel.HasUnreadableHistory);
+        Assert.False(viewModel.CanRemoveResultHistory);
         Assert.False(viewModel.CanClearResultHistory);
         Assert.Empty(viewModel.Runs);
         Assert.Equal(HistoryRecoveryStatus.Recovered, (await viewModel.ResetUnreadableHistoryAsync()).Status);
 
         Assert.Equal([true, false], pickerAvailability);
         Assert.False(viewModel.HasUnreadableHistory);
+        Assert.True(viewModel.CanRemoveResultHistory);
         Assert.False(viewModel.CanClearResultHistory);
     }
 
