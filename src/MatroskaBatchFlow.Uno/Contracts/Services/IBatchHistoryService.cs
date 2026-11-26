@@ -23,8 +23,8 @@ public interface IBatchHistoryService
     int MaxRuns { get; }
 
     /// <summary>
-    /// Gets whether <see cref="Runs"/> lists runs that could not be saved yet. Saving them is tried again the next time
-    /// the history is saved; they are lost if the app closes first.
+    /// Gets whether <see cref="Runs"/> includes results kept only in memory. Failed saves are retried, but a run
+    /// that cannot be ordered against a clear stays in this session only. Closing the app loses unsaved results.
     /// </summary>
     bool HasUnsavedRuns { get; }
 
@@ -67,8 +67,8 @@ public interface IBatchHistoryService
     /// Removes all saved runs from this device. The media files themselves are not touched.
     /// </summary>
     /// <remarks>
-    /// The history file is kept without runs, but with the time it was cleared, so other app instances do not save
-    /// their earlier runs again.
+    /// The empty history retains a unique clear marker so other instances do not restore earlier runs, even
+    /// if the system clock changes.
     /// </remarks>
     /// <returns>Whether the history was successfully removed.</returns>
     Task<bool> ClearAsync();

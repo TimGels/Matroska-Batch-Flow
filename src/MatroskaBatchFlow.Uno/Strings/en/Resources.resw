@@ -405,7 +405,7 @@
   <data name="ResultsClearHistoryFailed.Title" xml:space="preserve"><value>Could not clear history</value></data>
   <data name="ResultsClearHistoryFailed.Message" xml:space="preserve"><value>Some saved results may still be on this device. Try clearing history again.</value></data>
   <data name="ResultsUnsavedRuns.Title" xml:space="preserve"><value>Some results are not saved yet</value></data>
-  <data name="ResultsUnsavedRuns.Message" xml:space="preserve"><value>They could not be saved on this device. The app tries again when the next batch finishes. If you close it before then, these results are lost.</value></data>
+  <data name="ResultsUnsavedRuns.Message" xml:space="preserve"><value>The app retries failed saves when the next batch finishes. If it cannot tell whether a result was added before history was cleared, that result stays in this session only. Closing the app discards any unsaved results.</value></data>
   <data name="BatchHistoryLimitSaveFailed.Title" xml:space="preserve"><value>Could not save the history limit</value></data>
   <data name="BatchHistoryLimitSaveFailed.Message" xml:space="preserve"><value>Check that saved results and settings are accessible, then try changing the limit again.</value></data>
 </root>

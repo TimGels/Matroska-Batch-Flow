@@ -23,6 +23,9 @@ public partial class BatchHistoryService
     [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to save the batch history to {FilePath}")]
     private partial void LogSaveFailed(Exception ex, string filePath);
 
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Could not read the batch history clear marker at {FilePath} when a run finished")]
+    private partial void LogClearMarkerReadFailed(Exception ex, string filePath);
+
     [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to clear the batch history at {FilePath}")]
     private partial void LogClearFailed(Exception ex, string filePath);
 

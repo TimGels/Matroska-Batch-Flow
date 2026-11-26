@@ -16,11 +16,10 @@ namespace MatroskaBatchFlow.Uno.Services;
 /// </summary>
 public partial class BatchHistoryService : IBatchHistoryService
 {
-    /// <summary>
-    /// The current version of the file format. A file with an unsupported version must not be overwritten.
-    /// </summary>
     private const int LegacyFormatVersion = 1;
-    private const int FormatVersion = 2;
+    private const int TimestampFormatVersion = 2;
+    private const int FormatVersion = 3;
+    private static readonly HistoryHeader NeverCleared = new(LegacyFormatVersion);
 
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
@@ -28,13 +27,14 @@ public partial class BatchHistoryService : IBatchHistoryService
     };
 
     private readonly ObservableCollection<BatchRunRecord> _runs = [];
-    private readonly List<BatchRunRecord> _unsavedRuns = [];
+    private readonly List<PendingRun> _unsavedRuns = [];
     private readonly SemaphoreSlim _fileLock = new(1, 1);
     private readonly string _filePath;
     private readonly IWritableSettings<UserSettings> _userSettings;
     private readonly ILogger<BatchHistoryService> _logger;
     private Task? _loadTask;
     private bool _loaded;
+    private HistoryHeader? _lastSeenHeader;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BatchHistoryService"/> class.
@@ -76,18 +76,18 @@ public partial class BatchHistoryService : IBatchHistoryService
         {
             using var storageLock = await FileLock.AcquireAsync(_filePath);
             var previousLimit = await ReadPersistedMaxRunsAsync();
-            var (runs, clearedAt) = await ReadMergedAsync();
+            var (runs, header) = await ReadMergedAsync();
             var removed = Math.Max(0, runs.Length - maxRuns);
-            if (removed > 0 && removed != confirmedRemovals)
-                return removed;
-
-            // Trim before saving the lower limit: a saved limit without the trimmed history would remove runs the next
-            // time the history is saved, even though the change failed.
             var kept = runs.Take(maxRuns).ToArray();
             if (removed > 0)
             {
-                await Task.Run(() => Write(kept, clearedAt));
-                _unsavedRuns.Clear();
+                ReplaceRuns(runs.Take(previousLimit).ToArray());
+                if (removed != confirmedRemovals)
+                    return removed;
+
+                // Trim before saving the lower limit, so a failed trim cannot take effect on the next save.
+                await Task.Run(() => Write(kept, header));
+                _unsavedRuns.RemoveAll(pending => pending.Order == ClearOrder.Known);
             }
 
             ReplaceRuns(kept);
@@ -130,25 +130,26 @@ public partial class BatchHistoryService : IBatchHistoryService
     {
         ArgumentNullException.ThrowIfNull(run);
 
-        var addStartedAt = DateTimeOffset.UtcNow;
+        var lastSeen = _lastSeenHeader;
+        var headerAtStart = ReadHeaderAtAddStartAsync();
         await _fileLock.WaitAsync();
         try
         {
-            _unsavedRuns.Insert(0, run);
-            int? maxRuns = null;
-            BatchRunRecord[]? merged = null;
+            var observed = await headerAtStart;
+            var order = observed is null ? ClearOrder.Unknown : ClearOrder.Known;
+            _unsavedRuns.Insert(0, new PendingRun(run, observed ?? lastSeen, order));
+            BatchRunRecord[]? kept = null;
             try
             {
                 using var storageLock = await FileLock.AcquireAsync(_filePath);
 
                 // Save every run when the limit cannot be read: an unknown limit must not remove runs, and runs kept
                 // only in memory would be lost when the app closes.
-                maxRuns = await TryReadPersistedMaxRunsAsync();
-                var (runs, clearedAt) = await ReadMergedAsync(run, addStartedAt);
-                merged = runs;
-                var kept = runs.Take(maxRuns ?? runs.Length).ToArray();
-                await Task.Run(() => Write(kept, clearedAt));
-                _unsavedRuns.Clear();
+                var maxRuns = await TryReadPersistedMaxRunsAsync();
+                var (runs, header) = await ReadMergedAsync();
+                kept = runs.Take(maxRuns ?? runs.Length).ToArray();
+                await Task.Run(() => Write(kept, header));
+                _unsavedRuns.RemoveAll(pending => pending.Order == ClearOrder.Known);
                 ReplaceRuns(kept);
                 if (maxRuns is { } limit && runs.Length > limit)
                 {
@@ -160,19 +161,7 @@ public partial class BatchHistoryService : IBatchHistoryService
                 LogSaveFailed(ex, _filePath);
 
                 // Show the history that was just read when possible, so runs another instance removed do not reappear.
-                var runs = merged ?? Merge(_runs).ToArray();
-                if (maxRuns is { } persistedLimit)
-                {
-                    ReplaceRuns(runs.Take(persistedLimit).ToArray());
-                    if (_unsavedRuns.Count > persistedLimit)
-                    {
-                        _unsavedRuns.RemoveRange(persistedLimit, _unsavedRuns.Count - persistedLimit);
-                    }
-                }
-                else
-                {
-                    ReplaceRuns(runs);
-                }
+                ReplaceRuns(kept is null ? _runs : kept);
             }
         }
         finally
@@ -189,10 +178,9 @@ public partial class BatchHistoryService : IBatchHistoryService
         {
             using var storageLock = await FileLock.AcquireAsync(_filePath);
 
-            // Keep an empty file that records when it was cleared, so other app instances drop their unsaved
-            // runs from before the clear instead of saving them again.
-            var clearedAt = DateTimeOffset.UtcNow;
-            await Task.Run(() => Write([], clearedAt));
+            var header = new HistoryHeader(FormatVersion, ClearId: Guid.NewGuid());
+            await Task.Run(() => Write([], header));
+            _lastSeenHeader = header;
             var removed = _runs.Count;
             _unsavedRuns.Clear();
             _runs.Clear();
@@ -235,29 +223,46 @@ public partial class BatchHistoryService : IBatchHistoryService
     }
 
     /// <summary>
-    /// Reads the saved runs and combines them with the runs this instance could not save yet.
+    /// Opens a snapshot before the add waits for either lock. Replacing the history file atomically cannot
+    /// change the marker in the open snapshot, and the snapshot does not block a clear.
     /// </summary>
-    /// <remarks>
-    /// Unsaved runs from before the history was last cleared are dropped. An added run is exempt only if its add
-    /// operation began after the clear.
-    /// </remarks>
-    /// <param name="addedRun">The run that is being added, or <see langword="null"/>.</param>
-    /// <param name="addStartedAt">When the add operation began, or <see langword="null"/>.</param>
-    /// <returns>The runs, newest first, and when the history was last cleared.</returns>
-    private async Task<(BatchRunRecord[] Runs, DateTimeOffset? ClearedAt)> ReadMergedAsync(
-        BatchRunRecord? addedRun = null,
-        DateTimeOffset? addStartedAt = null)
+    private async Task<HistoryHeader?> ReadHeaderAtAddStartAsync()
     {
-        var saved = await Task.Run(Read);
-        if (saved.ClearedAt is { } clearedAt)
+        try
         {
-            var addedBeforeClear = addedRun is not null && addStartedAt is { } startedAt && startedAt <= clearedAt;
-            _unsavedRuns.RemoveAll(run => ReferenceEquals(run, addedRun)
-                ? addedBeforeClear
-                : run.RecordedAt <= clearedAt);
+            using var stream = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete,
+                bufferSize: 4096, useAsync: true);
+            return ValidateHeader(await JsonSerializer.DeserializeAsync<HistoryHeader>(stream));
+        }
+        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+        {
+            return NeverCleared;
+        }
+        catch (Exception ex) when (IsStorageFailure(ex))
+        {
+            LogClearMarkerReadFailed(ex, _filePath);
+            return null;
+        }
+    }
+
+    private async Task<(BatchRunRecord[] Runs, HistoryHeader Header)> ReadMergedAsync()
+    {
+        var (saved, header) = await Task.Run(Read);
+        _lastSeenHeader = header;
+        _unsavedRuns.RemoveAll(pending => pending.Order != ClearOrder.Unknown && pending.Header != header);
+        for (var index = 0; index < _unsavedRuns.Count; index++)
+        {
+            var pending = _unsavedRuns[index];
+            if (pending.Order != ClearOrder.Unknown)
+                continue;
+
+            // An unreadable snapshot followed by an unfamiliar clear proves neither order. Keep the result
+            // visible, but never write it back across that clear. A subsequent clear can safely remove it.
+            var order = header == NeverCleared || pending.Header == header ? ClearOrder.Known : ClearOrder.SessionOnly;
+            _unsavedRuns[index] = pending with { Header = header, Order = order };
         }
 
-        return (Merge(saved.Runs!).ToArray(), saved.ClearedAt);
+        return (Merge(_unsavedRuns.Where(pending => pending.Order == ClearOrder.Known), saved), header);
     }
 
     /// <summary>
@@ -294,8 +299,8 @@ public partial class BatchHistoryService : IBatchHistoryService
         return maxRuns;
     }
 
-    private IEnumerable<BatchRunRecord> Merge(IEnumerable<BatchRunRecord> saved) =>
-        _unsavedRuns.Concat(saved).DistinctBy(run => run.Id).OrderByDescending(run => run.RecordedAt);
+    private static BatchRunRecord[] Merge(IEnumerable<PendingRun> pending, IEnumerable<BatchRunRecord> saved) =>
+        pending.Select(item => item.Run).Concat(saved).DistinctBy(run => run.Id).OrderByDescending(run => run.RecordedAt).ToArray();
 
     /// <summary>
     /// Updates <see cref="HasUnsavedRuns"/> for the runs an operation left behind, then lets the next operation start.
@@ -304,7 +309,7 @@ public partial class BatchHistoryService : IBatchHistoryService
     {
         try
         {
-            var unsavedIds = _unsavedRuns.Select(run => run.Id).ToHashSet();
+            var unsavedIds = _unsavedRuns.Select(pending => pending.Run.Id).ToHashSet();
             var hasUnsavedRuns = _runs.Any(run => unsavedIds.Contains(run.Id));
             if (hasUnsavedRuns != HasUnsavedRuns)
             {
@@ -320,6 +325,11 @@ public partial class BatchHistoryService : IBatchHistoryService
 
     private void ReplaceRuns(IReadOnlyList<BatchRunRecord> runs)
     {
+        if (_unsavedRuns.Count > 0)
+        {
+            runs = Merge(_unsavedRuns, runs);
+        }
+
         var keptIds = runs.Select(run => run.Id).ToHashSet();
         for (var index = _runs.Count - 1; index >= 0; index--)
         {
@@ -358,7 +368,7 @@ public partial class BatchHistoryService : IBatchHistoryService
     /// The file has another format version or is incomplete. It must be kept as it is, because saving would drop
     /// the runs that could not be read.
     /// </exception>
-    private BatchHistoryDocument Read()
+    private (BatchRunRecord[] Runs, HistoryHeader Header) Read()
     {
         string json;
         try
@@ -367,33 +377,44 @@ public partial class BatchHistoryService : IBatchHistoryService
         }
         catch (FileNotFoundException)
         {
-            return new BatchHistoryDocument(FormatVersion, Array.Empty<BatchRunRecord>());
+            return ([], NeverCleared);
         }
 
         var document = JsonSerializer.Deserialize<BatchHistoryDocument>(json, SerializerOptions);
-        if (document is null || document.Version is not LegacyFormatVersion and not FormatVersion)
+        var header = ValidateHeader(document?.GetHeader());
+        if (!IsComplete(document?.Runs))
         {
-            LogUnsupportedFile(document?.Version, _filePath);
+            LogIncompleteFile(_filePath);
+            throw new InvalidDataException("The batch history file is incomplete.");
+        }
+
+        return (document.Runs.Select(run => run with { Files = run.Files.Select(Normalize).ToArray() }).ToArray(), header);
+    }
+
+    private HistoryHeader ValidateHeader(HistoryHeader? header)
+    {
+        if (header is null || header.Version is not (LegacyFormatVersion or TimestampFormatVersion or FormatVersion))
+        {
+            LogUnsupportedFile(header?.Version, _filePath);
             throw new InvalidDataException("Unsupported batch history format.");
         }
 
-        if (document.Version == FormatVersion
-            && (document.ClearedAt is null || document.ClearedAt.Value == default))
+        if (header.Version == FormatVersion)
         {
-            LogIncompleteFile(_filePath);
-            throw new InvalidDataException("The batch history file is incomplete.");
+            if (header.ClearId is { } id && id != Guid.Empty)
+                return new HistoryHeader(FormatVersion, ClearId: id);
+        }
+        else
+        {
+            if (header.ClearedAt is { } time && time != default)
+                return new HistoryHeader(TimestampFormatVersion, time);
+
+            if (header.Version == LegacyFormatVersion && header.ClearedAt is null)
+                return NeverCleared;
         }
 
-        if (!IsComplete(document.Runs))
-        {
-            LogIncompleteFile(_filePath);
-            throw new InvalidDataException("The batch history file is incomplete.");
-        }
-
-        return document with
-        {
-            Runs = document.Runs.Select(run => run with { Files = run.Files.Select(Normalize).ToArray() }).ToArray()
-        };
+        LogIncompleteFile(_filePath);
+        throw new InvalidDataException("The batch history file is incomplete.");
     }
 
     /// <summary>
@@ -431,12 +452,11 @@ public partial class BatchHistoryService : IBatchHistoryService
         return true;
     }
 
-    private void Write(BatchRunRecord[] runs, DateTimeOffset? clearedAt)
+    private void Write(BatchRunRecord[] runs, HistoryHeader header)
     {
         // Write next to the file first, so a crash during the write cannot leave a truncated history.
         var temporaryPath = _filePath + ".tmp";
-        var version = clearedAt is null ? LegacyFormatVersion : FormatVersion;
-        var document = new BatchHistoryDocument(version, runs, clearedAt);
+        var document = new BatchHistoryDocument(header.Version, runs, header.ClearedAt, header.ClearId);
         File.WriteAllText(temporaryPath, JsonSerializer.Serialize(document, SerializerOptions));
         File.Move(temporaryPath, _filePath, overwrite: true);
     }
@@ -457,6 +477,18 @@ public partial class BatchHistoryService : IBatchHistoryService
     /// </summary>
     /// <param name="Version">The version of the file format.</param>
     /// <param name="Runs">The saved runs, newest first.</param>
-    /// <param name="ClearedAt">When the history was last cleared, or <see langword="null"/> if it never was.</param>
-    private sealed record BatchHistoryDocument(int Version, IReadOnlyList<BatchRunRecord>? Runs, DateTimeOffset? ClearedAt = null);
+    /// <param name="ClearedAt">The clear marker used by older history files.</param>
+    /// <param name="ClearId">The unique identifier of the most recent clear.</param>
+    private sealed record BatchHistoryDocument(
+        int Version,
+        IReadOnlyList<BatchRunRecord>? Runs,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] DateTimeOffset? ClearedAt,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Guid? ClearId)
+    {
+        public HistoryHeader GetHeader() => new(Version, ClearedAt, ClearId);
+    }
+
+    private sealed record HistoryHeader(int Version, DateTimeOffset? ClearedAt = null, Guid? ClearId = null);
+    private sealed record PendingRun(BatchRunRecord Run, HistoryHeader? Header, ClearOrder Order);
+    private enum ClearOrder { Unknown, Known, SessionOnly }
 }

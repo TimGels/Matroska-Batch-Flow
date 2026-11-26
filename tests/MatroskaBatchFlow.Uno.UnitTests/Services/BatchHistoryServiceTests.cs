@@ -138,8 +138,8 @@ public sealed class BatchHistoryServiceTests : IDisposable
         Assert.Empty(service.Runs);
         var clearedContent = await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken);
         using var document = System.Text.Json.JsonDocument.Parse(clearedContent);
-        Assert.Equal(2, document.RootElement.GetProperty("Version").GetInt32());
-        Assert.True(document.RootElement.GetProperty("ClearedAt").GetDateTimeOffset() > DateTimeOffset.MinValue);
+        Assert.Equal(3, document.RootElement.GetProperty("Version").GetInt32());
+        Assert.NotEqual(Guid.Empty, document.RootElement.GetProperty("ClearId").GetGuid());
 
         Assert.False(File.Exists(_filePath + ".tmp"));
         var restarted = CreateService();
@@ -152,7 +152,8 @@ public sealed class BatchHistoryServiceTests : IDisposable
     {
         var first = CreateService();
         Directory.CreateDirectory(_filePath + ".tmp");
-        await first.AddAsync(Run(0) with { RecordedAt = DateTimeOffset.UtcNow.AddMinutes(-1) });
+        await first.AddAsync(Run(0) with { RecordedAt = DateTimeOffset.UtcNow.AddDays(1) });
+        Assert.True(first.HasUnsavedRuns);
         Directory.Delete(_filePath + ".tmp");
         Assert.True(await CreateService().ClearAsync());
 
@@ -163,6 +164,88 @@ public sealed class BatchHistoryServiceTests : IDisposable
         await restarted.LoadAsync();
         Assert.Equal(added.Id, Assert.Single(first.Runs).Id);
         Assert.Equal(added.Id, Assert.Single(restarted.Runs).Id);
+    }
+
+    [Fact]
+    public async Task AddAsync_RetriesAPostClearRunWithAnEarlierRecordedTime()
+    {
+        var service = CreateService();
+        Assert.True(await CreateService().ClearAsync());
+        var pending = Run(1) with { RecordedAt = DateTimeOffset.UnixEpoch };
+        Directory.CreateDirectory(_filePath + ".tmp");
+        await service.AddAsync(pending);
+        Assert.True(service.HasUnsavedRuns);
+
+        await service.LoadAsync();
+        Assert.True(service.HasUnsavedRuns);
+        Assert.Equal(pending.Id, Assert.Single(service.Runs).Id);
+
+        Directory.Delete(_filePath + ".tmp");
+        var next = Run(2);
+        await service.AddAsync(next);
+        Assert.False(service.HasUnsavedRuns);
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal([next.Id, pending.Id], restarted.Runs.Select(run => run.Id));
+    }
+
+    [Fact]
+    public async Task AddAsync_SavesAfterALegacyClearEvenWhenTheClockHasMovedBack()
+    {
+        var cleared = """{"Version":2,"ClearedAt":"2099-01-01T00:00:00Z","Runs":[]}""";
+        await File.WriteAllTextAsync(_filePath, cleared, TestContext.Current.CancellationToken);
+
+        var run = Run(1);
+        var service = CreateService();
+        await service.AddAsync(run);
+
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal(run.Id, Assert.Single(restarted.Runs).Id);
+        Assert.False(service.HasUnsavedRuns);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task AddAsync_WhenTheInitialMarkerIsUnreadable_OnlyRetriesAcrossAKnownGeneration(bool sawClear)
+    {
+        var service = CreateService();
+        var other = CreateService();
+        Assert.True(await other.ClearAsync());
+        if (sawClear)
+        {
+            await service.LoadAsync();
+        }
+
+        var pending = Run(1);
+        using (new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            await service.AddAsync(pending);
+        }
+
+        Assert.Equal(pending.Id, Assert.Single(service.Runs).Id);
+        Assert.True(service.HasUnsavedRuns);
+
+        var next = Run(2);
+        await service.AddAsync(next);
+        Assert.Equal([next.Id, pending.Id], service.Runs.Select(run => run.Id));
+        Assert.Equal(!sawClear, service.HasUnsavedRuns);
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal(sawClear ? new[] { next.Id, pending.Id } : [next.Id], restarted.Runs.Select(run => run.Id));
+
+        if (!sawClear)
+        {
+            // The session-only row does not consume retention or require confirmation to trim saved runs.
+            Assert.Equal(0, await service.SetMaxRunsAsync(1));
+            Assert.True(service.HasUnsavedRuns);
+            Assert.Equal([next.Id, pending.Id], service.Runs.Select(run => run.Id));
+            Assert.True(await other.ClearAsync());
+            await service.LoadAsync();
+            Assert.Empty(service.Runs);
+            Assert.False(service.HasUnsavedRuns);
+        }
     }
 
     [Fact]
@@ -194,14 +277,14 @@ public sealed class BatchHistoryServiceTests : IDisposable
         var run = Run(1) with { RecordedAt = DateTimeOffset.UtcNow.AddMinutes(5) };
         var addTask = service.AddAsync(run);
 
-        var clearedAt = DateTimeOffset.UtcNow;
         var clearedDocument = System.Text.Json.JsonSerializer.Serialize(new
         {
-            Version = 2,
+            Version = 3,
             Runs = Array.Empty<BatchRunRecord>(),
-            ClearedAt = clearedAt
+            ClearId = Guid.NewGuid()
         });
-        await File.WriteAllTextAsync(_filePath, clearedDocument, TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(_filePath + ".tmp", clearedDocument, TestContext.Current.CancellationToken);
+        File.Move(_filePath + ".tmp", _filePath, overwrite: true);
 
         storageLock.Dispose();
         await addTask.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
@@ -254,6 +337,8 @@ public sealed class BatchHistoryServiceTests : IDisposable
     [InlineData("""{"Version":2,"Runs":[]}""")]
     [InlineData("""{"Version":2,"ClearedAt":null,"Runs":[]}""")]
     [InlineData("""{"Version":2,"ClearedAt":"0001-01-01T00:00:00+00:00","Runs":[]}""")]
+    [InlineData("""{"Version":3,"Runs":[]}""")]
+    [InlineData("""{"Version":3,"ClearId":"00000000-0000-0000-0000-000000000000","Runs":[]}""")]
     public async Task AddAsync_PreservesAnUnreadableFileUntilExplicitlyCleared(string content)
     {
         await File.WriteAllTextAsync(_filePath, content, TestContext.Current.CancellationToken);
