@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MatroskaBatchFlow.HistoryPeer\MatroskaBatchFlow.HistoryPeer.csproj" />
     <!-- Reference the projects under test -->
     <ProjectReference Include="..\..\src\MatroskaBatchFlow.Uno\MatroskaBatchFlow.Uno.csproj" />
     <!-- Reference the test helper project that contains MediaInfoResultBuilder -->
