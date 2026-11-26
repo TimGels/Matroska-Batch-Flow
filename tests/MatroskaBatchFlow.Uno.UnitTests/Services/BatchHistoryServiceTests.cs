@@ -22,12 +22,6 @@ public sealed class BatchHistoryServiceTests : IDisposable
         _filePath = Path.Combine(_directory, "BatchHistory.json");
         _userSettings.Value.Returns(_settings);
         _userSettings.ReadFromDiskAsync().Returns(Task.FromResult(_settings));
-        _userSettings.UpdateAsync(Arg.Any<Action<UserSettings>>())
-            .Returns(call =>
-            {
-                call.Arg<Action<UserSettings>>()(_settings);
-                return Task.CompletedTask;
-            });
         _userSettings.UpdateAsync(Arg.Any<Action<UserSettings>>(), Arg.Any<Action<UserSettings>>())
             .Returns(call =>
             {
@@ -547,7 +541,7 @@ public sealed class BatchHistoryServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task SetMaxRunsAsync_KeepsThePreviousLimit_WhenItCannotBeSavedAfterTrimming()
+    public async Task SetMaxRunsAsync_RestoresCachedLimitAndHistory_WhenSettingsSaveFails()
     {
         var service = CreateService();
         foreach (var run in Enumerable.Range(0, 4).Select(Run))
@@ -566,14 +560,22 @@ public sealed class BatchHistoryServiceTests : IDisposable
         var exception = await Assert.ThrowsAsync<BatchHistoryLimitSaveException>(
             () => service.SetMaxRunsAsync(2, confirmedRemovals: 2));
 
-        Assert.True(exception.HistoryTrimmed);
+        Assert.False(exception.HistoryTrimmed);
         Assert.IsType<IOException>(exception.InnerException);
         Assert.Equal(UserSettings.BatchHistorySettings.DefaultMaxRuns, service.MaxRuns);
+        var afterFailure = CreateService();
+        await afterFailure.LoadAsync();
+        Assert.Equal(4, afterFailure.Runs.Count);
+
+        _userSettings.UpdateAsync(Arg.Any<Action<UserSettings>>(), Arg.Any<Action<UserSettings>>())
+            .Returns(call =>
+            {
+                call.ArgAt<Action<UserSettings>>(0)(_settings);
+                return Task.CompletedTask;
+            });
+        Assert.Equal(0, await service.SetMaxRunsAsync(2, confirmedRemovals: 2));
+        Assert.Equal(2, service.MaxRuns);
         Assert.Equal(2, service.Runs.Count);
-        await service.AddAsync(Run(4));
-        var restarted = CreateService();
-        await restarted.LoadAsync();
-        Assert.Equal(3, restarted.Runs.Count);
     }
 
     [Fact]
@@ -616,9 +618,10 @@ public sealed class BatchHistoryServiceTests : IDisposable
         Directory.CreateDirectory(temporaryPath);
         var exception = await Assert.ThrowsAsync<BatchHistoryLimitSaveException>(
             () => service.SetMaxRunsAsync(2, confirmedRemovals: 2));
-        Assert.True(exception.HistoryTrimmed);
+        Assert.False(exception.HistoryTrimmed);
         Assert.IsType<UnauthorizedAccessException>(exception.InnerException);
         Assert.Equal(20, userSettings.Value.BatchHistory.MaxRuns);
+        Assert.Equal(4, service.Runs.Count);
 
         Directory.Delete(temporaryPath);
         await userSettings.UpdateAsync(settings => settings.UI.Theme = "Dark");
@@ -626,7 +629,9 @@ public sealed class BatchHistoryServiceTests : IDisposable
         var savedSettings = await userSettings.ReadFromDiskAsync();
         Assert.Equal(20, savedSettings.BatchHistory.MaxRuns);
         Assert.Equal("Dark", savedSettings.UI.Theme);
-        Assert.Equal(2, service.Runs.Count);
+        var restarted = new BatchHistoryService(_filePath, userSettings, NullLogger<BatchHistoryService>.Instance);
+        await restarted.LoadAsync();
+        Assert.Equal(4, restarted.Runs.Count);
     }
 
     [Fact]
@@ -994,6 +999,101 @@ public sealed class BatchHistoryServiceTests : IDisposable
 
     private static HistoryRemoval SelectAll(BatchHistoryService service) =>
         new(service.Runs.Select(run => run.Id).ToImmutableHashSet());
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ResetUnreadableHistory_AppliesThePersistedLimit_WhenRecovering(bool anotherInstanceRepairedHistory)
+    {
+        _settings.BatchHistory.MaxRuns = 1;
+        await File.WriteAllTextAsync(_filePath, "invalid", TestContext.Current.CancellationToken);
+        var service = CreateService();
+        await service.LoadAsync();
+
+        var older = Run(0);
+        var newer = Run(1);
+        await service.AddAsync(older);
+        await service.AddAsync(newer);
+
+        var expected = newer;
+        if (anotherInstanceRepairedHistory)
+        {
+            expected = Run(2);
+            var repairedPath = Path.Combine(_directory, "RepairedHistory.json");
+            var otherInstance = new BatchHistoryService(repairedPath, _userSettings, NullLogger<BatchHistoryService>.Instance);
+            await otherInstance.AddAsync(expected);
+            File.Copy(repairedPath, _filePath, overwrite: true);
+        }
+
+        Assert.Equal(HistoryRecoveryStatus.Recovered, (await service.ResetUnreadableHistoryAsync()).Status);
+        Assert.Equal(expected.Id, Assert.Single(service.Runs).Id);
+
+        using var document = System.Text.Json.JsonDocument.Parse(
+            await File.ReadAllTextAsync(_filePath, TestContext.Current.CancellationToken));
+        Assert.Single(document.RootElement.GetProperty("Runs").EnumerateArray());
+
+        var restarted = CreateService();
+        await restarted.LoadAsync();
+        Assert.Equal(expected.Id, Assert.Single(restarted.Runs).Id);
+    }
+
+    [Fact]
+    public async Task SetMaxRunsAsync_DoesNotPersistTheLowerLimit_WhenHistoryCannotBeTrimmed()
+    {
+        var settingsPath = Path.Combine(_directory, "UserSettings.json");
+        var userSettings = new WritableJsonSettings<UserSettings>(
+            NullLogger<WritableJsonSettings<UserSettings>>.Instance,
+            settingsPath);
+        var service = new BatchHistoryService(_filePath, userSettings, NullLogger<BatchHistoryService>.Instance);
+        foreach (var run in Enumerable.Range(0, 4).Select(Run))
+        {
+            await service.AddAsync(run);
+        }
+
+        Directory.CreateDirectory(_filePath + ".tmp");
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => service.SetMaxRunsAsync(2, confirmedRemovals: 2));
+
+        Assert.Equal(UserSettings.BatchHistorySettings.DefaultMaxRuns, service.MaxRuns);
+        Assert.False(File.Exists(settingsPath));
+        Directory.Delete(_filePath + ".tmp");
+
+        var restartedSettings = new WritableJsonSettings<UserSettings>(
+            NullLogger<WritableJsonSettings<UserSettings>>.Instance,
+            settingsPath);
+        var restarted = new BatchHistoryService(_filePath, restartedSettings, NullLogger<BatchHistoryService>.Instance);
+        await restarted.LoadAsync();
+        Assert.Equal(4, restarted.Runs.Count);
+        await restarted.AddAsync(Run(4));
+        Assert.Equal(5, restarted.Runs.Count);
+    }
+
+    [Fact]
+    public async Task WritableSettingsUpdate_RestoresRejectedLimitBeforeTheNextUpdate_WhenSaveFails()
+    {
+        var settingsPath = Path.Combine(_directory, "SettingsUpdate.json");
+        var settings = new WritableJsonSettings<UserSettings>(
+            NullLogger<WritableJsonSettings<UserSettings>>.Instance,
+            settingsPath);
+        await settings.UpdateAsync(value => value.BatchHistory.MaxRuns = 20);
+
+        using (new FileStream(settingsPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            await Assert.ThrowsAsync<IOException>(
+                () => settings.UpdateAsync(
+                    value => value.BatchHistory.MaxRuns = 10,
+                    value => value.BatchHistory.MaxRuns = 20));
+        }
+
+        await settings.UpdateAsync(value => value.UI.Theme = "Dark");
+
+        var saved = await new WritableJsonSettings<UserSettings>(
+            NullLogger<WritableJsonSettings<UserSettings>>.Instance,
+            settingsPath).ReadFromDiskAsync();
+        Assert.Equal(20, saved.BatchHistory.MaxRuns);
+        Assert.Equal("Dark", saved.UI.Theme);
+        Assert.Equal(20, settings.Value.BatchHistory.MaxRuns);
+    }
 
     private BatchHistoryService CreateService() => new(_filePath, _userSettings, NullLogger<BatchHistoryService>.Instance);
 

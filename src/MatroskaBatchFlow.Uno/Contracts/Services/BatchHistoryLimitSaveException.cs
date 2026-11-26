@@ -17,7 +17,7 @@ public sealed class BatchHistoryLimitSaveException : Exception
     }
 
     /// <summary>
-    /// Gets whether confirmed runs were removed from the saved history before saving the limit failed.
+    /// Gets whether confirmed runs remain removed from saved history because rollback also failed.
     /// </summary>
     public bool HistoryTrimmed { get; }
 }
