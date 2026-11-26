@@ -607,6 +607,27 @@ public sealed class BatchHistoryServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task SetMaxRunsAsync_ShowsTheSavedRuns_WhenTheHistoryCannotBeTrimmed()
+    {
+        var first = CreateService();
+        foreach (var run in Enumerable.Range(0, 4).Select(Run))
+        {
+            await first.AddAsync(run);
+        }
+
+        var second = CreateService();
+        await second.LoadAsync();
+        var removedElsewhere = first.Runs[0];
+        Assert.Equal(HistoryRemovalStatus.Removed, (await first.RemoveAsync(new([removedElsewhere.Id]))).Status);
+        Directory.CreateDirectory(_filePath + ".tmp");
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => second.SetMaxRunsAsync(2, confirmedRemovals: 1));
+
+        Assert.Equal(3, second.Runs.Count);
+        Assert.DoesNotContain(second.Runs, run => run.Id == removedElsewhere.Id);
+    }
+
+    [Fact]
     public async Task SetMaxRunsAsync_DiscardsFailedLimit_WhenAnUnrelatedSettingsUpdateFollows()
     {
         var settingsPath = Path.Combine(_directory, "UserSettings.json");
