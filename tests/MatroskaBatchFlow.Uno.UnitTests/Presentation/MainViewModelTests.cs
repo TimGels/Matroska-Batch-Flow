@@ -369,6 +369,14 @@ public class MainViewModelTests
         _uiPreferences.ShowMkvpropeditArguments.Returns(false);
         var viewModel = CreateViewModel();
         Assert.False(viewModel.ShowMkvpropeditArguments);
+        var propertyChanged = false;
+        viewModel.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(MainViewModel.ShowMkvpropeditArguments))
+            {
+                propertyChanged = true;
+            }
+        };
 
         _uiPreferences.ShowMkvpropeditArguments.Returns(true);
         _uiPreferences.PropertyChanged += Raise.Event<System.ComponentModel.PropertyChangedEventHandler>(
@@ -376,6 +384,7 @@ public class MainViewModelTests
             new System.ComponentModel.PropertyChangedEventArgs(nameof(IUIPreferencesService.ShowMkvpropeditArguments)));
 
         Assert.True(viewModel.ShowMkvpropeditArguments);
+        Assert.True(propertyChanged);
     }
 
     [Fact]
