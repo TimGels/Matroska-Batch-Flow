@@ -82,17 +82,21 @@
                                                 Click="OnConfirmHistoryAction" />
                                     </toolkit:WrapPanel>
                                 </StackPanel>
-                                <InfoBar x:Name="PickerError" Severity="Error" IsClosable="False" AutomationProperties.LiveSetting="Polite" />
+                                <InfoBar x:Name="PickerError" Severity="Error" IsClosable="False" AutomationProperties.LiveSetting="Polite"
+                                         Visibility="{x:Bind PickerError.IsOpen, Mode=OneWay}" />
                             </StackPanel>
                         </Flyout>
                     </DropDownButton.Flyout>
                 </DropDownButton>
             </StackPanel>
 
-            <InfoBar x:Name="HistoryFeedback" Severity="Success" AutomationProperties.LiveSetting="Polite" />
+            <!-- Closed InfoBars stay Visible with zero height, so collapse them to avoid extra StackPanel spacing -->
+            <InfoBar x:Name="HistoryFeedback" Severity="Success" AutomationProperties.LiveSetting="Polite"
+                     Visibility="{x:Bind HistoryFeedback.IsOpen, Mode=OneWay}" />
 
             <InfoBar x:Uid="ResultsUnsavedRuns"
                      IsOpen="{x:Bind ViewModel.HasUnsavedRuns, Mode=OneWay}"
+                     Visibility="{x:Bind ViewModel.HasUnsavedRuns, Mode=OneWay}"
                      Severity="Warning" IsClosable="False" AutomationProperties.LiveSetting="Polite" />
 
             <!-- No saved batches -->
