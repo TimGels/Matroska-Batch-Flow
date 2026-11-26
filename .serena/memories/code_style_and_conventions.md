@@ -104,6 +104,11 @@ Use XML documentation comments for public APIs:
 public class BatchConfiguration : IBatchConfiguration
 ```
 
+- **Always open and close `<summary>` on their own lines**, even for one sentence. Never write `/// <summary>Text</summary>`.
+- Write `<param>`, `<returns>`, `<exception>` and `<typeparam>` on a single line: `/// <param name="run">The finished run.</param>`.
+- Document each positional record parameter with `<param>` and give the members of new enums their own `<summary>`.
+- Start property summaries with "Gets", "Gets or sets" or "Gets whether".
+
 ## Testing Conventions
 
 ### Test Framework

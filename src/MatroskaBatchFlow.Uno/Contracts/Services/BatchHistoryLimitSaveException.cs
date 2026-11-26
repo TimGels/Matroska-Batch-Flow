@@ -8,7 +8,7 @@ public sealed class BatchHistoryLimitSaveException : Exception
     /// <summary>
     /// Initializes a new instance of the <see cref="BatchHistoryLimitSaveException"/> class.
     /// </summary>
-    /// <param name="historyTrimmed">Whether confirmed runs were removed from the saved history.</param>
+    /// <param name="historyTrimmed">Whether confirmed runs remain removed from the saved history because rollback also failed.</param>
     /// <param name="innerException">The exception raised while saving the limit.</param>
     public BatchHistoryLimitSaveException(bool historyTrimmed, Exception innerException)
         : base("The batch history limit could not be saved.", innerException)

@@ -67,12 +67,22 @@ public interface IBatchHistoryService : INotifyPropertyChanged
     /// <summary>
     /// Removes only the confirmed runs in one write, even if every listed run was selected.
     /// </summary>
+    /// <param name="removal">The runs captured when the removal was confirmed. Runs that are no longer listed are ignored.</param>
+    /// <returns>The outcome and how many listed runs were removed.</returns>
+    /// <exception cref="ArgumentException"><paramref name="removal"/> contains no runs.</exception>
     Task<HistoryRemovalResult> RemoveAsync(HistoryRemoval removal);
 
-    /// <summary>Whether an unreadable history file or its pending reconciliation still requires recovery.</summary>
+    /// <summary>
+    /// Gets whether an unreadable history file or its pending reconciliation still requires recovery.
+    /// </summary>
     bool HasUnreadableHistory { get; }
 
-    /// <summary>Rechecks history under the lock. A readable file missing previously listed results requires a decision about those exact IDs.</summary>
+    /// <summary>
+    /// Rechecks history under the lock. A readable file missing previously listed results requires a decision about
+    /// those exact IDs.
+    /// </summary>
+    /// <param name="decision">The choice about the results from <see cref="HistoryRecoveryStatus.ChooseMissingResults"/>, or <see langword="null"/> before one is asked for.</param>
+    /// <returns>The outcome, or the decision the user must make before trying again.</returns>
     Task<HistoryRecoveryResult> ResetUnreadableHistoryAsync(HistoryRecoveryDecision? decision = null);
 
     /// <summary>
