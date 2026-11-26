@@ -91,11 +91,8 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
 
                 // Trim before saving the lower limit, so a failed trim cannot take effect on the next save.
                 await Task.Run(() => Write(kept, header));
-                _unsavedRuns.RemoveAll(pending => pending.Order == ClearOrder.Known);
-                HasUnreadableHistory = false;
             }
 
-            ReplaceRuns(kept);
             if (maxRuns != previousLimit)
             {
                 try
@@ -110,10 +107,11 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
                     {
                         try
                         {
-                            await SaveRemainingAsync(runs, header);
+                            await Task.Run(() => Write(runs, header));
                         }
                         catch (Exception rollbackException)
                         {
+                            HasUnreadableHistory = true;
                             throw new BatchHistoryLimitSaveException(
                                 true,
                                 new AggregateException(ex, rollbackException));
@@ -124,6 +122,13 @@ public partial class BatchHistoryService : ObservableObject, IBatchHistoryServic
                 }
             }
 
+            if (removed > 0)
+            {
+                _unsavedRuns.RemoveAll(pending => pending.Order == ClearOrder.Known);
+                HasUnreadableHistory = false;
+            }
+
+            ReplaceRuns(kept);
             LogLimitChanged(previousLimit, maxRuns, removed);
             return 0;
         }
