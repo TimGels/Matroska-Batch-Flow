@@ -95,8 +95,14 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     [ObservableProperty]
     public partial bool BatchHistoryLimitSaveFailed { get; private set; }
 
+    /// <summary>
+    /// Gets whether the history must be recovered on the Results page before its limit can change.
+    /// </summary>
     public bool IsHistoryRecoveryRequired => _batchHistory.HasUnreadableHistory;
 
+    /// <summary>
+    /// Gets whether the history limit can be edited. It is read-only while the history must be recovered.
+    /// </summary>
     public bool CanEditBatchHistoryLimit => !IsHistoryRecoveryRequired;
 
     public double BatchHistoryMinRuns => UserSettings.BatchHistorySettings.MinMaxRuns;

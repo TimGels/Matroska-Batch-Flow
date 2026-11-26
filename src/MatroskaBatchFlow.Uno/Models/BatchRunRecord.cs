@@ -139,12 +139,24 @@ public sealed partial class BatchRunSummary : ObservableObject
     /// </summary>
     public DateTimeOffset When => StartedAt ?? Run.RecordedAt;
 
+    /// <summary>
+    /// Gets a prefix of the run ID that tells this run apart from others with the same picker label, or
+    /// <see langword="null"/> when the label is unique.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PickerLabel))]
     public partial string? PickerId { get; private set; }
 
+    /// <summary>
+    /// Gets the label of this run in the run picker, including <see cref="PickerId"/> when it is set.
+    /// </summary>
     public string PickerLabel => ResultsText.RunLabel(When, Counts, PickerId);
 
+    /// <summary>
+    /// Sets <see cref="PickerId"/> on runs whose picker labels would otherwise match, using the shortest ID prefix of
+    /// at least four characters that is unique within each group.
+    /// </summary>
+    /// <param name="runs">All runs listed in the picker.</param>
     internal static void DisambiguatePickerLabels(IEnumerable<BatchRunSummary> runs)
     {
         // The picker displays local time to the minute. Only a failure headline includes a count.

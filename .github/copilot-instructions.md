@@ -139,6 +139,18 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
   - Organize code with clear comments and whitespace instead
   - Keep sections separated visually without folding directives
 
+### XML Documentation Comments
+- Document public APIs, including each positional record parameter (`<param>`) and the members of new enums
+- **Always put `<summary>` on its own lines**, never `/// <summary>Text</summary>`:
+  ```csharp
+  /// <summary>
+  /// Gets whether the history must be recovered before it can change.
+  /// </summary>
+  /// <param name="decision">The user's choice, or <see langword="null"/> before one is asked for.</param>
+  ```
+- Write `<param>`, `<returns>`, `<exception>` and `<typeparam>` on a single line
+- Start property summaries with "Gets", "Gets or sets" or "Gets whether"
+
 ### Logging Pattern
 - Use **LoggerMessage source generators** for high-performance logging
 - Logging definitions go in separate `*.Logging.cs` partial class files
@@ -285,6 +297,7 @@ dotnet test --filter "FullyQualifiedName~BatchConfigurationTests"
 
 ### Common Code Patterns to Avoid
 - Don't use #region/#endregion blocks (use comments and whitespace)
+- Don't write single-line summaries (`/// <summary>Text</summary>`); open and close `<summary>` on their own lines
 - Don't manually implement INotifyPropertyChanged (use `[ObservableProperty]` source generator)
 - Don't create commands manually (use `[RelayCommand]` source generator)
 - Don't register services as scoped/transient unless necessary (use singleton)

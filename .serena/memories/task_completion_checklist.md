@@ -14,6 +14,7 @@ When completing a task in this project, follow these steps to ensure code qualit
 ### Verify Documentation
 - Add or update XML documentation comments for public APIs
 - Use `<summary>`, `<param>`, `<returns>`, and `<remarks>` tags appropriately
+- Open and close every `<summary>` on its own lines; search for `/// <summary>.+</summary>` and fix any match
 - Document any complex logic or non-obvious behavior
 
 ### Check Nullable Annotations

@@ -87,11 +87,26 @@ public static class ResultsText
         return pickerId is null ? label : Format("ResultsRunLabelWithId", label, pickerId);
     }
 
+    /// <summary>
+    /// Gets the text shown in the run picker.
+    /// </summary>
+    /// <param name="run">The selected run, or <see langword="null"/> when no run is selected.</param>
+    /// <returns>The label of the run, or "No saved batch results" without a run.</returns>
     public static string PickerLabel(BatchRunSummary? run) =>
         run?.PickerLabel ?? Get("ResultsPickerEmpty");
 
+    /// <summary>
+    /// Gets the accessible name of the run picker.
+    /// </summary>
+    /// <param name="run">The selected run, or <see langword="null"/> when no run is selected.</param>
+    /// <returns>The name, for example "Saved batch result: 23-11-2026 19:40 · Batch completed".</returns>
     public static string PickerName(BatchRunSummary? run) => Format("ResultsPickerNameWithValue", PickerLabel(run));
 
+    /// <summary>
+    /// Gets the accessible name of the button that removes a run from history.
+    /// </summary>
+    /// <param name="label">The picker label of the run.</param>
+    /// <returns>The name, for example "Remove from history: 23-11-2026 19:40 · Batch completed".</returns>
     public static string RemoveRunName(string label) => Format("ResultsRemoveNamedRun", label);
 
     /// <summary>

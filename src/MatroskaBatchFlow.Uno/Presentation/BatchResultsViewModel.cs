@@ -63,6 +63,9 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
     [NotifyPropertyChangedFor(nameof(HasFiles))]
     public partial IReadOnlyList<FileResultItem> VisibleFiles { get; private set; } = Array.Empty<FileResultItem>();
 
+    /// <summary>
+    /// Gets whether a removal or recovery is running. Other history changes are blocked until it finishes.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanRemoveResultHistory))]
     public partial bool IsChangingHistory { get; private set; }
@@ -218,14 +221,32 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
     public Task<HistoryRemovalResult> RemoveHistoryAsync(HistoryRemoval removal) =>
         ChangeHistoryAsync(() => _history.RemoveAsync(removal));
 
+    /// <summary>
+    /// Gets whether the history must be recovered before saved results can be removed or cleared.
+    /// </summary>
     public bool HasUnreadableHistory => _history.HasUnreadableHistory;
 
+    /// <summary>
+    /// Gets whether the run picker is shown: when runs are listed or the history must be recovered.
+    /// </summary>
     public bool HasHistoryPicker => HasRuns || HasUnreadableHistory;
 
+    /// <summary>
+    /// Gets whether individual runs can be removed: not while the history must be recovered or another history
+    /// change is running.
+    /// </summary>
     public bool CanRemoveResultHistory => !HasUnreadableHistory && !IsChangingHistory;
 
+    /// <summary>
+    /// Gets whether the history can be cleared: when runs are listed and the history does not need recovery.
+    /// </summary>
     public bool CanClearResultHistory => HasRuns && !HasUnreadableHistory;
 
+    /// <summary>
+    /// Recovers the history while other history changes are blocked, then refreshes the run picker.
+    /// </summary>
+    /// <param name="decision">The choice about the results from <see cref="HistoryRecoveryStatus.ChooseMissingResults"/>, or <see langword="null"/> before one is asked for.</param>
+    /// <returns>The outcome, or the decision the user must make before trying again.</returns>
     public Task<HistoryRecoveryResult> ResetUnreadableHistoryAsync(HistoryRecoveryDecision? decision = null) =>
         ChangeHistoryAsync(() => _history.ResetUnreadableHistoryAsync(decision));
 
