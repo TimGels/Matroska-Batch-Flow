@@ -14,7 +14,7 @@
         <!-- App Identifier -->
         <ApplicationId>com.companyname.MatroskaBatchFlow</ApplicationId>
         <!-- Versions -->
-        <PackageVersion>0.12.0</PackageVersion>
+        <PackageVersion>0.13.0</PackageVersion>
         <ApplicationDisplayVersion>$(PackageVersion)</ApplicationDisplayVersion>
         <ApplicationVersion>1</ApplicationVersion>
         <!-- Package Publisher -->
@@ -58,7 +58,7 @@
         <PublishAot>False</PublishAot>
         <!-- Required by source-generated COM interop (taskbar progress) -->
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <AssemblyVersion>0.12.0.0</AssemblyVersion>
+        <AssemblyVersion>0.13.0.0</AssemblyVersion>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" />
