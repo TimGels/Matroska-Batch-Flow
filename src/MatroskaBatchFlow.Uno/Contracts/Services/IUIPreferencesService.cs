@@ -22,4 +22,9 @@ public interface IUIPreferencesService : INotifyPropertyChanged
     /// Gets or sets whether the logging viewer tab is enabled in the navigation menu.
     /// </summary>
     bool EnableLoggingView { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the command preview button is shown in the main window.
+    /// </summary>
+    bool ShowMkvpropeditArguments { get; set; }
 }

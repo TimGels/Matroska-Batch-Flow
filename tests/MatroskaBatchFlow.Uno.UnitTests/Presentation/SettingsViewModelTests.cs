@@ -122,6 +122,26 @@ public class SettingsViewModelTests
         _uiPreferences.Received().ShowTrackAvailabilityText = true;
     }
 
+
+    [Fact]
+    public void ShowMkvpropeditArguments_GetFromUIPreferences()
+    {
+        _uiPreferences.ShowMkvpropeditArguments.Returns(true);
+        var viewModel = CreateViewModel();
+
+        Assert.True(viewModel.ShowMkvpropeditArguments);
+    }
+
+    [Fact]
+    public void ShowMkvpropeditArguments_SetToUIPreferences()
+    {
+        var viewModel = CreateViewModel();
+
+        viewModel.ShowMkvpropeditArguments = true;
+
+        _uiPreferences.Received().ShowMkvpropeditArguments = true;
+    }
+
     [Fact]
     public void EnableLoggingView_GetFromUIPreferences()
     {

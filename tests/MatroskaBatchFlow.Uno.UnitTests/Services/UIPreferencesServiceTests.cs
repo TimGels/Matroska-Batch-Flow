@@ -91,6 +91,38 @@ public class UIPreferencesServiceTests
         Assert.True(service.ShowTrackAvailabilityText);
     }
 
+
+    [Fact]
+    public void ShowMkvpropeditArguments_DefaultValue_IsFalse()
+    {
+        var service = new UIPreferencesService(CreateMockSettings());
+
+        Assert.False(service.ShowMkvpropeditArguments);
+    }
+
+    [Fact]
+    public void ShowMkvpropeditArguments_WhenSettingIsTrue_ReturnsTrue()
+    {
+        var settings = new UserSettings { UI = { ShowMkvpropeditArguments = true } };
+        var service = new UIPreferencesService(CreateMockSettings(settings));
+
+        Assert.True(service.ShowMkvpropeditArguments);
+    }
+
+    [Fact]
+    public void ShowMkvpropeditArguments_SetValue_RaisesPropertyChangedAndPersistsToSettings()
+    {
+        var mockSettings = CreateMockSettings();
+        var service = new UIPreferencesService(mockSettings);
+
+        Assert.PropertyChanged(
+            service,
+            nameof(UIPreferencesService.ShowMkvpropeditArguments),
+            () => service.ShowMkvpropeditArguments = true);
+
+        mockSettings.Received(1).UpdateAsync(Arg.Any<Action<UserSettings>>());
+    }
+
     [Fact]
     public void ShowTrackAvailabilityText_SetValue_RaisesPropertyChanged()
     {

@@ -209,6 +209,22 @@ public sealed partial class MainPage : Page
     private void SupportFlyout_Closed(object? sender, object args) => SupportHeart.SetIsHighlighted(SupportNavItem, false);
 
     /// <summary>
+    /// Shows the Show arguments button as disabled when the setting reveals it while the batch cannot be processed.
+    /// </summary>
+    /// <remarks>
+    /// The button's template is only applied once it becomes visible, and it then starts in the Normal state even when it is disabled.
+    /// </remarks>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="args">The event data.</param>
+    private void ShowArgumentsButton_SizeChanged(object sender, SizeChangedEventArgs args)
+    {
+        if (!ShowArgumentsButton.IsEnabled)
+        {
+            VisualStateManager.GoToState(ShowArgumentsButton, "Disabled", false);
+        }
+    }
+
+    /// <summary>
     /// Handles the Loaded event of the MainPage, initializing the default navigation view item.
     /// </summary>
     /// <param name="sender">The source of the event.</param>

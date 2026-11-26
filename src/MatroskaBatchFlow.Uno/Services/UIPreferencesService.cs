@@ -21,11 +21,15 @@ public sealed partial class UIPreferencesService : ObservableObject, IUIPreferen
     [ObservableProperty]
     private bool enableLoggingView;
 
+    [ObservableProperty]
+    private bool showMkvpropeditArguments;
+
     public UIPreferencesService(IWritableSettings<UserSettings> userSettings)
     {
         _userSettings = userSettings;
         showTrackAvailabilityText = userSettings.Value.UI.ShowTrackAvailabilityText;
         enableLoggingView = userSettings.Value.UI.EnableLoggingView;
+        showMkvpropeditArguments = userSettings.Value.UI.ShowMkvpropeditArguments;
         
         // Parse the theme from settings, defaulting to System if invalid
         if (Enum.TryParse<AppThemePreference>(userSettings.Value.UI.Theme, out var parsedTheme))
@@ -65,5 +69,10 @@ public sealed partial class UIPreferencesService : ObservableObject, IUIPreferen
     partial void OnEnableLoggingViewChanged(bool value)
     {
         _ = _userSettings.UpdateAsync(settings => settings.UI.EnableLoggingView = value);
+    }
+
+    partial void OnShowMkvpropeditArgumentsChanged(bool value)
+    {
+        _ = _userSettings.UpdateAsync(settings => settings.UI.ShowMkvpropeditArguments = value);
     }
 }

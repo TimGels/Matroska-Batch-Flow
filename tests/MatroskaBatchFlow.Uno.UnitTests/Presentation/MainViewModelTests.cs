@@ -353,6 +353,31 @@ public class MainViewModelTests
         Assert.True(viewModel.EnableLoggingView);
     }
 
+
+    [Fact]
+    public void ShowMkvpropeditArguments_ReflectsUIPreferencesValue()
+    {
+        _uiPreferences.ShowMkvpropeditArguments.Returns(true);
+        var viewModel = CreateViewModel();
+
+        Assert.True(viewModel.ShowMkvpropeditArguments);
+    }
+
+    [Fact]
+    public void OnUIPreferencesChanged_UpdatesShowMkvpropeditArguments()
+    {
+        _uiPreferences.ShowMkvpropeditArguments.Returns(false);
+        var viewModel = CreateViewModel();
+        Assert.False(viewModel.ShowMkvpropeditArguments);
+
+        _uiPreferences.ShowMkvpropeditArguments.Returns(true);
+        _uiPreferences.PropertyChanged += Raise.Event<System.ComponentModel.PropertyChangedEventHandler>(
+            _uiPreferences,
+            new System.ComponentModel.PropertyChangedEventArgs(nameof(IUIPreferencesService.ShowMkvpropeditArguments)));
+
+        Assert.True(viewModel.ShowMkvpropeditArguments);
+    }
+
     [Fact]
     public void Constructor_SetsBatchReportFromStore()
     {

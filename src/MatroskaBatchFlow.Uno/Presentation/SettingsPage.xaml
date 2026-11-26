@@ -336,6 +336,12 @@
                     <ToggleSwitch IsOn="{x:Bind ViewModel.ShowTrackAvailabilityText, Mode=TwoWay}" />
                 </controls:SettingsCard>
 
+                <controls:SettingsCard Header="Show Arguments"
+                                       Description="Display a button to preview the generated mkvpropedit command in the main window."
+                                       HeaderIcon="{ui:FontIcon Glyph=&#xE8BC;}">
+                    <ToggleSwitch IsOn="{x:Bind ViewModel.ShowMkvpropeditArguments, Mode=TwoWay}" />
+                </controls:SettingsCard>
+
                 <controls:SettingsCard x:Uid="BatchHistoryLimitCard"
                                        HeaderIcon="{ui:FontIcon Glyph=&#xE81C;}">
                     <NumberBox x:Uid="BatchHistoryLimitBox"
