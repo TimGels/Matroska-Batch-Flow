@@ -39,7 +39,7 @@ public interface IBatchHistoryService : INotifyPropertyChanged
     /// </summary>
     /// <remarks>
     /// The history is trimmed before the limit is saved. If saving the limit then fails, the prior history is
-    /// restored when possible and the previous limit stays in effect.
+    /// restored when possible and <see cref="Runs"/> is not changed. If that rollback also fails, recovery is required.
     /// </remarks>
     /// <exception cref="BatchHistoryLimitSaveException">
     /// The limit could not be saved; <see cref="BatchHistoryLimitSaveException.HistoryTrimmed"/> reports whether

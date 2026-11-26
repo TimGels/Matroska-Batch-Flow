@@ -541,7 +541,7 @@ public sealed class BatchHistoryServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task SetMaxRunsAsync_RestoresCachedLimitAndHistory_WhenSettingsSaveFails()
+    public async Task SetMaxRunsAsync_RestoresHistoryAndViewState_WhenSavingTheLimitFails()
     {
         var service = CreateService();
         foreach (var run in Enumerable.Range(0, 4).Select(Run))
@@ -549,6 +549,9 @@ public sealed class BatchHistoryServiceTests : IDisposable
             await service.AddAsync(run);
         }
 
+        var collectionChangedCount = 0;
+        var runsCollection = (System.Collections.Specialized.INotifyCollectionChanged)service.Runs;
+        runsCollection.CollectionChanged += (_, _) => collectionChangedCount++;
         _userSettings.UpdateAsync(Arg.Any<Action<UserSettings>>(), Arg.Any<Action<UserSettings>>())
             .Returns(call =>
             {
@@ -563,6 +566,8 @@ public sealed class BatchHistoryServiceTests : IDisposable
         Assert.False(exception.HistoryTrimmed);
         Assert.IsType<IOException>(exception.InnerException);
         Assert.Equal(UserSettings.BatchHistorySettings.DefaultMaxRuns, service.MaxRuns);
+        Assert.Equal(0, collectionChangedCount);
+        Assert.Equal(4, service.Runs.Count);
         var afterFailure = CreateService();
         await afterFailure.LoadAsync();
         Assert.Equal(4, afterFailure.Runs.Count);
@@ -576,6 +581,7 @@ public sealed class BatchHistoryServiceTests : IDisposable
         Assert.Equal(0, await service.SetMaxRunsAsync(2, confirmedRemovals: 2));
         Assert.Equal(2, service.MaxRuns);
         Assert.Equal(2, service.Runs.Count);
+        Assert.NotEqual(0, collectionChangedCount);
     }
 
     [Fact]
