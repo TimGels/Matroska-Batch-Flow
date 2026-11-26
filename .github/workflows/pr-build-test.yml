@@ -141,6 +141,24 @@ jobs:
         path: '**/TestResults/**/coverage.cobertura*.xml'
         retention-days: 7
 
+  history-process:
+    name: History process tests (${{ matrix.os }})
+    needs: changes
+    if: needs.changes.outputs.src == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v6
+    - uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    # Windows already runs these in the full integration suite. On Unix restore the multi-target projects,
+    # but execute only the portable net10.0 tests, using the runner's native filesystem.
+    - run: dotnet test --project tests/MatroskaBatchFlow.Uno.IntegrationTests --configuration Release -p:EnableWindowsTargeting=true --filter-class "*BatchHistoryProcessTests" --minimum-expected-tests 3
+
   test-summary:
     name: Test Summary
     runs-on: windows-latest

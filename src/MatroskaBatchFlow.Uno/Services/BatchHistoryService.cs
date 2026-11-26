@@ -458,7 +458,16 @@ public partial class BatchHistoryService : IBatchHistoryService
         var temporaryPath = _filePath + ".tmp";
         var document = new BatchHistoryDocument(header.Version, runs, header.ClearedAt, header.ClearId);
         File.WriteAllText(temporaryPath, JsonSerializer.Serialize(document, SerializerOptions));
-        File.Move(temporaryPath, _filePath, overwrite: true);
+        // While holding the sidecar, replace an existing file without invalidating open snapshots.
+        // Move(overwrite: true) can fail on Windows even when every reader shares deletion.
+        if (File.Exists(_filePath))
+        {
+            File.Replace(temporaryPath, _filePath, destinationBackupFileName: null);
+        }
+        else
+        {
+            File.Move(temporaryPath, _filePath);
+        }
     }
 
     /// <summary>

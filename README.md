@@ -208,6 +208,21 @@ dotnet test --filter-class "*BatchConfigurationTests"
 dotnet test --report-xunit-trx --coverlet --coverlet-output-format cobertura
 ```
 
+**Testing history across app instances.** The history integration tests start a second .NET process
+and use a temporary directory, never your real settings, results, or media. They check that a clear
+leaves an open reader's old snapshot intact, cannot bypass another writer's lock, and prevents queued
+runs from coming back. They also check that lowering the retention limit asks for confirmation again
+if another process adds a run and the number to be removed changes.
+
+Run them on Windows, Linux, or macOS with:
+
+```shell
+dotnet test --project tests/MatroskaBatchFlow.Uno.IntegrationTests -p:EnableWindowsTargeting=true --filter-class "*BatchHistoryProcessTests"
+```
+
+The MSBuild property allows the SDK to restore the solution's Windows targets; the tests and the second
+process run natively on the host OS. These checks cover local filesystems, not network shares or power loss.
+
 ## Contributing
 
 This is a personal project. While I'm open to contributions, whether one is accepted is up to me. I may decline a contribution even if there's nothing wrong with it, for example if it doesn't fit the project's direction, or for any other reason. When that happens, it isn't a judgment of your work.
