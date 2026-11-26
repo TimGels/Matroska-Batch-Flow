@@ -683,6 +683,24 @@ public sealed class BatchHistoryServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RemoveAsync_WhenAnotherInstanceAlreadyRemovedRun_DoesNotWriteOrReportFailure()
+    {
+        var first = CreateService();
+        var run = Run(0);
+        await first.AddAsync(run);
+        var stale = CreateService();
+        await stale.LoadAsync();
+        await first.RemoveAsync(new([run.Id]));
+        var blockedPath = Directory.CreateDirectory(_filePath + ".tmp");
+
+        var result = await stale.RemoveAsync(new([run.Id]));
+
+        Assert.Equal(new HistoryRemovalResult(HistoryRemovalStatus.Removed, 0), result);
+        Assert.Empty(stale.Runs);
+        Assert.True(Directory.Exists(blockedPath.FullName));
+    }
+
+    [Fact]
     public async Task RemoveAsync_WhenWriteFails_PreservesDiskAndListedRuns_UntilRetry()
     {
         var service = CreateService();

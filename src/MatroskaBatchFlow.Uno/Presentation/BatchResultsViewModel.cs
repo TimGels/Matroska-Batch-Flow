@@ -64,6 +64,7 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
     public partial IReadOnlyList<FileResultItem> VisibleFiles { get; private set; } = Array.Empty<FileResultItem>();
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanRemoveResultHistory))]
     public partial bool IsChangingHistory { get; private set; }
 
     /// <summary>
@@ -114,6 +115,7 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
             {
                 OnPropertyChanged(nameof(HasUnreadableHistory));
                 OnPropertyChanged(nameof(HasHistoryPicker));
+                OnPropertyChanged(nameof(CanRemoveResultHistory));
                 OnPropertyChanged(nameof(CanClearResultHistory));
             }
         };
@@ -219,6 +221,8 @@ public partial class BatchResultsViewModel : ObservableObject, INavigationAware
     public bool HasUnreadableHistory => _history.HasUnreadableHistory;
 
     public bool HasHistoryPicker => HasRuns || HasUnreadableHistory;
+
+    public bool CanRemoveResultHistory => !HasUnreadableHistory && !IsChangingHistory;
 
     public bool CanClearResultHistory => HasRuns && !HasUnreadableHistory;
 
