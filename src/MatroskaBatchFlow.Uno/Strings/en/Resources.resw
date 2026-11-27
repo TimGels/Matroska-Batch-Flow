@@ -236,9 +236,164 @@
     <value>Cancel</value>
     <comment>Keeps the previous limit and all saved results.</comment>
   </data>
+  <data name="SettingsPageTitle.Text" xml:space="preserve"><value>Settings</value></data>
+  <data name="SettingsMkvpropeditSection.Text" xml:space="preserve"><value>mkvpropedit</value></data>
+  <data name="SettingsExecutableSelection.Header" xml:space="preserve"><value>Executable selection</value></data>
+  <data name="SettingsExecutableSelection.Description" xml:space="preserve">
+    <value>Choose between the bundled mkvpropedit executable or specify a path to use your own.</value>
+  </data>
+  <data name="SettingsExecutableIncluded.Content" xml:space="preserve"><value>Included</value></data>
+  <data name="SettingsExecutableCustom.Content" xml:space="preserve"><value>Custom</value></data>
+  <data name="SettingsExecutableLocation.Header" xml:space="preserve"><value>Location</value></data>
+  <data name="SettingsExecutableBrowse.Text" xml:space="preserve"><value>Browse...</value></data>
+  <data name="SettingsExecutableBrowseErrorTitle" xml:space="preserve"><value>Error</value></data>
+  <data name="SettingsExecutableBrowseErrorMessage" xml:space="preserve">
+    <value>File picker is not available at this time. Please try again.</value>
+  </data>
+
+  <data name="SettingsStrictnessMode.Header" xml:space="preserve"><value>Strictness mode</value></data>
+  <data name="SettingsStrictnessMode.Description" xml:space="preserve">
+    <value>Control how files with different track counts are handled during batch operations.</value>
+  </data>
+  <data name="SettingsStrictnessSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Batch validation strictness mode</value>
+  </data>
+  <data name="SettingsStrictnessSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.HelpText" xml:space="preserve">
+    <value>Select how strict batch validation should be</value>
+  </data>
+  <data name="SettingsStrictnessStrict.Content" xml:space="preserve"><value>Strict</value></data>
+  <data name="SettingsStrictnessLenient.Content" xml:space="preserve"><value>Lenient</value></data>
+  <data name="SettingsStrictnessCustom.Content" xml:space="preserve"><value>Custom</value></data>
+  <data name="SettingsStructuralValidation.Header" xml:space="preserve"><value>Structural validation</value></data>
+  <data name="SettingsTrackCountParity.Text" xml:space="preserve"><value>Track count parity</value></data>
+  <data name="SettingsTrackCountParitySelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Track count parity validation severity</value>
+  </data>
+  <data name="SettingsTrackCountParitySelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.HelpText" xml:space="preserve">
+    <value>Set validation severity for track count consistency</value>
+  </data>
+  <data name="SettingsAudioTrackValidation.Header" xml:space="preserve"><value>Audio track validation</value></data>
+  <data name="SettingsAudioTrackValidation.Description" xml:space="preserve"><value>Validation rules for audio tracks</value></data>
+  <data name="SettingsVideoTrackValidation.Header" xml:space="preserve"><value>Video track validation</value></data>
+  <data name="SettingsVideoTrackValidation.Description" xml:space="preserve"><value>Validation rules for video tracks</value></data>
+  <data name="SettingsSubtitleTrackValidation.Header" xml:space="preserve"><value>Subtitle track validation</value></data>
+  <data name="SettingsSubtitleTrackValidation.Description" xml:space="preserve"><value>Validation rules for subtitle tracks</value></data>
+  <data name="SettingsLanguageConsistency.Text" xml:space="preserve"><value>Language consistency</value></data>
+  <data name="SettingsDefaultFlag.Text" xml:space="preserve"><value>Default flag</value></data>
+  <data name="SettingsForcedFlag.Text" xml:space="preserve"><value>Forced flag</value></data>
+  <data name="SettingsAudioLanguageSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Audio language consistency validation severity</value>
+  </data>
+  <data name="SettingsAudioLanguageSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.HelpText" xml:space="preserve">
+    <value>Set validation severity for audio language consistency</value>
+  </data>
+  <data name="SettingsAudioDefaultFlagSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Audio default flag validation severity</value>
+  </data>
+  <data name="SettingsAudioDefaultFlagSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.HelpText" xml:space="preserve">
+    <value>Set validation severity for the audio default flag</value>
+  </data>
+  <data name="SettingsAudioForcedFlagSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Audio forced flag validation severity</value>
+  </data>
+  <data name="SettingsAudioForcedFlagSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.HelpText" xml:space="preserve">
+    <value>Set validation severity for the audio forced flag</value>
+  </data>
+  <data name="SettingsVideoLanguageSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Video language consistency validation severity</value>
+  </data>
+  <data name="SettingsVideoLanguageSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.HelpText" xml:space="preserve">
+    <value>Set validation severity for video language consistency</value>
+  </data>
+  <data name="SettingsVideoDefaultFlagSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Video default flag validation severity</value>
+  </data>
+  <data name="SettingsVideoDefaultFlagSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.HelpText" xml:space="preserve">
+    <value>Set validation severity for the video default flag</value>
+  </data>
+  <data name="SettingsSubtitleLanguageSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Subtitle language consistency validation severity</value>
+  </data>
+  <data name="SettingsSubtitleLanguageSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.HelpText" xml:space="preserve">
+    <value>Set validation severity for subtitle language consistency</value>
+  </data>
+  <data name="SettingsSubtitleForcedFlagSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Subtitle forced flag validation severity</value>
+  </data>
+  <data name="SettingsSubtitleForcedFlagSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.HelpText" xml:space="preserve">
+    <value>Set validation severity for the subtitle forced flag</value>
+  </data>
+  <data name="SettingsSeverityOff.Content" xml:space="preserve"><value>Off</value></data>
+  <data name="SettingsSeverityInfo.Content" xml:space="preserve"><value>Info</value></data>
+  <data name="SettingsSeverityWarning.Content" xml:space="preserve"><value>Warning</value></data>
+  <data name="SettingsSeverityError.Content" xml:space="preserve"><value>Error</value></data>
+
+  <data name="SettingsUserInterfaceSection.Text" xml:space="preserve"><value>User interface</value></data>
+  <data name="SettingsAppTheme.Header" xml:space="preserve"><value>App theme</value></data>
+  <data name="SettingsAppTheme.Description" xml:space="preserve"><value>Choose the color theme for the app.</value></data>
+  <data name="SettingsThemeSystem.Content" xml:space="preserve"><value>Use system setting</value></data>
+  <data name="SettingsThemeLight.Content" xml:space="preserve"><value>Light</value></data>
+  <data name="SettingsThemeDark.Content" xml:space="preserve"><value>Dark</value></data>
+  <data name="SettingsTrackAvailability.Header" xml:space="preserve"><value>Track availability display</value></data>
+  <data name="SettingsTrackAvailability.Description" xml:space="preserve">
+    <value>Show detailed file count together with colored indicators in track selection dropdowns.</value>
+  </data>
+  <data name="SettingsTrackAvailabilityToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show track availability text</value>
+  </data>
+  <data name="SettingsShowArguments.Header" xml:space="preserve"><value>Show arguments</value></data>
+  <data name="SettingsShowArguments.Description" xml:space="preserve">
+    <value>Display a button to preview the generated mkvpropedit command in the main window.</value>
+  </data>
+  <data name="SettingsShowArgumentsToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show arguments</value>
+  </data>
+
+  <data name="SettingsLoggingSection.Text" xml:space="preserve"><value>Logging</value></data>
+  <data name="SettingsShowLogViewer.Header" xml:space="preserve"><value>Show log viewer</value></data>
+  <data name="SettingsShowLogViewer.Description" xml:space="preserve">
+    <value>Display a log viewer tab in the navigation menu to monitor application logs in real-time.</value>
+  </data>
+  <data name="SettingsShowLogViewerToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show log viewer</value>
+  </data>
+  <data name="SettingsLogLevel.Header" xml:space="preserve"><value>Log level</value></data>
+  <data name="SettingsLogLevelDescription" xml:space="preserve">
+    <value>Set the minimum logging level. Lower levels produce more detailed logs.</value>
+  </data>
+  <data name="SettingsLogLevelConfiguredDescription" xml:space="preserve">
+    <value>Currently set by appsettings.json to '{0}' and cannot be changed here.</value>
+    <comment>{0} is the exact logging level set in the configuration file, for example Warning.</comment>
+  </data>
+  <data name="SettingsLogLevelVerbose.Content" xml:space="preserve"><value>Verbose</value></data>
+  <data name="SettingsLogLevelDebug.Content" xml:space="preserve"><value>Debug</value></data>
+  <data name="SettingsLogLevelInformation.Content" xml:space="preserve"><value>Information</value></data>
+  <data name="SettingsLogLevelWarning.Content" xml:space="preserve"><value>Warning</value></data>
+  <data name="SettingsLogLevelError.Content" xml:space="preserve"><value>Error</value></data>
+  <data name="SettingsLogLevelFatal.Content" xml:space="preserve"><value>Fatal</value></data>
+
+  <data name="SettingsAboutSection.Text" xml:space="preserve"><value>About</value></data>
+  <data name="SettingsAboutApp.Header" xml:space="preserve"><value>Matroska Batch Flow</value></data>
+  <data name="SettingsAppVersion" xml:space="preserve">
+    <value>Version {0}</value>
+    <comment>{0} is the app version, for example 1.2.3.</comment>
+  </data>
+  <data name="SettingsCopyrightNotice" xml:space="preserve">
+    <value>© 2025-{0}. All rights reserved.</value>
+    <comment>{0} is the current year.</comment>
+  </data>
+  <data name="SettingsLicenseLink.Content" xml:space="preserve"><value>License</value></data>
+  <data name="SettingsDependencies.Header" xml:space="preserve"><value>Third-party dependencies</value></data>
+  <data name="SettingsUnoPlatformLink.Content" xml:space="preserve"><value>Uno Platform</value></data>
+  <data name="SettingsDotNetToolkitLink.Content" xml:space="preserve"><value>.NET Community Toolkit</value></data>
+  <data name="SettingsWindowsAppSdkLink.Content" xml:space="preserve"><value>Windows App SDK</value></data>
+  <data name="SettingsWinUiLink.Content" xml:space="preserve"><value>WinUI 3</value></data>
+  <data name="SettingsUsefulLinks.Header" xml:space="preserve"><value>Useful links</value></data>
+  <data name="SettingsGitHubLink.Content" xml:space="preserve"><value>GitHub repository</value></data>
+
   <data name="ChecksNavItem.Content" xml:space="preserve"><value>Validation</value></data>
   <data name="ChecksPageTitle.Text" xml:space="preserve"><value>Validation</value></data>
-  <data name="ChecksSettingsSection.Text" xml:space="preserve"><value>Batch Validation</value></data>
+  <data name="ChecksSettingsSection.Text" xml:space="preserve"><value>Batch validation</value></data>
   <data name="ChecksFileColumn.Text" xml:space="preserve"><value>File</value></data>
   <data name="ChecksCountColumn.Text" xml:space="preserve"><value>Batch checks</value></data>
   <data name="ChecksUnsupportedBadge.Text" xml:space="preserve"><value>Unsupported file</value></data>

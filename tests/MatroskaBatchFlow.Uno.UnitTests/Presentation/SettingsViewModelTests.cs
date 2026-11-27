@@ -93,6 +93,7 @@ public class SettingsViewModelTests
         // Assert
         Assert.Equal(3, viewModel.SelectedLogLevelIndex); // Warning = 3
         Assert.False(viewModel.IsLogLevelControlEnabled);
+        Assert.Equal("Warning", viewModel.ConfiguredMinimumLogLevel);
     }
 
     [Fact]
@@ -192,35 +193,6 @@ public class SettingsViewModelTests
 
         // Assert
         Assert.False(viewModel.IsCustomMode);
-    }
-
-    [Fact]
-    public void LogLevelDescription_WhenEnabled_ShowsStandardDescription()
-    {
-        // Arrange
-        _loggingOptions.Value.Returns(new LoggingOptions { MinimumLevel = "" });
-        var viewModel = CreateViewModel();
-
-        // Act
-        var description = viewModel.LogLevelDescription;
-
-        // Assert
-        Assert.Contains("Set the minimum logging level", description);
-    }
-
-    [Fact]
-    public void LogLevelDescription_WhenDisabled_ShowsConfiguredLevel()
-    {
-        // Arrange
-        _loggingOptions.Value.Returns(new LoggingOptions { MinimumLevel = "Error" });
-        var viewModel = CreateViewModel();
-
-        // Act
-        var description = viewModel.LogLevelDescription;
-
-        // Assert
-        Assert.Contains("Error", description);
-        Assert.Contains("appsettings.json", description);
     }
 
     [Fact]
