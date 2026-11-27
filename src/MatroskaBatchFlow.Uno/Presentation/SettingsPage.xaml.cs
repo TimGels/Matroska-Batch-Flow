@@ -51,11 +51,15 @@ public sealed partial class SettingsPage : Page
 
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Binding requires instance member.")]
     [SuppressMessage("CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "Suppression is necessary.")]
-    public string AppVersion => $"Version {AppEnvironmentHelper.GetApplicationVersion().ToString(3)}";
+    public string AppVersion => UiText.Format("SettingsAppVersion", AppEnvironmentHelper.GetApplicationVersion().ToString(3));
 
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Binding requires instance member.")]
     [SuppressMessage("CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "Suppression is necessary.")]
-    public string CopyrightNotice => $"© 2025-{DateTime.Now.Year}. All rights reserved.";
+    public string CopyrightNotice => UiText.Format("SettingsCopyrightNotice", DateTime.Now.Year);
+
+    private string LogLevelDescription => ViewModel.IsLogLevelControlEnabled
+        ? UiText.Get("SettingsLogLevelDescription")
+        : UiText.Format("SettingsLogLevelConfiguredDescription", ViewModel.ConfiguredMinimumLogLevel);
 
     public SettingsPage()
     {
@@ -87,7 +91,9 @@ public sealed partial class SettingsPage : Page
         }
         else
         {
-            WeakReferenceMessenger.Default.Send(new DialogMessage("Error", "File picker is not available at this time. Please try again."));
+            WeakReferenceMessenger.Default.Send(new DialogMessage(
+                UiText.Get("SettingsExecutableBrowseErrorTitle"),
+                UiText.Get("SettingsExecutableBrowseErrorMessage")));
             return;
         }
 

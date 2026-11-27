@@ -31,42 +31,40 @@
         <Grid>
             <StackPanel HorizontalAlignment="Stretch"
                 Spacing="4">
-                <TextBlock FontSize="28"
-                   Text="Settings" />
+                <TextBlock x:Uid="SettingsPageTitle"
+                           FontSize="28" />
 
                 <!--Mkvpropedit section-->
-                <TextBlock Text="Mkvpropedit"
+                <TextBlock x:Uid="SettingsMkvpropeditSection"
                    Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
 
                 <controls:SwitchPresenter TargetType="x:Boolean"
                                   Value="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=OneWay}">
 
                     <controls:Case Value="False">
-                        <controls:SettingsCard Description="Choose between the bundled mkvpropedit executable or specify a path to use your own."
-                                       Header="Executable Selection"
+                        <controls:SettingsCard x:Uid="SettingsExecutableSelection"
                                        HeaderIcon="{ui:FontIcon Glyph=&#xE756;}">
 
                             <ComboBox SelectedIndex="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=TwoWay, Converter={StaticResource BoolToIndexConverter}}">
-                                <ComboBoxItem Content="Included" />
-                                <ComboBoxItem Content="Custom" />
+                                <ComboBoxItem x:Uid="SettingsExecutableIncluded" />
+                                <ComboBoxItem x:Uid="SettingsExecutableCustom" />
                             </ComboBox>
 
                         </controls:SettingsCard>
                     </controls:Case>
 
                     <controls:Case Value="True">
-                        <controls:SettingsExpander Description="Choose between the bundled mkvpropedit executable or specify a path to use your own."
-                                           Header="Executable Selection"
+                        <controls:SettingsExpander x:Uid="SettingsExecutableSelection"
                                            HeaderIcon="{ui:FontIcon Glyph=&#xE756;}"
                                            IsExpanded="True">
 
                             <ComboBox SelectedIndex="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=TwoWay, Converter={StaticResource BoolToIndexConverter}}">
-                                <ComboBoxItem Content="Included" />
-                                <ComboBoxItem Content="Custom" />
+                                <ComboBoxItem x:Uid="SettingsExecutableIncluded" />
+                                <ComboBoxItem x:Uid="SettingsExecutableCustom" />
                             </ComboBox>
 
                             <controls:SettingsExpander.Items>
-                                <controls:SettingsCard Header="Location"
+                                <controls:SettingsCard x:Uid="SettingsExecutableLocation"
                                                IsEnabled="{x:Bind ViewModel.IsCustomMkvPropeditPathEnabled, Mode=OneWay}">
                                     <controls:SettingsCard.Description>
                                         <TextBlock Text="{x:Bind ViewModel.CustomMkvPropeditPath, Mode=OneWay}"
@@ -86,7 +84,7 @@
                                         HorizontalAlignment="Right">
                                             <Button.Content>
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <TextBlock Text="Browse..." />
+                                                    <TextBlock x:Uid="SettingsExecutableBrowse" />
                                                 </StackPanel>
                                             </Button.Content>
                                         </Button>
@@ -105,81 +103,74 @@
                                           Value="{x:Bind ViewModel.IsCustomMode, Mode=OneWay}">
 
                     <controls:Case Value="False">
-                        <controls:SettingsCard Header="Strictness Mode"
-                                               Description="Control how files with different track counts are handled during batch operations."
+                        <controls:SettingsCard x:Uid="SettingsStrictnessMode"
                                                HeaderIcon="{ui:FontIcon Glyph=&#xE8FD;}">
 
-                            <ComboBox SelectedIndex="{x:Bind ViewModel.SelectedStrictnessModeIndex, Mode=TwoWay}"
-                                      MinWidth="120"
-                                      AutomationProperties.Name="Batch validation strictness mode"
-                                      AutomationProperties.HelpText="Select how strict batch validation should be">
-                                <ComboBoxItem Content="Strict" />
-                                <ComboBoxItem Content="Lenient" />
-                                <ComboBoxItem Content="Custom" />
+                            <ComboBox x:Uid="SettingsStrictnessSelector"
+                                      SelectedIndex="{x:Bind ViewModel.SelectedStrictnessModeIndex, Mode=TwoWay}"
+                                      MinWidth="120">
+                                <ComboBoxItem x:Uid="SettingsStrictnessStrict" />
+                                <ComboBoxItem x:Uid="SettingsStrictnessLenient" />
+                                <ComboBoxItem x:Uid="SettingsStrictnessCustom" />
                             </ComboBox>
                         </controls:SettingsCard>
                     </controls:Case>
 
                     <controls:Case Value="True">
-                        <controls:SettingsExpander Header="Strictness Mode"
-                                                   Description="Control how files with different track counts are handled during batch operations."
+                        <controls:SettingsExpander x:Uid="SettingsStrictnessMode"
                                                    HeaderIcon="{ui:FontIcon Glyph=&#xE8FD;}"
                                                    IsExpanded="True">
 
-                            <ComboBox SelectedIndex="{x:Bind ViewModel.SelectedStrictnessModeIndex, Mode=TwoWay}"
-                                      MinWidth="120"
-                                      AutomationProperties.Name="Batch validation strictness mode"
-                                      AutomationProperties.HelpText="Select how strict batch validation should be">
-                                <ComboBoxItem Content="Strict" />
-                                <ComboBoxItem Content="Lenient" />
-                                <ComboBoxItem Content="Custom" />
+                            <ComboBox x:Uid="SettingsStrictnessSelector"
+                                      SelectedIndex="{x:Bind ViewModel.SelectedStrictnessModeIndex, Mode=TwoWay}"
+                                      MinWidth="120">
+                                <ComboBoxItem x:Uid="SettingsStrictnessStrict" />
+                                <ComboBoxItem x:Uid="SettingsStrictnessLenient" />
+                                <ComboBoxItem x:Uid="SettingsStrictnessCustom" />
                             </ComboBox>
 
                             <controls:SettingsExpander.Items>
 
                                 <!-- Structural Validation -->
-                                <controls:SettingsCard Header="Structural Validation">
+                                <controls:SettingsCard x:Uid="SettingsStructuralValidation">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="200" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Track Count Parity"
+                                <TextBlock x:Uid="SettingsTrackCountParity"
                                            VerticalAlignment="Center" />
-                                <ComboBox Grid.Column="1"
+                                <ComboBox x:Uid="SettingsTrackCountParitySelector"
+                                              Grid.Column="1"
                                               SelectedIndex="{x:Bind ViewModel.TrackCountParitySeverityIndex, Mode=TwoWay}"
                                               MinWidth="120"
-                                              HorizontalAlignment="Right"
-                                              AutomationProperties.Name="Track count parity validation severity"
-                                              AutomationProperties.HelpText="Set validation severity for track count consistency">
-                                    <ComboBoxItem Content="Off" />
-                                    <ComboBoxItem Content="Info" />
-                                    <ComboBoxItem Content="Warning" />
-                                    <ComboBoxItem Content="Error" />
+                                              HorizontalAlignment="Right">
+                                    <ComboBoxItem x:Uid="SettingsSeverityOff" />
+                                    <ComboBoxItem x:Uid="SettingsSeverityInfo" />
+                                    <ComboBoxItem x:Uid="SettingsSeverityWarning" />
+                                    <ComboBoxItem x:Uid="SettingsSeverityError" />
                                 </ComboBox>
                             </Grid>
                                 </controls:SettingsCard>
 
                                 <!-- Audio Track Properties -->
-                                <controls:SettingsCard Header="Audio Track Validation"
-                                                       Description="Validation rules for audio tracks">
+                                <controls:SettingsCard x:Uid="SettingsAudioTrackValidation">
                             <StackPanel Spacing="8">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="200" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Language Consistency" VerticalAlignment="Center" />
-                                    <ComboBox Grid.Column="1"
+                                    <TextBlock x:Uid="SettingsLanguageConsistency" VerticalAlignment="Center" />
+                                    <ComboBox x:Uid="SettingsAudioLanguageSelector"
+                                                  Grid.Column="1"
                                                   SelectedIndex="{x:Bind ViewModel.AudioLanguageSeverityIndex, Mode=TwoWay}"
                                                   MinWidth="120"
-                                                  HorizontalAlignment="Right"
-                                                  AutomationProperties.Name="Audio language consistency validation severity"
-                                                  AutomationProperties.HelpText="Set validation severity for audio language consistency">
-                                        <ComboBoxItem Content="Off" />
-                                        <ComboBoxItem Content="Info" />
-                                        <ComboBoxItem Content="Warning" />
-                                        <ComboBoxItem Content="Error" />
+                                                  HorizontalAlignment="Right">
+                                        <ComboBoxItem x:Uid="SettingsSeverityOff" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityInfo" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityWarning" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityError" />
                                     </ComboBox>
                                 </Grid>
 
@@ -188,17 +179,16 @@
                                         <ColumnDefinition Width="200" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Default Flag" VerticalAlignment="Center" />
-                                    <ComboBox Grid.Column="1"
+                                    <TextBlock x:Uid="SettingsDefaultFlag" VerticalAlignment="Center" />
+                                    <ComboBox x:Uid="SettingsAudioDefaultFlagSelector"
+                                                  Grid.Column="1"
                                                   SelectedIndex="{x:Bind ViewModel.AudioDefaultFlagSeverityIndex, Mode=TwoWay}"
                                                   MinWidth="120"
-                                                  HorizontalAlignment="Right"
-                                                  AutomationProperties.Name="Audio default flag validation severity"
-                                                  AutomationProperties.HelpText="Set validation severity for audio default flag">
-                                        <ComboBoxItem Content="Off" />
-                                        <ComboBoxItem Content="Info" />
-                                        <ComboBoxItem Content="Warning" />
-                                        <ComboBoxItem Content="Error" />
+                                                  HorizontalAlignment="Right">
+                                        <ComboBoxItem x:Uid="SettingsSeverityOff" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityInfo" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityWarning" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityError" />
                                     </ComboBox>
                                 </Grid>
 
@@ -207,42 +197,39 @@
                                         <ColumnDefinition Width="200" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Forced Flag" VerticalAlignment="Center" />
-                                    <ComboBox Grid.Column="1"
+                                    <TextBlock x:Uid="SettingsForcedFlag" VerticalAlignment="Center" />
+                                    <ComboBox x:Uid="SettingsAudioForcedFlagSelector"
+                                                  Grid.Column="1"
                                                   SelectedIndex="{x:Bind ViewModel.AudioForcedFlagSeverityIndex, Mode=TwoWay}"
                                                   MinWidth="120"
-                                                  HorizontalAlignment="Right"
-                                                  AutomationProperties.Name="Audio forced flag validation severity"
-                                                  AutomationProperties.HelpText="Set validation severity for audio forced flag">
-                                        <ComboBoxItem Content="Off" />
-                                        <ComboBoxItem Content="Info" />
-                                        <ComboBoxItem Content="Warning" />
-                                        <ComboBoxItem Content="Error" />
+                                                  HorizontalAlignment="Right">
+                                        <ComboBoxItem x:Uid="SettingsSeverityOff" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityInfo" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityWarning" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityError" />
                                     </ComboBox>
                                 </Grid>
                             </StackPanel>
                                 </controls:SettingsCard>
 
                                 <!-- Video Track Properties -->
-                                <controls:SettingsCard Header="Video Track Validation"
-                                                       Description="Validation rules for video tracks">
+                                <controls:SettingsCard x:Uid="SettingsVideoTrackValidation">
                                     <StackPanel Spacing="8">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="200" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Language Consistency" VerticalAlignment="Center" />
-                                    <ComboBox Grid.Column="1"
+                                    <TextBlock x:Uid="SettingsLanguageConsistency" VerticalAlignment="Center" />
+                                    <ComboBox x:Uid="SettingsVideoLanguageSelector"
+                                                  Grid.Column="1"
                                                   SelectedIndex="{x:Bind ViewModel.VideoLanguageSeverityIndex, Mode=TwoWay}"
                                                   MinWidth="120"
-                                                  HorizontalAlignment="Right"
-                                                  AutomationProperties.Name="Video language consistency validation severity"
-                                                  AutomationProperties.HelpText="Set validation severity for video language consistency">
-                                        <ComboBoxItem Content="Off" />
-                                        <ComboBoxItem Content="Info" />
-                                        <ComboBoxItem Content="Warning" />
-                                        <ComboBoxItem Content="Error" />
+                                                  HorizontalAlignment="Right">
+                                        <ComboBoxItem x:Uid="SettingsSeverityOff" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityInfo" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityWarning" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityError" />
                                     </ComboBox>
                                 </Grid>
 
@@ -251,42 +238,39 @@
                                         <ColumnDefinition Width="200" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Default Flag" VerticalAlignment="Center" />
-                                    <ComboBox Grid.Column="1"
+                                    <TextBlock x:Uid="SettingsDefaultFlag" VerticalAlignment="Center" />
+                                    <ComboBox x:Uid="SettingsVideoDefaultFlagSelector"
+                                                  Grid.Column="1"
                                                   SelectedIndex="{x:Bind ViewModel.VideoDefaultFlagSeverityIndex, Mode=TwoWay}"
                                                   MinWidth="120"
-                                                  HorizontalAlignment="Right"
-                                                  AutomationProperties.Name="Video default flag validation severity"
-                                                  AutomationProperties.HelpText="Set validation severity for video default flag">
-                                        <ComboBoxItem Content="Off" />
-                                        <ComboBoxItem Content="Info" />
-                                        <ComboBoxItem Content="Warning" />
-                                        <ComboBoxItem Content="Error" />
+                                                  HorizontalAlignment="Right">
+                                        <ComboBoxItem x:Uid="SettingsSeverityOff" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityInfo" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityWarning" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityError" />
                                     </ComboBox>
                                 </Grid>
                             </StackPanel>
                                 </controls:SettingsCard>
 
                                 <!-- Subtitle Track Properties -->
-                                <controls:SettingsCard Header="Subtitle Track Validation"
-                                                       Description="Validation rules for subtitle tracks">
+                                <controls:SettingsCard x:Uid="SettingsSubtitleTrackValidation">
                                     <StackPanel Spacing="8">
                                         <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="200" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Language Consistency" VerticalAlignment="Center" />
-                                    <ComboBox Grid.Column="1"
+                                    <TextBlock x:Uid="SettingsLanguageConsistency" VerticalAlignment="Center" />
+                                    <ComboBox x:Uid="SettingsSubtitleLanguageSelector"
+                                                  Grid.Column="1"
                                                   SelectedIndex="{x:Bind ViewModel.SubtitleLanguageSeverityIndex, Mode=TwoWay}"
                                                   MinWidth="120"
-                                                  HorizontalAlignment="Right"
-                                                  AutomationProperties.Name="Subtitle language consistency validation severity"
-                                                  AutomationProperties.HelpText="Set validation severity for subtitle language consistency">
-                                        <ComboBoxItem Content="Off" />
-                                        <ComboBoxItem Content="Info" />
-                                        <ComboBoxItem Content="Warning" />
-                                        <ComboBoxItem Content="Error" />
+                                                  HorizontalAlignment="Right">
+                                        <ComboBoxItem x:Uid="SettingsSeverityOff" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityInfo" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityWarning" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityError" />
                                     </ComboBox>
                                 </Grid>
 
@@ -295,17 +279,16 @@
                                         <ColumnDefinition Width="200" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Forced Flag" VerticalAlignment="Center" />
-                                    <ComboBox Grid.Column="1"
+                                    <TextBlock x:Uid="SettingsForcedFlag" VerticalAlignment="Center" />
+                                    <ComboBox x:Uid="SettingsSubtitleForcedFlagSelector"
+                                                  Grid.Column="1"
                                                   SelectedIndex="{x:Bind ViewModel.SubtitleForcedFlagSeverityIndex, Mode=TwoWay}"
                                                   MinWidth="120"
-                                                  HorizontalAlignment="Right"
-                                                  AutomationProperties.Name="Subtitle forced flag validation severity"
-                                                  AutomationProperties.HelpText="Set validation severity for subtitle forced flag">
-                                        <ComboBoxItem Content="Off" />
-                                        <ComboBoxItem Content="Info" />
-                                        <ComboBoxItem Content="Warning" />
-                                        <ComboBoxItem Content="Error" />
+                                                  HorizontalAlignment="Right">
+                                        <ComboBoxItem x:Uid="SettingsSeverityOff" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityInfo" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityWarning" />
+                                        <ComboBoxItem x:Uid="SettingsSeverityError" />
                                     </ComboBox>
                                 </Grid>
                             </StackPanel>
@@ -316,30 +299,29 @@
                     </controls:Case>
                 </controls:SwitchPresenter>
                 <!--User Interface section-->
-                <TextBlock Text="User Interface"
+                <TextBlock x:Uid="SettingsUserInterfaceSection"
                            Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
 
-                <controls:SettingsCard Header="App Theme"
-                                       Description="Choose the color theme for the app."
+                <controls:SettingsCard x:Uid="SettingsAppTheme"
                                        HeaderIcon="{ui:FontIcon Glyph=&#xE771;}">
                     <ComboBox SelectedIndex="{x:Bind ViewModel.SelectedThemeIndex, Mode=TwoWay}"
                               MinWidth="150">
-                        <ComboBoxItem Content="Use system setting" />
-                        <ComboBoxItem Content="Light" />
-                        <ComboBoxItem Content="Dark" />
+                        <ComboBoxItem x:Uid="SettingsThemeSystem" />
+                        <ComboBoxItem x:Uid="SettingsThemeLight" />
+                        <ComboBoxItem x:Uid="SettingsThemeDark" />
                     </ComboBox>
                 </controls:SettingsCard>
 
-                <controls:SettingsCard Header="Track Availability Display"
-                                       Description="Show detailed file count together with colored indicators in track selection dropdowns."
+                <controls:SettingsCard x:Uid="SettingsTrackAvailability"
                                        HeaderIcon="{ui:FontIcon Glyph=&#xE7EE;}">
-                    <ToggleSwitch IsOn="{x:Bind ViewModel.ShowTrackAvailabilityText, Mode=TwoWay}" />
+                    <ToggleSwitch x:Uid="SettingsTrackAvailabilityToggle"
+                                  IsOn="{x:Bind ViewModel.ShowTrackAvailabilityText, Mode=TwoWay}" />
                 </controls:SettingsCard>
 
-                <controls:SettingsCard Header="Show Arguments"
-                                       Description="Display a button to preview the generated mkvpropedit command in the main window."
+                <controls:SettingsCard x:Uid="SettingsShowArguments"
                                        HeaderIcon="{ui:FontIcon Glyph=&#xE8BC;}">
-                    <ToggleSwitch IsOn="{x:Bind ViewModel.ShowMkvpropeditArguments, Mode=TwoWay}" />
+                    <ToggleSwitch x:Uid="SettingsShowArgumentsToggle"
+                                  IsOn="{x:Bind ViewModel.ShowMkvpropeditArguments, Mode=TwoWay}" />
                 </controls:SettingsCard>
 
                 <controls:SettingsCard x:Uid="BatchHistoryLimitCard"
@@ -381,27 +363,27 @@
                          Severity="Error" IsClosable="False" AutomationProperties.LiveSetting="Polite" />
 
                 <!--Logging section-->
-                <TextBlock Text="Logging"
+                <TextBlock x:Uid="SettingsLoggingSection"
                            Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
 
-                <controls:SettingsCard Header="Show Log Viewer"
-                                       Description="Display a log viewer tab in the navigation menu to monitor application logs in real-time."
+                <controls:SettingsCard x:Uid="SettingsShowLogViewer"
                                        HeaderIcon="{ui:FontIcon Glyph=&#xE736;}">
-                    <ToggleSwitch IsOn="{x:Bind ViewModel.EnableLoggingView, Mode=TwoWay}" />
+                    <ToggleSwitch x:Uid="SettingsShowLogViewerToggle"
+                                  IsOn="{x:Bind ViewModel.EnableLoggingView, Mode=TwoWay}" />
                 </controls:SettingsCard>
 
-                <controls:SettingsCard Header="Log Level"
+                <controls:SettingsCard x:Uid="SettingsLogLevel"
                                        HeaderIcon="{ui:FontIcon Glyph=&#xE7BA;}"
-                                       Description="{x:Bind ViewModel.LogLevelDescription}">
+                                       Description="{x:Bind LogLevelDescription}">
                     <ComboBox SelectedIndex="{x:Bind ViewModel.SelectedLogLevelIndex, Mode=TwoWay}"
                               IsEnabled="{x:Bind ViewModel.IsLogLevelControlEnabled, Mode=OneWay}"
                               MinWidth="150">
-                        <ComboBoxItem Content="Verbose" />
-                        <ComboBoxItem Content="Debug" />
-                        <ComboBoxItem Content="Information" />
-                        <ComboBoxItem Content="Warning" />
-                        <ComboBoxItem Content="Error" />
-                        <ComboBoxItem Content="Fatal" />
+                        <ComboBoxItem x:Uid="SettingsLogLevelVerbose" />
+                        <ComboBoxItem x:Uid="SettingsLogLevelDebug" />
+                        <ComboBoxItem x:Uid="SettingsLogLevelInformation" />
+                        <ComboBoxItem x:Uid="SettingsLogLevelWarning" />
+                        <ComboBoxItem x:Uid="SettingsLogLevelError" />
+                        <ComboBoxItem x:Uid="SettingsLogLevelFatal" />
                     </ComboBox>
                 </controls:SettingsCard>
 
@@ -420,10 +402,10 @@
                 </controls:SettingsCard>
 
                 <!--About section-->
-                <TextBlock Text="About"
+                <TextBlock x:Uid="SettingsAboutSection"
                            Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
-                <controls:SettingsExpander Header="Matroska Batch Flow"
+                <controls:SettingsExpander x:Uid="SettingsAboutApp"
                                    Description="{x:Bind CopyrightNotice}"
                                    IsExpanded="True">
                     <controls:SettingsExpander.HeaderIcon>
@@ -438,32 +420,32 @@
                                        ContentAlignment="Left">
                             <StackPanel Margin="-12,0,0,0"
                                 Orientation="Vertical">
-                                <HyperlinkButton Content="License"
+                                <HyperlinkButton x:Uid="SettingsLicenseLink"
                                          NavigateUri="https://github.com/TimGels/Matroska-Batch-Flow/blob/main/LICENSE" />
                             </StackPanel>
                         </controls:SettingsCard>
-                        <controls:SettingsCard HorizontalContentAlignment="Left"
-                                       ContentAlignment="Vertical"
-                                       Header="Third party dependencies">
+                        <controls:SettingsCard x:Uid="SettingsDependencies"
+                                       HorizontalContentAlignment="Left"
+                                       ContentAlignment="Vertical">
                             <StackPanel Margin="-12,0,0,0"
                                 Orientation="Vertical">
-                                <HyperlinkButton Content="Uno Platform"
+                                <HyperlinkButton x:Uid="SettingsUnoPlatformLink"
                                          NavigateUri="https://github.com/unoplatform/uno" />
-                                <HyperlinkButton Content=".NET Community Toolkit"
+                                <HyperlinkButton x:Uid="SettingsDotNetToolkitLink"
                                          NavigateUri="https://github.com/CommunityToolkit/dotnet" />
-                                <HyperlinkButton Content="Windows App SDK"
+                                <HyperlinkButton x:Uid="SettingsWindowsAppSdkLink"
                                          NavigateUri="https://github.com/microsoft/windowsappsdk" />
-                                <HyperlinkButton Content="WinUI 3"
+                                <HyperlinkButton x:Uid="SettingsWinUiLink"
                                          NavigateUri="https://github.com/microsoft/microsoft-ui-xaml" />
 
                             </StackPanel>
                         </controls:SettingsCard>
-                        <controls:SettingsCard HorizontalContentAlignment="Left"
-                                               ContentAlignment="Vertical"
-                                               Header="Useful links">
+                        <controls:SettingsCard x:Uid="SettingsUsefulLinks"
+                                               HorizontalContentAlignment="Left"
+                                               ContentAlignment="Vertical">
                             <StackPanel Margin="-12,0,0,0"
                                 Orientation="Vertical">
-                                <HyperlinkButton Content="GitHub repository"
+                                <HyperlinkButton x:Uid="SettingsGitHubLink"
                                          NavigateUri="https://github.com/TimGels/Matroska-Batch-Flow" />
                             </StackPanel>
                         </controls:SettingsCard>

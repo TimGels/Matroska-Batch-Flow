@@ -109,9 +109,10 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
 
     public double BatchHistoryMaxRunsLimit => UserSettings.BatchHistorySettings.MaxMaxRuns;
 
-    public string LogLevelDescription => IsLogLevelControlEnabled
-        ? "Set the minimum logging level. Lower levels produce more detailed logs."
-        : $"Currently set by appsettings.json to '{_loggingOptions.MinimumLevel}' and cannot be changed here.";
+    /// <summary>
+    /// Gets the minimum log level specified in appsettings.json, if any.
+    /// </summary>
+    public string? ConfiguredMinimumLogLevel => _loggingOptions.MinimumLevel;
 
     public bool ShowTrackAvailabilityText
     {
